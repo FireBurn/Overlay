@@ -1,0 +1,200 @@
+# ChangeLog for sys-devel/llvm
+# Copyright 1999-2011 Gentoo Foundation; Distributed under the GPL v2
+# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/ChangeLog,v 1.43 2011/06/06 19:34:32 voyageur Exp $
+
+  06 Jun 2011; Bernard Cafarelli <voyageur@gentoo.org> llvm-9999.ebuild:
+  Update live ebuild to sync latest ebuild changes (vim-syntax, libffi, ...)
+
+*llvm-2.9-r2 (23 May 2011)
+
+  23 May 2011; Bernard Cafarelli <voyageur@gentoo.org> +llvm-2.9-r2.ebuild,
+  +files/llvm-2.9-Operator.h-c++0x.patch:
+  Fix header for gcc 4.6, bug #365925
+
+  21 Apr 2011; Fabian Groffen <grobian@gentoo.org> llvm-2.9-r1.ebuild,
+  llvm-9999.ebuild:
+  Fix broken reference that I missed yesterday
+
+  20 Apr 2011; Fabian Groffen <grobian@gentoo.org> llvm-2.9-r1.ebuild,
+  llvm-9999.ebuild:
+  Fix install_name_tooling
+
+*llvm-2.8-r4 (15 Apr 2011)
+
+  15 Apr 2011; Bernard Cafarelli <voyageur@gentoo.org> -llvm-2.8-r3.ebuild,
+  +llvm-2.8-r4.ebuild, -llvm-2.9.ebuild:
+  Also update 2.8 branch with libffi/debug changes
+
+*llvm-2.9-r1 (15 Apr 2011)
+
+  15 Apr 2011; Bernard Cafarelli <voyageur@gentoo.org> +llvm-2.9-r1.ebuild:
+  Fix libffi include search path and debug flags, bugs #363595 and #362567
+
+  10 Apr 2011; Pawel Hajdan jr <phajdan.jr@gentoo.org> llvm-2.8-r2.ebuild:
+  x86 stable wrt bug #360553
+
+*llvm-2.9 (07 Apr 2011)
+
+  07 Apr 2011; Bernard Cafarelli <voyageur@gentoo.org> +llvm-2.9.ebuild:
+  Version bump
+
+  28 Mar 2011; Christoph Mende <angelos@gentoo.org> llvm-2.8-r2.ebuild:
+  Stable on amd64 wrt bug #360553
+
+*llvm-2.8-r3 (28 Mar 2011)
+
+  28 Mar 2011; Bernard Cafarelli <voyageur@gentoo.org>
+  -files/llvm-2.6-nodoctargz.patch, -llvm-2.7.ebuild, -llvm-2.7-r2.ebuild,
+  +llvm-2.8-r3.ebuild:
+  Install vim syntax files with USE=vim-syntax, bug #360147. Also drop 2.7
+  versions
+
+  14 Mar 2011; Fabian Groffen <grobian@gentoo.org> llvm-2.8-r2.ebuild:
+  Marked ~x86-linux
+
+  28 Feb 2011; Bernard Cafarelli <voyageur@gentoo.org>
+  +files/llvm-2.9-nodoctargz.patch, llvm-9999.ebuild:
+  Fix depend on live ebuild, and finally update nodoc patch, bug #348701
+
+  14 Feb 2011; Kacper Kowalik <xarthisius@gentoo.org> llvm-2.8-r1.ebuild:
+  ppc stable wrt #336371
+
+*llvm-2.8-r2 (19 Dec 2010)
+
+  19 Dec 2010; Bernard Cafarelli <voyageur@gentoo.org> +llvm-2.8-r2.ebuild,
+  +files/llvm-2.8-alignof.patch:
+  Backport to rename alignof, fixes C++'0x compilers support
+
+  11 Nov 2010; Markos Chandras <hwoarang@gentoo.org> llvm-2.8-r1.ebuild:
+  Stable on amd64 wrt bug #336371
+
+  09 Nov 2010; Thomas Kahle <tomka@gentoo.org> llvm-2.8-r1.ebuild:
+  x86 stable per bug 336371
+
+  24 Oct 2010; Fabian Groffen <grobian@gentoo.org> llvm-2.8-r1.ebuild,
+  llvm-9999.ebuild:
+  Update reference fixing for Darwin for newer more strict versions of
+  Portage
+
+  23 Oct 2010; Fabian Groffen <grobian@gentoo.org> llvm-2.8-r1.ebuild,
+  +files/llvm-2.8-darwin8.patch, llvm-9999.ebuild:
+  Fix compilation on Mac OS X Tiger (10.4, Darwin 8), fix install_names for
+  new libs also, bug #342289
+
+*llvm-2.8-r1 (08 Oct 2010)
+
+  08 Oct 2010; Bernard Cafarelli <voyageur@gentoo.org> -llvm-2.8.ebuild,
+  +llvm-2.8-r1.ebuild:
+  SRC_URI arrow workaround to fetch updated tarball with correct package
+  version, thanks Alexey Charkov <alchark@gmail.com> in bug #340106 for
+  spotting it
+
+  06 Oct 2010; Bernard Cafarelli <voyageur@gentoo.org> llvm-2.8.ebuild,
+  llvm-9999.ebuild:
+  Tests now use an internal framework, dejagnu not needed anymore
+
+*llvm-2.8 (06 Oct 2010)
+
+  06 Oct 2010; Bernard Cafarelli <voyageur@gentoo.org> +llvm-2.8.ebuild:
+  2.8 version bump
+
+  21 Sep 2010; Bernard Cafarelli <voyageur@gentoo.org> llvm-9999.ebuild:
+  Also fix live ebuild
+
+*llvm-2.7-r2 (21 Sep 2010)
+
+  21 Sep 2010; Bernard Cafarelli <voyageur@gentoo.org> -llvm-2.7-r1.ebuild,
+  +llvm-2.7-r2.ebuild:
+  Fix the rpath sed so llvm-* binaries actually find the llvm shared library
+
+  20 Sep 2010; Bernard Cafarelli <voyageur@gentoo.org> llvm-2.7-r1.ebuild:
+  udis86 needs pic on amd64, bug #337969
+
+*llvm-2.7-r1 (17 Sep 2010)
+
+  17 Sep 2010; Bernard Cafarelli <voyageur@gentoo.org> +llvm-2.7-r1.ebuild,
+  llvm-9999.ebuild:
+  Enable shared library, move libs and plugins to fix bug #337467
+
+  04 Sep 2010; Fabian Groffen <grobian@gentoo.org> llvm-2.7.ebuild:
+  Also fix libEnhancedDisassembly, which is only built on Darwin 10 (Mac OS
+  X Snow Leopard)
+
+  03 Sep 2010; Fabian Groffen <grobian@gentoo.org> llvm-2.7.ebuild:
+  Marked ~amd64-linux
+
+  26 Aug 2010; Fabian Groffen <grobian@gentoo.org> llvm-2.7.ebuild,
+  llvm-9999.ebuild:
+  Bump to EAPI=3, make Prefix aware, add support for Darwin platforms,
+  bug #333387
+
+  20 Jul 2010; Bernard Cafarelli <voyageur@gentoo.org> -llvm-2.6-r2.ebuild,
+  -files/llvm-2.6-cflags.patch:
+  Drop 2.6 version
+
+*llvm-9999 (01 Jun 2010)
+
+  01 Jun 2010; Bernard Cafarelli <voyageur@gentoo.org> +llvm-9999.ebuild:
+  Add live version, bug #320919
+
+  01 Jun 2010; Bernard Cafarelli <voyageur@gentoo.org> llvm-2.6-r2.ebuild,
+  llvm-2.7.ebuild:
+  Really fix bug #293382, llvm-gcc was still in DEPEND
+
+*llvm-2.7 (27 Apr 2010)
+
+  27 Apr 2010; Bernard Cafarelli <voyageur@gentoo.org> -llvm-2.6-r1.ebuild,
+  +llvm-2.7.ebuild, +files/llvm-2.7-nodoctargz.patch:
+  2.7 official release version bump
+
+  26 Apr 2010; Bernard Cafarelli <voyageur@gentoo.org> llvm-2.6-r2.ebuild:
+  --without-udis86 is broken in configure script
+
+*llvm-2.6-r2 (26 Apr 2010)
+
+  26 Apr 2010; Bernard Cafarelli <voyageur@gentoo.org> +llvm-2.6-r2.ebuild,
+  metadata.xml:
+  Add udis86 support, thanks to chithanh in bug #317151
+
+*llvm-2.6-r1 (18 Mar 2010)
+
+  18 Mar 2010; Bernard Cafarelli <voyageur@gentoo.org> -llvm-2.6.ebuild,
+  +llvm-2.6-r1.ebuild, +files/llvm-2.6-cflags.patch:
+  Remove forced -O3 -fomit-frame-pointer CFLAGS, bug #308145
+
+  17 Nov 2009; Bernard Cafarelli <voyageur@gentoo.org> llvm-2.6.ebuild:
+  Drop llvm-gcc depend, as it triggers circular dependency on first install
+  (warn the user if it is not found instead), bug #293382
+
+  26 Oct 2009; Bernard Cafarelli <voyageur@gentoo.org>
+  files/llvm-2.6-commandguide-nops.patch:
+  Fix the patch, after test by flameeyes
+
+  26 Oct 2009; Bernard Cafarelli <voyageur@gentoo.org> llvm-2.6.ebuild,
+  +files/llvm-2.6-commandguide-nops.patch:
+  Disable .ps doc generation, these are just the man pages. Bug #290581
+
+  26 Oct 2009; Bernard Cafarelli <voyageur@gentoo.org> llvm-2.6.ebuild,
+  metadata.xml:
+  Fix libffi automagic dependency, bug #289933
+
+*llvm-2.6 (25 Oct 2009)
+
+  25 Oct 2009; Bernard Cafarelli <voyageur@gentoo.org>
+  -llvm-2.6_pre2.ebuild, +llvm-2.6.ebuild:
+  Bump to final 2.6 release
+
+  07 Oct 2009; Bernard Cafarelli <voyageur@gentoo.org> llvm-2.6_pre2.ebuild,
+  +files/llvm-2.6-nodoctargz.patch, -files/llvm-2.6-nohtmltargz.patch:
+  Add USE flag for ocaml bindings, complete doc patch to fix ocmal doc
+  failure, see bug #186279
+
+  07 Oct 2009; Bernard Cafarelli <voyageur@gentoo.org> llvm-2.6_pre2.ebuild:
+  Fix llvm-gcc location, work with ${ROOT}
+
+*llvm-2.6_pre2 (05 Oct 2009)
+
+  05 Oct 2009; Bernard Cafarelli <voyageur@gentoo.org>
+  +llvm-2.6_pre2.ebuild, +files/llvm-2.6-nohtmltargz.patch, +metadata.xml:
+  Initial commit, thanks everyone in bug #186279 and others
+

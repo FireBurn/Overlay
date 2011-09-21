@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+<herd>x11</herd>
+<use>
+	<flag name='classic'>Build drivers based on the classic architecture.</flag>
+	<flag name='d3d'>Enable DirectX 10/10.1/11 backend for Gallium3D.</flag>
+	<flag name='gallium'>Build drivers based on Gallium3D, the new architecture for 3D graphics drivers.</flag>
+	<flag name='gles'>Enable GLES support for Gallium3D.</flag>
+	<flag name='llvm'>Enable LLVM backend for Gallium3D.</flag>
+	<flag name='pic'>disable optimized assembly code that is not PIC friendly</flag>
+</use>
+</pkgmetadata>

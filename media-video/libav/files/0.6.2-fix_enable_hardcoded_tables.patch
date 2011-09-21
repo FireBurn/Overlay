@@ -1,0 +1,45 @@
+From 2b2856bac2012fe505ffd80f441db28c7fc31787 Mon Sep 17 00:00:00 2001
+From: Reinhard Tartler <siretart@tauware.de>
+Date: Tue, 22 Mar 2011 20:57:36 +0100
+Subject: [PATCH] Add missing dependencies for the AAC-HE backport for hardcoded tables
+
+Unbreaks compilation with --enable-hardcoded-tables
+---
+ Changelog           |    5 +++++
+ libavcodec/Makefile |    4 +++-
+ 2 files changed, 8 insertions(+), 1 deletions(-)
+
+diff --git a/Changelog b/Changelog
+index 2e0a99c..bcf6428 100644
+--- a/Changelog
++++ b/Changelog
+@@ -1,6 +1,11 @@
+ Entries are sorted chronologically from oldest to youngest within each release,
+ releases are sorted from youngest to oldest.
+ 
++version 0.6.3:
++
++- fix compilation with --enable-hardcoded-tables
++
++
+ version 0.6.2:
+ 
+ - Fix invalid reads in VC-1 decoding (related to CVE-2011-0723)
+diff --git a/libavcodec/Makefile b/libavcodec/Makefile
+index 4547ef6..3dd24e7 100644
+--- a/libavcodec/Makefile
++++ b/libavcodec/Makefile
+@@ -645,7 +645,9 @@ $(SUBDIR)%_tables.h: $(SUBDIR)%_tablegen$(HOSTEXESUF)
+ 	$(M)./$< > $@
+ 
+ ifdef CONFIG_HARDCODED_TABLES
+-$(SUBDIR)aac.o: $(SUBDIR)cbrt_tables.h
++$(SUBDIR)aacdec.o: $(SUBDIR)cbrt_tables.h
++$(SUBDIR)aacps.o: $(SUBDIR)aacps_tables.h
++$(SUBDIR)aactab.o: $(SUBDIR)aac_tables.h
+ $(SUBDIR)dv.o: $(SUBDIR)dv_tables.h
+ $(SUBDIR)mdct.o: $(SUBDIR)mdct_tables.h
+ $(SUBDIR)mpegaudiodec.o: $(SUBDIR)mpegaudio_tables.h
+-- 
+1.7.3.5
+
