@@ -48,7 +48,7 @@ for card in ${VIDEO_CARDS}; do
 done
 
 IUSE="${IUSE_VIDEO_CARDS}
-	bindist +classic d3d debug +egl g3dvl +gallium gbm gles1 gles2 +llvm +nptl openvg pax_kernel pic selinux shared-dricore +shared-glapi vdpau wayland xvmc kernel_FreeBSD"
+	bindist +classic d3d debug +egl g3dvl +gallium gbm gles1 gles2 +llvm +nptl openvg osmesa pax_kernel pic selinux shared-dricore +shared-glapi vdpau wayland xvmc kernel_FreeBSD"
 
 REQUIRED_USE="
 	d3d?    ( gallium )
@@ -199,12 +199,6 @@ src_configure() {
 		fi
 	fi
 
-	myconf+="
-		$(use_enable !bindist texture-float)
-		$(use_enable gles1)
-		$(use_enable gles2)
-		$(use_enable egl)
-	"
 	if use egl; then
 		myconf+="
 			--with-egl-platforms=x11$(use wayland && echo ",wayland")$(use gbm && echo ",drm")
@@ -218,8 +212,8 @@ src_configure() {
 	fi
 	if use gallium; then
 		myconf+="
-			--with-state-trackers=glx,dri$(use egl && echo ",egl")$(use openvg && echo ",vega")$(use d3d && echo ",d3d1x")
-			$(use_enable g3dvl)
+			$(use_enable d3d d3d1x)
+			$(use_enable g3dvl gallium-g3dvl)
 			$(use_enable llvm gallium-llvm)
 			$(use_enable openvg)
 			$(use_enable vdpau)
@@ -250,17 +244,22 @@ src_configure() {
 		"
 	fi
 
-	# --with-driver=dri|xlib|osmesa || do we need osmesa?
 	econf \
 		--disable-option-checking \
-		--with-driver=dri \
+		--enable-dri \
+		--enable-glx \
 		--enable-xcb \
                 --enable-32bit \
                 --disable-64bit \
                 --libdir=/usr/lib32 \
+                $(use_enable !bindist texture-float) \
 		$(use_enable debug) \
+		$(use_enable egl) \
 		$(use_enable gbm) \
+		$(use_enable gles1) \
+		$(use_enable gles2) \
 		$(use_enable nptl glx-tls) \
+		$(use_enable osmesa) \
 		$(use_enable !pic asm) \
 		$(use_enable shared-dricore) \
 		$(use_enable shared-glapi) \
