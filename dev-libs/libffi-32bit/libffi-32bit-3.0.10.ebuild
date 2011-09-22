@@ -39,7 +39,6 @@ pkg_setup() {
 src_prepare() {
 	P="libffi-3.0.10"
 	PN="libffi"
-	epatch "${FILESDIR}"/${PN}-3.0.10-interix.patch
 	elibtoolize
 }
 
