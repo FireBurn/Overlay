@@ -4,12 +4,12 @@
 
 EAPI=2
 ABI="x86"
-P="libffi-3.0.10_rc8"
+P="libffi-3.0.10"
 PN="libffi"
 
 MY_P=${P/_}
 
-inherit libtool toolchain-funcs eutils
+inherit libtool toolchain-funcs eutils flag-o-matic 
 
 DESCRIPTION="a portable, high level programming interface to various calling conventions."
 HOMEPAGE="http://sourceware.org/libffi/"
@@ -37,7 +37,7 @@ pkg_setup() {
 }
 
 src_prepare() {
-	P="libffi-3.0.10_rc8"
+	P="libffi-3.0.10"
 	PN="libffi"
 	epatch "${FILESDIR}"/${PN}-3.0.10-interix.patch
 	elibtoolize
