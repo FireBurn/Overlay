@@ -18,7 +18,7 @@ SRC_URI="http://llvm.org/releases/${PV}/${P}.tgz"
 LICENSE="UoI-NCSA"
 SLOT="0"
 KEYWORDS="~amd64 ~ppc ~x86 ~amd64-linux ~x86-linux ~ppc-macos"
-IUSE="alltargets debug +libffi llvm-gcc ocaml test udis86 vim-syntax"
+IUSE="debug +libffi llvm-gcc multitarget ocaml test udis86 vim-syntax"
 
 DEPEND="dev-lang/perl
 	>=sys-devel/make-3.79
@@ -105,7 +105,7 @@ src_configure() {
 		$(use_enable debug assertions)
 		$(use_enable debug expensive-checks)"
 
-	if use alltargets; then
+	if use multitarget; then
 		CONF_FLAGS="${CONF_FLAGS} --enable-targets=all"
 	else
 		CONF_FLAGS="${CONF_FLAGS} --enable-targets=host-only"
