@@ -66,10 +66,12 @@ REQUIRED_USE="
 	video_cards_i915?   ( classic )
 	video_cards_r100?   ( classic )
 	video_cards_r200?   ( classic )
+	video_cards_r300?   ( gallium )
+	video_cards_r600?   ( gallium )
 	video_cards_vmware? ( gallium )
 "
 
-LIBDRM_DEPSTRING=">=x11-libs/libdrm-32bit-2.4.24"
+LIBDRM_DEPSTRING=">=x11-libs/libdrm-32bit-2.4.27"
 # not a runtime dependency of this package, but dependency of packages which
 # depend on this package, bug #342393
 EXTERNAL_DEPEND="
@@ -190,9 +192,7 @@ src_configure() {
 		driver_enable video_cards_r100 radeon
 		driver_enable video_cards_r200 r200
 		if ! use video_cards_r100 && \
-				! use video_cards_r200 && \
-				! use video_cards_r300 && \
-				! use video_cards_r600; then
+				! use video_cards_r200; then
 			driver_enable video_cards_radeon radeon r200
 		fi
 	fi
