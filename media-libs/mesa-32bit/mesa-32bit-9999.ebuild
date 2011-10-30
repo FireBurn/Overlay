@@ -189,13 +189,11 @@ src_configure() {
 		# ATI code
 		driver_enable video_cards_r100 radeon
 		driver_enable video_cards_r200 r200
-		driver_enable video_cards_r300 r300
-		driver_enable video_cards_r600 r600
 		if ! use video_cards_r100 && \
 				! use video_cards_r200 && \
 				! use video_cards_r300 && \
 				! use video_cards_r600; then
-			driver_enable video_cards_radeon radeon r200 r300 r600
+			driver_enable video_cards_radeon radeon r200
 		fi
 	fi
 
@@ -252,7 +250,7 @@ src_configure() {
                 --enable-32bit \
                 --disable-64bit \
                 --libdir=/usr/lib32 \
-                $(use_enable !bindist texture-float) \
+		$(use_enable !bindist texture-float) \
 		$(use_enable debug) \
 		$(use_enable egl) \
 		$(use_enable gbm) \
