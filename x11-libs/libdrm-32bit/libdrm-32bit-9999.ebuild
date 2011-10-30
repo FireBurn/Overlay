@@ -1,4 +1,4 @@
-# Copyright 1999-2009 Gentoo Foundation
+# Copyright 1999-2011 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
@@ -22,19 +22,30 @@ for card in ${VIDEO_CARDS}; do
 	IUSE_VIDEO_CARDS+=" video_cards_${card}"
 done
 
-IUSE="${IUSE_VIDEO_CARDS} +libkms"
+IUSE="${IUSE_VIDEO_CARDS} libkms"
 RESTRICT="test" # see bug #236845
 
-RDEPEND="dev-libs/libpthread-stubs"
-DEPEND="${RDEPEND}"
+RDEPEND="dev-libs/libpthread-stubs
+	video_cards_intel? ( >=x11-libs/libpciaccess-0.10 )"
+DEPEND="${RDEPEND}
+	>=x11-libs/libpciaccess-0.10"
+
+PATCHES=(
+	"${FILESDIR}"/${PN}-2.4.23-solaris.patch
+)
 
 pkg_setup() {
-	CONFIGURE_OPTIONS="--enable-udev
+	# tests are restricted, no point in building them
+	sed -ie 's/tests //' ${S}/Makefile.am
+
+	XORG_CONFIGURE_OPTIONS=(
+		--enable-udev
 		$(use_enable video_cards_intel intel)
 		$(use_enable video_cards_nouveau nouveau-experimental-api)
 		$(use_enable video_cards_radeon radeon)
 		$(use_enable video_cards_vmware vmwgfx-experimental-api)
-		$(use_enable libkms)"
+		$(use_enable libkms)
+	)
 
 	xorg-2_pkg_setup
 }
