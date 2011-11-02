@@ -31,7 +31,7 @@ DEPEND="${RDEPEND}
 	>=x11-libs/libpciaccess-0.10"
 
 PATCHES=(
-	"${FILESDIR}"/${PN}-2.4.23-solaris.patch
+	"${FILESDIR}"/${PN}-2.4.28-solaris.patch
 )
 
 pkg_setup() {
