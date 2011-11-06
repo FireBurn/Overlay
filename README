@@ -1,0 +1,5 @@
+Simple overlay for 32bit mesa drivers including llvmpipe
+
+Place the following in your /etc/make.conf to stop collision errors
+
+COLLISION_IGNORE="/usr/lib32 /lib32"
