@@ -4,7 +4,7 @@
 
 EAPI=4
 ABI=x86
-inherit xorg-2
+inherit xorg-2 flag-o-matic
 
 EGIT_REPO_URI="git://anongit.freedesktop.org/git/mesa/drm"
 
@@ -37,6 +37,8 @@ PATCHES=(
 pkg_setup() {
 	# tests are restricted, no point in building them
 	sed -ie 's/tests //' ${S}/Makefile.am
+
+        append-flags -m32
 
 	XORG_CONFIGURE_OPTIONS=(
 		--enable-udev
