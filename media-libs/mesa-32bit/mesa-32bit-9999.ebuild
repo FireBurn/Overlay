@@ -63,7 +63,7 @@ REQUIRED_USE="
 	g3dvl? ( || ( vdpau xvmc ) )
 	vdpau? ( g3dvl )
 	xvmc?  ( g3dvl )
-	video_cards_i915?   ( classic )
+	video_cards_i965?   ( classic )
 	video_cards_r100?   ( classic )
 	video_cards_r200?   ( classic )
 	video_cards_r300?   ( gallium )
@@ -141,6 +141,8 @@ pkg_setup() {
 	# recommended by upstream
 	append-flags -ffast-math -m32
 	append-ldflags -L/usr/lib32/llvm -m32
+	# workaround toc-issue wrt #386545
+	use ppc64 && append-flags -mminimal-toc
 }
 
 src_unpack() {
@@ -221,9 +223,8 @@ src_configure() {
 		gallium_enable video_cards_vmware svga
 		gallium_enable video_cards_nouveau nouveau
 		gallium_enable video_cards_i915 i915
-		if ! use video_cards_i915 && \
-				! use video_cards_i965; then
-			gallium_enable video_cards_intel i915 
+		if ! use video_cards_i915; then
+			gallium_enable video_cards_intel i915
 		fi
 
 		gallium_enable video_cards_r300 r300
