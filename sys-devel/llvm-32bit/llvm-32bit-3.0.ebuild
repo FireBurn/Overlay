@@ -1,33 +1,32 @@
 # Copyright 1999-2011 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-2.9-r2.ebuild,v 1.1 2011/05/23 11:43:47 voyageur Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-3.0.ebuild,v 1.1 2011/12/02 13:20:14 voyageur Exp $
 
 EAPI="3"
 ABI=x86
 inherit eutils flag-o-matic multilib toolchain-funcs
 
 PN="llvm"   
-P="llvm-2.9"   
-PF="llvm-2.9-r2"
-PV="2.9"
+P="llvm-3.0"   
+PF="llvm-3.0"
+PV="3.0"
 
 DESCRIPTION="Low Level Virtual Machine"
 HOMEPAGE="http://llvm.org/"
-SRC_URI="http://llvm.org/releases/${PV}/${P}.tgz"
+SRC_URI="http://llvm.org/releases/${PV}/${P}.tar.gz"
 
 LICENSE="UoI-NCSA"
 SLOT="0"
 KEYWORDS="~amd64 ~ppc ~x86 ~amd64-linux ~x86-linux ~ppc-macos"
-IUSE="debug +libffi llvm-gcc multitarget ocaml test udis86 vim-syntax"
+IUSE="debug gold +libffi multitarget ocaml test udis86 vim-syntax"
 
 DEPEND="dev-lang/perl
 	>=sys-devel/make-3.79
 	>=sys-devel/flex-2.5.4
-	>=sys-devel/bison-1.28
-	!~sys-devel/bison-1.85
-	!~sys-devel/bison-1.875
+	>=sys-devel/bison-1.875d
 	|| ( >=sys-devel/gcc-3.0 >=sys-devel/gcc-apple-4.2.1 )
 	|| ( >=sys-devel/binutils-2.18 >=sys-devel/binutils-apple-3.2.3 )
+	gold? ( >=sys-devel/binutils-2.22 )
 	libffi? ( dev-util/pkgconfig
 		dev-libs/libffi-32bit )
 	ocaml? ( dev-lang/ocaml )
@@ -37,7 +36,7 @@ RDEPEND="dev-lang/perl
 	libffi? ( dev-libs/libffi-32bit )
 	vim-syntax? ( || ( app-editors/vim app-editors/gvim ) )"
 
-S=${WORKDIR}/${PN}-${PV/_pre*}
+S=${WORKDIR}/${P}.src
 
 pkg_setup() {
 	# need to check if the active compiler is ok
@@ -77,7 +76,7 @@ pkg_setup() {
 
 src_prepare() {
 	PN="llvm"
-	P="llvm-2.9"
+	P="llvm-3.0"
 	# unfortunately ./configure won't listen to --mandir and the-like, so take
 	# care of this.
 	einfo "Fixing install dirs"
@@ -88,19 +87,22 @@ src_prepare() {
 	sed -e 's,$ABS_RUN_DIR/lib,'"${EPREFIX}"/usr/lib32/${PN}, \
 		-i tools/llvm-config/llvm-config.in.in || die "llvm-config sed failed"
 
-	einfo "Fixing rpath"
+	einfo "Fixing rpath and CFLAGS"
 	sed -e 's,\$(RPATH) -Wl\,\$(\(ToolDir\|LibDir\)),$(RPATH) -Wl\,'"${EPREFIX}"/usr/lib32/${PN}, \
+		-e '/OmitFramePointer/s/-fomit-frame-pointer//' \
 		-i Makefile.rules || die "rpath sed failed"
+	if use gold; then
+		sed -e 's,\$(SharedLibDir),'"${EPREFIX}"/usr/lib32/${PN}, \
+			-i tools/gold/Makefile || die "gold rpath sed failed"
+	fi
 
 	epatch "${FILESDIR}"/${PN}-2.6-commandguide-nops.patch
 	epatch "${FILESDIR}"/${PN}-2.9-nodoctargz.patch
-
-	# Upstream commit r131062
-	epatch "${FILESDIR}"/${P}-Operator.h-c++0x.patch
 }
 
 src_configure() {
 	local CONF_FLAGS="--enable-shared
+		--with-optimize-option=
 		$(use_enable !debug optimized)
 		$(use_enable debug assertions)
 		$(use_enable debug expensive-checks)"
@@ -115,32 +117,9 @@ src_configure() {
 		CONF_FLAGS="${CONF_FLAGS} --enable-pic"
 	fi
 
-	# things would be built differently depending on whether llvm-gcc is
-	# used or not.
-	local LLVM_GCC_DIR=/dev/null
-	local LLVM_GCC_DRIVER=nope ; local LLVM_GPP_DRIVER=nope
-	if use llvm-gcc ; then
-		if has_version sys-devel/llvm-gcc; then
-			LLVM_GCC_DIR=$(ls -d ${EROOT}/usr/lib32/llvm-gcc* 2> /dev/null)
-			LLVM_GCC_DRIVER=$(find ${LLVM_GCC_DIR} -name 'llvm*-gcc' 2> /dev/null)
-			if [[ -z ${LLVM_GCC_DRIVER} ]] ; then
-				die "failed to find installed llvm-gcc, LLVM_GCC_DIR=${LLVM_GCC_DIR}"
-			fi
-			einfo "Using $LLVM_GCC_DRIVER"
-			LLVM_GPP_DRIVER=${LLVM_GCC_DRIVER/%-gcc/-g++}
-		else
-			eerror "llvm-gcc USE flag enabled, but sys-devel/llvm-gcc was not found"
-			eerror "Building with standard gcc, re-merge this package after installing"
-			eerror "llvm-gcc to build with it"
-			eerror "This is normal behavior on first LLVM merge"
-		fi
+	if use gold; then
+		CONF_FLAGS="${CONF_FLAGS} --with-binutils-include=${EPREFIX}/usr/include/"
 	fi
-
-	CONF_FLAGS="${CONF_FLAGS} \
-		--with-llvmgccdir=${LLVM_GCC_DIR} \
-		--with-llvmgcc=${LLVM_GCC_DRIVER} \
-		--with-llvmgxx=${LLVM_GPP_DRIVER}"
-
 	if use ocaml; then
 		CONF_FLAGS="${CONF_FLAGS} --enable-bindings=ocaml"
 	else
@@ -172,6 +151,7 @@ src_install() {
 
 	# Fix install_names on Darwin.  The build system is too complicated
 	# to just fix this, so we correct it post-install
+	local lib= f= odylib=
 	if [[ ${CHOST} == *-darwin* ]] ; then
 		for lib in lib{EnhancedDisassembly,LLVM-${PV},LTO}.dylib {BugpointPasses,LLVMHello,profile_rt}.dylib ; do
 			# libEnhancedDisassembly is Darwin10 only, so non-fatal
@@ -183,9 +163,10 @@ src_install() {
 			eend $?
 		done
 		for f in "${ED}"/usr/bin/* "${ED}"/usr/lib/${PN}/libLTO.dylib ; do
-			ebegin "fixing install_name reference to libLLVM-${PV}.dylib of ${f##*/}"
+			odylib=$(scanmacho -BF'%n#f' "${f}" | tr ',' '\n' | grep libLLVM-${PV}.dylib)
+			ebegin "fixing install_name reference to ${odylib} of ${f##*/}"
 			install_name_tool \
-				-change "@executable_path/../lib/libLLVM-${PV}.dylib" \
+				-change "${odylib}" \
 					"${EPREFIX}"/usr/lib/${PN}/libLLVM-${PV}.dylib \
 				"${f}"
 			eend $?

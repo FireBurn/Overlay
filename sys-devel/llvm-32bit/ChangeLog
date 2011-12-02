@@ -1,6 +1,63 @@
 # ChangeLog for sys-devel/llvm
 # Copyright 1999-2011 Gentoo Foundation; Distributed under the GPL v2
-# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/ChangeLog,v 1.43 2011/06/06 19:34:32 voyageur Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/ChangeLog,v 1.55 2011/12/02 13:20:14 voyageur Exp $
+
+*llvm-3.0 (02 Dec 2011)
+
+  02 Dec 2011; Bernard Cafarelli <voyageur@gentoo.org> -llvm-3.0_rc4.ebuild,
+  +llvm-3.0.ebuild:
+  Final release bump, remove rc
+
+  28 Nov 2011; Tony Vroon <chainsaw@gentoo.org> llvm-2.9-r2.ebuild:
+  Marked stable on AMD64 based on arch testing by Michael Orlitzky, Agostino
+  "ago" Sarubbo & Elijah "Armageddon" El Lazkani in bug #384709.
+
+*llvm-3.0_rc4 (28 Nov 2011)
+
+  28 Nov 2011; Bernard Cafarelli <voyageur@gentoo.org> -llvm-3.0_rc3.ebuild,
+  +llvm-3.0_rc4.ebuild:
+  Final rc bump
+
+  24 Nov 2011; Fabian Groffen <grobian@gentoo.org> llvm-2.8-r2.ebuild,
+  llvm-9999.ebuild, llvm-2.9-r2.ebuild, llvm-3.0_rc3.ebuild:
+  Fix install_name pointer to libLLVM-x.y.dylib in a more flexible way to avoid
+  bugs like #391763
+
+  22 Nov 2011; Bernard Cafarelli <voyageur@gentoo.org> llvm-3.0_rc3.ebuild,
+  metadata.xml:
+  Add support for gold plugin, thanks Matthias Maier in bug #371951
+
+  17 Nov 2011; Pawel Hajdan jr <phajdan.jr@gentoo.org> llvm-2.9-r2.ebuild:
+  x86 stable wrt bug #384709
+
+*llvm-3.0_rc3 (09 Nov 2011)
+
+  09 Nov 2011; Bernard Cafarelli <voyageur@gentoo.org> -llvm-3.0_rc1.ebuild,
+  +llvm-3.0_rc3.ebuild:
+  Update rc, some more ebuild cleanups
+
+*llvm-3.0_rc1 (09 Nov 2011)
+
+  09 Nov 2011; Bernard Cafarelli <voyageur@gentoo.org> +llvm-3.0_rc1.ebuild,
+  llvm-9999.ebuild:
+  Add rc release to prepare for 3.0, remove llvm-gcc detection code (not used
+  in configure anymore)
+
+  04 Oct 2011; Bernard Cafarelli <voyageur@gentoo.org> llvm-2.8-r2.ebuild,
+  -llvm-2.8-r4.ebuild, llvm-2.9-r2.ebuild, llvm-9999.ebuild:
+  Fix forced -O3 -fomit-frame-pointer CFLAGS again, bug #385543
+
+  03 Oct 2011; Bernard Cafarelli <voyageur@gentoo.org> -llvm-2.8-r1.ebuild,
+  llvm-2.8-r2.ebuild, llvm-2.8-r4.ebuild, -llvm-2.9-r1.ebuild,
+  llvm-2.9-r2.ebuild, llvm-9999.ebuild, metadata.xml:
+  Rename alltargets USE flag to multitarget, bug #382307. Clean bison
+  dependency, depending only on new enough one. Drop some versions
+
+  28 Sep 2011; Samuli Suominen <ssuominen@gentoo.org> metadata.xml:
+  USE="libffi" is now global USE flag.
+
+  15 Jul 2011; Kacper Kowalik <xarthisius@gentoo.org> llvm-2.8-r2.ebuild:
+  ppc stable wrt #360553
 
   06 Jun 2011; Bernard Cafarelli <voyageur@gentoo.org> llvm-9999.ebuild:
   Update live ebuild to sync latest ebuild changes (vim-syntax, libffi, ...)
