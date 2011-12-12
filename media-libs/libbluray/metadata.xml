@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+  <herd>video</herd>
+  <maintainer>
+    <email>beandog@gentoo.org</email>
+    <name>Steve Dibb</name>
+  </maintainer>
+  <use>
+    <flag name="aacs">Add support for decryption of AACS</flag>
+    <flag name="java">Add support for BD-J</flag>
+    <flag name="utils">Install command-line utilities and examples</flag>
+    <flag name="xine">Build Blu-ray input plugin for Xine</flag>
+  </use>
+</pkgmetadata>
