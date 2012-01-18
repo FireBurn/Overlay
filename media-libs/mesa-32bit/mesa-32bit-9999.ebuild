@@ -71,7 +71,7 @@ REQUIRED_USE="
 	video_cards_vmware? ( gallium )
 "
 
-LIBDRM_DEPSTRING=">=x11-libs/libdrm-32bit-2.4.27"
+LIBDRM_DEPSTRING=">=x11-libs/libdrm-32bit-2.4.30"
 # not a runtime dependency of this package, but dependency of packages which
 # depend on this package, bug #342393
 EXTERNAL_DEPEND="
@@ -92,6 +92,7 @@ RDEPEND="${EXTERNAL_DEPEND}
 	x11-libs/libXdamage
 	x11-libs/libXext
 	x11-libs/libXxf86vm
+	>=x11-libs/libxcb-1.8
 	d3d? ( app-emulation/wine )
 	vdpau? ( >=x11-libs/libvdpau-0.4.1 )
 	wayland? ( x11-base/wayland )
@@ -139,7 +140,7 @@ pkg_setup() {
 	fi
 
 	# recommended by upstream
-	append-flags -ffast-math -m32
+	append-flags -m32
 	append-ldflags -L/usr/lib32/llvm -m32
 	# workaround toc-issue wrt #386545
 	use ppc64 && append-flags -mminimal-toc
@@ -246,7 +247,6 @@ src_configure() {
 		--disable-option-checking \
 		--enable-dri \
 		--enable-glx \
-		--enable-xcb \
                 --enable-32bit \
                 --disable-64bit \
                 --libdir=/usr/lib32 \
