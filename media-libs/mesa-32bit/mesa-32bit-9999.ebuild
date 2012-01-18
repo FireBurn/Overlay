@@ -88,7 +88,7 @@ RDEPEND="${EXTERNAL_DEPEND}
 	>=app-admin/eselect-opengl-1.2.2
 	dev-libs/expat
 	gbm? ( sys-fs/udev )
-	>=x11-libs/libX11-1.3.99.901
+	>=x11-libs/libX11-32bit-1.3.99.901
 	x11-libs/libXdamage
 	x11-libs/libXext
 	x11-libs/libXxf86vm
