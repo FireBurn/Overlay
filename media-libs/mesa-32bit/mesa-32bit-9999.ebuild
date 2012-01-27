@@ -20,7 +20,6 @@ MY_P="${MY_PN}-${PV/_/-}"
 MY_SRC_P="${MY_PN}Lib-${PV/_/-}"
 
 FOLDER="${PV/_rc*/}"
-[[ ${PV/_rc*/} == ${PV} ]] || FOLDER+="/RC"
 
 DESCRIPTION="OpenGL-like graphic library for Linux"
 HOMEPAGE="http://mesa3d.sourceforge.net/"
@@ -48,14 +47,15 @@ for card in ${VIDEO_CARDS}; do
 done
 
 IUSE="${IUSE_VIDEO_CARDS}
-	bindist +classic d3d debug +egl g3dvl +gallium gbm gles1 gles2 +llvm +nptl openvg osmesa pax_kernel +pic selinux shared-dricore +shared-glapi vdpau wayland xvmc kernel_FreeBSD"
+	bindist +classic d3d debug +egl g3dvl +gallium gbm gles1 gles2 +llvm +nptl
+	openvg osmesa pax_kernel +pic selinux +shared-glapi vdpau wayland xvmc kernel_FreeBSD"
 
 REQUIRED_USE="
 	d3d?    ( gallium )
 	g3dvl?  ( gallium )
 	llvm?   ( gallium )
-	openvg? ( gallium )
-	egl? ( shared-glapi )
+	openvg? ( egl gallium )
+	gbm?    ( shared-glapi )
 	gallium? (
 		video_cards_r300?   ( x86? ( llvm ) amd64? ( llvm ) )
 		video_cards_radeon? ( x86? ( llvm ) amd64? ( llvm ) )
@@ -63,7 +63,11 @@ REQUIRED_USE="
 	g3dvl? ( || ( vdpau xvmc ) )
 	vdpau? ( g3dvl )
 	xvmc?  ( g3dvl )
+	video_cards_intel?  ( || ( classic gallium ) )
+	video_cards_i915?   ( || ( classic gallium ) )
 	video_cards_i965?   ( classic )
+	video_cards_nouveau? ( || ( classic gallium ) )
+	video_cards_radeon? ( || ( classic gallium ) )
 	video_cards_r100?   ( classic )
 	video_cards_r200?   ( classic )
 	video_cards_r300?   ( gallium )
@@ -134,12 +138,6 @@ QA_WX_LOAD="usr/lib*/opengl/xorg-x11/lib/libGL.so*"
 # Think about: ggi, fbcon, no-X configs
 
 pkg_setup() {
-	# gcc 4.2 has buggy ivopts
-	if [[ $(gcc-version) = "4.2" ]]; then
-		append-flags -fno-ivopts
-	fi
-
-	# recommended by upstream
 	append-flags -m32
 	append-ldflags -L/usr/lib32/llvm -m32
 	# workaround toc-issue wrt #386545
@@ -207,10 +205,6 @@ src_configure() {
 		"
 	fi
 
-	if use !gallium && use !classic; then
-		ewarn "You enabled neither classic nor gallium USE flags. No hardware"
-		ewarn "drivers will be built."
-	fi
 	if use gallium; then
 		myconf+="
 			$(use_enable d3d d3d1x)
@@ -244,7 +238,6 @@ src_configure() {
 	fi
 
 	econf \
-		--disable-option-checking \
 		--enable-dri \
 		--enable-glx \
                 --enable-32bit \
@@ -259,7 +252,6 @@ src_configure() {
 		$(use_enable nptl glx-tls) \
 		$(use_enable osmesa) \
 		$(use_enable !pic asm) \
-		$(use_enable shared-dricore) \
 		$(use_enable shared-glapi) \
 		--with-dri-drivers=${DRI_DRIVERS} \
 		--with-gallium-drivers=${GALLIUM_DRIVERS} \
@@ -269,6 +261,7 @@ src_configure() {
 src_install() {
 	base_src_install
 
+	find "${ED}" -name '*.la' -exec rm -f {} + || die
 
 	# Save the glsl-compiler for later use
 	if ! tc-is-cross-compiler; then
