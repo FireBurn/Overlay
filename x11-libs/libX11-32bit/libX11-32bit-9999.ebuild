@@ -21,7 +21,8 @@ RDEPEND=">=x11-libs/libxcb-1.1.92
 	x11-proto/xf86bigfontproto
 	x11-proto/inputproto
 	x11-proto/kbproto
-	x11-proto/xextproto"
+	x11-proto/xextproto
+	app-emulation/emul-linux-x86-xlibs"
 DEPEND="${RDEPEND}
 	test? ( dev-lang/perl )"
 

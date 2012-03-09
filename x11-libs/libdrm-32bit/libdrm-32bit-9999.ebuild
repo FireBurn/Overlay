@@ -28,6 +28,7 @@ RESTRICT="test" # see bug #236845
 RDEPEND="dev-libs/libpthread-stubs
 	video_cards_intel? ( >=x11-libs/libpciaccess-0.10 )"
 DEPEND="${RDEPEND}
+	app-emulation/emul-linux-x86-xlibs
 	>=x11-libs/libpciaccess-0.10"
 
 PATCHES=(

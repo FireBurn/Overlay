@@ -14,8 +14,8 @@ IUSE="opengl"
 DEPEND=""
 RDEPEND="~app-emulation/emul-linux-x86-baselibs-${PV}
 	x11-libs/libX11
-	x11-libs/libX11-32bit
 	opengl? ( app-emulation/emul-linux-x86-opengl )"
+PDEPEND="x11-libs/libX11-32bit"
 
 src_prepare() {
         emul-linux-x86_src_prepare
