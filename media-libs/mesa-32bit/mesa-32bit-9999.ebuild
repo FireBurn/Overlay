@@ -48,7 +48,8 @@ done
 
 IUSE="${IUSE_VIDEO_CARDS}
 	bindist +classic d3d debug +egl g3dvl +gallium gbm gles1 gles2 +llvm +nptl
-	openvg osmesa pax_kernel +pic selinux +shared-glapi vdpau wayland xvmc kernel_FreeBSD"
+	openvg osmesa pax_kernel +pic selinux +shared-glapi vdpau wayland xvmc xa
+	kernel_FreeBSD"
 
 REQUIRED_USE="
 	d3d?    ( gallium )
@@ -62,6 +63,7 @@ REQUIRED_USE="
 	)
 	g3dvl? ( || ( vdpau xvmc ) )
 	vdpau? ( g3dvl )
+	xa?  ( gallium )
 	xvmc?  ( g3dvl )
 	video_cards_intel?  ( || ( classic gallium ) )
 	video_cards_i915?   ( || ( classic gallium ) )
@@ -253,6 +255,7 @@ src_configure() {
 		$(use_enable osmesa) \
 		$(use_enable !pic asm) \
 		$(use_enable shared-glapi) \
+		$(use_enable xa) \
 		--with-dri-drivers=${DRI_DRIVERS} \
 		--with-gallium-drivers=${GALLIUM_DRIVERS} \
 		${myconf}
