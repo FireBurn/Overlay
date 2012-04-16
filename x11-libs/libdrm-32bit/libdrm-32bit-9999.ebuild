@@ -55,6 +55,7 @@ src_prepare() {
 	if [[ ${PV} = 9999* ]]; then
 		# tests are restricted, no point in building them
 		sed -ie 's/tests //' "${S}"/Makefile.am
+	fi
 	xorg-2_src_prepare
 }
 
