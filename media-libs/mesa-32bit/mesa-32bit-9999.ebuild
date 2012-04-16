@@ -40,7 +40,7 @@ SLOT="0"
 KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~sh ~sparc ~x86 ~x86-fbsd ~x86-freebsd ~amd64-linux ~ia64-linux ~x86-linux ~sparc-solaris ~x64-solaris ~x86-solaris"
 
 INTEL_CARDS="i915 i965 intel"
-RADEON_CARDS="r100 r200 r300 r600 radeon"
+RADEON_CARDS="r100 r200 r300 r600 radeon radeonsi"
 VIDEO_CARDS="${INTEL_CARDS} ${RADEON_CARDS} nouveau vmware"
 for card in ${VIDEO_CARDS}; do
 	IUSE_VIDEO_CARDS+=" video_cards_${card}"
@@ -48,8 +48,8 @@ done
 
 IUSE="${IUSE_VIDEO_CARDS}
 	bindist +classic d3d debug +egl g3dvl +gallium gbm gles1 gles2 +llvm +nptl
-	openvg osmesa pax_kernel +pic selinux +shared-glapi vdpau wayland xvmc xa
-	kernel_FreeBSD"
+	openvg osmesa pax_kernel pic selinux +shared-glapi vdpau wayland xvmc xa
+	xorg kernel_FreeBSD"
 
 REQUIRED_USE="
 	d3d?    ( gallium )
@@ -57,13 +57,10 @@ REQUIRED_USE="
 	llvm?   ( gallium )
 	openvg? ( egl gallium )
 	gbm?    ( shared-glapi )
-	gallium? (
-		video_cards_r300?   ( x86? ( llvm ) amd64? ( llvm ) )
-		video_cards_radeon? ( x86? ( llvm ) amd64? ( llvm ) )
-	)
 	g3dvl? ( || ( vdpau xvmc ) )
 	vdpau? ( g3dvl )
 	xa?  ( gallium )
+	xorg?  ( gallium )
 	xvmc?  ( g3dvl )
 	video_cards_intel?  ( || ( classic gallium ) )
 	video_cards_i915?   ( || ( classic gallium ) )
@@ -74,15 +71,16 @@ REQUIRED_USE="
 	video_cards_r200?   ( classic )
 	video_cards_r300?   ( gallium )
 	video_cards_r600?   ( gallium )
+	video_cards_radeonsi?   ( gallium llvm xorg )
 	video_cards_vmware? ( gallium )
 "
 
-LIBDRM_DEPSTRING=">=x11-libs/libdrm-32bit-2.4.30"
+LIBDRM_DEPSTRING=">=x11-libs/libdrm-32bit-2.4.34"
 # not a runtime dependency of this package, but dependency of packages which
 # depend on this package, bug #342393
 EXTERNAL_DEPEND="
 	>=x11-proto/dri2proto-2.6
-	>=x11-proto/glproto-1.4.14
+	>=x11-proto/glproto-1.4.15
 "
 # keep correct libdrm and dri2proto dep
 # keep blocks in rdepend for binpkg
@@ -101,8 +99,12 @@ RDEPEND="${EXTERNAL_DEPEND}
 	>=x11-libs/libxcb-1.8
 	d3d? ( app-emulation/wine )
 	vdpau? ( >=x11-libs/libvdpau-0.4.1 )
-	wayland? ( x11-base/wayland )
-	xvmc? ( x11-libs/libXvMC )
+	wayland? ( dev-libs/wayland )
+	xorg? (
+		x11-base/xorg-server
+		x11-libs/libdrm[libkms]
+	)
+	xvmc? ( >=x11-libs/libXvMC-1.0.6 )
 	${LIBDRM_DEPSTRING}[video_cards_nouveau?,video_cards_vmware?]
 "
 for card in ${INTEL_CARDS}; do
@@ -118,7 +120,10 @@ for card in ${RADEON_CARDS}; do
 done
 
 DEPEND="${RDEPEND}
-	llvm? ( >=sys-devel/llvm-32bit-2.9 )
+	llvm? (
+		>=sys-devel/llvm-32bit-2.9
+		video_cards_radeonsi? ( >=sys-devel/llvm-32bit-3.1 )
+	)
 	=dev-lang/python-2*
 	dev-libs/libxml2[python]
 	dev-util/pkgconfig
@@ -167,6 +172,9 @@ src_prepare() {
 	if [[ ${CHOST} == *-solaris* ]] ; then
 		sed -i -e "s/-DSVR4/-D_POSIX_C_SOURCE=200112L/" configure.ac || die
 	fi
+
+	# Tests fail against python-3, bug #407887
+	sed -i 's|/usr/bin/env python|/usr/bin/env python2|' src/glsl/tests/compare_ir || die
 
 	base_src_prepare
 
@@ -226,6 +234,7 @@ src_configure() {
 
 		gallium_enable video_cards_r300 r300
 		gallium_enable video_cards_r600 r600
+		gallium_enable video_cards_radeonsi radeonsi
 		if ! use video_cards_r300 && \
 				! use video_cards_r600; then
 			gallium_enable video_cards_radeon r300 r600
@@ -256,6 +265,7 @@ src_configure() {
 		$(use_enable !pic asm) \
 		$(use_enable shared-glapi) \
 		$(use_enable xa) \
+		$(use_enable xorg) \
 		--with-dri-drivers=${DRI_DRIVERS} \
 		--with-gallium-drivers=${GALLIUM_DRIVERS} \
 		${myconf}
@@ -332,6 +342,14 @@ pkg_postinst() {
 	# Switch to the xorg implementation.
 	echo
 	eselect opengl set --use-old ${OPENGL_DIR}
+
+	# switch to xorg-x11 and back if necessary, bug #374647 comment 11
+	OLD_IMPLEM="$(eselect opengl show)"
+	if [[ ${OPENGL_DIR}x != ${OLD_IMPLEM}x ]]; then
+		eselect opengl set ${OPENGL_DIR}
+		eselect opengl set ${OLD_IMPLEM}
+	fi
+
 	# Select classic/gallium drivers
 	if use classic || use gallium; then
 		eselect mesa set --auto
