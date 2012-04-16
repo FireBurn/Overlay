@@ -251,8 +251,8 @@ src_configure() {
 	econf \
 		--enable-dri \
 		--enable-glx \
-                --enable-32bit \
-                --disable-64bit \
+                --enable-32-bit \
+                --disable-64-bit \
                 --libdir=/usr/lib32 \
 		$(use_enable !bindist texture-float) \
 		$(use_enable debug) \
