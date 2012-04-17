@@ -146,7 +146,7 @@ QA_WX_LOAD="usr/lib*/opengl/xorg-x11/lib/libGL.so*"
 
 pkg_setup() {
 	append-flags -m32
-	append-ldflags -L/usr/lib32/llvm 
+	append-ldflags -L/usr/lib32/llvm -m32
 	# workaround toc-issue wrt #386545
 	use ppc64 && append-flags -mminimal-toc
 }
