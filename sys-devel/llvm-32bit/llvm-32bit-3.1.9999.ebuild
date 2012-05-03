@@ -1,23 +1,25 @@
-# Copyright 1999-2011 Gentoo Foundation
+# Copyright 1999-2012 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-3.0.ebuild,v 1.1 2011/12/02 13:20:14 voyageur Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-9999.ebuild,v 1.25 2012/04/30 15:19:44 grobian Exp $
 
-EAPI="3"
+EAPI="4"
 ABI=x86
-inherit eutils flag-o-matic multilib toolchain-funcs
+PYTHON_DEPEND="2"
+inherit subversion eutils flag-o-matic multilib toolchain-funcs python
 
 PN="llvm"   
-P="llvm-3.0"   
-PF="llvm-3.0"
-PV="3.0"
+P="llvm-3.1.9999"   
+PF="llvm-3.1.9999"
+PV="3.1.9999"
 
 DESCRIPTION="Low Level Virtual Machine"
 HOMEPAGE="http://llvm.org/"
-SRC_URI="http://llvm.org/releases/${PV}/${P}.tar.gz"
+SRC_URI=""
+ESVN_REPO_URI="http://llvm.org/svn/llvm-project/llvm/branches/release_31"
 
 LICENSE="UoI-NCSA"
 SLOT="0"
-KEYWORDS="~amd64 ~ppc ~x86 ~amd64-linux ~x86-linux ~ppc-macos"
+KEYWORDS="~x86 ~amd64"
 IUSE="debug gold +libffi multitarget ocaml test udis86 vim-syntax"
 
 DEPEND="dev-lang/perl
@@ -36,9 +38,11 @@ RDEPEND="dev-lang/perl
 	libffi? ( dev-libs/libffi-32bit )
 	vim-syntax? ( || ( app-editors/vim app-editors/gvim ) )"
 
-S=${WORKDIR}/${P}.src
-
 pkg_setup() {
+	# Required for test and build
+	python_set_active_version 2
+	python_pkg_setup
+
 	# need to check if the active compiler is ok
 
 	broken_gcc=" 3.2.2 3.2.3 3.3.2 4.1.1 "
@@ -76,7 +80,7 @@ pkg_setup() {
 
 src_prepare() {
 	PN="llvm"
-	P="llvm-3.0"
+	P="llvm-3.1.9999"
 	# unfortunately ./configure won't listen to --mandir and the-like, so take
 	# care of this.
 	einfo "Fixing install dirs"
@@ -84,8 +88,8 @@ src_prepare() {
 		-e 's,^PROJ_etcdir.*,PROJ_etcdir := '"${EPREFIX}"'/etc/llvm,' \
 		-e 's,^PROJ_libdir.*,PROJ_libdir := $(PROJ_prefix)/'lib32/${PN}, \
 		-i Makefile.config.in || die "Makefile.config sed failed"
-	sed -e 's,$ABS_RUN_DIR/lib,'"${EPREFIX}"/usr/lib32/${PN}, \
-		-i tools/llvm-config/llvm-config.in.in || die "llvm-config sed failed"
+	sed -e "/ActiveLibDir = ActivePrefix/s/lib/lib32\/${PN}/" \
+		-i tools/llvm-config/llvm-config.cpp || die "llvm-config sed failed"
 
 	einfo "Fixing rpath and CFLAGS"
 	sed -e 's,\$(RPATH) -Wl\,\$(\(ToolDir\|LibDir\)),$(RPATH) -Wl\,'"${EPREFIX}"/usr/lib32/${PN}, \
@@ -96,8 +100,14 @@ src_prepare() {
 			-i tools/gold/Makefile || die "gold rpath sed failed"
 	fi
 
+	# Specify python version
+	python_convert_shebangs -r 2 test/Scripts
+
 	epatch "${FILESDIR}"/${PN}-2.6-commandguide-nops.patch
-	epatch "${FILESDIR}"/${PN}-2.9-nodoctargz.patch
+	epatch "${FILESDIR}"/${PN}-3.0-PPC_macro.patch
+
+	# User patches
+	epatch_user
 }
 
 src_configure() {
@@ -134,15 +144,15 @@ src_configure() {
 		append-cppflags "$(pkg-config --cflags libffi)"
 	fi
 	CONF_FLAGS="${CONF_FLAGS} $(use_enable libffi)"
-	econf ${CONF_FLAGS} || die "econf failed"
+	econf ${CONF_FLAGS}
 }
 
 src_compile() {
-	emake VERBOSE=1 KEEP_SYMBOLS=1 REQUIRES_RTTI=1 || die "emake failed"
+	emake VERBOSE=1 KEEP_SYMBOLS=1 REQUIRES_RTTI=1
 }
 
 src_install() {
-	emake KEEP_SYMBOLS=1 DESTDIR="${D}" install || die "install failed"
+	emake KEEP_SYMBOLS=1 DESTDIR="${D}" install
 
 	if use vim-syntax; then
 		insinto /usr/share/vim/vimfiles/syntax
@@ -151,9 +161,11 @@ src_install() {
 
 	# Fix install_names on Darwin.  The build system is too complicated
 	# to just fix this, so we correct it post-install
-	local lib= f= odylib=
+	local lib= f= odylib= libpv=${PV}
 	if [[ ${CHOST} == *-darwin* ]] ; then
-		for lib in lib{EnhancedDisassembly,LLVM-${PV},LTO}.dylib {BugpointPasses,LLVMHello,profile_rt}.dylib ; do
+		eval $(grep PACKAGE_VERSION= configure)
+		[[ -n ${PACKAGE_VERSION} ]] && libpv=${PACKAGE_VERSION}
+		for lib in lib{EnhancedDisassembly,LLVM-${libpv},LTO,profile_rt}.dylib {BugpointPasses,LLVMHello}.dylib ; do
 			# libEnhancedDisassembly is Darwin10 only, so non-fatal
 			[[ -f ${ED}/usr/lib/${PN}/${lib} ]] || continue
 			ebegin "fixing install_name of $lib"
@@ -163,11 +175,11 @@ src_install() {
 			eend $?
 		done
 		for f in "${ED}"/usr/bin/* "${ED}"/usr/lib/${PN}/libLTO.dylib ; do
-			odylib=$(scanmacho -BF'%n#f' "${f}" | tr ',' '\n' | grep libLLVM-${PV}.dylib)
+			odylib=$(scanmacho -BF'%n#f' "${f}" | tr ',' '\n' | grep libLLVM-${libpv}.dylib)
 			ebegin "fixing install_name reference to ${odylib} of ${f##*/}"
 			install_name_tool \
 				-change "${odylib}" \
-					"${EPREFIX}"/usr/lib/${PN}/libLLVM-${PV}.dylib \
+					"${EPREFIX}"/usr/lib/${PN}/libLLVM-${libpv}.dylib \
 				"${f}"
 			eend $?
 		done
