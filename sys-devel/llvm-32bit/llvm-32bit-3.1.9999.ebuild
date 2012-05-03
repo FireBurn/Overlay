@@ -3,9 +3,9 @@
 # $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-9999.ebuild,v 1.25 2012/04/30 15:19:44 grobian Exp $
 
 EAPI="4"
-ABI=x86
-PYTHON_DEPEND="2"
-inherit subversion eutils flag-o-matic multilib toolchain-funcs python
+ABI=x86 
+
+inherit subversion eutils flag-o-matic multilib toolchain-funcs
 
 PN="llvm"   
 P="llvm-3.1.9999"   
@@ -39,10 +39,6 @@ RDEPEND="dev-lang/perl
 	vim-syntax? ( || ( app-editors/vim app-editors/gvim ) )"
 
 pkg_setup() {
-	# Required for test and build
-	python_set_active_version 2
-	python_pkg_setup
-
 	# need to check if the active compiler is ok
 
 	broken_gcc=" 3.2.2 3.2.3 3.3.2 4.1.1 "
@@ -101,7 +97,6 @@ src_prepare() {
 	fi
 
 	# Specify python version
-	python_convert_shebangs -r 2 test/Scripts
 
 	epatch "${FILESDIR}"/${PN}-2.6-commandguide-nops.patch
 	epatch "${FILESDIR}"/${PN}-3.0-PPC_macro.patch
