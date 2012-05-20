@@ -1,8 +1,6 @@
-diff --git a/configure.ac b/configure.ac
-index 846b623..fbd05c1 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -1839,14 +1839,6 @@ gallium_check_st() {
+--- a/configure.ac	2012-05-12 11:50:09.786970584 +0200
++++ b/configure.ac	2012-05-12 12:00:00.770582272 +0200
+@@ -1922,14 +1922,6 @@
      fi
  }
  
@@ -14,10 +12,10 @@ index 846b623..fbd05c1 100644
 -    fi
 -}
 -
- dnl Gallium drivers
- dnl Duplicates in GALLIUM_DRIVERS_DIRS are removed by sorting it after this block
- if test "x$with_gallium_drivers" != x; then
-@@ -1868,7 +1860,6 @@ if test "x$with_gallium_drivers" != x; then
+ gallium_require_drm_loader() {
+     if test "x$enable_gallium_loader" = xyes; then
+         PKG_CHECK_MODULES([LIBUDEV], [libudev], [],
+@@ -1962,7 +1954,6 @@
              ;;
          xr300)
              PKG_CHECK_MODULES([RADEON], [libdrm_radeon >= $LIBDRM_RADEON_REQUIRED])
