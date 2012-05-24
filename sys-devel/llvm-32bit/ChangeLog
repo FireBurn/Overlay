@@ -1,6 +1,94 @@
 # ChangeLog for sys-devel/llvm
-# Copyright 1999-2011 Gentoo Foundation; Distributed under the GPL v2
-# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/ChangeLog,v 1.55 2011/12/02 13:20:14 voyageur Exp $
+# Copyright 1999-2012 Gentoo Foundation; Distributed under the GPL v2
+# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/ChangeLog,v 1.77 2012/05/23 20:45:57 mgorny Exp $
+
+*llvm-3.1 (23 May 2012)
+
+  23 May 2012; Michał Górny <mgorny@gentoo.org> +llvm-3.1.ebuild:
+  Version bump.
+
+  20 May 2012; Michał Górny <mgorny@gentoo.org> llvm-9999.ebuild:
+  Fix omitted doman call.
+
+  20 May 2012; Michał Górny <mgorny@gentoo.org> llvm-9999.ebuild:
+  Disable manpage generation code until either rst2man or docs are fixed.
+
+  14 May 2012; Michał Górny <mgorny@gentoo.org> llvm-9999.ebuild:
+  Generate manpages before compiling llvm -- save time if it is going to fail.
+
+  13 May 2012; Michał Górny <mgorny@gentoo.org> llvm-9999.ebuild:
+  Generate manpages from .rst files.
+
+  10 May 2012; Patrick Lauer <patrick@gentoo.org> llvm-9999.ebuild:
+  Upstream changed doc handling, removing obsolete patch from -9999 ebuild
+
+  04 May 2012; Jeff Horelick <jdhore@gentoo.org> llvm-2.9-r2.ebuild,
+  llvm-3.0-r2.ebuild, llvm-9999.ebuild:
+  dev-util/pkgconfig -> virtual/pkgconfig
+
+  02 May 2012; Michał Górny <mgorny@gentoo.org> metadata.xml:
+  Add myself as a co-maintainer.
+
+  30 Apr 2012; Fabian Groffen <grobian@gentoo.org>
+  +files/llvm-3.2-nodoctargz.patch, llvm-9999.ebuild:
+  Fix nodoctargz patch for latest source, bug #413111
+
+  30 Apr 2012; Fabian Groffen <grobian@gentoo.org> llvm-9999.ebuild:
+  Extract the version LLVM refers to internally so we can properly fix
+  install_names on Darwin, bug #412137
+
+  13 Apr 2012; Bernard Cafarelli <voyageur@gentoo.org> -llvm-3.0-r1.ebuild,
+  llvm-3.0-r2.ebuild, llvm-9999.ebuild:
+  Support epatch_user, bug #411447
+
+  13 Apr 2012; Bernard Cafarelli <voyageur@gentoo.org> llvm-3.0-r2.ebuild,
+  +files/llvm-3.0-PPCCompilationCallbackC_static.patch:
+  Fix TEXTREL on ppc, patch by and thanks to Kimura Masaru
+  <hiyuh.root@gmail.com> in bug #403519
+
+*llvm-3.0-r2 (27 Mar 2012)
+
+  27 Mar 2012; Bernard Cafarelli <voyageur@gentoo.org> +llvm-3.0-r2.ebuild,
+  +files/llvm-3.0-set_soname.patch:
+  Set soname in shared library, bug #409267 by ryao
+
+  13 Mar 2012; Bernard Cafarelli <voyageur@gentoo.org> llvm-3.0-r1.ebuild,
+  llvm-9999.ebuild:
+  Tests require python-2, spotted by patrick, bug #407885
+
+  06 Mar 2012; Bernard Cafarelli <voyageur@gentoo.org> llvm-9999.ebuild:
+  Set python-2 to build, thanks Matthias Dahl in bug #406155 for report and
+  patch. Also add PPC support patch and switch to EAPI4
+
+*llvm-3.0-r1 (03 Feb 2012)
+
+  03 Feb 2012; Bernard Cafarelli <voyageur@gentoo.org> -llvm-3.0.ebuild,
+  +llvm-3.0-r1.ebuild, +files/llvm-3.0-gold_LTO_link.patch:
+  Fix gold plugin build (using correct libLTO), thanks Rafał Mużyło and
+  grobian in bug #398391
+
+  27 Jan 2012; Bernard Cafarelli <voyageur@gentoo.org> llvm-3.0.ebuild,
+  +files/llvm-3.0-PPC_macro.patch:
+  Fix compilation on ppc, bug #394183
+
+  27 Jan 2012; Bernard Cafarelli <voyageur@gentoo.org> llvm-9999.ebuild:
+  Really fix new llvm-config in live ebuild, bug #392715
+
+  13 Dec 2011; Naohiro Aota <naota@gentoo.org> llvm-2.9-r2.ebuild:
+  Add ~x86-fbsd wrt #320221
+
+  12 Dec 2011; Fabian Groffen <grobian@gentoo.org> llvm-3.0.ebuild,
+  llvm-9999.ebuild:
+  Fix install_name of renamed profile_rt.dylib library (to libprofile_rt.dylib).
+
+  05 Dec 2011; Bernard Cafarelli <voyageur@gentoo.org> llvm-3.0.ebuild,
+  +files/llvm-3.0-ocaml_install.patch:
+  Fix ocaml bindings installation, thanks everyone in bug #393023
+
+  02 Dec 2011; Bernard Cafarelli <voyageur@gentoo.org> llvm-9999.ebuild:
+  Drop llvm-config sed in live ebuild, bug #392715. Also add USE=gold handling
+  to it, bug #392717. Thanks Marcin Mirosław <bug@mejor.pl> for both bug
+  reports
 
 *llvm-3.0 (02 Dec 2011)
 

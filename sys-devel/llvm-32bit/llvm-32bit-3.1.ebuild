@@ -1,25 +1,23 @@
 # Copyright 1999-2012 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-9999.ebuild,v 1.25 2012/04/30 15:19:44 grobian Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-3.1.ebuild,v 1.1 2012/05/23 20:45:57 mgorny Exp $
 
 EAPI="4"
 ABI=x86 
-
-inherit subversion eutils flag-o-matic multilib toolchain-funcs
+inherit eutils flag-o-matic multilib toolchain-funcs
 
 PN="llvm"   
-P="llvm-3.1.9999"   
-PF="llvm-3.1.9999"
-PV="3.1.9999"
+P="llvm-3.1"   
+PF="llvm-3.1"
+PV="3.1"
 
 DESCRIPTION="Low Level Virtual Machine"
 HOMEPAGE="http://llvm.org/"
-SRC_URI=""
-ESVN_REPO_URI="http://llvm.org/svn/llvm-project/llvm/branches/release_31"
+SRC_URI="http://llvm.org/releases/${PV}/${P}.src.tar.gz"
 
 LICENSE="UoI-NCSA"
 SLOT="0"
-KEYWORDS="~x86 ~amd64"
+KEYWORDS="~amd64 ~ppc ~x86 ~x86-fbsd ~amd64-linux ~x86-linux ~ppc-macos"
 IUSE="debug gold +libffi multitarget ocaml test udis86 vim-syntax"
 
 DEPEND="dev-lang/perl
@@ -29,14 +27,16 @@ DEPEND="dev-lang/perl
 	|| ( >=sys-devel/gcc-3.0 >=sys-devel/gcc-apple-4.2.1 )
 	|| ( >=sys-devel/binutils-2.18 >=sys-devel/binutils-apple-3.2.3 )
 	gold? ( >=sys-devel/binutils-2.22 )
-	libffi? ( dev-util/pkgconfig
+	libffi? ( virtual/pkgconfig
 		dev-libs/libffi-32bit )
 	ocaml? ( dev-lang/ocaml )
-	udis86? ( amd64? ( dev-libs/udis86-32bit[pic] )
-		!amd64? ( dev-libs/udis86-32bit ) )"
+	udis86? ( amd64? ( dev-libs/udis86[pic] )
+		!amd64? ( dev-libs/udis86 ) )"
 RDEPEND="dev-lang/perl
-	libffi? ( dev-libs/libffi-32bit )
+	libffi? ( virtual/libffi )
 	vim-syntax? ( || ( app-editors/vim app-editors/gvim ) )"
+
+S=${WORKDIR}/${P}.src
 
 pkg_setup() {
 	# need to check if the active compiler is ok
@@ -44,7 +44,7 @@ pkg_setup() {
 	broken_gcc=" 3.2.2 3.2.3 3.3.2 4.1.1 "
 	broken_gcc_x86=" 3.4.0 3.4.2 "
 	broken_gcc_amd64=" 3.4.6 "
-	
+
 	append-flags -m32
 	
 	gcc_vers=$(gcc-fullversion)
@@ -76,7 +76,7 @@ pkg_setup() {
 
 src_prepare() {
 	PN="llvm"
-	P="llvm-3.1.9999"
+	P="llvm-3.1"
 	# unfortunately ./configure won't listen to --mandir and the-like, so take
 	# care of this.
 	einfo "Fixing install dirs"
@@ -96,9 +96,8 @@ src_prepare() {
 			-i tools/gold/Makefile || die "gold rpath sed failed"
 	fi
 
-	# Specify python version
-
 	epatch "${FILESDIR}"/${PN}-2.6-commandguide-nops.patch
+	epatch "${FILESDIR}"/${PN}-2.9-nodoctargz.patch
 	epatch "${FILESDIR}"/${PN}-3.0-PPC_macro.patch
 
 	# User patches
@@ -156,11 +155,9 @@ src_install() {
 
 	# Fix install_names on Darwin.  The build system is too complicated
 	# to just fix this, so we correct it post-install
-	local lib= f= odylib= libpv=${PV}
+	local lib= f= odylib=
 	if [[ ${CHOST} == *-darwin* ]] ; then
-		eval $(grep PACKAGE_VERSION= configure)
-		[[ -n ${PACKAGE_VERSION} ]] && libpv=${PACKAGE_VERSION}
-		for lib in lib{EnhancedDisassembly,LLVM-${libpv},LTO,profile_rt}.dylib {BugpointPasses,LLVMHello}.dylib ; do
+		for lib in lib{EnhancedDisassembly,LLVM-${PV},LTO,profile_rt}.dylib {BugpointPasses,LLVMHello}.dylib ; do
 			# libEnhancedDisassembly is Darwin10 only, so non-fatal
 			[[ -f ${ED}/usr/lib/${PN}/${lib} ]] || continue
 			ebegin "fixing install_name of $lib"
@@ -170,11 +167,11 @@ src_install() {
 			eend $?
 		done
 		for f in "${ED}"/usr/bin/* "${ED}"/usr/lib/${PN}/libLTO.dylib ; do
-			odylib=$(scanmacho -BF'%n#f' "${f}" | tr ',' '\n' | grep libLLVM-${libpv}.dylib)
+			odylib=$(scanmacho -BF'%n#f' "${f}" | tr ',' '\n' | grep libLLVM-${PV}.dylib)
 			ebegin "fixing install_name reference to ${odylib} of ${f##*/}"
 			install_name_tool \
 				-change "${odylib}" \
-					"${EPREFIX}"/usr/lib/${PN}/libLLVM-${libpv}.dylib \
+					"${EPREFIX}"/usr/lib/${PN}/libLLVM-${PV}.dylib \
 				"${f}"
 			eend $?
 		done
