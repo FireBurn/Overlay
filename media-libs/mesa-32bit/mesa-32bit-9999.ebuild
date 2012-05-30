@@ -87,6 +87,7 @@ EXTERNAL_DEPEND="
 # keep blocks in rdepend for binpkg
 # gtest file collision bug #411825
 RDEPEND="${EXTERNAL_DEPEND}
+	dev-util/indent
 	!<x11-base/xorg-server-1.7
 	!<=x11-proto/xf86driproto-2.0.3
 	classic? ( app-admin/eselect-mesa )
