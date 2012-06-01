@@ -28,12 +28,11 @@ DEPEND="dev-lang/perl
 	|| ( >=sys-devel/binutils-2.18 >=sys-devel/binutils-apple-3.2.3 )
 	gold? ( >=sys-devel/binutils-2.22 )
 	libffi? ( virtual/pkgconfig
-		dev-libs/libffi-32bit )
+		app-emulation/emul-linux-x86-baselibs )
 	ocaml? ( dev-lang/ocaml )
-	udis86? ( amd64? ( dev-libs/udis86[pic] )
-		!amd64? ( dev-libs/udis86 ) )"
+	udis86? ( dev-libs/udis86-32bit )"
 RDEPEND="dev-lang/perl
-	libffi? ( virtual/libffi )
+	libffi? ( app-emulation/emul-linux-x86-baselibs )
 	vim-syntax? ( || ( app-editors/vim app-editors/gvim ) )"
 
 S=${WORKDIR}/${P}.src
