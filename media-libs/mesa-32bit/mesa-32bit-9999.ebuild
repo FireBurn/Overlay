@@ -81,7 +81,7 @@ LIBDRM_DEPSTRING=">=x11-libs/libdrm-32bit-2.4.34"
 # depend on this package, bug #342393
 EXTERNAL_DEPEND="
 	>=x11-proto/dri2proto-2.6
-	>=x11-proto/glproto-1.4.15
+	>=x11-proto/glproto-1.4.15-r1
 "
 # keep correct libdrm and dri2proto dep
 # keep blocks in rdepend for binpkg
@@ -92,7 +92,7 @@ RDEPEND="${EXTERNAL_DEPEND}
 	!<=x11-proto/xf86driproto-2.0.3
 	classic? ( app-admin/eselect-mesa )
 	gallium? ( app-admin/eselect-mesa )
-	>=app-admin/eselect-opengl-1.2.2
+	>=app-admin/eselect-opengl-1.2.6
 	dev-libs/expat
 	gbm? ( sys-fs/udev )
 	>=x11-libs/libX11-32bit-1.3.99.901
@@ -130,9 +130,9 @@ DEPEND="${RDEPEND}
 	)
 	=dev-lang/python-2*
 	dev-libs/libxml2[python]
-	dev-util/pkgconfig
 	sys-devel/bison
 	sys-devel/flex
+	virtual/pkgconfig
 	x11-misc/makedepend
 	>=x11-proto/xextproto-7.0.99.1
 	x11-proto/xf86driproto
@@ -292,17 +292,24 @@ src_install() {
 	# Move libGL and others from /usr/lib to /usr/lib/opengl/blah/lib
 	# because user can eselect desired GL provider.
 	ebegin "Moving libGL and friends for dynamic switching"
-		dodir /usr/lib32/opengl/${OPENGL_DIR}/{lib,extensions,include}
 		local x
-		for x in "${ED}"/usr/lib32/lib{EGL,GL,OpenVG}.{la,a,so*}; do
+		local gl_dir="/usr/lib32/opengl/${OPENGL_DIR}/"
+		dodir ${gl_dir}/{lib,extensions,include/GL}
+		for x in "${ED}"/usr/lib32/lib{EGL,GL*,OpenVG}.{la,a,so*}; do
 			if [ -f ${x} -o -L ${x} ]; then
-				mv -f "${x}" "${ED}"/usr/lib32/opengl/${OPENGL_DIR}/lib \
+				mv -f "${x}" "${ED}${gl_dir}"/lib \
 					|| die "Failed to move ${x}"
 			fi
 		done
 		for x in "${ED}"/usr/include/GL/{gl.h,glx.h,glext.h,glxext.h}; do
 			if [ -f ${x} -o -L ${x} ]; then
-				mv -f "${x}" "${ED}"/usr/lib32/opengl/${OPENGL_DIR}/include \
+				mv -f "${x}" "${ED}${gl_dir}"/include/GL \
+					|| die "Failed to move ${x}"
+			fi
+		done
+		for x in "${ED}"/usr/include/{EGL,GLES*,VG,KHR}; do
+			if [ -d ${x} ]; then
+				mv -f "${x}" "${ED}${gl_dir}"/include \
 					|| die "Failed to move ${x}"
 			fi
 		done
