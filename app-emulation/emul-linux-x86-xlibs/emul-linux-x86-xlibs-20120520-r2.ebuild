@@ -46,6 +46,21 @@ src_prepare() {
         rm -f "${S}/usr/lib32/libxcb-xtest.so.0.0.0" || die
         rm -f "${S}/usr/lib32/libxcb-xv.so.0.0.0" || die
         rm -f "${S}/usr/lib32/libxcb-xvmc.so.0.0.0" || die
+        rm -f "${S}/usr/lib32/libxcb-res.so" || die
+        rm -f "${S}/usr/lib32/libxcb-screensaver.so" || die
+        rm -f "${S}/usr/lib32/libxcb-shape.so" || die
+        rm -f "${S}/usr/lib32/libxcb-shm.so" || die
+        rm -f "${S}/usr/lib32/libxcb-sync.so" || die
+        rm -f "${S}/usr/lib32/libxcb-xevie.so" || die
+        rm -f "${S}/usr/lib32/libxcb-xf86dri.so" || die
+        rm -f "${S}/usr/lib32/libxcb-xfixes.so" || die
+        rm -f "${S}/usr/lib32/libxcb-xinerama.so" || die
+        rm -f "${S}/usr/lib32/libxcb-xinput.so" || die
+        rm -f "${S}/usr/lib32/libxcb-xprint.so" || die
+        rm -f "${S}/usr/lib32/libxcb-xtest.so" || die
+        rm -f "${S}/usr/lib32/libxcb-xv.so" || die
+        rm -f "${S}/usr/lib32/libxcb-xvmc.so" || die
+        rm -f "${S}/usr/lib32/libxcb.so.1.1.0" || die
         rm -f "${S}/usr/lib32/pkgconfig/x11-xcb.pc" || die
         rm -f "${S}/usr/lib32/pkgconfig/x11.pc" || die 
 }
