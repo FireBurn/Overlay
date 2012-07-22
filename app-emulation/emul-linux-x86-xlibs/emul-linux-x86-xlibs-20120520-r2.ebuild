@@ -61,6 +61,19 @@ src_prepare() {
         rm -f "${S}/usr/lib32/libxcb-xv.so" || die
         rm -f "${S}/usr/lib32/libxcb-xvmc.so" || die
         rm -f "${S}/usr/lib32/libxcb.so.1.1.0" || die
+        rm -f "${S}/usr/lib32/libxcb-composite.so" || die
+        rm -f "${S}/usr/lib32/libxcb-composite.so.0" || die
+        rm -f "${S}/usr/lib32/libxcb-composite.so.0.0.0" || die
+        rm -f "${S}/usr/lib32/libxcb-damage.so" || die
+        rm -f "${S}/usr/lib32/libxcb-damage.so.0" || die
+        rm -f "${S}/usr/lib32/libxcb-damage.so.0.0.0" || die
+        rm -f "${S}/usr/lib32/libxcb-dpms.so" || die
+        rm -f "${S}/usr/lib32/libxcb-dri2.so" || die
+        rm -f "${S}/usr/lib32/libxcb-glx.so" || die
+        rm -f "${S}/usr/lib32/libxcb-randr.so" || die
+        rm -f "${S}/usr/lib32/libxcb-record.so" || die
+        rm -f "${S}/usr/lib32/libxcb-render.so" || die
+        rm -f "${S}/usr/lib32/libxcb.so" || die
         rm -f "${S}/usr/lib32/pkgconfig/x11-xcb.pc" || die
         rm -f "${S}/usr/lib32/pkgconfig/x11.pc" || die 
 }
