@@ -16,7 +16,7 @@ DESCRIPTION="X.Org X11 library"
 KEYWORDS="~alpha amd64 arm hppa ~ia64 ~mips ppc ppc64 ~s390 ~sh ~sparc x86 ~ppc-aix ~amd64-fbsd ~x86-fbsd ~x64-freebsd ~x86-freebsd ~x86-interix ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris ~x86-winnt"
 IUSE="ipv6 test"
 
-RDEPEND=">=x11-libs/libxcb-1.8.1
+RDEPEND=">=x11-libs/libxcb-32bit-1.8.1
 	x11-libs/xtrans
 	>=x11-proto/xproto-7.0.17
 	x11-proto/xf86bigfontproto
