@@ -86,5 +86,7 @@ src_install() {
         [[ -n ${FONT} ]] && remove_font_metadata
 
         rm -rf "${D}"/usr/include* || die "Removing includes failed."
+	rm -rf "${D}"/usr/share/man* || die "Removing man files failed."
+
 }
 
