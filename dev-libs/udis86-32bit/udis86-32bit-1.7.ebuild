@@ -7,7 +7,7 @@ ABI="x86"
 P="udis86-1.7"
 PN="udis86"
 S=${WORKDIR}/${P}
-inherit autotools
+inherit autotools flag-o-matic
 
 DESCRIPTION="Disassembler library for the x86/-64 architecture sets."
 HOMEPAGE="http://udis86.sourceforge.net/"
