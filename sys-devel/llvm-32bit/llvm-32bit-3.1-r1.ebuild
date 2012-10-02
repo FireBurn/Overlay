@@ -1,6 +1,6 @@
 # Copyright 1999-2012 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-3.1.ebuild,v 1.1 2012/05/23 20:45:57 mgorny Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-3.1-r1.ebuild,v 1.1 2012/07/05 22:27:53 voyageur Exp $
 
 EAPI="4"
 ABI=x86 
@@ -17,7 +17,7 @@ SRC_URI="http://llvm.org/releases/${PV}/${P}.src.tar.gz"
 
 LICENSE="UoI-NCSA"
 SLOT="0"
-KEYWORDS="~amd64 ~ppc ~x86 ~x86-fbsd ~amd64-linux ~x86-linux ~ppc-macos"
+KEYWORDS="~amd64 ~arm ~ppc ~x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos"
 IUSE="debug gold +libffi multitarget ocaml test udis86 vim-syntax"
 
 DEPEND="dev-lang/perl
@@ -26,7 +26,7 @@ DEPEND="dev-lang/perl
 	>=sys-devel/bison-1.875d
 	|| ( >=sys-devel/gcc-3.0 >=sys-devel/gcc-apple-4.2.1 )
 	|| ( >=sys-devel/binutils-2.18 >=sys-devel/binutils-apple-3.2.3 )
-	gold? ( >=sys-devel/binutils-2.22 )
+	gold? ( >=sys-devel/binutils-2.22[cxx] )
 	libffi? ( virtual/pkgconfig
 		app-emulation/emul-linux-x86-baselibs )
 	ocaml? ( dev-lang/ocaml )
@@ -98,6 +98,8 @@ src_prepare() {
 	epatch "${FILESDIR}"/${PN}-2.6-commandguide-nops.patch
 	epatch "${FILESDIR}"/${PN}-2.9-nodoctargz.patch
 	epatch "${FILESDIR}"/${PN}-3.0-PPC_macro.patch
+	epatch "${FILESDIR}"/${P}-ivybridge_support.patch
+	epatch "${FILESDIR}"/${P}-fix_debug_line_info.patch
 
 	# User patches
 	epatch_user

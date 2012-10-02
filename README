@@ -1,5 +1,7 @@
 Simple overlay for 32bit mesa drivers including llvmpipe
 
-There is now no need to add COLLISION_IGNORE="/usr/lib32 /lib32" to your /etc/make.conf
+The overlay provides stripped x86 compatibility ebuilds to prevent collision problems
 
-The overlay provides stripped x86 compatibility ebuilds to prevent problems
+Switched back to using a non-live libX11 - we've not needed the live version for a while now
+
+Added libxcb-32bit to work around some issues compiling any software requiring -lGL e.g. wine and mesa-progs-32bit

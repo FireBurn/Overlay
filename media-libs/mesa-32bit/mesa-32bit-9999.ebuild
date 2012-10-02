@@ -32,12 +32,11 @@ else
 		${SRC_PATCHES}"
 fi
 
-# Most of the code is MIT/X11.
-# ralloc is LGPL-3
+# The code is MIT/X11.
 # GLES[2]/gl[2]{,ext,platform}.h are SGI-B-2.0
-LICENSE="MIT LGPL-3 SGI-B-2.0"
+LICENSE="MIT SGI-B-2.0"
 SLOT="0"
-KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~sh ~sparc ~x86 ~x86-fbsd ~x86-freebsd ~amd64-linux ~ia64-linux ~x86-linux ~sparc-solaris ~x64-solaris ~x86-solaris"
+KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-fbsd ~x86-freebsd ~amd64-linux ~ia64-linux ~x86-linux ~sparc-solaris ~x64-solaris ~x86-solaris"
 
 INTEL_CARDS="i915 i965 intel"
 RADEON_CARDS="r100 r200 r300 r600 radeon radeonsi"
@@ -47,12 +46,11 @@ for card in ${VIDEO_CARDS}; do
 done
 
 IUSE="${IUSE_VIDEO_CARDS}
-	bindist +classic d3d debug +egl g3dvl +gallium gbm gles1 gles2 +llvm +nptl
+	bindist +classic debug +egl g3dvl +gallium gbm gles1 gles2 +llvm +nptl
 	openvg osmesa pax_kernel pic r600-llvm-compiler selinux +shared-glapi vdpau
 	wayland xvmc xa xorg kernel_FreeBSD"
 
 REQUIRED_USE="
-	d3d?    ( gallium )
 	g3dvl?  ( gallium )
 	llvm?   ( gallium )
 	openvg? ( egl gallium )
@@ -76,7 +74,7 @@ REQUIRED_USE="
 	video_cards_vmware? ( gallium )
 "
 
-LIBDRM_DEPSTRING=">=x11-libs/libdrm-32bit-2.4.34"
+LIBDRM_DEPSTRING=">=x11-libs/libdrm-32bit-2.4.39"
 # not a runtime dependency of this package, but dependency of packages which
 # depend on this package, bug #342393
 EXTERNAL_DEPEND="
@@ -87,7 +85,6 @@ EXTERNAL_DEPEND="
 # keep blocks in rdepend for binpkg
 # gtest file collision bug #411825
 RDEPEND="${EXTERNAL_DEPEND}
-	dev-util/indent
 	!<x11-base/xorg-server-1.7
 	!<=x11-proto/xf86driproto-2.0.3
 	classic? ( app-admin/eselect-mesa )
@@ -99,8 +96,7 @@ RDEPEND="${EXTERNAL_DEPEND}
 	x11-libs/libXdamage
 	x11-libs/libXext
 	x11-libs/libXxf86vm
-	>=x11-libs/libxcb-1.8
-	d3d? ( app-emulation/wine )
+	>=x11-libs/libxcb-1.8.1
 	vdpau? ( >=x11-libs/libvdpau-0.4.1 )
 	wayland? ( dev-libs/wayland )
 	xorg? (
@@ -224,7 +220,6 @@ src_configure() {
 
 	if use gallium; then
 		myconf+="
-			$(use_enable d3d d3d1x)
 			$(use_enable g3dvl gallium-g3dvl)
 			$(use_enable llvm gallium-llvm)
 			$(use_enable openvg)
