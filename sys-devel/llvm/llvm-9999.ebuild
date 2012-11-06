@@ -4,12 +4,12 @@
 
 EAPI="4"
 PYTHON_DEPEND="2"
-inherit subversion eutils flag-o-matic multilib toolchain-funcs python pax-utils
+inherit git eutils flag-o-matic multilib toolchain-funcs python pax-utils
 
 DESCRIPTION="Low Level Virtual Machine"
 HOMEPAGE="http://llvm.org/"
 SRC_URI=""
-ESVN_REPO_URI="http://llvm.org/svn/llvm-project/llvm/trunk"
+EGIT_REPO_URI="git://people.freedesktop.org/~tstellar/llvm"
 
 LICENSE="UoI-NCSA"
 SLOT="0"

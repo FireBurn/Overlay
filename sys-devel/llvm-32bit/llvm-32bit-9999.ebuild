@@ -4,7 +4,7 @@
 
 EAPI="4"
 ABI=x86 
-inherit subversion eutils flag-o-matic multilib toolchain-funcs pax-utils
+inherit git eutils flag-o-matic multilib toolchain-funcs pax-utils
 
 PN="llvm"   
 P="llvm-9999"   
@@ -14,7 +14,7 @@ PV="9999"
 DESCRIPTION="Low Level Virtual Machine"
 HOMEPAGE="http://llvm.org/"
 SRC_URI=""
-ESVN_REPO_URI="http://llvm.org/svn/llvm-project/llvm/trunk"
+EGIT_REPO_URI="git://people.freedesktop.org/~tstellar/llvm"
 
 LICENSE="UoI-NCSA"
 SLOT="0"
