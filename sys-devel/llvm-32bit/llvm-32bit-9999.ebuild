@@ -108,7 +108,7 @@ src_configure() {
 	local CONF_FLAGS="--enable-shared
 		--with-optimize-option=
 		$(use_enable !debug optimized)
-		$(use_enable debug assertions)
+		$(use_enable amdgpu assertions)
 		$(use_enable debug expensive-checks)"
 
 	if use multitarget; then
