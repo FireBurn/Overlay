@@ -121,8 +121,8 @@ done
 DEPEND="${RDEPEND}
 	llvm? (
 		>=sys-devel/llvm-32bit-2.9[-udis86]
-		r600-llvm-compiler? ( >=sys-devel/llvm-32bit-3.2 )
-		video_cards_radeonsi? ( >=sys-devel/llvm-32bit-3.2 )
+		r600-llvm-compiler? ( >=sys-devel/llvm-32bit-3.2[amdgpu] )
+		video_cards_radeonsi? ( >=sys-devel/llvm-32bit-3.2[amdgpu] )
 	)
 	=dev-lang/python-2*
 	dev-libs/libxml2[python]
