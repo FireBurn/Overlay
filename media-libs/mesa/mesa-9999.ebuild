@@ -74,17 +74,10 @@ REQUIRED_USE="
 	video_cards_vmware? ( gallium )
 "
 
-LIBDRM_DEPSTRING=">=x11-libs/libdrm-32bit-2.4.39"
-# not a runtime dependency of this package, but dependency of packages which
-# depend on this package, bug #342393
-EXTERNAL_DEPEND="
-	>=x11-proto/dri2proto-2.6
-	>=x11-proto/glproto-1.4.15-r1
-"
+LIBDRM_DEPSTRING=">=x11-libs/libdrm-2.4.40"
 # keep correct libdrm and dri2proto dep
 # keep blocks in rdepend for binpkg
-# gtest file collision bug #411825
-RDEPEND="${EXTERNAL_DEPEND}
+RDEPEND="
 	!<x11-base/xorg-server-1.7
 	!<=x11-proto/xf86driproto-2.0.3
 	classic? ( app-admin/eselect-mesa )
@@ -92,7 +85,7 @@ RDEPEND="${EXTERNAL_DEPEND}
 	>=app-admin/eselect-opengl-1.2.6
 	dev-libs/expat
 	gbm? ( sys-fs/udev )
-	>=x11-libs/libX11-32bit-1.3.99.901
+	>=x11-libs/libX11-1.3.99.901
 	x11-libs/libXdamage
 	x11-libs/libXext
 	x11-libs/libXxf86vm
@@ -120,9 +113,9 @@ done
 
 DEPEND="${RDEPEND}
 	llvm? (
-		>=sys-devel/llvm-32bit-2.9[-udis86]
-		r600-llvm-compiler? ( >=sys-devel/llvm-32bit-3.2 )
-		video_cards_radeonsi? ( >=sys-devel/llvm-32bit-3.2 )
+		>=sys-devel/llvm-2.9[-udis86]
+		r600-llvm-compiler? ( >=sys-devel/llvm-3.2 )
+		video_cards_radeonsi? ( >=sys-devel/llvm-3.2 )
 	)
 	=dev-lang/python-2*
 	dev-libs/libxml2[python]
@@ -130,6 +123,8 @@ DEPEND="${RDEPEND}
 	sys-devel/flex
 	virtual/pkgconfig
 	x11-misc/makedepend
+	>=x11-proto/dri2proto-2.6
+	>=x11-proto/glproto-1.4.15-r1
 	>=x11-proto/xextproto-7.0.99.1
 	x11-proto/xf86driproto
 	x11-proto/xf86vidmodeproto
@@ -145,8 +140,6 @@ QA_WX_LOAD="usr/lib*/opengl/xorg-x11/lib/libGL.so*"
 # Think about: ggi, fbcon, no-X configs
 
 pkg_setup() {
-	append-flags -m32
-	append-ldflags -L/usr/lib32/llvm -m32
 	# workaround toc-issue wrt #386545
 	use ppc64 && append-flags -mminimal-toc
 }
@@ -254,9 +247,6 @@ src_configure() {
 	econf \
 		--enable-dri \
 		--enable-glx \
-                --enable-32-bit \
-                --disable-64-bit \
-                --libdir=/usr/lib32 \
 		$(use_enable !bindist texture-float) \
 		$(use_enable debug) \
 		$(use_enable egl) \
@@ -279,18 +269,26 @@ src_install() {
 
 	find "${ED}" -name '*.la' -exec rm -f {} + || die
 
+	if use !bindist; then
+		dodoc docs/patents.txt
+	fi
+
 	# Save the glsl-compiler for later use
 	if ! tc-is-cross-compiler; then
 		dobin "${S}"/src/glsl/glsl_compiler
 	fi
 
+	# Install config file for eselect mesa
+	insinto /usr/share/mesa
+	newins "${FILESDIR}/eselect-mesa.conf.8.1" eselect-mesa.conf
+
 	# Move libGL and others from /usr/lib to /usr/lib/opengl/blah/lib
 	# because user can eselect desired GL provider.
 	ebegin "Moving libGL and friends for dynamic switching"
 		local x
-		local gl_dir="/usr/lib32/opengl/${OPENGL_DIR}/"
+		local gl_dir="/usr/$(get_libdir)/opengl/${OPENGL_DIR}/"
 		dodir ${gl_dir}/{lib,extensions,include/GL}
-		for x in "${ED}"/usr/lib32/lib{EGL,GL*,OpenVG}.{la,a,so*}; do
+		for x in "${ED}"/usr/$(get_libdir)/lib{EGL,GL*,OpenVG}.{la,a,so*}; do
 			if [ -f ${x} -o -L ${x} ]; then
 				mv -f "${x}" "${ED}${gl_dir}"/lib \
 					|| die "Failed to move ${x}"
@@ -313,26 +311,26 @@ src_install() {
 	if use classic || use gallium; then
 			ebegin "Moving DRI/Gallium drivers for dynamic switching"
 			local gallium_drivers=( i915_dri.so i965_dri.so r300_dri.so r600_dri.so swrast_dri.so )
-			keepdir /usr/lib32/dri
-			dodir /usr/lib32/mesa
+			keepdir /usr/$(get_libdir)/dri
+			dodir /usr/$(get_libdir)/mesa
 			for x in ${gallium_drivers[@]}; do
-				if [ -f "${S}/lib32/gallium/${x}" ]; then
-					mv -f "${ED}/usr/lib32/dri/${x}" "${ED}/usr/lib32/dri/${x/_dri.so/g_dri.so}" \
+				if [ -f "${S}/$(get_libdir)/gallium/${x}" ]; then
+					mv -f "${ED}/usr/$(get_libdir)/dri/${x}" "${ED}/usr/$(get_libdir)/dri/${x/_dri.so/g_dri.so}" \
 						|| die "Failed to move ${x}"
-					insinto "/usr/lib32/dri/"
-					if [ -f "${S}/lib32/${x}" ]; then
+					insinto "/usr/$(get_libdir)/dri/"
+					if [ -f "${S}/$(get_libdir)/${x}" ]; then
 						insopts -m0755
-						doins "${S}/lib32/${x}"
+						doins "${S}/$(get_libdir)/${x}"
 					fi
 				fi
 			done
-			for x in "${ED}"/usr/lib32/dri/*.so; do
+			for x in "${ED}"/usr/$(get_libdir)/dri/*.so; do
 				if [ -f ${x} -o -L ${x} ]; then
 					mv -f "${x}" "${x/dri/mesa}" \
 						|| die "Failed to move ${x}"
 				fi
 			done
-			pushd "${ED}"/usr/lib32/dri || die "pushd failed"
+			pushd "${ED}"/usr/$(get_libdir)/dri || die "pushd failed"
 			ln -s ../mesa/*.so . || die "Creating symlink failed"
 			# remove symlinks to drivers known to eselect
 			for x in ${gallium_drivers[@]}; do
@@ -343,9 +341,6 @@ src_install() {
 			popd
 		eend $?
 	fi
-        rm -rf "${ED}"/usr/include || die "Removing includes failed."
-        rm -f "${ED}"/usr/bin/glsl_compiler || die "Removing glsl_compiler failed."
-        rm -f "${ED}"/usr/share/mesa/eselect-mesa.conf || die "Removing eselect-mesa failed."
 }
 
 pkg_postinst() {
