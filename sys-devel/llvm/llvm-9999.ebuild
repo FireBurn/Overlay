@@ -10,6 +10,7 @@ DESCRIPTION="Low Level Virtual Machine"
 HOMEPAGE="http://llvm.org/"
 SRC_URI=""
 EGIT_REPO_URI="git://people.freedesktop.org/~tstellar/llvm"
+EGIT_BRANCH="indirect-wip-2"
 
 LICENSE="UoI-NCSA"
 SLOT="0"
