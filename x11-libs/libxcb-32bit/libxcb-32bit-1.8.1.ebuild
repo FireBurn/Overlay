@@ -24,6 +24,7 @@ RDEPEND="dev-libs/libpthread-stubs
 	x11-libs/libXau
 	x11-libs/libXdmcp"
 DEPEND="${RDEPEND}
+	app-emulation/emul-linux-x86-xlibs
 	dev-lang/python[xml]
 	dev-libs/libxslt
 	>=x11-proto/xcb-proto-1.7-r1"

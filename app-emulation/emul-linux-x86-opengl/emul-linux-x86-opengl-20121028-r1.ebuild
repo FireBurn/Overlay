@@ -12,10 +12,10 @@ KEYWORDS="-* ~amd64 ~amd64-linux"
 
 DEPEND="app-admin/eselect-opengl
 	>=app-admin/eselect-mesa-0.0.9"
-RDEPEND=">=app-emulation/emul-linux-x86-xlibs-20100611
-        !<app-emulation/emul-linux-x86-xlibs-20100611
-	media-libs/mesa"
-PDEPEND="media-libs/mesa-32bit"
+RDEPEND="=app-emulation/emul-linux-x86-xlibs-20121028-r1
+        !<app-emulation/emul-linux-x86-xlibs-20121028
+	media-libs/mesa
+	media-libs/mesa-32bit"
 
 emul-linux-x86_src_unpack() {
 	cd "${S}"
