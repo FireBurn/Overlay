@@ -9,7 +9,7 @@ PN="libxcb"
 S=${WORKDIR}/${P}
 
 XORG_DOC=doc
-inherit xorg-2
+inherit xorg-2 flag-o-matic
 
 DESCRIPTION="X C-language Bindings library"
 HOMEPAGE="http://xcb.freedesktop.org/"
@@ -17,7 +17,7 @@ EGIT_REPO_URI="git://anongit.freedesktop.org/git/xcb/libxcb"
 [[ ${PV} != 9999* ]] && \
 	SRC_URI="http://xcb.freedesktop.org/dist/${P}.tar.bz2"
 
-KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-fbsd ~x86-freebsd ~x86-interix ~amd64-linux ~x86-linux ~ppc-macos ~x64-macos ~x86-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
+KEYWORDS="~amd64"
 IUSE="selinux"
 
 RDEPEND="dev-libs/libpthread-stubs

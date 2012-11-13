@@ -8,7 +8,7 @@ inherit emul-linux-x86
 
 LICENSE="BSD LGPL-2 MIT"
 
-KEYWORDS="-* ~amd64 ~amd64-linux"
+KEYWORDS="~amd64"
 
 DEPEND="app-admin/eselect-opengl
 	>=app-admin/eselect-mesa-0.0.9"

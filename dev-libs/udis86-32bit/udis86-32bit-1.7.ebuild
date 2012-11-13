@@ -15,7 +15,7 @@ SRC_URI="mirror://sourceforge/${PN}/${P}.tar.gz"
 
 LICENSE="BSD"
 SLOT="0"
-KEYWORDS="amd64 ~hppa ppc ~ppc64 x86 ~x86-fbsd"
+KEYWORDS="~amd64"
 IUSE="pic test"
 
 DEPEND="test? (

@@ -8,7 +8,7 @@ inherit emul-linux-x86
 
 LICENSE="FTL GPL-2 MIT"
 
-KEYWORDS="-* ~amd64"
+KEYWORDS="~amd64"
 IUSE="opengl"
 
 DEPEND=""

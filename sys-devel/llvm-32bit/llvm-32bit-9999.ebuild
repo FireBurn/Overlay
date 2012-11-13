@@ -18,7 +18,7 @@ EGIT_REPO_URI="git://people.freedesktop.org/~tstellar/llvm"
 
 LICENSE="UoI-NCSA"
 SLOT="0"
-KEYWORDS="~x86 ~amd64"
+KEYWORDS="~amd64"
 IUSE="+amdgpu debug gold +libffi multitarget ocaml test udis86 vim-syntax"
 
 DEPEND="dev-lang/perl
