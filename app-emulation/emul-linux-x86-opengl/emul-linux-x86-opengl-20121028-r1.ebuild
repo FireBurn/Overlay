@@ -12,8 +12,8 @@ KEYWORDS="-* ~amd64 ~amd64-linux"
 
 DEPEND="app-admin/eselect-opengl
 	>=app-admin/eselect-mesa-0.0.9"
-RDEPEND="media-libs/mesa
-	media-libs/mesa-32bit"
+RDEPEND="media-libs/mesa"
+PDEPEND="media-libs/mesa-32bit"
 
 emul-linux-x86_src_unpack() {
 	cd "${S}"
