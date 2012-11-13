@@ -4,7 +4,7 @@
 
 EAPI="4"
 ABI=x86 
-inherit git eutils flag-o-matic multilib toolchain-funcs pax-utils
+inherit git-2 eutils flag-o-matic multilib toolchain-funcs pax-utils
 
 PN="llvm"   
 P="llvm-9999"   
@@ -15,7 +15,6 @@ DESCRIPTION="Low Level Virtual Machine"
 HOMEPAGE="http://llvm.org/"
 SRC_URI=""
 EGIT_REPO_URI="git://people.freedesktop.org/~tstellar/llvm"
-EGIT_BRANCH="indirect-wip-2"
 
 LICENSE="UoI-NCSA"
 SLOT="0"
@@ -109,7 +108,7 @@ src_configure() {
 	local CONF_FLAGS="--enable-shared
 		--with-optimize-option=
 		$(use_enable !debug optimized)
-		$(use_enable amdgpu assertions)
+		$(use_enable debug assertions)
 		$(use_enable debug expensive-checks)"
 
 	if use multitarget; then
