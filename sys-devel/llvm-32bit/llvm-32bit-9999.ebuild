@@ -3,11 +3,11 @@
 # $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-9999.ebuild,v 1.35 2012/07/27 18:20:47 mgorny Exp $
 
 EAPI="4"
-ABI=x86 
+ABI=x86
 inherit git-2 eutils flag-o-matic multilib toolchain-funcs pax-utils
 
-PN="llvm"   
-P="llvm-9999"   
+PN="llvm"
+P="llvm-9999"
 PF="llvm-9999"
 PV="9999"
 
@@ -47,7 +47,7 @@ pkg_setup() {
 	broken_gcc_amd64=" 3.4.6 "
 
 	append-flags -m32
-	
+
 	gcc_vers=$(gcc-fullversion)
 
 	if [[ ${broken_gcc} == *" ${version} "* ]] ; then
@@ -121,9 +121,9 @@ src_configure() {
 		CONF_FLAGS="${CONF_FLAGS} --enable-pic"
 	fi
 
-        if use amdgpu; then
-                CONF_FLAGS="${CONF_FLAGS} --enable-experimental-targets=AMDGPU"
-        fi
+	if use amdgpu; then
+		CONF_FLAGS="${CONF_FLAGS} --enable-experimental-targets=AMDGPU"
+	fi
 
 	if use gold; then
 		CONF_FLAGS="${CONF_FLAGS} --with-binutils-include=${EPREFIX}/usr/include/"
@@ -190,7 +190,8 @@ src_install() {
 			eend $?
 		done
 	fi
+
 	rm -rf "${D}"/usr/share || die "Removing files failed."
-        rm -rf "${D}"/usr/bin || die "Removing files failed."
-        rm -rf "${D}"/usr/include || die "Removing files failed."
+	rm -rf "${D}"/usr/bin || die "Removing files failed."
+	rm -rf "${D}"/usr/include || die "Removing files failed."
 }

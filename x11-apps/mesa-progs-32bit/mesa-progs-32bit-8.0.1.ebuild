@@ -1,6 +1,6 @@
-# Copyright 1999-2011 Gentoo Foundation
+# Copyright 1999-2012 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/x11-apps/mesa-progs/mesa-progs-8.0.1.ebuild,v 1.7 2011/03/05 17:58:20 xarthisius Exp $
+# $Header: /var/cvsroot/gentoo-x86/x11-apps/mesa-progs/mesa-progs-8.0.1.ebuild,v 1.8 2011/05/16 07:55:20 mgorny Exp $
 
 EAPI=3
 ABI="x86"
@@ -35,7 +35,7 @@ DEPEND="${RDEPEND}"
 S=${WORKDIR}/${MY_P}
 
 pkg_setup() {
-        append-flags -m32
+	append-flags -m32
 }
 
 src_configure() {

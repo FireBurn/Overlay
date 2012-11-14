@@ -44,7 +44,7 @@ src_prepare() {
 
 src_configure() {
 	append-flags -m32
-	
+
 	XORG_CONFIGURE_OPTIONS=(
 		--enable-udev
 		$(use_enable video_cards_exynos exynos-experimental-api)
@@ -59,34 +59,32 @@ src_configure() {
 }
 
 src_install() {
-        debug-print-function ${FUNCNAME} "$@"
+	debug-print-function ${FUNCNAME} "$@"
 
-        if [[ ${CATEGORY} == x11-proto ]]; then
-                autotools-utils_src_install \
-                        ${PN/proto/}docdir="${EPREFIX}/usr/share/doc/${PF}" \
-                        docdir="${EPREFIX}/usr/share/doc/${PF}"
-        else
-                autotools-utils_src_install \
-                        docdir="${EPREFIX}/usr/share/doc/${PF}"
+	if [[ ${CATEGORY} == x11-proto ]]; then
+		autotools-utils_src_install \
+			${PN/proto/}docdir="${EPREFIX}/usr/share/doc/${PF}" \
+			docdir="${EPREFIX}/usr/share/doc/${PF}"
+	else
+		autotools-utils_src_install \
+			docdir="${EPREFIX}/usr/share/doc/${PF}"
 	fi
 
-        if [[ -n ${GIT_ECLASS} ]]; then
-                pushd "${EGIT_STORE_DIR}/${EGIT_CLONE_DIR}" > /dev/null
-                git log ${EGIT_COMMIT} > "${S}"/ChangeLog
-                popd > /dev/null
-        fi
+	if [[ -n ${GIT_ECLASS} ]]; then
+		pushd "${EGIT_STORE_DIR}/${EGIT_CLONE_DIR}" > /dev/null
+		git log ${EGIT_COMMIT} > "${S}"/ChangeLog
+		popd > /dev/null
+	fi
 
-        if [[ -e "${S}"/ChangeLog ]]; then
-                dodoc "${S}"/ChangeLog || die "dodoc failed"
-        fi
+	if [[ -e "${S}"/ChangeLog ]]; then
+		dodoc "${S}"/ChangeLog || die "dodoc failed"
+	fi
 
-        # Don't install libtool archives (even with static-libs)
-        remove_libtool_files all
+	# Don't install libtool archives (even with static-libs)
+	remove_libtool_files all
 
-        [[ -n ${FONT} ]] && remove_font_metadata
+	[[ -n ${FONT} ]] && remove_font_metadata
 
-        rm -rf "${D}"/usr/include* || die "Removing includes failed."
+	rm -rf "${D}"/usr/include* || die "Removing includes failed."
 	rm -rf "${D}"/usr/share/man* || die "Removing man files failed."
-
 }
-

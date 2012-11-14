@@ -118,9 +118,9 @@ src_configure() {
 		CONF_FLAGS="${CONF_FLAGS} --enable-pic"
 	fi
 
-        if use amdgpu; then
-                CONF_FLAGS="${CONF_FLAGS} --enable-experimental-targets=AMDGPU"
-        fi
+	if use amdgpu; then
+		CONF_FLAGS="${CONF_FLAGS} --enable-experimental-targets=AMDGPU"
+	fi
 
 	if use gold; then
 		CONF_FLAGS="${CONF_FLAGS} --with-binutils-include=${EPREFIX}/usr/include/"

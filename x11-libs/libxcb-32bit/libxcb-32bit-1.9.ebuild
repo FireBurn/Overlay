@@ -37,7 +37,7 @@ PATCHES=(
 pkg_setup() {
 	xorg-2_pkg_setup
 
-        append-flags -m32
+	append-flags -m32
 
 	XORG_CONFIGURE_OPTIONS=(
 		$(use_enable doc build-docs)
@@ -47,9 +47,8 @@ pkg_setup() {
 }
 
 src_install() {
-        autotools-utils_src_install \
-                docdir="${EPREFIX}/usr/share/doc/${PF}"
-        rm -rf "${D}"/usr/share || die "Removing man files failed."
-        rm -rf "${D}"/usr/include || die "Removing include files failed."
+	autotools-utils_src_install \
+		docdir="${EPREFIX}/usr/share/doc/${PF}"
+	rm -rf "${D}"/usr/share || die "Removing man files failed."
+	rm -rf "${D}"/usr/include || die "Removing include files failed."
 }
-

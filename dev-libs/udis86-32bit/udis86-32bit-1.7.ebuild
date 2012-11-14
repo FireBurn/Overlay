@@ -1,6 +1,6 @@
-# Copyright 1999-2010 Gentoo Foundation
+# Copyright 1999-2012 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/dev-libs/udis86/udis86-1.7.ebuild,v 1.12 2010/11/11 17:30:39 hwoarang Exp $
+# $Header: /var/cvsroot/gentoo-x86/dev-libs/udis86/udis86-1.7.ebuild,v 1.14 2012/05/24 03:19:12 aballier Exp $
 
 EAPI=3
 ABI="x86"
@@ -40,6 +40,6 @@ src_configure() {
 src_install() {
 	emake docdir="/usr/share/doc/${PF}/" DESTDIR="${D}" install || die "emake install failed"
 	rm -rf "${D}"/usr/share || die "Removing files failed."
-        rm -rf "${D}"/usr/bin || die "Removing files failed."
-        rm -rf "${D}"/usr/include || die "Removing files failed."
+	rm -rf "${D}"/usr/bin || die "Removing files failed."
+	rm -rf "${D}"/usr/include || die "Removing files failed."
 }

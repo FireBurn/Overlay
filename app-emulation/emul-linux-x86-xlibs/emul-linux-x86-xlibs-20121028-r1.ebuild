@@ -16,7 +16,7 @@ RDEPEND="~app-emulation/emul-linux-x86-baselibs-${PV}
 	x11-libs/libX11
 	opengl? ( app-emulation/emul-linux-x86-opengl )"
 PDEPEND="x11-libs/libX11-32bit
-        x11-libs/libxcb-32bit"
+	x11-libs/libxcb-32bit"
 
 src_prepare() {
 	emul-linux-x86_src_prepare
@@ -74,6 +74,6 @@ src_prepare() {
 	rm -f "${S}/usr/lib32/libxcb-xvmc.so" || die
 	rm -f "${S}/usr/lib32/libxcb-xv.so.0.0.0" || die
 	rm -f "${S}/usr/lib32/libxcb-xv.so" || die
-	rm -f "${S}/usr/lib32/pkgconfig/x11.pc" || die 
+	rm -f "${S}/usr/lib32/pkgconfig/x11.pc" || die
 	rm -f "${S}/usr/lib32/pkgconfig/x11-xcb.pc" || die
 }

@@ -65,7 +65,6 @@ src_compile() {
 src_install() {
 	autotools-utils_src_install \
 		docdir="${EPREFIX}/usr/share/doc/${PF}"
-        rm -rf "${D}"/usr/share || die "Removing man files failed."
+	rm -rf "${D}"/usr/share || die "Removing man files failed."
 	rm -rf "${D}"/usr/include || die "Removing include files failed."
 }
-

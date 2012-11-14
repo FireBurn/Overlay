@@ -345,9 +345,9 @@ src_install() {
 			popd
 		eend $?
 	fi
-        rm -rf "${ED}"/usr/include || die "Removing includes failed."
-        rm -f "${ED}"/usr/bin/glsl_compiler || die "Removing glsl_compiler failed."
-        rm -f "${ED}"/usr/share/mesa/eselect-mesa.conf || die "Removing eselect-mesa failed."
+	rm -rf "${ED}"/usr/include || die "Removing includes failed."
+	rm -f "${ED}"/usr/bin/glsl_compiler || die "Removing glsl_compiler failed."
+	rm -f "${ED}"/usr/share/mesa/eselect-mesa.conf || die "Removing eselect-mesa failed."
 }
 
 pkg_postinst() {
