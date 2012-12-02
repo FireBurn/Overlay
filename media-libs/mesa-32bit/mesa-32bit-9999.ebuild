@@ -87,8 +87,8 @@ EXTERNAL_DEPEND="
 RDEPEND="${EXTERNAL_DEPEND}
 	!<x11-base/xorg-server-1.7
 	!<=x11-proto/xf86driproto-2.0.3
-	!<=app-emulation/emul-linux-x86-xlibs-20121028
-	=app-emulation/emul-linux-x86-xlibs-20121028-r1
+	!<=app-emulation/emul-linux-x86-xlibs-20121202
+	=app-emulation/emul-linux-x86-xlibs-20121202-r1
 	classic? ( app-admin/eselect-mesa )
 	gallium? ( app-admin/eselect-mesa )
 	>=app-admin/eselect-opengl-1.2.6
