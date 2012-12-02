@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/app-emulation/emul-linux-x86-baselibs/emul-linux-x86-baselibs-20120520.ebuild,v 1.1 2012/05/20 12:57:13 pacho Exp $
 
-EAPI="4"
+EAPI=5
 
 inherit emul-linux-x86
 
