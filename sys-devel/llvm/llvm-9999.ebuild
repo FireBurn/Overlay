@@ -1,23 +1,23 @@
 # Copyright 1999-2012 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-9999.ebuild,v 1.35 2012/07/27 18:20:47 mgorny Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-9999.ebuild,v 1.36 2012/12/14 10:33:32 voyageur Exp $
 
 EAPI="4"
 PYTHON_DEPEND="2"
-inherit git-2 eutils flag-o-matic multilib toolchain-funcs python pax-utils
+inherit subversion eutils flag-o-matic multilib toolchain-funcs python pax-utils
 
 DESCRIPTION="Low Level Virtual Machine"
 HOMEPAGE="http://llvm.org/"
 SRC_URI=""
-EGIT_REPO_URI="git://people.freedesktop.org/~tstellar/llvm"
+ESVN_REPO_URI="http://llvm.org/svn/llvm-project/llvm/trunk"
 
 LICENSE="UoI-NCSA"
 SLOT="0"
-KEYWORDS="~x86 ~amd64"
+KEYWORDS="~amd64"
 IUSE="+amdgpu debug gold +libffi multitarget ocaml test udis86 vim-syntax"
 
 DEPEND="dev-lang/perl
-	dev-python/docutils
+	dev-python/sphinx
 	>=sys-devel/make-3.79
 	>=sys-devel/flex-2.5.4
 	>=sys-devel/bison-1.875d
@@ -146,17 +146,10 @@ src_configure() {
 }
 
 src_compile() {
-	# generate the manpages
-#	cd docs/CommandGuide || die
-#	local infiles=( *.rst )
-#
-#	cat > Makefile <<EOF || die
-#%.1: %.rst
-#	rst2man.py \$< > \$@
-#EOF
-#	emake ${infiles[@]/.rst/.1}
-
 	emake VERBOSE=1 KEEP_SYMBOLS=1 REQUIRES_RTTI=1
+
+	emake -C docs -f Makefile.sphinx man
+	use doc && emake -C docs -f Makefile.sphinx html
 
 	pax-mark m Release/bin/lli
 	if use test; then
@@ -166,6 +159,9 @@ src_compile() {
 
 src_install() {
 	emake KEEP_SYMBOLS=1 DESTDIR="${D}" install
+
+	doman docs/_build/man/*.1
+	use doc && dohtml -r docs/_build/html/
 
 	if use vim-syntax; then
 		insinto /usr/share/vim/vimfiles/syntax
