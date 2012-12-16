@@ -1,10 +1,10 @@
 # Copyright 1999-2012 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-9999.ebuild,v 1.36 2012/12/14 10:33:32 voyageur Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-9999.ebuild,v 1.35 2012/07/27 18:20:47 mgorny Exp $
 
 EAPI="4"
 ABI=x86
-inherit subversion eutils flag-o-matic multilib toolchain-funcs pax-utils
+inherit git-2 eutils flag-o-matic multilib toolchain-funcs pax-utils
 
 PN="llvm"
 P="llvm-9999"
@@ -14,7 +14,7 @@ PV="9999"
 DESCRIPTION="Low Level Virtual Machine"
 HOMEPAGE="http://llvm.org/"
 SRC_URI=""
-ESVN_REPO_URI="http://llvm.org/svn/llvm-project/llvm/trunk"
+EGIT_REPO_URI="git://people.freedesktop.org/~tstellar/llvm"
 
 LICENSE="UoI-NCSA"
 SLOT="0"
@@ -22,7 +22,7 @@ KEYWORDS="~amd64"
 IUSE="+amdgpu debug gold +libffi multitarget ocaml test udis86 vim-syntax"
 
 DEPEND="dev-lang/perl
-	dev-python/sphinx
+	dev-python/docutils
 	>=sys-devel/make-3.79
 	>=sys-devel/flex-2.5.4
 	>=sys-devel/bison-1.875d
