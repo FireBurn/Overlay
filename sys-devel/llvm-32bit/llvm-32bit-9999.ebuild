@@ -19,7 +19,7 @@ EGIT_REPO_URI="git://people.freedesktop.org/~tstellar/llvm"
 LICENSE="UoI-NCSA"
 SLOT="0"
 KEYWORDS="~amd64"
-IUSE="+amdgpu debug gold +libffi multitarget ocaml test udis86 vim-syntax"
+IUSE="debug gold +libffi multitarget ocaml +r600 test udis86 vim-syntax"
 
 DEPEND="dev-lang/perl
 	dev-python/docutils
@@ -121,8 +121,8 @@ src_configure() {
 		CONF_FLAGS="${CONF_FLAGS} --enable-pic"
 	fi
 
-	if use amdgpu; then
-		CONF_FLAGS="${CONF_FLAGS} --enable-experimental-targets=AMDGPU"
+	if use r600; then
+		CONF_FLAGS="${CONF_FLAGS} --enable-experimental-targets=R600"
 	fi
 
 	if use gold; then
