@@ -122,7 +122,6 @@ DEPEND="${RDEPEND}
 	sys-devel/bison
 	sys-devel/flex
 	virtual/pkgconfig
-	x11-misc/makedepend
 	>=x11-proto/dri2proto-2.6
 	>=x11-proto/glproto-1.4.15-r1
 	>=x11-proto/xextproto-7.0.99.1
