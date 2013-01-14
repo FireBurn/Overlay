@@ -147,7 +147,7 @@ QA_WX_LOAD="usr/lib*/opengl/xorg-x11/lib/libGL.so*"
 
 pkg_setup() {
 	append-flags -m32
-	append-ldflags -L/usr/lib32/llvm -m32
+	append-ldflags -m32
 	# workaround toc-issue wrt #386545
 	use ppc64 && append-flags -mminimal-toc
 }
@@ -252,12 +252,14 @@ src_configure() {
 		"
 	fi
 
+	LLVM_CONFIG="/usr/bin/llvm-config32" \
 	econf \
 		--enable-dri \
 		--enable-glx \
                 --enable-32-bit \
                 --disable-64-bit \
                 --libdir=/usr/lib32 \
+		--with-llvm-config="llvm-config32" \
 		$(use_enable !bindist texture-float) \
 		$(use_enable debug) \
 		$(use_enable egl) \
