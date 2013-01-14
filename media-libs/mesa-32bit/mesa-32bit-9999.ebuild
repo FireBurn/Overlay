@@ -259,7 +259,6 @@ src_configure() {
                 --enable-32-bit \
                 --disable-64-bit \
                 --libdir=/usr/lib32 \
-		--with-llvm-config="llvm-config32" \
 		$(use_enable !bindist texture-float) \
 		$(use_enable debug) \
 		$(use_enable egl) \
