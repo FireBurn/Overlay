@@ -1,8 +1,8 @@
-# Copyright 1999-2012 Gentoo Foundation
+# Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-9999.ebuild,v 1.35 2012/07/27 18:20:47 mgorny Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-9999.ebuild,v 1.38 2013/01/07 20:22:12 voyageur Exp $
 
-EAPI="4"
+EAPI="5"
 ABI=x86
 inherit git-2 eutils flag-o-matic multilib toolchain-funcs pax-utils
 

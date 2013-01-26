@@ -1,8 +1,8 @@
-# Copyright 1999-2012 Gentoo Foundation
+# Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-9999.ebuild,v 1.35 2012/07/27 18:20:47 mgorny Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-9999.ebuild,v 1.38 2013/01/07 20:22:12 voyageur Exp $
 
-EAPI="4"
+EAPI=5
 PYTHON_DEPEND="2"
 inherit git-2 eutils flag-o-matic multilib toolchain-funcs python pax-utils
 
@@ -13,7 +13,7 @@ EGIT_REPO_URI="git://people.freedesktop.org/~tstellar/llvm"
 
 LICENSE="UoI-NCSA"
 SLOT="0"
-KEYWORDS="~x86 ~amd64"
+KEYWORDS="~amd64"
 IUSE="debug gold +libffi multitarget ocaml +r600 test udis86 vim-syntax"
 
 DEPEND="dev-lang/perl
@@ -27,8 +27,7 @@ DEPEND="dev-lang/perl
 	libffi? ( virtual/pkgconfig
 		virtual/libffi )
 	ocaml? ( dev-lang/ocaml )
-	udis86? ( amd64? ( dev-libs/udis86[pic] )
-		!amd64? ( dev-libs/udis86 ) )"
+	udis86? ( dev-libs/udis86[pic(+)] )"
 RDEPEND="dev-lang/perl
 	libffi? ( virtual/libffi )
 	vim-syntax? ( || ( app-editors/vim app-editors/gvim ) )"

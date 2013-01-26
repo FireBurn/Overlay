@@ -1,8 +1,9 @@
-# Copyright 1999-2012 Gentoo Foundation
+# Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-EAPI=4
+EAPI=5
+ABI=x86
 
 EGIT_REPO_URI="git://anongit.freedesktop.org/mesa/mesa"
 
@@ -74,33 +75,26 @@ REQUIRED_USE="
 	video_cards_vmware? ( gallium )
 "
 
-LIBDRM_DEPSTRING=">=x11-libs/libdrm-32bit-2.4.39"
-# not a runtime dependency of this package, but dependency of packages which
-# depend on this package, bug #342393
-EXTERNAL_DEPEND="
-	>=x11-proto/dri2proto-2.6
-	>=x11-proto/glproto-1.4.15-r1
-"
+LIBDRM_DEPSTRING=">=x11-libs/libdrm-32bit-2.4.40"
 # keep correct libdrm and dri2proto dep
 # keep blocks in rdepend for binpkg
-# gtest file collision bug #411825
-RDEPEND="${EXTERNAL_DEPEND}
+RDEPEND="
 	!<x11-base/xorg-server-1.7
 	!<=x11-proto/xf86driproto-2.0.3
 	!<=app-emulation/emul-linux-x86-xlibs-20121202
 	=app-emulation/emul-linux-x86-xlibs-20121202-r1
 	classic? ( app-admin/eselect-mesa )
 	gallium? ( app-admin/eselect-mesa )
-	>=app-admin/eselect-opengl-1.2.6
+	>=app-admin/eselect-opengl-1.2.7
 	dev-libs/expat
 	gbm? ( sys-fs/udev )
-	x11-libs/libX11-32bit
+	>=x11-libs/libX11-32bit-1.3.99.901
 	x11-libs/libXdamage
 	x11-libs/libXext
 	x11-libs/libXxf86vm
 	>=x11-libs/libxcb-1.8.1
 	vdpau? ( >=x11-libs/libvdpau-0.4.1 )
-	wayland? ( dev-libs/wayland )
+	wayland? ( >=dev-libs/wayland-1.0.3 )
 	xorg? (
 		x11-base/xorg-server
 		x11-libs/libdrm[libkms]
@@ -131,6 +125,8 @@ DEPEND="${RDEPEND}
 	sys-devel/bison
 	sys-devel/flex
 	virtual/pkgconfig
+	>=x11-proto/dri2proto-2.6
+	>=x11-proto/glproto-1.4.15-r1
 	>=x11-proto/xextproto-7.0.99.1
 	x11-proto/xf86driproto
 	x11-proto/xf86vidmodeproto
@@ -252,6 +248,9 @@ src_configure() {
 		"
 	fi
 
+	# build fails with BSD indent, bug #428112
+	use userland_GNU || export INDENT=cat
+
 	LLVM_CONFIG="/usr/bin/llvm-config32" \
 	econf \
 		--enable-dri \
@@ -281,10 +280,6 @@ src_install() {
 
 	find "${ED}" -name '*.la' -exec rm -f {} + || die
 
-	# Save the glsl-compiler for later use
-	if ! tc-is-cross-compiler; then
-		dobin "${S}"/src/glsl/glsl_compiler
-	fi
 
 	# Move libGL and others from /usr/lib to /usr/lib/opengl/blah/lib
 	# because user can eselect desired GL provider.

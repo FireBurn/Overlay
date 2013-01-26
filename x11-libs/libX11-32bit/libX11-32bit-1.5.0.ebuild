@@ -1,8 +1,8 @@
-# Copyright 1999-2012 Gentoo Foundation
+# Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/x11-libs/libX11/libX11-1.5.0.ebuild,v 1.7 2012/07/12 17:42:14 ranger Exp $
+# $Header: /var/cvsroot/gentoo-x86/x11-libs/libX11/libX11-1.4.2.ebuild,v 1.2 2011/03/21 14:05:45 flameeyes Exp $
 
-EAPI=4
+EAPI=5
 ABI=x86
 P="libX11-1.5.0"
 PN="libX11"
@@ -44,9 +44,7 @@ pkg_setup() {
 		$(use_enable ipv6)
 		--without-fop
 	)
-}
 
-src_configure() {
 	[[ ${CHOST} == *-interix* ]] && export ac_cv_func_poll=no
 	xorg-2_src_configure
 }

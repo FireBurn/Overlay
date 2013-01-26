@@ -2,7 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/x11-libs/libxcb/libxcb-1.9.ebuild,v 1.1 2012/10/31 23:43:00 chithanh Exp $
 
-EAPI=4
+EAPI=5
 ABI=x86
 P="libxcb-1.9"
 PN="libxcb"

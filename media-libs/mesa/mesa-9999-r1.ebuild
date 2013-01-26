@@ -1,8 +1,8 @@
-# Copyright 1999-2012 Gentoo Foundation
+# Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
-EAPI=4
+EAPI=5
 
 EGIT_REPO_URI="git://anongit.freedesktop.org/mesa/mesa"
 
@@ -82,7 +82,7 @@ RDEPEND="
 	!<=x11-proto/xf86driproto-2.0.3
 	classic? ( app-admin/eselect-mesa )
 	gallium? ( app-admin/eselect-mesa )
-	>=app-admin/eselect-opengl-1.2.6
+	>=app-admin/eselect-opengl-1.2.7
 	dev-libs/expat
 	gbm? ( sys-fs/udev )
 	>=x11-libs/libX11-1.3.99.901
@@ -91,7 +91,7 @@ RDEPEND="
 	x11-libs/libXxf86vm
 	>=x11-libs/libxcb-1.8.1
 	vdpau? ( >=x11-libs/libvdpau-0.4.1 )
-	wayland? ( dev-libs/wayland )
+	wayland? ( >=dev-libs/wayland-1.0.3 )
 	xorg? (
 		x11-base/xorg-server
 		x11-libs/libdrm[libkms]
@@ -243,6 +243,9 @@ src_configure() {
 		"
 	fi
 
+	# build fails with BSD indent, bug #428112
+	use userland_GNU || export INDENT=cat
+
 	econf \
 		--enable-dri \
 		--enable-glx \
@@ -270,11 +273,6 @@ src_install() {
 
 	if use !bindist; then
 		dodoc docs/patents.txt
-	fi
-
-	# Save the glsl-compiler for later use
-	if ! tc-is-cross-compiler; then
-		dobin "${S}"/src/glsl/glsl_compiler
 	fi
 
 	# Install config file for eselect mesa
