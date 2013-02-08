@@ -47,21 +47,19 @@ for card in ${VIDEO_CARDS}; do
 done
 
 IUSE="${IUSE_VIDEO_CARDS}
-	bindist +classic debug +egl g3dvl +gallium gbm gles1 gles2 +llvm +nptl
+	bindist +classic debug +egl +gallium gbm gles1 gles2 +llvm +nptl
 	openvg osmesa pax_kernel pic r600-llvm-compiler selinux +shared-glapi vdpau
 	wayland xvmc xa xorg kernel_FreeBSD"
 
 REQUIRED_USE="
-	g3dvl?  ( gallium )
 	llvm?   ( gallium )
 	openvg? ( egl gallium )
 	gbm?    ( shared-glapi )
-	g3dvl? ( || ( vdpau xvmc ) )
-	vdpau? ( g3dvl )
+	gles1?  ( egl )
+	gles2?  ( egl )
 	r600-llvm-compiler? ( gallium llvm || ( video_cards_r600 video_cards_radeon ) )
 	xa?  ( gallium )
 	xorg?  ( gallium )
-	xvmc?  ( g3dvl )
 	video_cards_intel?  ( || ( classic gallium ) )
 	video_cards_i915?   ( || ( classic gallium ) )
 	video_cards_i965?   ( classic )
@@ -87,7 +85,7 @@ RDEPEND="
 	gallium? ( app-admin/eselect-mesa )
 	>=app-admin/eselect-opengl-1.2.7
 	dev-libs/expat
-	gbm? ( sys-fs/udev )
+	gbm? ( virtual/udev )
 	>=x11-libs/libX11-32bit-1.3.99.901
 	x11-libs/libXdamage
 	x11-libs/libXext
@@ -217,7 +215,6 @@ src_configure() {
 
 	if use gallium; then
 		myconf+="
-			$(use_enable g3dvl gallium-g3dvl)
 			$(use_enable llvm gallium-llvm)
 			$(use_enable openvg)
 			$(use_enable r600-llvm-compiler)
