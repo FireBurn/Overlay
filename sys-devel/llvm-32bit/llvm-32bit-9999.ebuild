@@ -1,10 +1,15 @@
 # Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-9999.ebuild,v 1.38 2013/01/07 20:22:12 voyageur Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-9999.ebuild,v 1.39 2013/02/02 23:41:54 mgorny Exp $
 
-EAPI="5"
+EAPI=5
 ABI=x86
-inherit git-2 eutils flag-o-matic multilib toolchain-funcs pax-utils
+
+# pypy gives me around 1700 unresolved tests due to open file limit
+# being exceeded. probably GC does not close them fast enough.
+PYTHON_COMPAT=( python{2_5,2_6,2_7} )
+
+inherit subversion eutils flag-o-matic multilib python-any-r1 toolchain-funcs pax-utils
 
 PN="llvm"
 P="llvm-9999"
@@ -14,15 +19,15 @@ PV="9999"
 DESCRIPTION="Low Level Virtual Machine"
 HOMEPAGE="http://llvm.org/"
 SRC_URI=""
-EGIT_REPO_URI="git://people.freedesktop.org/~tstellar/llvm"
+ESVN_REPO_URI="http://llvm.org/svn/llvm-project/llvm/trunk"
 
 LICENSE="UoI-NCSA"
 SLOT="0"
-KEYWORDS="~amd64"
-IUSE="debug gold +libffi multitarget ocaml +r600 test udis86 vim-syntax"
+KEYWORDS="amd64"
+IUSE="debug doc gold +libffi multitarget ocaml +r600 test udis86 vim-syntax"
 
 DEPEND="dev-lang/perl
-	dev-python/docutils
+	dev-python/sphinx
 	>=sys-devel/make-3.79
 	>=sys-devel/flex-2.5.4
 	>=sys-devel/bison-1.875d
@@ -40,6 +45,9 @@ RDEPEND="dev-lang/perl
 S=${WORKDIR}/${P}.src
 
 pkg_setup() {
+	# Required for test and build
+	python-any-r1_pkg_setup
+
 	# need to check if the active compiler is ok
 
 	broken_gcc=" 3.2.2 3.2.3 3.3.2 4.1.1 "
@@ -67,12 +75,12 @@ pkg_setup() {
 
 	if [[ ${CHOST} == x86_64-* && ${broken_gcc_amd64} == *" ${version} "* ]];
 	then
-		 elog "Your version of gcc is known to miscompile llvm in amd64"
-		 elog "architectures.  Check"
-		 elog "http://www.llvm.org/docs/GettingStarted.html for possible"
-		 elog "solutions."
+		elog "Your version of gcc is known to miscompile llvm in amd64"
+		elog "architectures.  Check"
+		elog "http://www.llvm.org/docs/GettingStarted.html for possible"
+		elog "solutions."
 		die "Your currently active version of gcc is known to miscompile llvm"
-	 fi
+	fi
 }
 
 src_prepare() {
@@ -96,6 +104,10 @@ src_prepare() {
 		sed -e 's,\$(SharedLibDir),'"${EPREFIX}"/usr/lib32/${PN}, \
 			-i tools/gold/Makefile || die "gold rpath sed failed"
 	fi
+
+	# FileCheck is needed at least for dragonegg tests
+	sed -e "/NO_INSTALL = 1/s/^/#/" -i utils/FileCheck/Makefile \
+		|| die "FileCheck Makefile sed failed"
 
 	epatch "${FILESDIR}"/${PN}-3.2-nodoctargz.patch
 	epatch "${FILESDIR}"/${PN}-3.0-PPC_macro.patch
@@ -151,14 +163,22 @@ src_configure() {
 src_compile() {
 	emake VERBOSE=1 KEEP_SYMBOLS=1 REQUIRES_RTTI=1
 
+	emake -C docs -f Makefile.sphinx man
+	use doc && emake -C docs -f Makefile.sphinx html
+
 	pax-mark m Release/bin/lli
 	if use test; then
 		pax-mark m unittests/ExecutionEngine/JIT/Release/JITTests
+		pax-mark m unittests/ExecutionEngine/MCJIT/Release/MCJITTests
+		pax-mark m unittests/Support/Release/SupportTests
 	fi
 }
 
 src_install() {
 	emake KEEP_SYMBOLS=1 DESTDIR="${D}" install
+
+	doman docs/_build/man/*.1
+	use doc && dohtml -r docs/_build/html/
 
 	if use vim-syntax; then
 		insinto /usr/share/vim/vimfiles/syntax
