@@ -237,6 +237,8 @@ src_install() {
 	rm -rf "${D}"/usr/bin/llvm-stress || die "Removing files failed."
 	rm -rf "${D}"/usr/bin/llvm-tblgen || die "Removing files failed."
 	rm -rf "${D}"/usr/bin/macho-dump || die "Removing files failed."
+	rm -rf "${D}"/usr/bin/FileCheck || die "Removing files failed."
+	rm -rf "${D}"/usr/bin/llvm-symbolizer || die "Removing files failed."
 	rm -rf "${D}"/usr/bin/opt || die "Removing files failed."
 	rm -rf "${D}"/usr/include || die "Removing files failed."
 }
