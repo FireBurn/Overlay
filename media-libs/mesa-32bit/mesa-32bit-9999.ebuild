@@ -47,13 +47,14 @@ for card in ${VIDEO_CARDS}; do
 done
 
 IUSE="${IUSE_VIDEO_CARDS}
-	bindist +classic debug +egl +gallium gbm gles1 gles2 +llvm +nptl
+	bindist +classic debug +egl +gallium gbm gles1 gles2 +llvm +nptl opencl
 	openvg osmesa pax_kernel pic r600-llvm-compiler selinux +shared-glapi vdpau
 	wayland xvmc xa xorg kernel_FreeBSD"
 
 REQUIRED_USE="
 	llvm?   ( gallium )
 	openvg? ( egl gallium )
+	opencl? ( gallium r600-llvm-compiler )
 	gbm?    ( shared-glapi )
 	gles1?  ( egl )
 	gles2?  ( egl )
@@ -91,6 +92,10 @@ RDEPEND="
 	x11-libs/libXext
 	x11-libs/libXxf86vm
 	>=x11-libs/libxcb-1.8.1
+	opencl? ( 
+				app-admin/eselect-opencl
+				dev-libs/libclc
+			)
 	vdpau? ( >=x11-libs/libvdpau-0.4.1 )
 	wayland? ( >=dev-libs/wayland-1.0.3 )
 	xorg? (
@@ -118,6 +123,10 @@ DEPEND="${RDEPEND}
 		r600-llvm-compiler? ( >=sys-devel/llvm-32bit-3.2[r600] )
 		video_cards_radeonsi? ( >=sys-devel/llvm-32bit-3.2[r600] )
 	)
+	opencl? (
+				>=sys-devel/clang-32bit-9999
+				>=sys-devel/gcc-4.6
+	)
 	=dev-lang/python-2*
 	dev-libs/libxml2[python]
 	sys-devel/bison
@@ -131,6 +140,10 @@ DEPEND="${RDEPEND}
 "
 
 S="${WORKDIR}/${MY_P}"
+
+PATCHES=(
+		"${FILESDIR}/0001-radeong-opencl-rename-target-from-r600-to-r600-amd-n.patch"
+		)
 
 # It is slow without texrels, if someone wants slow
 # mesa without texrels +pic use is worth the shot
@@ -236,6 +249,14 @@ src_configure() {
 				! use video_cards_r600; then
 			gallium_enable video_cards_radeon r300 r600
 		fi
+		# opencl stuff
+		if use opencl; then
+			myconf+="
+				$(use_enable opencl)
+				--with-opencl-libdir="${EPREFIX}/usr/lib32/OpenCL/vendors/mesa"
+				--with-clang-libdir="${EPREFIX}/usr/lib32"
+				"
+		fi
 	fi
 
 	# x86 hardened pax_kernel needs glx-rts, bug 240956
@@ -336,6 +357,13 @@ src_install() {
 			done
 			popd
 		eend $?
+	fi
+	if use opencl; then
+		ebegin "Moving Gallium/Clover OpenCL implentation for dynamic switching"
+		if [ -f "${ED}/usr/lib32/libOpenCL.so" ]; then
+			mv -f "${ED}"/usr/lib32/libOpenCL.so* \
+			"${ED}"/usr/lib32/OpenCL/vendors/mesa
+		fi
 	fi
 	rm -rf "${ED}"/usr/include || die "Removing includes failed."
 	rm -f "${ED}"/usr/bin/glsl_compiler || die "Removing glsl_compiler failed."

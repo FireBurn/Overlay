@@ -1,0 +1,17 @@
+diff -Naur work-orig/libclc-9999/utils/prepare-builtins.cpp work/libclc-9999/utils/prepare-builtins.cpp
+--- work-orig/libclc-9999/utils/prepare-builtins.cpp	2013-02-20 19:42:06.245445821 +0000
++++ work/libclc-9999/utils/prepare-builtins.cpp	2013-02-20 19:44:14.261443023 +0000
+@@ -1,9 +1,9 @@
+ #include "llvm/ADT/OwningPtr.h"
+ #include "llvm/Bitcode/ReaderWriter.h"
+-#include "llvm/Function.h"
+-#include "llvm/GlobalVariable.h"
+-#include "llvm/LLVMContext.h"
+-#include "llvm/Module.h"
++#include "llvm/IR/Function.h"
++#include "llvm/IR/GlobalVariable.h"
++#include "llvm/IR/LLVMContext.h"
++#include "llvm/IR/Module.h"
+ #include "llvm/Support/CommandLine.h"
+ #include "llvm/Support/ManagedStatic.h"
+ #include "llvm/Support/MemoryBuffer.h"

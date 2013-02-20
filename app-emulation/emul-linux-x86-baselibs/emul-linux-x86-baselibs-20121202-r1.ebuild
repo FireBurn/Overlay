@@ -7,7 +7,7 @@ EAPI=5
 inherit emul-linux-x86
 
 LICENSE="Artistic GPL-1 GPL-2 GPL-3 BSD BSD-2 BZIP2 AFL-2.1 LGPL-2.1 BSD-4 MIT public-domain
-LGPL-3 LGPL-2 GPL-2-with-exceptions MPL-1.1 OPENLDAP OracleDB UoI-NCSA ZLIB as-is openssl tcp_wrappers_license"
+LGPL-3 LGPL-2 GPL-2-with-exceptions MPL-1.1 OPENLDAP UoI-NCSA ZLIB openssl tcp_wrappers_license"
 
 KEYWORDS="~amd64"
 
