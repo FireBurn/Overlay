@@ -22,7 +22,10 @@ IUSE="selinux"
 
 RDEPEND="dev-libs/libpthread-stubs
 	x11-libs/libXau
-	x11-libs/libXdmcp"
+	x11-libs/libXdmcp
+	!<=app-emulation/emul-linux-x86-xlibs-20121202
+	=app-emulation/emul-linux-x86-xlibs-20121202-r1
+"
 DEPEND="${RDEPEND}
 	app-emulation/emul-linux-x86-xlibs
 	dev-lang/python[xml]

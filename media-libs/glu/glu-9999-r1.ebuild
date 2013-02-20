@@ -30,6 +30,8 @@ IUSE="multilib static-libs"
 
 DEPEND="virtual/opengl"
 RDEPEND="${DEPEND}
+        !<=app-emulation/emul-linux-x86-opengl-20121202-r1
+        =app-emulation/emul-linux-x86-opengl-20121202-r2
 	!<media-libs/mesa-9"
 
 foreachabi() {
