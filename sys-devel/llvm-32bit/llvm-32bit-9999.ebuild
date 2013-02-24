@@ -11,14 +11,10 @@ PYTHON_COMPAT=( python{2_5,2_6,2_7} )
 
 inherit subversion eutils flag-o-matic multilib python-any-r1 toolchain-funcs pax-utils
 
-PN="llvm"
-P="llvm-9999"
-PF="llvm-9999"
-PV="9999"
-
 DESCRIPTION="Low Level Virtual Machine"
 HOMEPAGE="http://llvm.org/"
 SRC_URI=""
+MY_PN="llvm"
 ESVN_REPO_URI="http://llvm.org/svn/llvm-project/llvm/trunk"
 
 LICENSE="UoI-NCSA"
@@ -26,7 +22,9 @@ SLOT="0"
 KEYWORDS="amd64"
 IUSE="debug doc gold +libffi multitarget ocaml +r600 test udis86 vim-syntax"
 
-DEPEND="dev-lang/perl
+DEPEND="!<=app-emulation/emul-linux-x86-baselibs-20121202-r49
+	=app-emulation/emul-linux-x86-baselibs-20121202-r50
+	dev-lang/perl
 	dev-python/sphinx
 	>=sys-devel/make-3.79
 	>=sys-devel/flex-2.5.4
@@ -35,14 +33,14 @@ DEPEND="dev-lang/perl
 	|| ( >=sys-devel/binutils-2.18 >=sys-devel/binutils-apple-3.2.3 )
 	gold? ( >=sys-devel/binutils-2.22[cxx] )
 	libffi? ( virtual/pkgconfig
-		app-emulation/emul-linux-x86-baselibs )
+		=app-emulation/emul-linux-x86-baselibs-20121202-r50 )
 	ocaml? ( dev-lang/ocaml )
 	udis86? ( dev-libs/udis86-32bit )"
 RDEPEND="dev-lang/perl
-	libffi? ( app-emulation/emul-linux-x86-baselibs )
+	!<=app-emulation/emul-linux-x86-baselibs-20121202-r49
+	=app-emulation/emul-linux-x86-baselibs-20121202-r50
+	libffi? ( =app-emulation/emul-linux-x86-baselibs-20121202-r50 )
 	vim-syntax? ( || ( app-editors/vim app-editors/gvim ) )"
-
-S=${WORKDIR}/${P}.src
 
 pkg_setup() {
 	# Required for test and build
@@ -84,24 +82,22 @@ pkg_setup() {
 }
 
 src_prepare() {
-	PN="llvm"
-	P="llvm-9999"
 	# unfortunately ./configure won't listen to --mandir and the-like, so take
 	# care of this.
 	einfo "Fixing install dirs"
 	sed -e 's,^PROJ_docsdir.*,PROJ_docsdir := $(PROJ_prefix)/share/doc/'${PF}, \
 		-e 's,^PROJ_etcdir.*,PROJ_etcdir := '"${EPREFIX}"'/etc/llvm,' \
-		-e 's,^PROJ_libdir.*,PROJ_libdir := $(PROJ_prefix)/'lib32/${PN}, \
+		-e 's,^PROJ_libdir.*,PROJ_libdir := $(PROJ_prefix)/'$(get_libdir)/${MY_PN}, \
 		-i Makefile.config.in || die "Makefile.config sed failed"
-	sed -e "/ActiveLibDir = ActivePrefix/s/lib/lib32\/${PN}/" \
+	sed -e "/ActiveLibDir = ActivePrefix/s/lib/$(get_libdir)\/${MY_PN}/" \
 		-i tools/llvm-config/llvm-config.cpp || die "llvm-config sed failed"
 
 	einfo "Fixing rpath and CFLAGS"
-	sed -e 's,\$(RPATH) -Wl\,\$(\(ToolDir\|LibDir\)),$(RPATH) -Wl\,'"${EPREFIX}"/usr/lib32/${PN}, \
+	sed -e 's,\$(RPATH) -Wl\,\$(\(ToolDir\|LibDir\)),$(RPATH) -Wl\,'"${EPREFIX}"/usr/$(get_libdir)/${MY_PN}, \
 		-e '/OmitFramePointer/s/-fomit-frame-pointer//' \
 		-i Makefile.rules || die "rpath sed failed"
 	if use gold; then
-		sed -e 's,\$(SharedLibDir),'"${EPREFIX}"/usr/lib32/${PN}, \
+		sed -e 's,\$(SharedLibDir),'"${EPREFIX}"/usr/$(get_libdir)/${MY_PN}, \
 			-i tools/gold/Makefile || die "gold rpath sed failed"
 	fi
 
@@ -109,8 +105,8 @@ src_prepare() {
 	sed -e "/NO_INSTALL = 1/s/^/#/" -i utils/FileCheck/Makefile \
 		|| die "FileCheck Makefile sed failed"
 
-	epatch "${FILESDIR}"/${PN}-3.2-nodoctargz.patch
-	epatch "${FILESDIR}"/${PN}-3.0-PPC_macro.patch
+	epatch "${FILESDIR}"/${MY_PN}-3.2-nodoctargz.patch
+	epatch "${FILESDIR}"/${MY_PN}-3.0-PPC_macro.patch
 
 	# User patches
 	epatch_user
@@ -193,19 +189,19 @@ src_install() {
 		[[ -n ${PACKAGE_VERSION} ]] && libpv=${PACKAGE_VERSION}
 		for lib in lib{EnhancedDisassembly,LLVM-${libpv},LTO,profile_rt}.dylib {BugpointPasses,LLVMHello}.dylib ; do
 			# libEnhancedDisassembly is Darwin10 only, so non-fatal
-			[[ -f ${ED}/usr/lib/${PN}/${lib} ]] || continue
+			[[ -f ${ED}/usr/lib/${MY_PN}/${lib} ]] || continue
 			ebegin "fixing install_name of $lib"
 			install_name_tool \
-				-id "${EPREFIX}"/usr/lib/${PN}/${lib} \
-				"${ED}"/usr/lib/${PN}/${lib}
+				-id "${EPREFIX}"/usr/lib/${MY_PN}/${lib} \
+				"${ED}"/usr/lib/${MY_PN}/${lib}
 			eend $?
 		done
-		for f in "${ED}"/usr/bin/* "${ED}"/usr/lib/${PN}/libLTO.dylib ; do
+		for f in "${ED}"/usr/bin/* "${ED}"/usr/lib/${MY_PN}/libLTO.dylib ; do
 			odylib=$(scanmacho -BF'%n#f' "${f}" | tr ',' '\n' | grep libLLVM-${libpv}.dylib)
 			ebegin "fixing install_name reference to ${odylib} of ${f##*/}"
 			install_name_tool \
 				-change "${odylib}" \
-					"${EPREFIX}"/usr/lib/${PN}/libLLVM-${libpv}.dylib \
+					"${EPREFIX}"/usr/lib/${MY_PN}/libLLVM-${libpv}.dylib \
 				"${f}"
 			eend $?
 		done

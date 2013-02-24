@@ -4,18 +4,19 @@
 
 EAPI=5
 ABI=x86
-P="libxcb-1.9"
-PN="libxcb"
-S=${WORKDIR}/${P}
 
 XORG_DOC=doc
-inherit xorg-2 flag-o-matic
+inherit xorg-2
 
 DESCRIPTION="X C-language Bindings library"
 HOMEPAGE="http://xcb.freedesktop.org/"
 EGIT_REPO_URI="git://anongit.freedesktop.org/git/xcb/libxcb"
+MY_PN="libxcb"
+MY_P=${MY_PN}-${PV}
 [[ ${PV} != 9999* ]] && \
-	SRC_URI="http://xcb.freedesktop.org/dist/${P}.tar.bz2"
+	SRC_URI="http://xcb.freedesktop.org/dist/${MY_P}.tar.bz2"
+
+S=${WORKDIR}/${MY_P}
 
 KEYWORDS="~amd64"
 IUSE="selinux"
@@ -23,18 +24,17 @@ IUSE="selinux"
 RDEPEND="dev-libs/libpthread-stubs
 	x11-libs/libXau
 	x11-libs/libXdmcp
-	!<=app-emulation/emul-linux-x86-xlibs-20121202
-	=app-emulation/emul-linux-x86-xlibs-20121202-r1
 "
 DEPEND="${RDEPEND}
-	app-emulation/emul-linux-x86-xlibs
+	!<=app-emulation/emul-linux-x86-xlibs-20121202-r49
+	=app-emulation/emul-linux-x86-xlibs-20121202-r50
 	dev-lang/python[xml]
 	dev-libs/libxslt
 	>=x11-proto/xcb-proto-1.7-r1"
 
 PATCHES=(
-	"${FILESDIR}"/${PN}-1.9-python-3-iteritems.patch
-	"${FILESDIR}"/${PN}-1.9-python-3-exception.patch
+	"${FILESDIR}"/${MY_PN}-1.9-python-3-iteritems.patch
+	"${FILESDIR}"/${MY_PN}-1.9-python-3-exception.patch
 )
 
 pkg_setup() {

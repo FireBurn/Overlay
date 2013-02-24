@@ -4,28 +4,26 @@
 
 EAPI=5
 ABI=x86
-P="glew-1.9.0"
-PN="glew"
-S=${WORKDIR}/${P}
 
 inherit multilib toolchain-funcs flag-o-matic
 
 DESCRIPTION="The OpenGL Extension Wrangler Library"
 HOMEPAGE="http://glew.sourceforge.net/"
-SRC_URI="mirror://sourceforge/${PN}/${P}.tgz"
+MY_PN="glew"
+MY_P=${MY_PN}-${PV}
+SRC_URI="mirror://sourceforge/${MY_PN}/${MY_P}.tgz"
 
 LICENSE="BSD MIT"
 SLOT="0"
 KEYWORDS="amd64"
 IUSE="doc static-libs"
 
-RDEPEND="virtual/glu
-	virtual/opengl
-	x11-libs/libX11
-	x11-libs/libXext
-	x11-libs/libXi
-	x11-libs/libXmu"
+RDEPEND="=media-libs/glu-9999-r50
+	!<=app-emulation/emul-linux-x86-opengl-20121202-r49
+	=app-emulation/emul-linux-x86-opengl-20121202-r50"
 DEPEND=${RDEPEND}
+
+S=${WORKDIR}/${MY_P}
 
 pkg_setup() {
 	append-flags -m32
@@ -76,7 +74,7 @@ src_install() {
 	dodoc TODO.txt
 	use doc && dohtml doc/*
 
-        rm -rf "${D}"/usr/bin || die "Removing bin files failed."
-        rm -rf "${D}"/usr/share || die "Removing man files failed."
-        rm -rf "${D}"/usr/include || die "Removing include files failed."
+	rm -rf "${D}"/usr/bin || die "Removing bin files failed."
+	rm -rf "${D}"/usr/share || die "Removing man files failed."
+	rm -rf "${D}"/usr/include || die "Removing include files failed."
 }

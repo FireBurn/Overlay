@@ -89,7 +89,7 @@ RDEPEND="
 	x11-libs/libXext
 	x11-libs/libXxf86vm
 	>=x11-libs/libxcb-1.8.1
-	opencl? ( 
+	opencl? (
 				app-admin/eselect-opencl
 				dev-libs/libclc
 			)
@@ -117,11 +117,11 @@ done
 DEPEND="${RDEPEND}
 	llvm? (
 		>=sys-devel/llvm-2.9[-udis86]
-		r600-llvm-compiler? ( >=sys-devel/llvm-3.2[r600] )
-		video_cards_radeonsi? ( >=sys-devel/llvm-3.2[r600] )
+		r600-llvm-compiler? ( =sys-devel/llvm-9999-r50[r600] )
+		video_cards_radeonsi? ( =sys-devel/llvm-9999-r50[r600] )
 	)
 	opencl? (
-				>=sys-devel/clang-9999
+				=sys-devel/clang-9999-r50
 				>=sys-devel/gcc-4.6
 	)
 	=dev-lang/python-2*

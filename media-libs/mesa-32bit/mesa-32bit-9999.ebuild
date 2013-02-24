@@ -80,8 +80,8 @@ LIBDRM_DEPSTRING=">=x11-libs/libdrm-32bit-2.4.40"
 RDEPEND="
 	!<x11-base/xorg-server-1.7
 	!<=x11-proto/xf86driproto-2.0.3
-	!<=app-emulation/emul-linux-x86-xlibs-20121202
-	=app-emulation/emul-linux-x86-xlibs-20121202-r1
+	!<=app-emulation/emul-linux-x86-opengl-20121202-r49
+	=app-emulation/emul-linux-x86-xlibs-20121202-r50
 	classic? ( app-admin/eselect-mesa )
 	gallium? ( app-admin/eselect-mesa )
 	>=app-admin/eselect-opengl-1.2.7
@@ -92,7 +92,7 @@ RDEPEND="
 	x11-libs/libXext
 	x11-libs/libXxf86vm
 	>=x11-libs/libxcb-1.8.1
-	opencl? ( 
+	opencl? (
 				app-admin/eselect-opencl
 				dev-libs/libclc
 			)
@@ -100,11 +100,15 @@ RDEPEND="
 	wayland? ( >=dev-libs/wayland-1.0.3 )
 	xorg? (
 		x11-base/xorg-server
-		x11-libs/libdrm[libkms]
+		x11-libs/libdrm-32bit[libkms]
 	)
 	xvmc? ( >=x11-libs/libXvMC-1.0.6 )
 	${LIBDRM_DEPSTRING}[video_cards_nouveau?,video_cards_vmware?]
 "
+DEPEND="!<=app-emulation/emul-linux-x86-opengl-20121202-r49
+	x11-libs/libdrm-32bit"
+PDEPEND="=app-emulation/emul-linux-x86-opengl-20121202-r50"
+
 for card in ${INTEL_CARDS}; do
 	RDEPEND="${RDEPEND}
 		video_cards_${card}? ( ${LIBDRM_DEPSTRING}[video_cards_intel] )
@@ -254,8 +258,8 @@ src_configure() {
 		if use opencl; then
 			myconf+="
 				$(use_enable opencl)
-				--with-opencl-libdir="${EPREFIX}/usr/lib32/OpenCL/vendors/mesa"
-				--with-clang-libdir="${EPREFIX}/usr/lib32"
+				--with-opencl-libdir="${EPREFIX}/usr/$(get_libdir)/OpenCL/vendors/mesa"
+				--with-clang-libdir="${EPREFIX}/usr/$(get_libdir)"
 				"
 		fi
 	fi
@@ -276,7 +280,7 @@ src_configure() {
 		--enable-glx \
                 --enable-32-bit \
                 --disable-64-bit \
-                --libdir=/usr/lib32 \
+                --libdir=/usr/$(get_libdir) \
 		$(use_enable !bindist texture-float) \
 		$(use_enable debug) \
 		$(use_enable egl) \
@@ -299,14 +303,13 @@ src_install() {
 
 	find "${ED}" -name '*.la' -exec rm -f {} + || die
 
-
 	# Move libGL and others from /usr/lib to /usr/lib/opengl/blah/lib
 	# because user can eselect desired GL provider.
 	ebegin "Moving libGL and friends for dynamic switching"
 		local x
-		local gl_dir="/usr/lib32/opengl/${OPENGL_DIR}/"
+		local gl_dir="/usr/$(get_libdir)/opengl/${OPENGL_DIR}/"
 		dodir ${gl_dir}/{lib,extensions,include/GL}
-		for x in "${ED}"/usr/lib32/lib{EGL,GL*,OpenVG}.{la,a,so*}; do
+		for x in "${ED}"/usr/$(get_libdir)/lib{EGL,GL*,OpenVG}.{la,a,so*}; do
 			if [ -f ${x} -o -L ${x} ]; then
 				mv -f "${x}" "${ED}${gl_dir}"/lib \
 					|| die "Failed to move ${x}"
@@ -329,26 +332,26 @@ src_install() {
 	if use classic || use gallium; then
 			ebegin "Moving DRI/Gallium drivers for dynamic switching"
 			local gallium_drivers=( i915_dri.so i965_dri.so r300_dri.so r600_dri.so swrast_dri.so )
-			keepdir /usr/lib32/dri
-			dodir /usr/lib32/mesa
+			keepdir /usr/$(get_libdir)/dri
+			dodir /usr/$(get_libdir)/mesa
 			for x in ${gallium_drivers[@]}; do
-				if [ -f "${S}/lib32/gallium/${x}" ]; then
-					mv -f "${ED}/usr/lib32/dri/${x}" "${ED}/usr/lib32/dri/${x/_dri.so/g_dri.so}" \
+				if [ -f "${S}/$(get_libdir)/gallium/${x}" ]; then
+					mv -f "${ED}/usr/$(get_libdir)/dri/${x}" "${ED}/usr/$(get_libdir)/dri/${x/_dri.so/g_dri.so}" \
 						|| die "Failed to move ${x}"
-					insinto "/usr/lib32/dri/"
-					if [ -f "${S}/lib32/${x}" ]; then
+					insinto "/usr/$(get_libdir)/dri/"
+					if [ -f "${S}/$(get_libdir)/${x}" ]; then
 						insopts -m0755
-						doins "${S}/lib32/${x}"
+						doins "${S}/$(get_libdir)/${x}"
 					fi
 				fi
 			done
-			for x in "${ED}"/usr/lib32/dri/*.so; do
+			for x in "${ED}"/usr/$(get_libdir)/dri/*.so; do
 				if [ -f ${x} -o -L ${x} ]; then
 					mv -f "${x}" "${x/dri/mesa}" \
 						|| die "Failed to move ${x}"
 				fi
 			done
-			pushd "${ED}"/usr/lib32/dri || die "pushd failed"
+			pushd "${ED}"/usr/$(get_libdir)/dri || die "pushd failed"
 			ln -s ../mesa/*.so . || die "Creating symlink failed"
 			# remove symlinks to drivers known to eselect
 			for x in ${gallium_drivers[@]}; do
@@ -361,9 +364,9 @@ src_install() {
 	fi
 	if use opencl; then
 		ebegin "Moving Gallium/Clover OpenCL implentation for dynamic switching"
-		if [ -f "${ED}/usr/lib32/libOpenCL.so" ]; then
-			mv -f "${ED}"/usr/lib32/libOpenCL.so* \
-			"${ED}"/usr/lib32/OpenCL/vendors/mesa
+		if [ -f "${ED}/usr/$(get_libdir)/libOpenCL.so" ]; then
+			mv -f "${ED}"/usr/$(get_libdir)/libOpenCL.so* \
+			"${ED}"/usr/$(get_libdir)/OpenCL/vendors/mesa
 		fi
 	fi
 	rm -rf "${ED}"/usr/include || die "Removing includes failed."

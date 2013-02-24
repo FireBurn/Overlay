@@ -12,11 +12,15 @@ KEYWORDS="~amd64"
 IUSE="opengl"
 
 DEPEND=""
+
 RDEPEND="~app-emulation/emul-linux-x86-baselibs-${PV}
 	x11-libs/libX11
-	opengl? ( app-emulation/emul-linux-x86-opengl )"
+"
+
 PDEPEND="x11-libs/libX11-32bit
-	x11-libs/libxcb-32bit"
+	x11-libs/libxcb-32bit
+	opengl? ( app-emulation/emul-linux-x86-opengl )
+"
 
 src_prepare() {
 	emul-linux-x86_src_prepare

@@ -9,14 +9,10 @@ PYTHON_COMPAT=( python{2_6,2_7} pypy{1_9,2_0} )
 
 inherit subversion eutils flag-o-matic multilib python-r1
 
-PN="clang"
-P="clang-9999"
-PF="clang-9999"
-PV="9999"
-
 DESCRIPTION="C language family frontend for LLVM"
 HOMEPAGE="http://clang.llvm.org/"
 SRC_URI=""
+MY_PN="clang"
 ESVN_REPO_URI="http://llvm.org/svn/llvm-project/cfe/trunk"
 
 LICENSE="UoI-NCSA"
@@ -45,7 +41,7 @@ pkg_setup() {
 
 src_prepare() {
 	# Same as llvm doc patches
-	epatch "${FILESDIR}"/${PN}-2.7-fixdoc.patch
+	epatch "${FILESDIR}"/${MY_PN}-2.7-fixdoc.patch
 
 	# multilib-strict
 	sed -e "/PROJ_headers/s#lib/clang#$(get_libdir)/clang#" \
@@ -58,7 +54,7 @@ src_prepare() {
 	sed -e 's/import ScanView/from clang \0/'  \
 		-i tools/clang/tools/scan-view/scan-view \
 		|| die "scan-view sed failed"
-	sed -e "/scanview.css\|sorttable.js/s#\$RealBin#${EPREFIX}/usr/share/${PN}#" \
+	sed -e "/scanview.css\|sorttable.js/s#\$RealBin#${EPREFIX}/usr/share/${MY_PN}#" \
 		-i tools/clang/tools/scan-build/scan-build \
 		|| die "scan-build sed failed"
 	# Set correct path for gold plugin
@@ -70,11 +66,11 @@ src_prepare() {
 	einfo "Fixing install dirs"
 	sed -e 's,^PROJ_docsdir.*,PROJ_docsdir := $(PROJ_prefix)/share/doc/'${PF}, \
 		-e 's,^PROJ_etcdir.*,PROJ_etcdir := '"${EPREFIX}"'/etc/llvm,' \
-		-e 's,^PROJ_libdir.*,PROJ_libdir := $(PROJ_prefix)/'lib32/llvm, \
+		-e 's,^PROJ_libdir.*,PROJ_libdir := $(PROJ_prefix)/'$(get_libdir)/llvm, \
 		-i Makefile.config.in || die "Makefile.config sed failed"
 
 	einfo "Fixing rpath and CFLAGS"
-	sed -e 's,\$(RPATH) -Wl\,\$(\(ToolDir\|LibDir\)),$(RPATH) -Wl\,'"${EPREFIX}"/usr/lib32/llvm, \
+	sed -e 's,\$(RPATH) -Wl\,\$(\(ToolDir\|LibDir\)),$(RPATH) -Wl\,'"${EPREFIX}"/usr/$(get_libdir)/llvm, \
 		-e '/OmitFramePointer/s/-fomit-frame-pointer//' \
 		-i Makefile.rules || die "rpath sed failed"
 
@@ -145,7 +141,7 @@ src_install() {
 		dosym ccc-analyzer /usr/bin/c++-analyzer
 		dobin tools/scan-build/scan-build
 
-		insinto /usr/share/${PN}
+		insinto /usr/share/${MY_PN}
 		doins tools/scan-build/scanview.css
 		doins tools/scan-build/sorttable.js
 	fi

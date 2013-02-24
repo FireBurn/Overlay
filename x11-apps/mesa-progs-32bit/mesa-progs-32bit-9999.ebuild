@@ -4,9 +4,8 @@
 
 EAPI=5
 ABI="x86"
-P="mesa-progs-9999"
-PN="mesa-progs"
-MY_PN=${PN/progs/demos}
+
+MY_PN="mesa-demos"
 MY_P=${MY_PN}-${PV}
 EGIT_REPO_URI="git://anongit.freedesktop.org/${MY_PN/-//}"
 EGIT_PROJECT="mesa-progs"
@@ -16,7 +15,7 @@ if [[ ${PV} = 9999* ]]; then
 	EXPERIMENTAL="true"
 fi
 
-inherit base autotools toolchain-funcs ${GIT_ECLASS} flag-o-matic
+inherit base autotools toolchain-funcs flag-o-matic ${GIT_ECLASS}
 
 DESCRIPTION="Mesa's OpenGL utility and demo programs (glxgears and glxinfo)"
 HOMEPAGE="http://mesa3d.sourceforge.net/"
@@ -32,16 +31,16 @@ KEYWORDS="~amd64"
 IUSE="egl gles1 gles2"
 
 RDEPEND="
-	media-libs/mesa[egl?,gles1?,gles2?]
+	media-libs/mesa-32bit[egl?,gles1?,gles2?]
 	virtual/opengl
-	x11-libs/libX11"
+	x11-libs/libX11-32bit"
 # glew and glu are only needed by the configure script which is only used
 # when building EGL/GLESv1/GLESv2 programs. They are not actually required
 # by the installed programs.
 DEPEND="${RDEPEND}
 	egl? (
 		media-libs/glew-32bit
-		virtual/glu
+		=media-libs/glu-9999-r50
 	)
 	x11-proto/xproto"
 

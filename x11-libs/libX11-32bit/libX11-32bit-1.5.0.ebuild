@@ -4,14 +4,16 @@
 
 EAPI=5
 ABI=x86
-P="libX11-1.5.0"
-PN="libX11"
-S=${WORKDIR}/${P}
 
 XORG_DOC=doc
-inherit xorg-2 toolchain-funcs flag-o-matic
+inherit xorg-2 toolchain-funcs
 
 DESCRIPTION="X.Org X11 library"
+MY_PN="libX11"
+MY_P=${MY_PN}-${PV}
+SRC_URI="${XORG_BASE_INDIVIDUAL_URI}/${XORG_MODULE}${MY_P}.tar.bz2"
+
+S=${WORKDIR}/${MY_P}
 
 KEYWORDS="~amd64"
 IUSE="ipv6 test"
@@ -23,14 +25,17 @@ RDEPEND=">=x11-libs/libxcb-32bit-1.8.1
 	x11-proto/inputproto
 	x11-proto/kbproto
 	x11-proto/xextproto
-	app-emulation/emul-linux-x86-xlibs"
+"
+
 DEPEND="${RDEPEND}
+	!<=app-emulation/emul-linux-x86-xlibs-20121202-r49
+	=app-emulation/emul-linux-x86-xlibs-20121202-r50
 	test? ( dev-lang/perl )"
 
 PATCHES=(
-	"${FILESDIR}"/${PN}-1.1.4-aix-pthread.patch
-	"${FILESDIR}"/${PN}-1.1.5-winnt-private.patch
-	"${FILESDIR}"/${PN}-1.1.5-solaris.patch
+	"${FILESDIR}"/${MY_PN}-1.1.4-aix-pthread.patch
+	"${FILESDIR}"/${MY_PN}-1.1.5-winnt-private.patch
+	"${FILESDIR}"/${MY_PN}-1.1.5-solaris.patch
 )
 
 pkg_setup() {
@@ -44,7 +49,7 @@ pkg_setup() {
 		$(use_enable ipv6)
 		--without-fop
 	)
-} 
+}
 
 src_configure() {
 	[[ ${CHOST} == *-interix* ]] && export ac_cv_func_poll=no

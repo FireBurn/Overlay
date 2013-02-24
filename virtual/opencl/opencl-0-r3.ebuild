@@ -17,8 +17,8 @@ RDEPEND="app-admin/eselect-opencl
 		video_cards_fglrx? ( >=x11-drivers/ati-drivers-12.1-r1 )
 		video_cards_nvidia? ( >=x11-drivers/nvidia-drivers-290.10-r2 )
 		video_cards_radeon? ( >=media-libs/mesa-8.1[video_cards_radeon,opencl] )
-                video_cards_radeonsi? ( >=media-libs/mesa-8.1[video_cards_radeonsi,opencl] )
-                video_cards_r600? ( >=media-libs/mesa-8.1[video_cards_r600,opencl] )
+		video_cards_radeonsi? ( >=media-libs/mesa-8.1[video_cards_radeonsi,opencl] )
+		video_cards_r600? ( >=media-libs/mesa-8.1[video_cards_r600,opencl] )
 		video_cards_nouveau? ( >=media-libs/mesa-8.1[video_cards_nouveau,opencl] )
 		dev-util/intel-ocl-sdk
 	)"
