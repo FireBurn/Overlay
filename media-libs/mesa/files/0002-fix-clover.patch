@@ -1,10 +1,6 @@
-.../state_trackers/clover/llvm/invocation.cpp      |   47 ++++++++++++++++---
- 1 files changed, 39 insertions(+), 8 deletions(-)
-
-diff --git a/src/gallium/state_trackers/clover/llvm/invocation.cpp b/src/gallium/state_trackers/clover/llvm/invocation.cpp
-index 0bd8e22..2785d10 100644
---- a/src/gallium/state_trackers/clover/llvm/invocation.cpp
-+++ b/src/gallium/state_trackers/clover/llvm/invocation.cpp
+diff -Naur a/src/gallium/state_trackers/clover/llvm/invocation.cpp b/src/gallium/state_trackers/clover/llvm/invocation.cpp
+--- a/src/gallium/state_trackers/clover/llvm/invocation.cpp	2013-02-24 02:37:28.745908050 +0000
++++ b/src/gallium/state_trackers/clover/llvm/invocation.cpp	2013-02-24 02:41:11.456903182 +0000
 @@ -28,10 +28,17 @@
  #include <clang/CodeGen/CodeGenAction.h>
  #include <llvm/Bitcode/BitstreamWriter.h>
@@ -25,7 +21,7 @@ index 0bd8e22..2785d10 100644
  #include <llvm/Support/TargetSelect.h>
  #include <llvm/Support/MemoryBuffer.h>
 @@ -41,8 +48,10 @@
-
+ 
  #if HAVE_LLVM < 0x0302
  #include <llvm/Target/TargetData.h>
 -#else
@@ -34,9 +30,9 @@ index 0bd8e22..2785d10 100644
 +#else
 +#include <llvm/IR/DataLayout.h>
  #endif
-
+ 
  #include "pipe/p_state.h"
-@@ -151,7 +160,11 @@ namespace {
+@@ -151,7 +160,11 @@
        // Add libclc generic search path
        c.getHeaderSearchOpts().AddPath(LIBCLC_INCLUDEDIR,
                                        clang::frontend::Angled,
@@ -46,10 +42,10 @@ index 0bd8e22..2785d10 100644
 +                                      , false
 +#endif
 +                                      );
-
+ 
        // Add libclc include
        c.getPreprocessorOpts().Includes.push_back("clc/clc.h");
-@@ -167,8 +180,12 @@ namespace {
+@@ -167,8 +180,12 @@
        c.getInvocation().setLangDefaults(c.getLangOpts(), clang::IK_OpenCL,
                                          clang::LangStandard::lang_opencl11);
  #endif
@@ -64,15 +60,15 @@ index 0bd8e22..2785d10 100644
  #if HAVE_LLVM <= 0x0301
                                   c.getDiagnosticOpts()));
  #else
-@@ -201,12 +218,26 @@ namespace {
-
+@@ -201,12 +218,26 @@
+ 
        llvm::PassManager PM;
        llvm::PassManagerBuilder Builder;
 -      bool isNative;
 -      llvm::Linker linker("clover", mod);
 +      llvm::sys::Path libclc_path =
 +                            llvm::sys::Path(LIBCLC_LIBEXECDIR + triple + ".bc");
-
+ 
        // Link the kernel with libclc
 -      linker.LinkInFile(llvm::sys::Path(LIBCLC_LIBEXECDIR + triple + ".bc"), isNative);
 +#if HAVE_LLVM < 0x0303
@@ -91,7 +87,20 @@ index 0bd8e22..2785d10 100644
 +         throw build_error(err_str);
 +      }
 +#endif
-
+ 
        // Add a function internalizer pass.
        //
-
+diff -Naur a/src/gallium/targets/opencl/Makefile.am b/src/gallium/targets/opencl/Makefile.am
+--- a/src/gallium/targets/opencl/Makefile.am	2013-02-24 02:37:28.776908049 +0000
++++ b/src/gallium/targets/opencl/Makefile.am	2013-02-24 02:45:22.786897688 +0000
+@@ -21,9 +21,9 @@
+ 	-lclangSema \
+ 	-lclangAnalysis \
+ 	-lclangAST \
++	-lclangEdit \
+ 	-lclangLex \
+ 	-lclangBasic \
+-	-lclangEdit \
+ 	$(LLVM_LIBS)
+ 
+ 
