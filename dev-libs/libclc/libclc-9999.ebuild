@@ -28,8 +28,8 @@ KEYWORDS="~amd64 ~x86"
 IUSE=""
 
 RDEPEND="
-	>=sys-devel/clang-3.1
-	>=sys-devel/llvm-3.1"
+	=sys-devel/clang-9999-r50[r600]
+	=sys-devel/llvm-9999-r50[r600]"
 DEPEND="${RDEPEND}"
 
 PATCHES=(
