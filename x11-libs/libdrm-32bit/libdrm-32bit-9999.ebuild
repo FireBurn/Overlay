@@ -29,8 +29,8 @@ RESTRICT="test" # see bug #236845
 RDEPEND="dev-libs/libpthread-stubs
 	video_cards_intel? ( >=x11-libs/libpciaccess-0.10 )"
 DEPEND="${RDEPEND}
-	!<=app-emulation/emul-linux-x86-opengl-20121202-r49
-	=app-emulation/emul-linux-x86-xlibs-20121202-r50"
+	!<=app-emulation/emul-linux-x86-opengl-20130224-r49
+	=app-emulation/emul-linux-x86-xlibs-20130224-r50"
 
 PATCHES=(
 	"${FILESDIR}"/${PN}-2.4.28-solaris.patch

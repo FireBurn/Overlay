@@ -19,8 +19,8 @@ KEYWORDS="amd64"
 IUSE="doc static-libs"
 
 RDEPEND="=media-libs/glu-9999-r50
-	!<=app-emulation/emul-linux-x86-opengl-20121202-r49
-	=app-emulation/emul-linux-x86-opengl-20121202-r50"
+	!<=app-emulation/emul-linux-x86-opengl-20130224-r49
+	=app-emulation/emul-linux-x86-opengl-20130224-r50"
 DEPEND=${RDEPEND}
 
 S=${WORKDIR}/${MY_P}

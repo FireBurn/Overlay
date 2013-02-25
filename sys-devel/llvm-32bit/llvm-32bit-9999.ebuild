@@ -23,8 +23,8 @@ SLOT="0"
 KEYWORDS="amd64"
 IUSE="debug doc gold +libffi multitarget ocaml +r600 test udis86 vim-syntax"
 
-DEPEND="!<=app-emulation/emul-linux-x86-baselibs-20121202-r49
-	=app-emulation/emul-linux-x86-baselibs-20121202-r50
+DEPEND="!<=app-emulation/emul-linux-x86-baselibs-20130224-r49
+	=app-emulation/emul-linux-x86-baselibs-20130224-r50
 	dev-lang/perl
 	dev-python/sphinx
 	>=sys-devel/make-3.79
@@ -34,13 +34,13 @@ DEPEND="!<=app-emulation/emul-linux-x86-baselibs-20121202-r49
 	|| ( >=sys-devel/binutils-2.18 >=sys-devel/binutils-apple-3.2.3 )
 	gold? ( >=sys-devel/binutils-2.22[cxx] )
 	libffi? ( virtual/pkgconfig
-		=app-emulation/emul-linux-x86-baselibs-20121202-r50 )
+		=app-emulation/emul-linux-x86-baselibs-20130224-r50 )
 	ocaml? ( dev-lang/ocaml )
 	udis86? ( dev-libs/udis86-32bit )"
 RDEPEND="dev-lang/perl
-	!<=app-emulation/emul-linux-x86-baselibs-20121202-r49
-	=app-emulation/emul-linux-x86-baselibs-20121202-r50
-	libffi? ( =app-emulation/emul-linux-x86-baselibs-20121202-r50 )
+	!<=app-emulation/emul-linux-x86-baselibs-20130224-r49
+	=app-emulation/emul-linux-x86-baselibs-20130224-r50
+	libffi? ( =app-emulation/emul-linux-x86-baselibs-20130224-r50 )
 	vim-syntax? ( || ( app-editors/vim app-editors/gvim ) )"
 
 pkg_setup() {

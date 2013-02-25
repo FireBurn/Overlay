@@ -80,14 +80,14 @@ LIBDRM_DEPSTRING=">=x11-libs/libdrm-32bit-2.4.40"
 RDEPEND="
 	!<x11-base/xorg-server-1.7
 	!<=x11-proto/xf86driproto-2.0.3
-	!<=app-emulation/emul-linux-x86-opengl-20121202-r49
-	=app-emulation/emul-linux-x86-xlibs-20121202-r50
+	!<=app-emulation/emul-linux-x86-opengl-20130224-r49
+	=app-emulation/emul-linux-x86-xlibs-20130224-r50
 	classic? ( app-admin/eselect-mesa )
 	gallium? ( app-admin/eselect-mesa )
 	>=app-admin/eselect-opengl-1.2.7
 	dev-libs/expat
 	gbm? ( virtual/udev )
-	>=x11-libs/libX11-32bit-1.3.99.901
+	>=x11-libs/libX11-1.3.99.901
 	x11-libs/libXdamage
 	x11-libs/libXext
 	x11-libs/libXxf86vm
@@ -105,9 +105,9 @@ RDEPEND="
 	xvmc? ( >=x11-libs/libXvMC-1.0.6 )
 	${LIBDRM_DEPSTRING}[video_cards_nouveau?,video_cards_vmware?]
 "
-DEPEND="!<=app-emulation/emul-linux-x86-opengl-20121202-r49
+DEPEND="!<=app-emulation/emul-linux-x86-opengl-20130224-r49
 	x11-libs/libdrm-32bit"
-PDEPEND="=app-emulation/emul-linux-x86-opengl-20121202-r50"
+PDEPEND="=app-emulation/emul-linux-x86-opengl-20130224-r50"
 
 for card in ${INTEL_CARDS}; do
 	RDEPEND="${RDEPEND}

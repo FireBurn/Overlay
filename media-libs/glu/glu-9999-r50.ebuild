@@ -30,8 +30,8 @@ IUSE="multilib static-libs"
 DEPEND="media-libs/mesa
 	media-libs/mesa-32bit"
 RDEPEND="${DEPEND}
-	!<=app-emulation/emul-linux-x86-opengl-20121202-r49
-	=app-emulation/emul-linux-x86-opengl-20121202-r50
+	!<=app-emulation/emul-linux-x86-opengl-20130224-r49
+	=app-emulation/emul-linux-x86-opengl-20130224-r50
 	!<media-libs/mesa-9"
 
 foreachabi() {

@@ -12,8 +12,8 @@ KEYWORDS="~amd64"
 
 DEPEND="app-admin/eselect-opengl
 	>=app-admin/eselect-mesa-0.0.9"
-RDEPEND="!<=app-emulation/emul-linux-x86-xlibs-20121202-r49
-	=app-emulation/emul-linux-x86-xlibs-20121202-r50
+RDEPEND="!<=app-emulation/emul-linux-x86-xlibs-20130224-r49
+	=app-emulation/emul-linux-x86-xlibs-20130224-r50
 	media-libs/mesa"
 PDEPEND="x11-libs/libdrm-32bit
 	media-libs/glew-32bit

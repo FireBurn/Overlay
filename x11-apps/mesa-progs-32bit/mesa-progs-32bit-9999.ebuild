@@ -30,10 +30,8 @@ SLOT="0"
 KEYWORDS="~amd64"
 IUSE="egl gles1 gles2"
 
-RDEPEND="
-	media-libs/mesa-32bit[egl?,gles1?,gles2?]
-	virtual/opengl
-	x11-libs/libX11-32bit"
+RDEPEND="media-libs/mesa-32bit[egl?,gles1?,gles2?]
+	virtual/opengl"
 # glew and glu are only needed by the configure script which is only used
 # when building EGL/GLESv1/GLESv2 programs. They are not actually required
 # by the installed programs.
