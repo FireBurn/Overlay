@@ -35,6 +35,7 @@ DEPEND="${RDEPEND}"
 PATCHES=(
 	"${FILESDIR}/fix-install-target.patch"
 	"${FILESDIR}/0001-Rename-includes.patch"
+	"${FILESDIR}/0002-Force-python2.patch"
 )
 
 src_configure() {
