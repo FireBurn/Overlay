@@ -140,7 +140,6 @@ S="${WORKDIR}/${MY_P}"
 
 PATCHES=(
 		"${FILESDIR}/0001-radeong-opencl-rename-target-from-r600-to-r600-amd-n.patch"
-		"${FILESDIR}/0002-fix-clover.patch"
 		)
 
 # It is slow without texrels, if someone wants slow
