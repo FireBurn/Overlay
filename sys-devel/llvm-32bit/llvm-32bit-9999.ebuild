@@ -208,6 +208,9 @@ src_install() {
 		done
 	fi
 
+	dodir /etc/ld.so.conf.d/
+	echo "/usr/$(get_libdir)/${PN}" > ${ED}/etc/ld.so.conf.d/06${PN}.conf || die
+
 	mv "${D}"/usr/bin/llvm-config "${D}"/usr/bin/llvm-config32 || die "Removing files failed."
 	rm -rf "${D}"/usr/share || die "Removing files failed."
 	rm -rf "${D}"/usr/bin/bugpoint || die "Removing files failed."
@@ -239,3 +242,5 @@ src_install() {
 	rm -rf "${D}"/usr/bin/opt || die "Removing files failed."
 	rm -rf "${D}"/usr/include || die "Removing files failed."
 }
+
+

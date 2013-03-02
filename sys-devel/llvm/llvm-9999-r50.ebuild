@@ -199,4 +199,7 @@ src_install() {
 			eend $?
 		done
 	fi
+
+	dodir /etc/ld.so.conf.d/
+	echo "/usr/$(get_libdir)/${PN}" > ${ED}/etc/ld.so.conf.d/06${PN}.conf || die
 }
