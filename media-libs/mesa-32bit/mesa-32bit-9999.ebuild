@@ -12,7 +12,9 @@ if [[ ${PV} = 9999* ]]; then
 	EXPERIMENTAL="true"
 fi
 
-inherit base autotools multilib flag-o-matic toolchain-funcs ${GIT_ECLASS}
+PYTHON_COMPAT=( python{2_6,2_7} )
+
+inherit base autotools multilib flag-o-matic python-single-r1 toolchain-funcs ${GIT_ECLASS}
 
 OPENGL_DIR="xorg-x11"
 
@@ -131,8 +133,8 @@ DEPEND="${RDEPEND}
 				>=sys-devel/clang-32bit-9999
 				>=sys-devel/gcc-4.6
 	)
-	=dev-lang/python-2*
-	dev-libs/libxml2[python]
+	${PYTHON_DEPS}
+	dev-libs/libxml2[python,${PYTHON_USEDEP}]
 	sys-devel/bison
 	sys-devel/flex
 	virtual/pkgconfig
@@ -161,6 +163,8 @@ pkg_setup() {
 	append-ldflags -m32
 	# workaround toc-issue wrt #386545
 	use ppc64 && append-flags -mminimal-toc
+
+	python-single-r1_pkg_setup
 }
 
 src_unpack() {
@@ -294,6 +298,7 @@ src_configure() {
 		$(use_enable xorg) \
 		--with-dri-drivers=${DRI_DRIVERS} \
 		--with-gallium-drivers=${GALLIUM_DRIVERS} \
+		PYTHON2="${PYTHON}" \
 		${myconf}
 }
 
@@ -400,6 +405,10 @@ pkg_postinst() {
 	# Select classic/gallium drivers
 	if use classic || use gallium; then
 		eselect mesa set --auto
+	fi
+
+	if use opencl; then
+		eselect opencl set mesa
 	fi
 
 	# warn about patent encumbered texture-float

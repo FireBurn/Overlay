@@ -3,6 +3,7 @@
 # $Header: $
 
 EAPI=5
+ABI=x86
 
 EGIT_REPO_URI="git://anongit.freedesktop.org/mesa/mesa"
 
@@ -11,9 +12,7 @@ if [[ ${PV} = 9999* ]]; then
 	EXPERIMENTAL="true"
 fi
 
-PYTHON_COMPAT=( python{2_6,2_7} )
-
-inherit base autotools multilib flag-o-matic python-single-r1 toolchain-funcs ${GIT_ECLASS}
+inherit base autotools multilib flag-o-matic toolchain-funcs ${GIT_ECLASS}
 
 OPENGL_DIR="xorg-x11"
 
@@ -38,7 +37,7 @@ fi
 # GLES[2]/gl[2]{,ext,platform}.h are SGI-B-2.0
 LICENSE="MIT SGI-B-2.0"
 SLOT="0"
-KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-fbsd ~x86-freebsd ~amd64-linux ~arm-linux ~ia64-linux ~x86-linux ~sparc-solaris ~x64-solaris ~x86-solaris"
+KEYWORDS="~amd64"
 
 INTEL_CARDS="i915 i965 intel"
 RADEON_CARDS="r100 r200 r300 r600 radeon radeonsi"
@@ -75,12 +74,14 @@ REQUIRED_USE="
 	video_cards_vmware? ( gallium )
 "
 
-LIBDRM_DEPSTRING=">=x11-libs/libdrm-2.4.40"
+LIBDRM_DEPSTRING=">=x11-libs/libdrm-32bit-2.4.40"
 # keep correct libdrm and dri2proto dep
 # keep blocks in rdepend for binpkg
 RDEPEND="
 	!<x11-base/xorg-server-1.7
 	!<=x11-proto/xf86driproto-2.0.3
+	!<=app-emulation/emul-linux-x86-opengl-20130224-r49
+	=app-emulation/emul-linux-x86-xlibs-20130224-r50
 	classic? ( app-admin/eselect-mesa )
 	gallium? ( app-admin/eselect-mesa )
 	>=app-admin/eselect-opengl-1.2.7
@@ -99,11 +100,15 @@ RDEPEND="
 	wayland? ( >=dev-libs/wayland-1.0.3 )
 	xorg? (
 		x11-base/xorg-server
-		x11-libs/libdrm[libkms]
+		x11-libs/libdrm-32bit[libkms]
 	)
 	xvmc? ( >=x11-libs/libXvMC-1.0.6 )
 	${LIBDRM_DEPSTRING}[video_cards_nouveau?,video_cards_vmware?]
 "
+DEPEND="!<=app-emulation/emul-linux-x86-opengl-20130224-r49
+	x11-libs/libdrm-32bit"
+PDEPEND="=app-emulation/emul-linux-x86-opengl-20130224-r50"
+
 for card in ${INTEL_CARDS}; do
 	RDEPEND="${RDEPEND}
 		video_cards_${card}? ( ${LIBDRM_DEPSTRING}[video_cards_intel] )
@@ -118,16 +123,16 @@ done
 
 DEPEND="${RDEPEND}
 	llvm? (
-		>=sys-devel/llvm-2.9[-udis86]
-		r600-llvm-compiler? ( =sys-devel/llvm-9999-r50[r600] )
-		video_cards_radeonsi? ( =sys-devel/llvm-9999-r50[r600] )
+		>=sys-devel/llvm-32bit-2.9[-udis86]
+		r600-llvm-compiler? ( >=sys-devel/llvm-32bit-3.2[r600] )
+		video_cards_radeonsi? ( >=sys-devel/llvm-32bit-3.2[r600] )
 	)
 	opencl? (
-				=sys-devel/clang-9999-r50
+				>=sys-devel/clang-32bit-9999
 				>=sys-devel/gcc-4.6
 	)
-	${PYTHON_DEPS}
-	dev-libs/libxml2[python,${PYTHON_USEDEP}]
+	=dev-lang/python-2*
+	dev-libs/libxml2[python]
 	sys-devel/bison
 	sys-devel/flex
 	virtual/pkgconfig
@@ -152,10 +157,10 @@ QA_WX_LOAD="usr/lib*/opengl/xorg-x11/lib/libGL.so*"
 # Think about: ggi, fbcon, no-X configs
 
 pkg_setup() {
+	append-flags -m32
+	append-ldflags -m32
 	# workaround toc-issue wrt #386545
 	use ppc64 && append-flags -mminimal-toc
-
-	python-single-r1_pkg_setup
 }
 
 src_unpack() {
@@ -268,9 +273,13 @@ src_configure() {
 	# build fails with BSD indent, bug #428112
 	use userland_GNU || export INDENT=cat
 
+	LLVM_CONFIG="/usr/bin/llvm-config32" \
 	econf \
 		--enable-dri \
 		--enable-glx \
+                --enable-32-bit \
+                --disable-64-bit \
+                --libdir=/usr/$(get_libdir) \
 		$(use_enable !bindist texture-float) \
 		$(use_enable debug) \
 		$(use_enable egl) \
@@ -285,7 +294,6 @@ src_configure() {
 		$(use_enable xorg) \
 		--with-dri-drivers=${DRI_DRIVERS} \
 		--with-gallium-drivers=${GALLIUM_DRIVERS} \
-		PYTHON2="${PYTHON}" \
 		${myconf}
 }
 
@@ -293,14 +301,6 @@ src_install() {
 	base_src_install
 
 	find "${ED}" -name '*.la' -exec rm -f {} + || die
-
-	if use !bindist; then
-		dodoc docs/patents.txt
-	fi
-
-	# Install config file for eselect mesa
-	insinto /usr/share/mesa
-	newins "${FILESDIR}/eselect-mesa.conf.8.1" eselect-mesa.conf
 
 	# Move libGL and others from /usr/lib to /usr/lib/opengl/blah/lib
 	# because user can eselect desired GL provider.
@@ -380,6 +380,9 @@ src_install() {
                 done
 		eend $?
 	fi
+	rm -rf "${ED}"/usr/include || die "Removing includes failed."
+	rm -f "${ED}"/usr/bin/glsl_compiler || die "Removing glsl_compiler failed."
+	rm -f "${ED}"/usr/share/mesa/eselect-mesa.conf || die "Removing eselect-mesa failed."
 }
 
 pkg_postinst() {
@@ -397,10 +400,6 @@ pkg_postinst() {
 	# Select classic/gallium drivers
 	if use classic || use gallium; then
 		eselect mesa set --auto
-	fi
-
-	if use opencl; then
-		eselect opencl set mesa
 	fi
 
 	# warn about patent encumbered texture-float
