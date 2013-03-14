@@ -369,20 +369,20 @@ src_install() {
 	if use opencl; then
 		ebegin "Moving Gallium/Clover OpenCL implentation for dynamic switching"
 
-                local cl_dir="/usr/$(get_libdir)/OpenCL/vendors/mesa/"
-                dodir ${cl_dir}/include/CL
-                for x in "${ED}"/usr/$(get_libdir)/libOpenCL.*; do
-                        if [ -f ${x} -o -L ${x} ]; then
-                                mv -f "${x}" "${ED}${cl_dir}" \
-                                        || die "Failed to move ${x}"
-                        fi
-                done
-                for x in "${ED}"/usr/include/CL/*; do
-                        if [ -f ${x} -o -L ${x} ]; then
-                                mv -f "${x}" "${ED}${cl_dir}"/include/CL \
-                                        || die "Failed to move ${x}"
-                        fi
-                done
+		local cl_dir="/usr/$(get_libdir)/OpenCL/vendors/mesa/"
+		dodir ${cl_dir}/include/CL
+		for x in "${ED}"/usr/$(get_libdir)/libOpenCL.*; do
+			if [ -f ${x} -o -L ${x} ]; then
+				mv -f "${x}" "${ED}${cl_dir}" \
+					|| die "Failed to move ${x}"
+			fi
+		done
+		for x in "${ED}"/usr/include/CL/*; do
+			if [ -f ${x} -o -L ${x} ]; then
+				mv -f "${x}" "${ED}${cl_dir}"/include/CL \
+					|| die "Failed to move ${x}"
+			fi
+		done
 		eend $?
 	fi
 	rm -rf "${ED}"/usr/include || die "Removing includes failed."
