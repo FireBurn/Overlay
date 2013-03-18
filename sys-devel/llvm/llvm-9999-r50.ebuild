@@ -99,7 +99,6 @@ src_prepare() {
 		|| die "FileCheck Makefile sed failed"
 
 	epatch "${FILESDIR}"/${PN}-3.2-nodoctargz.patch
-	epatch "${FILESDIR}"/${PN}-3.0-PPC_macro.patch
 
 	# User patches
 	epatch_user
