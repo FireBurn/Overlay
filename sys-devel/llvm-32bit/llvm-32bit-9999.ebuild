@@ -106,8 +106,7 @@ src_prepare() {
 	sed -e "/NO_INSTALL = 1/s/^/#/" -i utils/FileCheck/Makefile \
 		|| die "FileCheck Makefile sed failed"
 
-	epatch "${FILESDIR}"/${PN}-3.2-nodoctargz.patch
-	epatch "${FILESDIR}"/${PN}-3.0-PPC_macro.patch
+	epatch "${FILESDIR}"/${MY_PN}-3.2-nodoctargz.patch
 
 	# User patches
 	epatch_user
