@@ -1,6 +1,6 @@
 # Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-9999.ebuild,v 1.39 2013/02/02 23:41:54 mgorny Exp $
+# $Header: /var/cvsroot/gentoo-x86/sys-devel/llvm/llvm-9999.ebuild,v 1.40 2013/03/19 12:42:12 chithanh Exp $
 
 EAPI=5
 ABI=x86
@@ -21,7 +21,7 @@ ESVN_REPO_URI="http://llvm.org/svn/llvm-project/llvm/trunk"
 LICENSE="UoI-NCSA"
 SLOT="0"
 KEYWORDS="amd64"
-IUSE="debug doc gold +libffi multitarget ocaml +r600 test udis86 vim-syntax"
+IUSE="debug doc gold +libffi multitarget ocaml test udis86 vim-syntax video_cards_radeon"
 
 DEPEND="!<=app-emulation/emul-linux-x86-baselibs-20130224-r49
 	=app-emulation/emul-linux-x86-baselibs-20130224-r50
@@ -106,7 +106,8 @@ src_prepare() {
 	sed -e "/NO_INSTALL = 1/s/^/#/" -i utils/FileCheck/Makefile \
 		|| die "FileCheck Makefile sed failed"
 
-	epatch "${FILESDIR}"/${MY_PN}-3.2-nodoctargz.patch
+	epatch "${FILESDIR}"/${PN}-3.2-nodoctargz.patch
+	epatch "${FILESDIR}"/${PN}-3.0-PPC_macro.patch
 
 	# User patches
 	epatch_user
@@ -129,10 +130,6 @@ src_configure() {
 		CONF_FLAGS="${CONF_FLAGS} --enable-pic"
 	fi
 
-	if use r600; then
-		CONF_FLAGS="${CONF_FLAGS} --enable-experimental-targets=R600"
-	fi
-
 	if use gold; then
 		CONF_FLAGS="${CONF_FLAGS} --with-binutils-include=${EPREFIX}/usr/include/"
 	fi
@@ -144,6 +141,10 @@ src_configure() {
 
 	if use udis86; then
 		CONF_FLAGS="${CONF_FLAGS} --with-udis86"
+	fi
+
+	if use video_cards_radeon; then
+		CONF_FLAGS="${CONF_FLAGS} --enable-experimental-targets=R600"
 	fi
 
 	if use libffi; then

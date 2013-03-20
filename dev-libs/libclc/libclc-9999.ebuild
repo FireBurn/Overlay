@@ -28,8 +28,8 @@ KEYWORDS="~amd64 ~x86"
 IUSE=""
 
 RDEPEND="
-	=sys-devel/clang-9999-r50[r600]
-	=sys-devel/llvm-9999-r50[r600]"
+	=sys-devel/clang-9999-r50[video_cards_radeon]
+	=sys-devel/llvm-9999-r50[video_cards_radeon]"
 DEPEND="${RDEPEND}"
 
 PATCHES=(

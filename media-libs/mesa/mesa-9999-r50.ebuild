@@ -98,7 +98,7 @@ RDEPEND="
 	vdpau? ( >=x11-libs/libvdpau-0.4.1 )
 	wayland? ( >=dev-libs/wayland-1.0.3 )
 	xorg? (
-		x11-base/xorg-server
+		x11-base/xorg-server:=
 		x11-libs/libdrm[libkms]
 	)
 	xvmc? ( >=x11-libs/libXvMC-1.0.6 )
@@ -118,13 +118,13 @@ done
 
 DEPEND="${RDEPEND}
 	llvm? (
-		>=sys-devel/llvm-2.9[-udis86]
-		r600-llvm-compiler? ( =sys-devel/llvm-9999-r50[r600] )
-		video_cards_radeonsi? ( =sys-devel/llvm-9999-r50[r600] )
+		>=sys-devel/llvm-2.9
+		r600-llvm-compiler? ( sys-devel/llvm[video_cards_radeon] )
+		video_cards_radeonsi? ( sys-devel/llvm[video_cards_radeon] )
 	)
 	opencl? (
-				=sys-devel/clang-9999-r50
-				>=sys-devel/gcc-4.6
+		sys-devel/clang[video_cards_radeon]
+		>=sys-devel/gcc-4.6
 	)
 	${PYTHON_DEPS}
 	dev-libs/libxml2[python,${PYTHON_USEDEP}]

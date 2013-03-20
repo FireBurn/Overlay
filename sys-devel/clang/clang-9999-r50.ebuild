@@ -16,11 +16,11 @@ ESVN_REPO_URI="http://llvm.org/svn/llvm-project/cfe/trunk"
 LICENSE="UoI-NCSA"
 SLOT="0"
 KEYWORDS="amd64"
-IUSE="debug multitarget +r600 python +static-analyzer test"
+IUSE="debug multitarget python +static-analyzer test video_cards_radeon"
 
 DEPEND="static-analyzer? ( dev-lang/perl )
 	${PYTHON_DEPS}"
-RDEPEND="~sys-devel/llvm-${PV}[debug=,multitarget=]
+RDEPEND="~sys-devel/llvm-${PV}[debug=,multitarget=,video_cards_radeon=]
 	${PYTHON_DEPS}"
 
 S="${WORKDIR}/llvm"
@@ -94,7 +94,7 @@ src_configure() {
 		CONF_FLAGS="${CONF_FLAGS} --enable-targets=host,cpp"
 	fi
 
-	if use r600; then
+	if use video_cards_radeon; then
 		CONF_FLAGS="${CONF_FLAGS} --enable-experimental-targets=R600"
 	fi
 
