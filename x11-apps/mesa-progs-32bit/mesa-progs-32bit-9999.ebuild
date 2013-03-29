@@ -30,16 +30,16 @@ SLOT="0"
 KEYWORDS="~amd64"
 IUSE="egl gles1 gles2"
 
-RDEPEND="media-libs/mesa-32bit[egl?,gles1?,gles2?]
-	virtual/opengl"
+RDEPEND="
+	media-libs/mesa-32bit[egl?,gles1?,gles2?]
+	virtual/opengl
+	app-emulation/emul-linux-x86-xlibs"
 # glew and glu are only needed by the configure script which is only used
 # when building EGL/GLESv1/GLESv2 programs. They are not actually required
 # by the installed programs.
 DEPEND="${RDEPEND}
-	egl? (
-		media-libs/glew-32bit
-		=media-libs/glu-9999-r50
-	)
+	media-libs/glew-32bit
+	=media-libs/glu-9999-r50
 	x11-proto/xproto"
 
 S=${WORKDIR}/${MY_P}

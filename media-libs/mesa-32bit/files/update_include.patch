@@ -1,0 +1,13 @@
+diff -Naur a/src/gallium/state_trackers/clover/llvm/invocation.cpp b/src/gallium/state_trackers/clover/llvm/invocation.cpp
+--- a/src/gallium/state_trackers/clover/llvm/invocation.cpp	2013-03-29 12:14:25.514504748 +0000
++++ b/src/gallium/state_trackers/clover/llvm/invocation.cpp	2013-03-29 12:13:03.978506530 +0000
+@@ -37,7 +37,8 @@
+ #include <llvm/IR/DerivedTypes.h>
+ #include <llvm/IR/LLVMContext.h>
+ #include <llvm/IR/Module.h>
+-#include <llvm/Support/IRReader.h>
++#include <llvm/Support/SourceMgr.h>
++#include <llvm/IRReader/IRReader.h>
+ #endif
+ #include <llvm/PassManager.h>
+ #include <llvm/Support/TargetSelect.h>
