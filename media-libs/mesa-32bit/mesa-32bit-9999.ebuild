@@ -147,10 +147,6 @@ DEPEND="${RDEPEND}
 
 S="${WORKDIR}/${MY_P}"
 
-PATCHES=(
-		"${FILESDIR}/0001-radeong-opencl-rename-target-from-r600-to-r600-amd-n.patch"
-		)
-
 # It is slow without texrels, if someone wants slow
 # mesa without texrels +pic use is worth the shot
 QA_EXECSTACK="usr/lib*/opengl/xorg-x11/lib/libGL.so*"
