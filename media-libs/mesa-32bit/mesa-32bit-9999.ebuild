@@ -54,26 +54,36 @@ IUSE="${IUSE_VIDEO_CARDS}
 	wayland xvmc xa xorg kernel_FreeBSD"
 
 REQUIRED_USE="
-	llvm?   ( gallium )
 	openvg? ( egl gallium )
-	opencl? ( gallium r600-llvm-compiler )
-	gbm?    ( shared-glapi )
-	gles1?  ( egl )
-	gles2?  ( egl )
-	r600-llvm-compiler? ( gallium llvm || ( video_cards_r600 video_cards_radeon ) )
+	opencl? (
+		video_cards_r600? ( gallium r600-llvm-compiler )
+	)
+	gbm? ( shared-glapi )
+	gles1? ( egl )
+	gles2? ( egl )
 	wayland? ( egl )
-	xa?  ( gallium )
-	xorg?  ( gallium )
-	video_cards_intel?  ( || ( classic gallium ) )
-	video_cards_i915?   ( || ( classic gallium ) )
-	video_cards_i965?   ( || ( classic gallium ) )
+	xa? ( gallium )
+	xorg? ( gallium )
+
+	video_cards_intel? (
+		|| ( video_cards_i915 video_cards_i965 video_cards_ilo )
+	)
+	video_cards_i915? ( || ( classic gallium ) )
+	video_cards_i965? ( classic )
+	video_cards_ilo? ( gallium )
+
 	video_cards_nouveau? ( || ( classic gallium ) )
-	video_cards_radeon? ( || ( classic gallium ) )
-	video_cards_r100?   ( classic )
-	video_cards_r200?   ( classic )
-	video_cards_r300?   ( gallium )
-	video_cards_r600?   ( gallium )
-	video_cards_radeonsi?   ( gallium llvm )
+
+	video_cards_radeon? (
+		|| ( video_cards_r100 video_cards_r200 video_cards_r300 video_cards_r600 video_cards_radeonsi )
+	)
+	video_cards_r100? ( classic )
+	video_cards_r200? ( classic )
+	video_cards_r300? ( gallium )
+	video_cards_r600? ( gallium )
+	r600-llvm-compiler? ( gallium llvm video_cards_r600 )
+	video_cards_radeonsi? ( gallium llvm )
+
 	video_cards_vmware? ( gallium )
 "
 
@@ -98,7 +108,13 @@ RDEPEND="
 	opencl? (
 		app-admin/eselect-opencl
 		dev-libs/libclc
-			)
+		sys-devel/clang-32bit[video_cards_radeon]
+	)
+	llvm? (
+		>=sys-devel/llvm-32bit-2.9[-udis86]
+		r600-llvm-compiler? ( sys-devel/llvm-32bit[video_cards_radeon] )
+		video_cards_radeonsi? ( sys-devel/llvm-32bit[video_cards_radeon] )
+	)
 	vdpau? ( >=x11-libs/libvdpau-0.4.1 )
 	wayland? ( >=dev-libs/wayland-1.0.3 )
 	xorg? (
@@ -125,14 +141,8 @@ for card in ${RADEON_CARDS}; do
 done
 
 DEPEND="${RDEPEND}
-	llvm? (
-		>=sys-devel/llvm-32bit-2.9[-udis86]
-		r600-llvm-compiler? ( sys-devel/llvm-32bit[video_cards_radeon] )
-		video_cards_radeonsi? ( sys-devel/llvm-32bit[video_cards_radeon] )
-	)
 	opencl? (
-		sys-devel/clang-32bit[video_cards_radeon]
-		>=sys-devel/gcc-4.6
+		!<sys-devel/gcc-4.6
 	)
 	${PYTHON_DEPS}
 	dev-libs/libxml2[python,${PYTHON_USEDEP}]
@@ -207,11 +217,6 @@ src_configure() {
 	# Intel code
 		driver_enable video_cards_i915 i915
 		driver_enable video_cards_i965 i965
-		if ! use video_cards_i915 && \
-			! use video_cards_i965 && \
-				! use video_cards_ilo; then
-			driver_enable video_cards_intel i915 i965
-		fi
 
 		# Nouveau code
 		driver_enable video_cards_nouveau nouveau
@@ -245,18 +250,10 @@ src_configure() {
 		gallium_enable video_cards_nouveau nouveau
 		gallium_enable video_cards_i915 i915
 		gallium_enable video_cards_ilo ilo
-		if ! use video_cards_i915 && \
-			! use video_cards_ilo; then
-			gallium_enable video_cards_intel i915 ilo
-		fi
 
 		gallium_enable video_cards_r300 r300
 		gallium_enable video_cards_r600 r600
 		gallium_enable video_cards_radeonsi radeonsi
-		if ! use video_cards_r300 && \
-				! use video_cards_r600; then
-			gallium_enable video_cards_radeon r300 r600
-		fi
 		# opencl stuff
 		if use opencl; then
 			myconf+="
@@ -281,9 +278,9 @@ src_configure() {
 	econf \
 		--enable-dri \
 		--enable-glx \
-                --enable-32-bit \
-                --disable-64-bit \
-                --libdir=/usr/$(get_libdir) \
+		--enable-32-bit \
+		--disable-64-bit \
+		--libdir=/usr/$(get_libdir) \
 		$(use_enable !bindist texture-float) \
 		$(use_enable debug) \
 		$(use_enable egl) \
