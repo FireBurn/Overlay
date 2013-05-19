@@ -60,7 +60,7 @@ REQUIRED_USE="
 	gbm?    ( shared-glapi )
 	gles1?  ( egl )
 	gles2?  ( egl )
-	r600-llvm-compiler? ( gallium llvm || ( video_cards_r600 video_cards_radeon ) )
+	r600-llvm-compiler? ( gallium llvm || ( video_cards_r600 video_cards_radeonsi video_cards_radeon ) )
 	wayland? ( egl )
 	xa?  ( gallium )
 	xorg?  ( gallium )
@@ -77,7 +77,7 @@ REQUIRED_USE="
 	video_cards_vmware? ( gallium )
 "
 
-LIBDRM_DEPSTRING=">=x11-libs/libdrm-2.4.44"
+LIBDRM_DEPSTRING=">=x11-libs/libdrm-2.4.45"
 # keep correct libdrm and dri2proto dep
 # keep blocks in rdepend for binpkg
 RDEPEND="

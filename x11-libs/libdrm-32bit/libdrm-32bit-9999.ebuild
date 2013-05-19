@@ -7,12 +7,10 @@ ABI=x86
 
 inherit xorg-2
 
-EGIT_REPO_URI="git://anongit.freedesktop.org/git/mesa/drm"
-
 DESCRIPTION="X.Org libdrm library"
 HOMEPAGE="http://dri.freedesktop.org/"
 if [[ ${PV} = 9999* ]]; then
-	SRC_URI=""
+	EGIT_REPO_URI="git://anongit.freedesktop.org/git/mesa/drm"
 else
 	SRC_URI="http://dri.freedesktop.org/${PN}/${P}.tar.bz2"
 fi
