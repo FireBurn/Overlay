@@ -43,7 +43,7 @@ KEYWORDS="~amd64"
 
 INTEL_CARDS="i915 i965 ilo intel"
 RADEON_CARDS="r100 r200 r300 r600 radeon radeonsi"
-VIDEO_CARDS="${INTEL_CARDS} ${RADEON_CARDS} nouveau vmware"
+VIDEO_CARDS="${INTEL_CARDS} ${RADEON_CARDS} freedreno nouveau vmware"
 for card in ${VIDEO_CARDS}; do
 	IUSE_VIDEO_CARDS+=" video_cards_${card}"
 done
@@ -64,9 +64,11 @@ REQUIRED_USE="
 	wayland? ( egl )
 	xa?  ( gallium )
 	xorg?  ( gallium )
+	video_cards_freedreno?  ( gallium )
 	video_cards_intel?  ( || ( classic gallium ) )
 	video_cards_i915?   ( || ( classic gallium ) )
-	video_cards_i965?   ( || ( classic gallium ) )
+	video_cards_i965?   ( classic )
+	video_cards_ilo?    ( gallium )
 	video_cards_nouveau? ( || ( classic gallium ) )
 	video_cards_radeon? ( || ( classic gallium ) )
 	video_cards_r100?   ( classic )
@@ -96,8 +98,8 @@ RDEPEND="
 	x11-libs/libXxf86vm
 	>=x11-libs/libxcb-1.8.1
 	opencl? (
-		app-admin/eselect-opencl
-		dev-libs/libclc
+				app-admin/eselect-opencl
+				dev-libs/libclc
 			)
 	vdpau? ( >=x11-libs/libvdpau-0.4.1 )
 	wayland? ( >=dev-libs/wayland-1.0.3 )
@@ -106,7 +108,7 @@ RDEPEND="
 		x11-libs/libdrm-32bit[libkms]
 	)
 	xvmc? ( >=x11-libs/libXvMC-1.0.6 )
-	${LIBDRM_DEPSTRING}[video_cards_nouveau?,video_cards_vmware?]
+	${LIBDRM_DEPSTRING}[video_cards_freedreno?,video_cards_nouveau?,video_cards_vmware?]
 "
 DEPEND="!<=app-emulation/emul-linux-x86-opengl-20130224-r49
 	x11-libs/libdrm-32bit"
@@ -131,8 +133,9 @@ DEPEND="${RDEPEND}
 		video_cards_radeonsi? ( sys-devel/llvm-32bit[video_cards_radeon] )
 	)
 	opencl? (
-		sys-devel/clang-32bit[video_cards_radeon]
-		>=sys-devel/gcc-4.6
+				>=sys-devel/llvm-32bit-3.3[video_cards_radeon]
+				>=sys-devel/clang-32bit-3.3
+				>=sys-devel/gcc-4.6
 	)
 	${PYTHON_DEPS}
 	dev-libs/libxml2[python,${PYTHON_USEDEP}]
@@ -208,8 +211,7 @@ src_configure() {
 		driver_enable video_cards_i915 i915
 		driver_enable video_cards_i965 i965
 		if ! use video_cards_i915 && \
-			! use video_cards_i965 && \
-				! use video_cards_ilo; then
+			! use video_cards_i965; then
 			driver_enable video_cards_intel i915 i965
 		fi
 
@@ -246,8 +248,8 @@ src_configure() {
 		gallium_enable video_cards_i915 i915
 		gallium_enable video_cards_ilo ilo
 		if ! use video_cards_i915 && \
-			! use video_cards_ilo; then
-			gallium_enable video_cards_intel i915 ilo
+			! use video_cards_i965; then
+			gallium_enable video_cards_intel i915
 		fi
 
 		gallium_enable video_cards_r300 r300
@@ -257,6 +259,8 @@ src_configure() {
 				! use video_cards_r600; then
 			gallium_enable video_cards_radeon r300 r600
 		fi
+
+		gallium_enable video_cards_freedreno freedreno
 		# opencl stuff
 		if use opencl; then
 			myconf+="
