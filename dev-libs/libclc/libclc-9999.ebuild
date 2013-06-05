@@ -12,8 +12,8 @@ if [[ ${PV} = 9999* ]]; then
 fi
 
 PYTHON_COMPAT=( python{2_6,2_7} )
-
-inherit base python-single-r1 $GIT_ECLASS
+XORG_MULTILIB=yes
+inherit base autotools python-single-r1 $GIT_ECLASS multilib-minimal
 
 DESCRIPTION="OpenCL C library"
 HOMEPAGE="http://libclc.llvm.org/"
@@ -30,12 +30,18 @@ KEYWORDS="~amd64 ~x86"
 IUSE=""
 
 RDEPEND="
-        =sys-devel/clang-9999-r50[video_cards_radeon]
-        =sys-devel/llvm-9999-r50[video_cards_radeon]"
+        =sys-devel/clang-9999-r51[video_cards_radeon]
+        =sys-devel/llvm-9999-r51[video_cards_radeon]"
 DEPEND="${RDEPEND}"
 
-src_configure() {
+src_prepare() {
+        multilib_copy_sources
+}
+
+multilib_src_configure() {
         ./configure.py \
                 --with-llvm-config="${EPREFIX}/usr/bin/llvm-config" \
-                --prefix="${EPREFIX}/usr"
+		--prefix="${EPREFIX}/usr" \
+		--libexecdir="${EPREFIX}/usr/$(get_libdir)/clc" \
+		--pkgconfigdir="${EPREFIX}/usr/$(get_libdir)/pkgconfig" || die
 }
