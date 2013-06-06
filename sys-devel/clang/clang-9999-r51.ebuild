@@ -130,69 +130,75 @@ multilib_src_test() {
 
 multilib_src_install() {
 	cd "${S}-${ABI}"/tools/clang || die "cd clang failed"
-	emake KEEP_SYMBOLS=1 DESTDIR="${D}" install
+	if [[ ${ABI} == ${DEFAULT_ABI} ]] ; then
+		emake KEEP_SYMBOLS=1 DESTDIR="${D}" install
 
-	if use static-analyzer ; then
-		dobin tools/scan-build/ccc-analyzer
-		dosym ccc-analyzer /usr/bin/c++-analyzer
-		dobin tools/scan-build/scan-build
-
-		insinto /usr/share/${PN}
-		doins tools/scan-build/scanview.css
-		doins tools/scan-build/sorttable.js
-	fi
-
-	python_inst() {
 		if use static-analyzer ; then
-			pushd tools/scan-view >/dev/null || die
+			dobin tools/scan-build/ccc-analyzer
+			dosym ccc-analyzer /usr/bin/c++-analyzer
+			dobin tools/scan-build/scan-build
 
-			python_doscript scan-view
-
-			touch __init__.py || die
-			python_moduleinto clang
-			python_domodule __init__.py Reporter.py Resources ScanView.py startfile.py
-
-			popd >/dev/null || die
+			insinto /usr/share/${PN}
+			doins tools/scan-build/scanview.css
+			doins tools/scan-build/sorttable.js
 		fi
 
-		if use python ; then
-			pushd bindings/python/clang >/dev/null || die
+		python_inst() {
+			if use static-analyzer ; then
+				pushd tools/scan-view >/dev/null || die
 
-			python_moduleinto clang
-			python_domodule __init__.py cindex.py enumerations.py
+				python_doscript scan-view
 
-			popd >/dev/null || die
+				touch __init__.py || die
+				python_moduleinto clang
+				python_domodule __init__.py Reporter.py Resources ScanView.py startfile.py
+
+				popd >/dev/null || die
+			fi
+
+			if use python ; then
+				pushd bindings/python/clang >/dev/null || die
+
+				python_moduleinto clang
+				python_domodule __init__.py cindex.py enumerations.py
+
+				popd >/dev/null || die
+			fi
+
+			# AddressSanitizer symbolizer (currently separate)
+			python_doscript "${S}"/projects/compiler-rt/lib/asan/scripts/asan_symbolize.py
+		}
+		python_foreach_impl python_inst
+		# Fix install_names on Darwin.  The build system is too complicated
+		# to just fix this, so we correct it post-install
+		if [[ ${CHOST} == *-darwin* ]] ; then
+			for lib in libclang.dylib ; do
+				ebegin "fixing install_name of $lib"
+				install_name_tool -id "${EPREFIX}"/usr/lib/llvm/${lib} \
+					"${ED}"/usr/lib/llvm/${lib}
+				eend $?
+			done
+			for f in usr/bin/{c-index-test,clang} usr/lib/llvm/libclang.dylib ; do
+				ebegin "fixing references in ${f##*/}"
+				install_name_tool \
+					-change "@rpath/libclang.dylib" \
+						"${EPREFIX}"/usr/lib/llvm/libclang.dylib \
+					-change "@executable_path/../lib/libLLVM-${PV}.dylib" \
+						"${EPREFIX}"/usr/lib/llvm/libLLVM-${PV}.dylib \
+					-change "${S}"/Release/lib/libclang.dylib \
+						"${EPREFIX}"/usr/lib/llvm/libclang.dylib \
+					"${ED}"/$f
+				eend $?
+			done
 		fi
-
-		# AddressSanitizer symbolizer (currently separate)
-		python_doscript "${S}"/projects/compiler-rt/lib/asan/scripts/asan_symbolize.py
-	}
-	python_foreach_impl python_inst
-
-	# Fix install_names on Darwin.  The build system is too complicated
-	# to just fix this, so we correct it post-install
-	if [[ ${CHOST} == *-darwin* ]] ; then
-		for lib in libclang.dylib ; do
-			ebegin "fixing install_name of $lib"
-			install_name_tool -id "${EPREFIX}"/usr/lib/llvm/${lib} \
-				"${ED}"/usr/lib/llvm/${lib}
-			eend $?
-		done
-		for f in usr/bin/{c-index-test,clang} usr/lib/llvm/libclang.dylib ; do
-			ebegin "fixing references in ${f##*/}"
-			install_name_tool \
-				-change "@rpath/libclang.dylib" \
-					"${EPREFIX}"/usr/lib/llvm/libclang.dylib \
-				-change "@executable_path/../lib/libLLVM-${PV}.dylib" \
-					"${EPREFIX}"/usr/lib/llvm/libLLVM-${PV}.dylib \
-				-change "${S}"/Release/lib/libclang.dylib \
-					"${EPREFIX}"/usr/lib/llvm/libclang.dylib \
-				"${ED}"/$f
-			eend $?
+	else
+		insinto /usr/$(get_libdir)/llvm
+		for lib in "${S}-${ABI}"/Release/lib/libclang*; do
+			doins "${lib}"
 		done
 	fi
 }
 
 multilib_check_headers() {
-        einfo "Skipping header check"
+	einfo "Skipping header check"
 }
