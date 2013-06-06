@@ -139,8 +139,12 @@ DEPEND="${RDEPEND}
 	>=x11-proto/dri2proto-2.6[${MULTILIB_USEDEP}]
 	>=x11-proto/glproto-1.4.15-r1[${MULTILIB_USEDEP}]
 	>=x11-proto/xextproto-7.0.99.1[${MULTILIB_USEDEP}]
+	x11-proto/xproto[${MULTILIB_USEDEP}]
 	x11-proto/xf86driproto[${MULTILIB_USEDEP}]
 	x11-proto/xf86vidmodeproto[${MULTILIB_USEDEP}]
+	x11-proto/kbproto[${MULTILIB_USEDEP}]
+	x11-proto/damageproto[${MULTILIB_USEDEP}]
+	x11-proto/fixesproto[${MULTILIB_USEDEP}]
 	xvmc? ( x11-proto/videoproto[${MULTILIB_USEDEP}] )
 "
 

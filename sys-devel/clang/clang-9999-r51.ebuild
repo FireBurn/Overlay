@@ -196,6 +196,14 @@ multilib_src_install() {
 		for lib in "${S}-${ABI}"/Release/lib/libclang*; do
 			doins "${lib}"
 		done
+		insinto /usr/$(get_libdir)/clang/3.4/include/
+		for lib in "${S}-${ABI}"/Release/lib/clang/3.4/include/*h; do
+			doins "${lib}"
+		done
+		insinto /usr/$(get_libdir)/clang/3.4/lib/linux/
+		for lib in "${S}-${ABI}"/Release/lib/clang/3.4/lib/linux/*; do
+			doins "${lib}"
+		done
 	fi
 }
 
