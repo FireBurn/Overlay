@@ -12,9 +12,7 @@ LGPL-3 LGPL-2 GPL-2-with-exceptions MPL-1.1 OPENLDAP UoI-NCSA ZLIB openssl tcp_w
 KEYWORDS="~amd64"
 
 DEPEND=""
-RDEPEND="!sys-devel/llvm-32bit
-	!sys-devel/clang-32bit
-	!<app-emulation/emul-linux-x86-medialibs-10.2" # bug 168507
+RDEPEND="!<app-emulation/emul-linux-x86-medialibs-10.2" # bug 168507
 PDEPEND="dev-libs/glib[abi_x86_32]"
 
 QA_DT_HASH="usr/lib32/.*"

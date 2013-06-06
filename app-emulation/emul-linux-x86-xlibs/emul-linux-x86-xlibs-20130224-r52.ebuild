@@ -4,20 +4,23 @@
 
 EAPI=5
 
-inherit emul-linux-x86
-
-LICENSE="FTL GPL-2 MIT"
-
 KEYWORDS="~amd64"
-IUSE="opengl"
+IUSE="opengl +development"
+
+SLOT="0"
 
 DEPEND=""
 
-RDEPEND="!=app-emulation/emul-linux-x86-opengl-20130224-r50
-	~app-emulation/emul-linux-x86-baselibs-${PV}
-	x11-libs/libX11
-	!x11-libs/libX11-32bit
-	!x11-libs/libxcb-32bit
+RDEPEND="app-emulation/emul-linux-x86-baselibs
 "
 
 PDEPEND="opengl? ( app-emulation/emul-linux-x86-opengl )"
+
+
+SRC_URI=""
+src_unpack(){
+	mkdir "${S}"
+}
+src_install(){
+	true
+}

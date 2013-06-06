@@ -30,7 +30,6 @@ IUSE="static-libs"
 DEPEND="media-libs/mesa[${MULTILIB_USEDEP}]"
 RDEPEND="${DEPEND}
 	!<=app-emulation/emul-linux-x86-opengl-20130224-r50
-	=app-emulation/emul-linux-x86-opengl-20130224-r51
 	!<media-libs/mesa-9"
 
 src_unpack() {
@@ -41,4 +40,4 @@ src_unpack() {
 src_prepare() {
 	eautoreconf
 	multilib_copy_sources
-}	
+}

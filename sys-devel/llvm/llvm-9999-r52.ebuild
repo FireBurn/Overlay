@@ -8,7 +8,7 @@ EAPI=5
 # being exceeded. probably GC does not close them fast enough.
 PYTHON_COMPAT=( python{2_5,2_6,2_7} )
 
-inherit subversion eutils flag-o-matic multilib python-any-r1 toolchain-funcs pax-utils multilib-minimal
+inherit subversion eutils flag-o-matic multilib python-r1 pax-utils multilib-minimal
 
 DESCRIPTION="Low Level Virtual Machine"
 HOMEPAGE="http://llvm.org/"
@@ -18,9 +18,15 @@ ESVN_REPO_URI="http://llvm.org/svn/llvm-project/llvm/trunk"
 LICENSE="UoI-NCSA"
 SLOT="0"
 KEYWORDS="amd64"
-IUSE="debug doc gold +libffi multitarget ocaml test udis86 vim-syntax video_cards_radeon"
+LLVM_TARGETS="x86 x86_64 sparc powerpc aarch64 arm mips mipsel mips64 mips64el xcore msp430 cpp hexagon mblaze nvptx systemz r600"
+LLVM_TARGETS_USE=""
+for i in $LLVM_TARGETS ; do
+	LLVM_TARGETS_USE="${LLVM_TARGETS_USE} +llvm_targets_${i}"
+done
+IUSE="+clang debug doc gold +libffi multitarget ocaml python test udis86 +static-analyzer vim-syntax ${LLVM_TARGETS_USE}"
 
 DEPEND="!sys-devel/llvm-32bit
+	!<sys-devel/clang-9999-r52
 	dev-lang/perl
 	dev-python/sphinx
 	>=sys-devel/make-3.79
@@ -33,15 +39,22 @@ DEPEND="!sys-devel/llvm-32bit
 		virtual/libffi )
 	ocaml? ( dev-lang/ocaml )
 	udis86? ( dev-libs/udis86[pic(+),${MULTILIB_USEDEP}] )
+	static-analyzer? ( dev-lang/perl )
 	${PYTHON_DEPS}"
 RDEPEND="dev-lang/perl
 	libffi? ( virtual/libffi )
 	vim-syntax? ( || ( app-editors/vim app-editors/gvim ) )"
 
-pkg_setup() {
-	# Required for test and build
-	python-any-r1_pkg_setup
+src_unpack() {
+	# Fetching LLVM and subprojects
+	ESVN_PROJECT=llvm subversion_fetch "http://llvm.org/svn/llvm-project/llvm/trunk"
+	if use clang ; then
+		ESVN_PROJECT=compiler-rt S="${S}"/projects/compiler-rt subversion_fetch "http://llvm.org/svn/llvm-project/compiler-rt/trunk"
+		ESVN_PROJECT=clang S="${S}"/tools/clang subversion_fetch "http://llvm.org/svn/llvm-project/cfe/trunk"
+	fi
+}
 
+pkg_setup() {
 	# need to check if the active compiler is ok
 
 	broken_gcc=" 3.2.2 3.2.3 3.3.2 4.1.1 "
@@ -76,7 +89,16 @@ pkg_setup() {
 }
 
 src_prepare() {
-	epatch "${FILESDIR}"/${PN}-3.2-nodoctargz.patch
+	epatch "${FILESDIR}"/llvm-3.2-nodoctargz.patch
+	use clang && epatch "${FILESDIR}"/clang-2.7-fixdoc.patch
+
+	# fix the static analyzer for in-tree install
+	sed -e 's/import ScanView/from clang \0/'  \
+		-i tools/clang/tools/scan-view/scan-view \
+		|| die "scan-view sed failed"
+	sed -e "/scanview.css\|sorttable.js/s#\$RealBin#${EPREFIX}/usr/share/clang#" \
+		-i tools/clang/tools/scan-build/scan-build \
+		|| die "scan-build sed failed"
 
 	# User patches
 	epatch_user
@@ -85,22 +107,36 @@ src_prepare() {
 }
 
 multilib_src_configure() {
+	if use clang ; then
+		# multilib-strict
+		sed -e "/PROJ_headers/s#lib/clang#$(get_libdir)/clang#" \
+			-i tools/clang/lib/Headers/Makefile \
+			|| die "clang Makefile failed"
+		sed -e "/PROJ_resources/s#lib/clang#$(get_libdir)/clang#" \
+			-i tools/clang/runtime/compiler-rt/Makefile \
+			|| die "compiler-rt Makefile failed"
+		# Set correct path for gold plugin
+		sed -e "/LLVMgold.so/s#lib/#$(get_libdir)/llvm/#" \
+			-i  tools/clang/lib/Driver/Tools.cpp \
+			|| die "gold plugin path sed failed"
+	fi
+
 	# unfortunately ./configure won't listen to --mandir and the-like, so take
 	# care of this.
 	einfo "Fixing install dirs"
-	sed -e 's,^PROJ_docsdir.*,PROJ_docsdir := $(PROJ_prefix)/share/doc/'${PF}, \
+	sed -e 's,^PROJ_docsdir.*,PROJ_docsdir := $(PROJ_prefix)/share/doc/${PF}', \
 		-e 's,^PROJ_etcdir.*,PROJ_etcdir := '"${EPREFIX}"'/etc/llvm,' \
-		-e 's,^PROJ_libdir.*,PROJ_libdir := $(PROJ_prefix)/'$(get_libdir)/${PN}, \
+		-e 's,^PROJ_libdir.*,PROJ_libdir := $(PROJ_prefix)/'$(get_libdir)/llvm, \
 		-i Makefile.config.in || die "Makefile.config sed failed"
-	sed -e "/ActiveLibDir = ActivePrefix/s/lib/$(get_libdir)\/${PN}/" \
+	sed -e "/ActiveLibDir = ActivePrefix/s/lib/$(get_libdir)\/llvm/" \
 		-i tools/llvm-config/llvm-config.cpp || die "llvm-config sed failed"
 
 	einfo "Fixing rpath and CFLAGS"
-	sed -e 's,\$(RPATH) -Wl\,\$(\(ToolDir\|LibDir\)),$(RPATH) -Wl\,'"${EPREFIX}"/usr/$(get_libdir)/${PN}, \
+	sed -e 's,\$(RPATH) -Wl\,\$(\(ToolDir\|LibDir\)),$(RPATH) -Wl\,'"${EPREFIX}"/usr/$(get_libdir)/llvm, \
 		-e '/OmitFramePointer/s/-fomit-frame-pointer//' \
 		-i Makefile.rules || die "rpath sed failed"
 	if use gold; then
-		sed -e 's,\$(SharedLibDir),'"${EPREFIX}"/usr/$(get_libdir)/${PN}, \
+		sed -e 's,\$(SharedLibDir),'"${EPREFIX}"/usr/$(get_libdir)/llvm, \
 			-i tools/gold/Makefile || die "gold rpath sed failed"
 	fi
 
@@ -115,11 +151,17 @@ multilib_src_configure() {
 		$(use_enable debug assertions)
 		$(use_enable debug expensive-checks)"
 
-	if use multitarget; then
-		CONF_FLAGS="${CONF_FLAGS} --enable-targets=all"
-	else
-		CONF_FLAGS="${CONF_FLAGS} --enable-targets=host,cpp"
+	# Setup the search path to include the Prefix includes
+	if use prefix ; then
+		CONF_FLAGS="${CONF_FLAGS} \
+			--with-c-include-dirs=${EPREFIX}/usr/include:/usr/include"
 	fi
+
+	local ENABLE_TARGETS='host'
+	for i in $LLVM_TARGETS ; do
+		use llvm_targets_$i && ENABLED_TARGETS="${ENABLE_TARGETS},${i}"
+	done
+	CONF_FLAGS="${CONF_FLAGS} --enable-targets=${ENABLE_TARGETS}"
 
 	if use amd64; then
 		CONF_FLAGS="${CONF_FLAGS} --enable-pic"
@@ -138,14 +180,13 @@ multilib_src_configure() {
 		CONF_FLAGS="${CONF_FLAGS} --with-udis86"
 	fi
 
-	if use video_cards_radeon; then
-		CONF_FLAGS="${CONF_FLAGS} --enable-experimental-targets=R600"
-	fi
-
 	if use libffi; then
 		append-cppflags "$(pkg-config --cflags libffi)"
 	fi
 	CONF_FLAGS="${CONF_FLAGS} $(use_enable libffi)"
+
+	# build with a suitable Python version
+	python_export_best
 
 	# llvm prefers clang over gcc, so we may need to force that
 	tc-export CC CXX
@@ -179,30 +220,81 @@ multilib_src_install() {
 			doins utils/vim/*.vim
 		fi
 
+		if use static-analyzer ; then
+			dobin tools/clang/tools/scan-build/ccc-analyzer
+			dosym ccc-analyzer /usr/bin/c++-analyzer
+			dobin tools/clang/tools/scan-build/scan-build
+
+			insinto /usr/share/clang
+			doins tools/clang/tools/scan-build/scanview.css
+			doins tools/clang/tools/scan-build/sorttable.js
+		fi
+
+		python_inst() {
+			if use static-analyzer ; then
+				pushd tools/clang/tools/scan-view >/dev/null || die
+
+				python_doscript scan-view
+
+				touch __init__.py || die
+				python_moduleinto clang
+				python_domodule __init__.py Reporter.py Resources ScanView.py startfile.py
+
+				popd >/dev/null || die
+			fi
+
+			if use python ; then
+				pushd tools/clang/bindings/python/clang >/dev/null || die
+
+				python_moduleinto clang
+				python_domodule __init__.py cindex.py enumerations.py
+
+				popd >/dev/null || die
+			fi
+
+			# AddressSanitizer symbolizer (currently separate)
+			python_doscript "${S}"/projects/compiler-rt/lib/asan/scripts/asan_symbolize.py
+		}
+		use clang && python_foreach_impl python_inst
+
 		# Fix install_names on Darwin.  The build system is too complicated
 		# to just fix this, so we correct it post-install
 		local lib= f= odylib= libpv=${PV}
 		if [[ ${CHOST} == *-darwin* ]] ; then
 			eval $(grep PACKAGE_VERSION= configure)
 			[[ -n ${PACKAGE_VERSION} ]] && libpv=${PACKAGE_VERSION}
-			for lib in lib{EnhancedDisassembly,LLVM-${libpv},LTO,profile_rt}.dylib {BugpointPasses,LLVMHello}.dylib ; do
+			for lib in lib{EnhancedDisassembly,LLVM-${libpv},LTO,profile_rt}.dylib {BugpointPasses,LLVMHello}.dylib libclang.dylib ; do
 				# libEnhancedDisassembly is Darwin10 only, so non-fatal
-				[[ -f ${ED}/usr/lib/${PN}/${lib} ]] || continue
+				[[ -f ${ED}/usr/lib/llvm/${lib} ]] || continue
 				ebegin "fixing install_name of $lib"
 				install_name_tool \
-					-id "${EPREFIX}"/usr/lib/${PN}/${lib} \
-					"${ED}"/usr/lib/${PN}/${lib}
+					-id "${EPREFIX}"/usr/lib/llvm/${lib} \
+					"${ED}"/usr/lib/llvm/${lib}
 				eend $?
 			done
-			for f in "${ED}"/usr/bin/* "${ED}"/usr/lib/${PN}/libLTO.dylib ; do
+			for f in "${ED}"/usr/bin/* "${ED}"/usr/lib/llvm/libLTO.dylib ; do
 				odylib=$(scanmacho -BF'%n#f' "${f}" | tr ',' '\n' | grep libLLVM-${libpv}.dylib)
 				ebegin "fixing install_name reference to ${odylib} of ${f##*/}"
 				install_name_tool \
 					-change "${odylib}" \
-						"${EPREFIX}"/usr/lib/${PN}/libLLVM-${libpv}.dylib \
+						"${EPREFIX}"/usr/lib/llvm/libLLVM-${libpv}.dylib \
 					"${f}"
 				eend $?
 			done
+			if use clang ; then
+				for f in usr/bin/{c-index-test,clang} usr/lib/llvm/libclang.dylib ; do
+					ebegin "fixing references in ${f##*/}"
+					install_name_tool \
+						-change "@rpath/libclang.dylib" \
+							"${EPREFIX}"/usr/lib/llvm/libclang.dylib \
+						-change "@executable_path/../lib/libLLVM-${PV}.dylib" \
+							"${EPREFIX}"/usr/lib/llvm/libLLVM-${PV}.dylib \
+						-change "${S}"/Release/lib/libclang.dylib \
+							"${EPREFIX}"/usr/lib/llvm/libclang.dylib \
+						"${ED}"/$f
+					eend $?
+				done
+			fi
 		fi
 
 		# Install config file for ld.so.conf
@@ -216,6 +308,7 @@ multilib_src_install() {
 		done
 		insinto /usr/bin
 		newbin "${S}-${ABI}"/Release/bin/llvm-config llvm-config-${ABI} 
+		use clang && cp -r "${S}-${ABI}"/Release/lib/clang/ "${ED}"/usr/$(get_libdir)/clang/
 	fi
 }
 

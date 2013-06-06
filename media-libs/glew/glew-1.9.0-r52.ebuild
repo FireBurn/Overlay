@@ -18,10 +18,10 @@ IUSE="doc static-libs"
 RDEPEND="!media-libs/glew-32bit
 	virtual/glu[${MULTILIB_USEDEP}]
 	virtual/opengl[${MULTILIB_USEDEP}]
-	x11-libs/libX11
-	x11-libs/libXext
-	x11-libs/libXi
-	x11-libs/libXmu"
+	x11-libs/libX11[${MULTILIB_USEDEP}]
+	x11-libs/libXext[${MULTILIB_USEDEP}]
+	x11-libs/libXi[${MULTILIB_USEDEP}]
+	x11-libs/libXmu[${MULTILIB_USEDEP}]"
 DEPEND=${RDEPEND}
 
 src_prepare() {
@@ -60,7 +60,7 @@ multilib_src_configure() {
 	default
 }
 
-multilib_src_compile(){
+multilib_src_compile() {
 	myglewopts=(
 		AR="$(tc-getAR)"
 		STRIP=true

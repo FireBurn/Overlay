@@ -53,28 +53,28 @@ IUSE="${IUSE_VIDEO_CARDS}
 	wayland xvmc xa xorg kernel_FreeBSD"
 
 REQUIRED_USE="
-	llvm?   ( gallium )
+	llvm? ( gallium )
 	openvg? ( egl gallium )
-	opencl? ( gallium r600-llvm-compiler )
-	gbm?    ( shared-glapi )
-	gles1?  ( egl )
-	gles2?  ( egl )
-	r600-llvm-compiler? ( gallium llvm || ( video_cards_r600 video_cards_radeonsi video_cards_radeon ) )
+	opencl? ( gallium video_cards_r600? ( r600-llvm-compiler ) )
+	gbm? ( shared-glapi )
+	gles1? ( egl )
+	gles2? ( egl )
+	r600-llvm-compiler? ( gallium llvm video_cards_r600 )
 	wayland? ( egl )
-	xa?  ( gallium )
-	xorg?  ( gallium )
-	video_cards_freedreno?  ( gallium )
-	video_cards_intel?  ( || ( classic gallium ) )
-	video_cards_i915?   ( || ( classic gallium ) )
-	video_cards_i965?   ( classic )
-	video_cards_ilo?    ( gallium )
+	xa? ( gallium )
+	xorg? ( gallium )
+	video_cards_freedreno? ( gallium )
+	video_cards_intel? ( || ( video_cards_i915 video_cards_i965 video_cards_ilo ) )
+	video_cards_i915? ( || ( classic gallium ) )
+	video_cards_i965? ( classic )
+	video_cards_ilo? ( gallium )
 	video_cards_nouveau? ( || ( classic gallium ) )
-	video_cards_radeon? ( || ( classic gallium ) )
-	video_cards_r100?   ( classic )
-	video_cards_r200?   ( classic )
-	video_cards_r300?   ( gallium )
-	video_cards_r600?   ( gallium )
-	video_cards_radeonsi?   ( gallium llvm )
+	video_cards_radeon? ( || ( video_cards_r100 video_cards_r200 video_cards_r300 video_cards_r600 video_cards_radeonsi ) )
+	video_cards_r100? ( classic )
+	video_cards_r200? ( classic )
+	video_cards_r300? ( gallium )
+	video_cards_r600? ( gallium )
+	video_cards_radeonsi? ( gallium llvm )
 	video_cards_vmware? ( gallium )
 "
 
@@ -90,17 +90,23 @@ RDEPEND="
 	>=app-admin/eselect-opengl-1.2.7
 	dev-libs/expat
 	gbm? ( virtual/udev )
-	>=x11-libs/libX11-1.3.99.901
-	x11-libs/libXdamage
-	x11-libs/libXext
-	x11-libs/libXxf86vm
+	>=x11-libs/libX11-1.3.99.901[${MULTILIB_USEDEP}]
+	x11-libs/libXdamage[${MULTILIB_USEDEP}]
+	x11-libs/libXext[${MULTILIB_USEDEP}]
+	x11-libs/libXxf86vm[${MULTILIB_USEDEP}]
 	>=x11-libs/libxcb-1.8.1
 	opencl? (
-				app-admin/eselect-opencl
-				dev-libs/libclc[${MULTILIB_USEDEP}]
-			)
-	vdpau? ( >=x11-libs/libvdpau-0.4.1 )
-	wayland? ( >=dev-libs/wayland-1.0.3 )
+		app-admin/eselect-opencl
+		dev-libs/libclc[${MULTILIB_USEDEP}]
+		>=sys-devel/llvm-3.3[llvm_targets_r600,${MULTILIB_USEDEP}]
+	)
+	llvm? (
+		>=sys-devel/llvm-2.9[${MULTILIB_USEDEP}]
+		r600-llvm-compiler? ( sys-devel/llvm[llvm_targets_r600,${MULTILIB_USEDEP}] )
+		video_cards_radeonsi? ( sys-devel/llvm[llvm_targets_r600,${MULTILIB_USEDEP}] )
+	)
+	vdpau? ( >=x11-libs/libvdpau-0.4.1[${MULTILIB_USEDEP}] )
+	wayland? ( >=dev-libs/wayland-1.0.3[${MULTILIB_USEDEP}] )
 	xorg? (
 		x11-base/xorg-server:=
 		x11-libs/libdrm[libkms]
@@ -121,15 +127,8 @@ for card in ${RADEON_CARDS}; do
 done
 
 DEPEND="${RDEPEND}
-	llvm? (
-		>=sys-devel/llvm-2.9[${MULTILIB_USEDEP}]
-		r600-llvm-compiler? ( sys-devel/llvm[video_cards_radeon,${MULTILIB_USEDEP}] )
-		video_cards_radeonsi? ( sys-devel/llvm[video_cards_radeon,${MULTILIB_USEDEP}] )
-	)
 	opencl? (
-				>=sys-devel/llvm-3.3[video_cards_radeon,${MULTILIB_USEDEP}]
-				>=sys-devel/clang-3.3[${MULTILIB_USEDEP}]
-				>=sys-devel/gcc-4.6
+		>=sys-devel/gcc-4.6
 	)
 	${PYTHON_DEPS}
 	dev-libs/libxml2[python,${PYTHON_USEDEP}]
@@ -139,6 +138,7 @@ DEPEND="${RDEPEND}
 	>=x11-proto/dri2proto-2.6[${MULTILIB_USEDEP}]
 	>=x11-proto/glproto-1.4.15-r1[${MULTILIB_USEDEP}]
 	>=x11-proto/xextproto-7.0.99.1[${MULTILIB_USEDEP}]
+	x11-proto/xproto[${MULTILIB_USEDEP}]
 	x11-proto/xf86driproto[${MULTILIB_USEDEP}]
 	x11-proto/xf86vidmodeproto[${MULTILIB_USEDEP}]
 	xvmc? ( x11-proto/videoproto[${MULTILIB_USEDEP}] )
@@ -205,10 +205,6 @@ multilib_src_configure() {
 	# Intel code
 		driver_enable video_cards_i915 i915
 		driver_enable video_cards_i965 i965
-		if ! use video_cards_i915 && \
-			! use video_cards_i965; then
-			driver_enable video_cards_intel i915 i965
-		fi
 
 		# Nouveau code
 		driver_enable video_cards_nouveau nouveau
@@ -216,10 +212,6 @@ multilib_src_configure() {
 		# ATI code
 		driver_enable video_cards_r100 radeon
 		driver_enable video_cards_r200 r200
-		if ! use video_cards_r100 && \
-				! use video_cards_r200; then
-			driver_enable video_cards_radeon radeon r200
-		fi
 	fi
 
 	if use egl; then
@@ -242,18 +234,10 @@ multilib_src_configure() {
 		gallium_enable video_cards_nouveau nouveau
 		gallium_enable video_cards_i915 i915
 		gallium_enable video_cards_ilo ilo
-		if ! use video_cards_i915 && \
-			! use video_cards_i965; then
-			gallium_enable video_cards_intel i915
-		fi
 
 		gallium_enable video_cards_r300 r300
 		gallium_enable video_cards_r600 r600
 		gallium_enable video_cards_radeonsi radeonsi
-		if ! use video_cards_r300 && \
-				! use video_cards_r600; then
-			gallium_enable video_cards_radeon r300 r600
-		fi
 
 		gallium_enable video_cards_freedreno freedreno
 		# opencl stuff

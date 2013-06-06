@@ -4,29 +4,24 @@
 
 EAPI=5
 
-inherit emul-linux-x86
-
-LICENSE="BSD LGPL-2 MIT"
+LICENSE=""
 
 KEYWORDS="~amd64"
+SLOT="0"
+IUSE="+development"
 
-DEPEND="!x11-libs/libdrm-32bit
-        !media-libs/glew-32bit
-        !media-libs/mesa-32bit
-        !=media-libs/glu-9999-r50
-	app-admin/eselect-opengl
+DEPEND="app-admin/eselect-opengl
 	>=app-admin/eselect-mesa-0.0.9"
-RDEPEND="!<=app-emulation/emul-linux-x86-xlibs-20130224-r50
-	=app-emulation/emul-linux-x86-xlibs-20130224-r51"
+RDEPEND="app-emulation/emul-linux-x86-xlibs"
 PDEPEND="x11-libs/libdrm[abi_x86_32]
 	media-libs/glew[abi_x86_32]
 	virtual/glu[abi_x86_32]
 	media-libs/mesa[abi_x86_32]"
 
-emul-linux-x86_src_unpack() {
-	cd "${S}"
+src_unpack() {
+	mkdir "${S}"
 }
 
-emul-linux-x86_src_install() {
-	cd "${S}"
+src_install() {
+	true
 }

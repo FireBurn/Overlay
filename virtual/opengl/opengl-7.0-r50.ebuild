@@ -21,18 +21,18 @@ src_unpack() {
 }
 
 src_prepare() {
-	einfo "Skip prepare"
+	true
 }
 
 src_configure() {
-	einfo "Skip configure"
+	true
 }
 
 src_compile() {
-	einfo "Skip compile"
+	true
 }
 
 src_install() {
-	einfo "Skip install"
+	true
 }
 
