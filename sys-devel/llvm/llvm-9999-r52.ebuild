@@ -159,7 +159,7 @@ multilib_src_configure() {
 
 	local ENABLE_TARGETS='host'
 	for i in $LLVM_TARGETS ; do
-		use llvm_targets_$i && ENABLED_TARGETS="${ENABLE_TARGETS},${i}"
+		use llvm_targets_$i && ENABLE_TARGETS="${ENABLE_TARGETS},${i}"
 	done
 	CONF_FLAGS="${CONF_FLAGS} --enable-targets=${ENABLE_TARGETS}"
 
