@@ -23,7 +23,7 @@ LLVM_TARGETS_USE=""
 for i in $LLVM_TARGETS ; do
 	LLVM_TARGETS_USE="${LLVM_TARGETS_USE} +llvm_targets_${i}"
 done
-IUSE="+clang debug doc gold +libffi multitarget ocaml python test udis86 +static-analyzer vim-syntax ${LLVM_TARGETS_USE}"
+IUSE="+clang debug doc gold +libffi ocaml python test udis86 +static-analyzer vim-syntax ${LLVM_TARGETS_USE}"
 
 DEPEND="!sys-devel/llvm-32bit
 	!<sys-devel/clang-9999-r52
@@ -255,7 +255,7 @@ multilib_src_install() {
 			# AddressSanitizer symbolizer (currently separate)
 			python_doscript "${S}"/projects/compiler-rt/lib/asan/scripts/asan_symbolize.py
 		}
-		use clang && python_foreach_impl python_inst
+		use clang && use python && python_foreach_impl python_inst
 
 		# Fix install_names on Darwin.  The build system is too complicated
 		# to just fix this, so we correct it post-install
