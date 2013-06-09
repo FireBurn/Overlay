@@ -1,0 +1,76 @@
+# ChangeLog for dev-libs/wayland
+# Copyright 1999-2013 Gentoo Foundation; Distributed under the GPL v2
+# $Header: /var/cvsroot/gentoo-x86/dev-libs/wayland/ChangeLog,v 1.19 2013/05/16 00:40:59 mattst88 Exp $
+
+  16 May 2013; Matt Turner <mattst88@gentoo.org> wayland-0.95.0.ebuild,
+  wayland-1.0.6.ebuild, wayland-1.1.0.ebuild:
+  Remove CC-BY-SA-3.0 from LICENSE.
+
+  06 May 2013; Matt Turner <mattst88@gentoo.org> -wayland-1.0.4.ebuild:
+  Remove old.
+
+*wayland-1.0.6 (21 Apr 2013)
+*wayland-1.1.0 (21 Apr 2013)
+
+  21 Apr 2013; Chí-Thanh Christopher Nguyễn <chithanh@gentoo.org>
+  +wayland-1.0.6.ebuild, +wayland-1.1.0.ebuild:
+  Version bumps.
+
+  19 Feb 2013; Matt Turner <mattst88@gentoo.org> wayland-1.0.4.ebuild:
+  Explicitly disable documentation.
+
+  17 Feb 2013; Matt Turner <mattst88@gentoo.org> wayland-1.0.4.ebuild:
+  Remove doc USE flag, bug 455586.
+
+  11 Feb 2013; Matt Turner <mattst88@gentoo.org> wayland-1.0.4.ebuild:
+  Define XDG_RUNTIME_DIR for tests, bug 456054.
+
+  07 Feb 2013; Ulrich Müller <ulm@gentoo.org> wayland-0.95.0.ebuild,
+  wayland-1.0.4.ebuild:
+  Move Creative Commons licenses to shorter names.
+
+*wayland-1.0.4 (05 Feb 2013)
+
+  05 Feb 2013; Matt Turner <mattst88@gentoo.org> +wayland-1.0.4.ebuild,
+  -wayland-1.0.3.ebuild:
+  Version bump to 1.0.4, bug 454764.
+
+  21 Jan 2013; Matt Turner <mattst88@gentoo.org> -wayland-0.85.0.ebuild:
+  Drop old.
+
+  21 Jan 2013; Matt Turner <mattst88@gentoo.org> wayland-1.0.3.ebuild:
+  Add doc USE flag, bug 442468.
+
+*wayland-1.0.3 (21 Jan 2013)
+
+  21 Jan 2013; Matt Turner <mattst88@gentoo.org> +wayland-1.0.3.ebuild:
+  Version bump to 1.0.3, bug 445494.
+
+  19 Dec 2012; Agostino Sarubbo <ago@gentoo.org> wayland-0.95.0.ebuild:
+  Add ~ia64, wrt bug #403015
+
+  10 Dec 2012; Agostino Sarubbo <ago@gentoo.org> wayland-0.95.0.ebuild:
+  Add ~ppc, wrt bug #403015
+
+*wayland-0.95.0 (10 Aug 2012)
+
+  10 Aug 2012; Matt Turner <mattst88@gentoo.org> +wayland-0.95.0.ebuild:
+  Version bump.
+
+  14 Jun 2012; Samuli Suominen <ssuominen@gentoo.org> wayland-0.85.0.ebuild:
+  Use virtual/libffi instead of dev-libs/libffi.
+
+  09 Mar 2012; Brent Baude <ranger@gentoo.org> wayland-0.85.0.ebuild:
+  Marking wayland-0.85.0 ~ppc64 for bug 403015
+
+  02 Mar 2012; Markus Meier <maekke@gentoo.org> wayland-0.85.0.ebuild:
+  add ~arm, bug #403015
+
+  12 Feb 2012; Jeroen Roovers <jer@gentoo.org> wayland-0.85.0.ebuild:
+  Marked ~hppa (bug #403015).
+
+*wayland-0.85.0 (10 Feb 2012)
+
+  10 Feb 2012; Matt Turner <mattst88@gentoo.org> +wayland-0.85.0.ebuild,
+  +metadata.xml:
+  First version of wayland in portage.

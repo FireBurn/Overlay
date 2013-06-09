@@ -100,13 +100,13 @@ RDEPEND="
 				dev-libs/libclc[${MULTILIB_USEDEP}]
 			)
 	vdpau? ( >=x11-libs/libvdpau-0.4.1 )
-	wayland? ( >=dev-libs/wayland-1.0.3 )
+	wayland? ( >=dev-libs/wayland-1.0.3[${MULTILIB_USEDEP}] )
 	xorg? (
 		x11-base/xorg-server:=
 		x11-libs/libdrm[libkms]
 	)
 	xvmc? ( >=x11-libs/libXvMC-1.0.6 )
-	${LIBDRM_DEPSTRING}[video_cards_freedreno?,video_cards_nouveau?,video_cards_vmware?]
+	${LIBDRM_DEPSTRING}[video_cards_freedreno?,video_cards_nouveau?,video_cards_vmware?,${MULTILIB_USEDEP}]
 "
 for card in ${INTEL_CARDS}; do
 	RDEPEND="${RDEPEND}
