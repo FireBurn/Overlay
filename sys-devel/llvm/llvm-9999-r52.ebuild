@@ -208,9 +208,11 @@ multilib_src_compile() {
 }
 
 multilib_src_install() {
+	local LLVM_FIX_BINARIES=''
+	local CLANG_FIX_BINARIES=''
 	if [[ ${ABI} == ${DEFAULT_ABI} ]] ; then
 		emake KEEP_SYMBOLS=1 DESTDIR="${D}" install
-		dosym ${ED}/usr/bin/llvm-config /usr/bin/llvm-config-${ABI}
+		dosym "${ED}"/usr/bin/llvm-config /usr/bin/llvm-config-${ABI}
 
 		doman docs/_build/man/*.1
 		use doc && dohtml -r docs/_build/html/
@@ -255,60 +257,58 @@ multilib_src_install() {
 			# AddressSanitizer symbolizer (currently separate)
 			python_doscript "${S}"/projects/compiler-rt/lib/asan/scripts/asan_symbolize.py
 		}
-		use clang && use python && python_foreach_impl python_inst
+		use clang && python_foreach_impl python_inst
 
-		# Fix install_names on Darwin.  The build system is too complicated
-		# to just fix this, so we correct it post-install
-		local lib= f= odylib= libpv=${PV}
-		if [[ ${CHOST} == *-darwin* ]] ; then
-			eval $(grep PACKAGE_VERSION= configure)
-			[[ -n ${PACKAGE_VERSION} ]] && libpv=${PACKAGE_VERSION}
-			for lib in lib{EnhancedDisassembly,LLVM-${libpv},LTO,profile_rt}.dylib {BugpointPasses,LLVMHello}.dylib libclang.dylib ; do
-				# libEnhancedDisassembly is Darwin10 only, so non-fatal
-				[[ -f ${ED}/usr/lib/llvm/${lib} ]] || continue
-				ebegin "fixing install_name of $lib"
+		LLVM_FIX_BINARIES="${ED}"/usr/bin/*
+		CLANG_FIX_BINARIES="${ED}"/usr/bin/{c-index-test,clang}
+	else
+		emake KEEP_SYMBOLS=1 DESTDIR="${D}" install-libs
+		if use clang ; then
+			pushd tools/clang >/dev/null
+			emake KEEP_SYMBOLS=1 DESTDIR="${D}" install-libs
+			popd >/dev/null
+		fi
+		insinto /usr/bin
+		newbin "${S}-${ABI}"/Release/bin/llvm-config llvm-config-${ABI} 
+	fi
+	# Fix install_names on Darwin.  The build system is too complicated
+	# to just fix this, so we correct it post-install
+	local lib= f= odylib= libpv=${PV}
+	if [[ ${CHOST} == *-darwin* ]] ; then
+		eval $(grep PACKAGE_VERSION= configure)
+		[[ -n ${PACKAGE_VERSION} ]] && libpv=${PACKAGE_VERSION}
+		for lib in {libEnhancedDisassembly,libLLVM-${libpv},libLTO,libprofile_rt,BugpointPasses,LLVMHello,libclang}.dylib ; do
+			# libEnhancedDisassembly is Darwin10 only, so non-fatal
+			[[ -f ${ED}/usr/$(get_libdir)/llvm/${lib} ]] || continue
+			ebegin "fixing install_name of $lib"
+			install_name_tool \
+				-id "${EPREFIX}"/usr/$(get_libdir)/llvm/${lib} \
+				"${ED}"/usr/$(get_libdir)/llvm/"${f}"
+			eend $?
+		done
+		for f in $LLVM_FIX_BINARIES "${ED}"/usr/$(get_libdir)/llvm/libLTO.dylib ; do
+			odylib=$(scanmacho -BF'%n#f' "${f}" | tr ',' '\n' | grep libLLVM-${libpv}.dylib)
+			ebegin "fixing install_name reference to ${odylib} of ${f##*/}"
+			install_name_tool \
+				-change "${odylib}" \
+					"${EPREFIX}"/usr/$(get_libdir)/llvm/libLLVM-${libpv}.dylib \
+				"${f}"
+			eend $?
+		done
+		if use clang ; then
+			for f in $CLANG_FIX_BINARIES "${ED}"/usr/$(get_libdir)/llvm/libclang.dylib ; do
+				ebegin "fixing references in ${f##*/}"
 				install_name_tool \
-					-id "${EPREFIX}"/usr/lib/llvm/${lib} \
-					"${ED}"/usr/lib/llvm/${lib}
-				eend $?
-			done
-			for f in "${ED}"/usr/bin/* "${ED}"/usr/lib/llvm/libLTO.dylib ; do
-				odylib=$(scanmacho -BF'%n#f' "${f}" | tr ',' '\n' | grep libLLVM-${libpv}.dylib)
-				ebegin "fixing install_name reference to ${odylib} of ${f##*/}"
-				install_name_tool \
-					-change "${odylib}" \
-						"${EPREFIX}"/usr/lib/llvm/libLLVM-${libpv}.dylib \
+					-change "@rpath/libclang.dylib" \
+						"${EPREFIX}"/usr/$(get_libdir)/llvm/libclang.dylib \
+					-change "@executable_path/../lib/libLLVM-${PV}.dylib" \
+						"${EPREFIX}"/usr/$(get_libdir)/llvm/libLLVM-${PV}.dylib \
+					-change "${S}"/Release/lib/libclang.dylib \
+						"${EPREFIX}"/usr/$(get_libdir)/llvm/libclang.dylib \
 					"${f}"
 				eend $?
 			done
-			if use clang ; then
-				for f in usr/bin/{c-index-test,clang} usr/lib/llvm/libclang.dylib ; do
-					ebegin "fixing references in ${f##*/}"
-					install_name_tool \
-						-change "@rpath/libclang.dylib" \
-							"${EPREFIX}"/usr/lib/llvm/libclang.dylib \
-						-change "@executable_path/../lib/libLLVM-${PV}.dylib" \
-							"${EPREFIX}"/usr/lib/llvm/libLLVM-${PV}.dylib \
-						-change "${S}"/Release/lib/libclang.dylib \
-							"${EPREFIX}"/usr/lib/llvm/libclang.dylib \
-						"${ED}"/$f
-					eend $?
-				done
-			fi
 		fi
-
-		# Install config file for ld.so.conf
-		insinto /etc/ld.so.conf.d/
-		newins "${FILESDIR}/06llvm.conf" 06llvm.conf
-
-	else
-		insinto /usr/$(get_libdir)/llvm
-		for lib in "${S}-${ABI}"/Release/lib/*.so "${S}-${ABI}"/Release/lib/*.a; do
-			doins "${lib}"
-		done
-		insinto /usr/bin
-		newbin "${S}-${ABI}"/Release/bin/llvm-config llvm-config-${ABI} 
-		use clang && cp -r "${S}-${ABI}"/Release/lib/clang/ "${ED}"/usr/$(get_libdir)/clang/
 	fi
 }
 
