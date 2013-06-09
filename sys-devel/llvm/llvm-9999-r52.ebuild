@@ -262,14 +262,13 @@ multilib_src_install() {
 		LLVM_FIX_BINARIES="${ED}"/usr/bin/*
 		CLANG_FIX_BINARIES="${ED}"/usr/bin/{c-index-test,clang}
 	else
-		emake KEEP_SYMBOLS=1 DESTDIR="${D}" install-libs
-		if use clang ; then
-			pushd tools/clang >/dev/null
-			emake KEEP_SYMBOLS=1 DESTDIR="${D}" install-libs
-			popd >/dev/null
-		fi
+		insinto /usr/$(get_libdir)/llvm
+		for lib in Release/lib/*.so Release/lib/*.a; do
+			doins "${lib}"
+		done
 		insinto /usr/bin
-		newbin "${S}-${ABI}"/Release/bin/llvm-config llvm-config-${ABI} 
+		newbin Release/bin/llvm-config llvm-config-${ABI} 
+		use clang && cp -r Release/lib/clang/ "${ED}"/usr/$(get_libdir)/clang/
 	fi
 	# Fix install_names on Darwin.  The build system is too complicated
 	# to just fix this, so we correct it post-install
