@@ -309,6 +309,8 @@ multilib_src_install() {
 			done
 		fi
 	fi
+
+	echo "/usr/$(get_libdir)/llvm" >> "${ED}"/etc/ld.so.conf.d/06llvm.conf
 }
 
 multilib_check_headers() {
