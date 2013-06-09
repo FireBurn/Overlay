@@ -153,16 +153,20 @@ multilib_src_configure() {
 }
 
 multilib_src_compile() {
-	emake VERBOSE=1 KEEP_SYMBOLS=1 REQUIRES_RTTI=1
+	if [[ ${ABI} == ${DEFAULT_ABI} ]] ; then
+		emake VERBOSE=1 KEEP_SYMBOLS=1 REQUIRES_RTTI=1
 
-	emake -C docs -f Makefile.sphinx man
-	use doc && emake -C docs -f Makefile.sphinx html
+		emake -C docs -f Makefile.sphinx man
+		use doc && emake -C docs -f Makefile.sphinx html
 
-	pax-mark m Release/bin/lli
-	if use test; then
-		pax-mark m unittests/ExecutionEngine/JIT/Release/JITTests
-		pax-mark m unittests/ExecutionEngine/MCJIT/Release/MCJITTests
-		pax-mark m unittests/Support/Release/SupportTests
+		pax-mark m Release/bin/lli
+		if use test; then
+			pax-mark m unittests/ExecutionEngine/JIT/Release/JITTests
+			pax-mark m unittests/ExecutionEngine/MCJIT/Release/MCJITTests
+			pax-mark m unittests/Support/Release/SupportTests
+		fi
+	else
+		emake VERBOSE=1 KEEP_SYMBOLS=1 REQUIRES_RTTI=1 libs-only
 	fi
 }
 
