@@ -11,4 +11,4 @@ Requires=nmbd.service
 
 [Install]
 WantedBy=multi-user.target
-Alias=samba.target.wants/smbd.service samba.target.wants/nmbd.service #samba.target.wants/winbindd.service
+Alias=samba.target.wants/smbd.service samba.target.wants/nmbd.service
