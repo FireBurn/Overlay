@@ -1,0 +1,9 @@
+[Unit]
+Description=Swat socket
+
+[Socket]
+ListenStream=901
+Accept=yes
+
+[Install]
+WantedBy=sockets.target

@@ -1,0 +1,14 @@
+# Copyright 2010-2013 Wulf C. Krueger <philantrop@exherbo.org>
+# Distributed under the terms of the GNU General Public License v2
+
+[Unit]
+Description=Samba network services
+After=syslog.target
+Requires=smbd.service
+Requires=nmbd.service
+# Uncomment the following line if you want/need winbindd
+#Requires=winbindd.service
+
+[Install]
+WantedBy=multi-user.target
+Alias=samba.target.wants/smbd.service samba.target.wants/nmbd.service #samba.target.wants/winbindd.service

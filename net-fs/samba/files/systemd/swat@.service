@@ -1,0 +1,6 @@
+[Unit]
+Description=Swat daemon
+
+[Service]
+ExecStart=/usr/sbin/swat
+StandardInput=socket
