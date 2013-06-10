@@ -18,3 +18,7 @@ IUSE=""
 
 DEPEND="!sys-devel/clang-32bit"
 RDEPEND="~sys-devel/llvm-${PV}[clang,${MULTILIB_USEDEP}]"
+
+src_unpack(){
+	mkdir -p "${S}"
+}
