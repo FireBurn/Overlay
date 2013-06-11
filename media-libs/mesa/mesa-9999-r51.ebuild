@@ -277,6 +277,13 @@ multilib_src_configure() {
 		"
 	fi
 
+	# Only use the xorg statetracker on the default abi
+	if [[ ${ABI} == ${DEFAULT_ABI} ]] ; then
+		myconf+="
+			$(use_enable xorg)
+		"
+	fi
+
 	# build fails with BSD indent, bug #428112
 	use userland_GNU || export INDENT=cat
 
@@ -295,7 +302,6 @@ multilib_src_configure() {
 		$(use_enable !pic asm) \
 		$(use_enable shared-glapi) \
 		$(use_enable xa) \
-		$(use_enable xorg) \
 		--with-dri-drivers=${DRI_DRIVERS} \
 		--with-gallium-drivers=${GALLIUM_DRIVERS} \
 		PYTHON2="${PYTHON}" \
