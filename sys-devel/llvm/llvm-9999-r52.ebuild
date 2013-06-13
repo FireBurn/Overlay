@@ -267,7 +267,7 @@ multilib_src_install() {
 			doins "${lib}"
 		done
 		insinto /usr/bin
-		newbin Release/bin/llvm-config llvm-config-${ABI} 
+		newbin Release/bin/llvm-config llvm-config-${ABI}
 		use clang && cp -r Release/lib/clang/ "${ED}"/usr/$(get_libdir)/clang/
 	fi
 	# Fix install_names on Darwin.  The build system is too complicated
@@ -309,7 +309,8 @@ multilib_src_install() {
 			done
 		fi
 	fi
-
+	
+	mkdir -p "${ED}"/etc/ld.so.conf.d
 	echo "/usr/$(get_libdir)/llvm" >> "${ED}"/etc/ld.so.conf.d/06llvm.conf
 }
 
