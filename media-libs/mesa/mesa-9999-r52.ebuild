@@ -98,7 +98,7 @@ RDEPEND="
 	opencl? (
 		app-admin/eselect-opencl
 		dev-libs/libclc[${MULTILIB_USEDEP}]
-		>=sys-devel/llvm-3.3[llvm_targets_r600,${MULTILIB_USEDEP}]
+		>=sys-devel/llvm-3.3[clang,llvm_targets_r600,${MULTILIB_USEDEP}]
 	)
 	llvm? (
 		>=sys-devel/llvm-2.9[${MULTILIB_USEDEP}]
