@@ -49,14 +49,13 @@ done
 
 IUSE="${IUSE_VIDEO_CARDS}
 	bindist +classic debug +egl +gallium gbm gles1 gles2 +llvm +nptl opencl
-	openvg osmesa pax_kernel pic r600-llvm-compiler selinux +shared-glapi vdpau
+	openvg osmesa pax_kernel pic r600-llvm-compiler selinux vdpau
 	wayland xvmc xa xorg kernel_FreeBSD"
 
 REQUIRED_USE="
 	llvm?   ( gallium )
 	openvg? ( egl gallium )
 	opencl? ( gallium r600-llvm-compiler )
-	gbm?    ( shared-glapi )
 	gles1?  ( egl )
 	gles2?  ( egl )
 	r600-llvm-compiler? ( gallium llvm || ( video_cards_r600 video_cards_radeonsi video_cards_radeon ) )
@@ -84,7 +83,6 @@ LIBDRM_DEPSTRING=">=x11-libs/libdrm-2.4.45"
 RDEPEND="
 	!<x11-base/xorg-server-1.7
 	!<=x11-proto/xf86driproto-2.0.3
-	!media-libs/mesa-32bit
 	classic? ( app-admin/eselect-mesa )
 	gallium? ( app-admin/eselect-mesa )
 	>=app-admin/eselect-opengl-1.2.7
@@ -291,6 +289,7 @@ multilib_src_configure() {
 	econf \
 		--enable-dri \
 		--enable-glx \
+		--enable-shared-glapi \
 		$(use_enable !bindist texture-float) \
 		$(use_enable debug) \
 		$(use_enable egl) \
@@ -300,7 +299,6 @@ multilib_src_configure() {
 		$(use_enable nptl glx-tls) \
 		$(use_enable osmesa) \
 		$(use_enable !pic asm) \
-		$(use_enable shared-glapi) \
 		$(use_enable xa) \
 		--with-dri-drivers=${DRI_DRIVERS} \
 		--with-gallium-drivers=${GALLIUM_DRIVERS} \
@@ -418,8 +416,9 @@ pkg_postinst() {
 		eselect mesa set --auto
 	fi
 
+	# Switch to mesa opencl
 	if use opencl; then
-		eselect opencl set mesa
+		eselect opencl set --use-old ${PN}
 	fi
 
 	# warn about patent encumbered texture-float
