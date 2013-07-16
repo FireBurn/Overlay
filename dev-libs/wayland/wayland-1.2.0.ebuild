@@ -10,7 +10,7 @@ if [[ ${PV} = 9999* ]]; then
 	EXPERIMENTAL="true"
 fi
 
-inherit autotools toolchain-funcs $GIT_ECLASS multilib-minimal
+inherit autotools eutils toolchain-funcs $GIT_ECLASS multilib-minimal
 
 DESCRIPTION="Wayland protocol libraries"
 HOMEPAGE="http://wayland.freedesktop.org/"
@@ -33,6 +33,8 @@ DEPEND="${RDEPEND}
 	doc? ( app-doc/doxygen )"
 
 src_prepare() {
+	epatch "${FILESDIR}"/0001-Add-option-to-not-install-wayland-scanner.patch
+	epatch "${FILESDIR}"/0002-Add-option-to-configure
 	if [[ ${PV} = 9999* ]]; then
 		eautoreconf
 	fi
@@ -46,7 +48,7 @@ multilib_src_configure() {
 		myconf+=" --disable-scanner"
 	fi
 	if [[ ${ABI} != ${DEFAULT_ABI} ]] ; then
-		myconf+=" --disable-scanner"
+		myconf+=" --disable-scanner-install"
 	fi
 	econf ${myconf}
 }
