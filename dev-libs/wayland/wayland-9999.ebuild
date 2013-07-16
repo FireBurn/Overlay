@@ -1,6 +1,6 @@
 # Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/dev-libs/wayland/wayland-1.1.0.ebuild,v 1.2 2013/05/16 00:40:59 mattst88 Exp $
+# $Header: $
 
 EAPI=5
 
@@ -20,7 +20,7 @@ if [[ $PV = 9999* ]]; then
 	KEYWORDS=""
 else
 	SRC_URI="http://wayland.freedesktop.org/releases/${P}.tar.xz"
-	KEYWORDS="~amd64 ~arm ~hppa ~ppc64 ~x86"
+	KEYWORDS="~amd64 ~arm ~hppa ~ia64 ~ppc ~ppc64 ~x86"
 fi
 
 LICENSE="MIT"
