@@ -2,20 +2,20 @@
 # Distributed under the terms of the GNU General Public License v2
 # $Header: /var/cvsroot/gentoo-x86/media-libs/glew/glew-1.9.0.ebuild,v 1.12 2013/02/24 17:51:42 ago Exp $
 
-EAPI="5"
+EAPI=5
 
-inherit multilib toolchain-funcs multilib-minimal
+inherit multilib toolchain-funcs multilib-minimal versionator
 
 DESCRIPTION="The OpenGL Extension Wrangler Library"
 HOMEPAGE="http://glew.sourceforge.net/"
 SRC_URI="mirror://sourceforge/${PN}/${P}.tgz"
 
 LICENSE="BSD MIT"
-SLOT="0"
+SLOT="0/$(get_version_component_range 1-2)"
 KEYWORDS="alpha amd64 arm hppa ia64 ~mips ppc ppc64 sh sparc x86 ~amd64-fbsd ~x86-fbsd ~x86-freebsd ~amd64-linux ~ia64-linux ~x86-linux ~x64-macos ~x86-macos ~sparc-solaris ~x64-solaris ~x86-solaris"
 IUSE="doc static-libs"
 
-RDEPEND="!media-libs/glew-32bit
+RDEPEND="
 	virtual/glu[${MULTILIB_USEDEP}]
 	virtual/opengl[${MULTILIB_USEDEP}]
 	x11-libs/libX11[${MULTILIB_USEDEP}]
@@ -25,6 +25,7 @@ RDEPEND="!media-libs/glew-32bit
 DEPEND=${RDEPEND}
 
 src_prepare() {
+	epatch_user
 	multilib_copy_sources
 }
 
@@ -56,8 +57,6 @@ multilib_src_configure() {
 	cp config/Makefile.linux config/Makefile.solaris || die
 	# and let freebsd be built as on linux too
 	cp config/Makefile.linux config/Makefile.freebsd || die
-
-	default
 }
 
 multilib_src_compile() {

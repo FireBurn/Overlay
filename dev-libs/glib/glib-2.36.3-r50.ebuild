@@ -164,6 +164,7 @@ multilib_src_configure() {
 	use debug && myconf="--enable-debug"
 
 	# Always use internal libpcre, bug #254659
+	ECONF_SOURCE="${S}" \
 	econf ${myconf} \
 		$(use_enable xattr) \
 		$(use_enable fam) \
@@ -179,7 +180,7 @@ multilib_src_configure() {
 }
 
 multilib_src_install() {
-	default
+	emake DESTDIR="${D}" install
 
 	if use utils ; then
 		python_replicate_script "${ED}"/usr/bin/gtester-report

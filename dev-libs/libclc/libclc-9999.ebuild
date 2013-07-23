@@ -30,7 +30,7 @@ KEYWORDS="~amd64 ~x86"
 IUSE=""
 
 RDEPEND="
-	=sys-devel/llvm-9999-r52[clang,llvm_targets_r600]"
+	sys-devel/llvm[clang,llvm_targets_r600]"
 DEPEND="${RDEPEND}"
 
 src_prepare() {
