@@ -1,0 +1,30 @@
+--- a/tools/lld/CMakeLists.txt
++++ b/tools/lld/CMakeLists.txt
+@@ -136,6 +136,11 @@
+   set_target_properties(${name} PROPERTIES FOLDER "lld executables")
+ endmacro(add_lld_executable)
+ 
++macro(add_lld_tool name)
++  add_llvm_tool(${name} ${ARGN})
++  set_target_properties(${name} PROPERTIES FOLDER "lld executables")
++endmacro(add_lld_executable)
++
+ include_directories(BEFORE
+   ${CMAKE_CURRENT_BINARY_DIR}/include
+   ${CMAKE_CURRENT_SOURCE_DIR}/include
+
+--- a/tools/lld/tools/lld/CMakeLists.txt
++++ b/tools/lld/tools/lld/CMakeLists.txt
+
+@@ -1,10 +1,7 @@
+-add_lld_executable(lld
++add_lld_tool(lld
+   lld.cpp
+   )
+ 
+ target_link_libraries(lld
+   lldDriver
+   )
+-
+-install(TARGETS lld
+-  RUNTIME DESTINATION bin)

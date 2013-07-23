@@ -1,0 +1,23 @@
+--- a/utils/FileCheck/CMakeLists.txt
++++ b/utils/FileCheck/CMakeLists.txt
+@@ -1,4 +1,4 @@
+-add_llvm_utility(FileCheck
++add_llvm_tool(FileCheck
+   FileCheck.cpp
+   )
+ 
+
+--- a/tools/llvm-config/CMakeLists.txt
++++ b/tools/llvm-config/CMakeLists.txt
+@@ -36,9 +36,10 @@
+   )
+ 
+ # Add the llvm-config tool.
+-add_llvm_tool(llvm-config
++add_llvm_executable(llvm-config
+   llvm-config.cpp
+   )
++install(TARGETS llvm-config RUNTIME DESTINATION bin)
+ 
+ # Add the dependency on the generation step.
+ add_file_dependencies(${CMAKE_CURRENT_SOURCE_DIR}/llvm-config.cpp ${BUILDVARIABLES_OBJPATH})
