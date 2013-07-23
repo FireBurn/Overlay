@@ -19,6 +19,7 @@ SLOT="0"
 KEYWORDS=""
 IUSE="clang lldb lld doc gold +libffi ocaml python
 	+static-analyzer test udis86"
+REQUIRED_USE="lldb? ( clang )"
 
 declare -A LLVM_TARGETS
 LLVM_TARGETS["x86"]="X86"
@@ -127,18 +128,14 @@ src_prepare() {
 	use lldb && epatch "${FILESDIR}"/lldb-3.4-gentoo-install.patch
 	use lld && epatch "${FILESDIR}"/lld-3.4-gentoo-install.patch
 
-	local sub_files=(
-		Makefile.config.in
-		Makefile.rules
-		tools/llvm-config/llvm-config.cpp
-	)
+	local sub_files=( )
 	use clang && sub_files+=(
 		tools/clang/lib/Driver/Tools.cpp
 		tools/clang/tools/scan-build/scan-build
 	)
 
 	use lldb && sub_files+=(
-		tools/lldb/source/CMakeLists.txt
+		tools/lldb/scripts/lldb_python_module.cmake
 	)
 
 	# unfortunately ./configure won't listen to --mandir and the-like, so take

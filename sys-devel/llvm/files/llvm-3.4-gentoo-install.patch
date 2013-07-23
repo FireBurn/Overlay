@@ -21,3 +21,34 @@
  
  # Add the dependency on the generation step.
  add_file_dependencies(${CMAKE_CURRENT_SOURCE_DIR}/llvm-config.cpp ${BUILDVARIABLES_OBJPATH})
+
+--- a/tools/llvm-config/llvm-config.cpp
++++ b/tools/llvm-config/llvm-config.cpp
+@@ -250,7 +250,7 @@
+     ActivePrefix = CurrentExecPrefix;
+     ActiveIncludeDir = ActivePrefix + "/include";
+     ActiveBinDir = ActivePrefix + "/bin";
+-    ActiveLibDir = ActivePrefix + "/lib";
++    ActiveLibDir = ActivePrefix + "/" + LLVM_LIBDIR;
+     ActiveIncludeOption = "-I" + ActiveIncludeDir;
+   }
+ 
+--- a/tools/llvm-config/CMakeLists.txt
++++ b/tools/llvm-config/CMakeLists.txt
+@@ -28,6 +28,7 @@
+   COMMAND echo s!@LLVM_BUILDMODE@!${CMAKE_BUILD_TYPE}! >> ${SEDSCRIPT_OBJPATH}
+   COMMAND echo s!@LLVM_SYSTEM_LIBS@!${SYSTEM_LIBS}! >> ${SEDSCRIPT_OBJPATH}
+   COMMAND echo s!@LLVM_TARGETS_BUILT@!${LLVM_TARGETS_TO_BUILD}! >> ${SEDSCRIPT_OBJPATH}
++  COMMAND echo s!@LLVM_LIBDIR@!lib${LLVM_LIBDIR_SUFFIX}! >> ${SEDSCRIPT_OBJPATH}
+   COMMAND sed -f ${SEDSCRIPT_OBJPATH} < ${BUILDVARIABLES_SRCPATH} > ${BUILDVARIABLES_OBJPATH}
+   VERBATIM
+   COMMENT "Building BuildVariables.inc include."
+
+--- a/tools/llvm-config/BuildVariables.inc.in
++++ b/tools/llvm-config/BuildVariables.inc.in
+@@ -25,3 +25,4 @@
+ #define LLVM_BUILDMODE "@LLVM_BUILDMODE@"
+ #define LLVM_TARGETS_BUILT "@LLVM_TARGETS_BUILT@"
+ #define LLVM_SYSTEM_LIBS "@LLVM_SYSTEM_LIBS@"
++#define LLVM_LIBDIR "@LLVM_LIBDIR@"
+
