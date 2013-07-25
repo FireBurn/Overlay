@@ -16,8 +16,9 @@ DEPEND="!x11-libs/libdrm-32bit
         !=media-libs/glu-9999-r50
 	app-admin/eselect-opengl
 	>=app-admin/eselect-mesa-0.0.9"
-RDEPEND="!<=app-emulation/emul-linux-x86-xlibs-20130224-r50
-	=app-emulation/emul-linux-x86-xlibs-20130224-r51"
+RDEPEND="!=app-emulation/emul-linux-x86-xlibs-20130224-r50
+	!=app-emulation/emul-linux-x86-xlibs-20130224-r51
+	>=app-emulation/emul-linux-x86-xlibs-20130224-r1"
 PDEPEND="x11-libs/libdrm[abi_x86_32]
 	media-libs/glew[abi_x86_32]
 	virtual/glu[abi_x86_32]
