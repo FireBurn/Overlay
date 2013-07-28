@@ -43,6 +43,7 @@ multilib_src_configure() {
 	sed -i \
 		-e '/INSTALL/s:-s::' \
 		-e '/$(CC) $(CFLAGS) -o/s:$(CFLAGS):$(CFLAGS) $(LDFLAGS):' \
+		-e '/^.PHONY: .*\.pc$/d' \
 		Makefile || die
 
 	if ! use static-libs ; then
@@ -68,9 +69,11 @@ multilib_src_compile() {
 		M_ARCH=""
 		LDFLAGS.EXTRA=""
 		POPT="${CFLAGS}"
+		GLEW_DEST="${EPREFIX}/usr"
+		LIBDIR="${EPREFIX}/usr/$(get_libdir)"
 	)
 
-	emake GLEW_DEST="${EPREFIX}/usr" "${myglewopts[@]}"
+	emake "${myglewopts[@]}"
 }
 
 multilib_src_install() {
@@ -82,14 +85,19 @@ multilib_src_install() {
 		M_ARCH=""
 		LDFLAGS.EXTRA=""
 		POPT="${CFLAGS}"
+		GLEW_DEST="${ED}/usr"
+		LIBDIR="${ED}/usr/$(get_libdir)"
 	)
 
 	emake \
-		GLEW_DEST="${ED}/usr" \
-		LIBDIR="${ED}/usr/$(get_libdir)" \
 		"${myglewopts[@]}" \
 		install.all
 
+	dodoc TODO.txt
+	use doc && dohtml doc/*
+}
+
+multilib_src_install_all() {
 	dodoc TODO.txt
 	use doc && dohtml doc/*
 }
