@@ -1,12 +1,12 @@
 # Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/dev-libs/glib/glib-2.36.3.ebuild,v 1.3 2013/06/11 13:30:29 pacho Exp $
+# $Header: /var/cvsroot/gentoo-x86/dev-libs/glib/glib-2.36.3-r1.ebuild,v 1.1 2013/07/26 20:39:10 pacho Exp $
 
 EAPI="5"
 PYTHON_COMPAT=( python2_{5,6,7} )
 # Avoid runtime dependency on python when USE=test
 
-inherit autotools gnome.org libtool eutils flag-o-matic gnome2-utils multilib pax-utils python-r1 toolchain-funcs versionator virtualx linux-info multilib-minimal
+inherit autotools bash-completion-r1 gnome.org libtool eutils flag-o-matic gnome2-utils multilib pax-utils python-r1 toolchain-funcs versionator virtualx linux-info multilib-minimal
 
 DESCRIPTION="The GLib library of C routines"
 HOMEPAGE="http://www.gtk.org/"
@@ -123,12 +123,16 @@ src_prepare() {
 	# gdbus-codegen is a separate package
 	epatch "${FILESDIR}/${PN}-2.35.x-external-gdbus-codegen.patch"
 
-	# bashcomp goes in /usr/share/bash-completion
-	epatch "${FILESDIR}/${PN}-2.32.4-bashcomp.patch"
-
 	# leave python shebang alone
 	sed -e '/${PYTHON}/d' \
 		-i glib/Makefile.{am,in} || die
+
+	# Gentoo handles completions in a different directory
+	sed -i "s|^completiondir =.*|completiondir = $(get_bashcompdir)|" \
+		gio/Makefile.am || die
+
+	# Revert "g_file_set_contents(): don't fsync on ext3/4" (from 2.36 branch)
+	epatch "${FILESDIR}/${P}-revert-ext34.patch"
 
 	epatch_user
 
@@ -226,29 +230,7 @@ multilib_src_test() {
 	Xemake check
 }
 
-#pkg_preinst() {
-	# Only give the introspection message if:
-	# * The user has gobject-introspection
-	# * Has glib already installed
-	# * Previous version was different from new version
-	# TODO: add a subslotted virtual to trigger this automatically
-	# * Replaced with the use of blockers to ensure people don't mix
-	#   different gobject-introspection and glib major versions
-#	if has_version "dev-libs/gobject-introspection" && ! has_version "=${CATEGORY}/${PF}"; then
-#		ewarn "You must rebuild gobject-introspection so that the installed"
-#		ewarn "typelibs and girs are regenerated for the new APIs in glib"
-#	fi
-#}
-
 pkg_postinst() {
-	# Inform users about possible breakage when updating glib and not dbus-glib, bug #297483
-	# TODO: add a subslotted virtual to trigger this automatically
-	# * Disabled for now as looks to not break for a long time
-	#if has_version dev-libs/dbus-glib; then
-	#	ewarn "If you experience a breakage after updating dev-libs/glib try"
-	#	ewarn "rebuilding dev-libs/dbus-glib"
-	#fi
-
 	if has_version '<x11-libs/gtk+-3.0.12:3'; then
 		# To have a clear upgrade path for gtk+-3.0.x users, have to resort to
 		# a warning instead of a blocker
