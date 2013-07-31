@@ -30,8 +30,7 @@ KEYWORDS="~amd64 ~x86"
 IUSE=""
 
 RDEPEND="
-        =sys-devel/clang-9999-r51[video_cards_radeon]
-        =sys-devel/llvm-9999-r51[video_cards_radeon]"
+        sys-devel/llvm[clang,video_cards_radeon]"
 DEPEND="${RDEPEND}"
 
 src_prepare() {

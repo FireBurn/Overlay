@@ -125,8 +125,7 @@ DEPEND="${RDEPEND}
 		video_cards_radeonsi? ( sys-devel/llvm[video_cards_radeon,${MULTILIB_USEDEP}] )
 	)
 	opencl? (
-				>=sys-devel/llvm-3.3[video_cards_radeon,${MULTILIB_USEDEP}]
-				>=sys-devel/clang-3.3[${MULTILIB_USEDEP}]
+				>=sys-devel/llvm-3.3[clang,video_cards_radeon,${MULTILIB_USEDEP}]
 				>=sys-devel/gcc-4.6
 	)
 	${PYTHON_DEPS}
@@ -263,7 +262,7 @@ multilib_src_configure() {
 			myconf+="
 				$(use_enable opencl)
 				--with-opencl-libdir="${EPREFIX}/usr/$(get_libdir)/OpenCL/vendors/mesa"
-				--with-clang-libdir="${EPREFIX}/usr/$(get_libdir)"
+				--with-clang-libdir="${EPREFIX}/usr/lib"
 				"
 		fi
 	fi
@@ -285,7 +284,15 @@ multilib_src_configure() {
 	# build fails with BSD indent, bug #428112
 	use userland_GNU || export INDENT=cat
 
-	LLVM_CONFIG="/usr/bin/llvm-config-${ABI}" \
+	if multilib_is_native_abi; then
+		llvmconfig="/usr/bin/llvm-config"
+	else
+		llvmconfig="/usr/bin/llvm-config.${ABI}"
+	fi
+
+einfo ${llvmconfig}
+
+	LLVM_CONFIG=${llvmconfig} \
 	econf \
 		--enable-dri \
 		--enable-glx \
