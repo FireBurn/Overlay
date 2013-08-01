@@ -4,6 +4,9 @@ lib32/libbz2.so.1.0.6
 lib32/libz.so.1
 lib32/libz.so.1.2.7
 usr/lib32/glib-2.0/include/glibconfig.h
+usr/lib32/libavc1394.so
+usr/lib32/libavc1394.so.0
+usr/lib32/libavc1394.so.0.3.0
 usr/lib32/libbz2.so
 usr/lib32/libffi-3.0.11/include/ffi.h
 usr/lib32/libffi-3.0.11/include/ffitarget.h
@@ -26,6 +29,7 @@ usr/lib32/libgthread-2.0.so
 usr/lib32/libgthread-2.0.so.0
 usr/lib32/libgthread-2.0.so.0.3200.4
 usr/lib32/libjpeg.so
+usr/lib32/libjpeg.so.62
 usr/lib32/libjpeg.so.8
 usr/lib32/libjpeg.so.8.0.2
 usr/lib32/libminizip.so
@@ -33,6 +37,12 @@ usr/lib32/libminizip.so.1
 usr/lib32/libminizip.so.1.0.0
 usr/lib32/libpng12.so.0
 usr/lib32/libpng.so
+usr/lib32/libraw1394.so
+usr/lib32/libraw1394.so.11
+usr/lib32/libraw1394.so.11.0.1
+usr/lib32/librom1394.so
+usr/lib32/librom1394.so.0
+usr/lib32/librom1394.so.0.3.0
 usr/lib32/libturbojpeg.so
 usr/lib32/libudis86.so
 usr/lib32/libudis86.so.0
@@ -51,8 +61,10 @@ usr/lib32/pkgconfig/gmodule-export-2.0.pc
 usr/lib32/pkgconfig/gmodule-no-export-2.0.pc
 usr/lib32/pkgconfig/gobject-2.0.pc
 usr/lib32/pkgconfig/gthread-2.0.pc
+usr/lib32/pkgconfig/libavc1394.pc
 usr/lib32/pkgconfig/libffi.pc
 usr/lib32/pkgconfig/libpng15.pc
 usr/lib32/pkgconfig/libpng.pc
+usr/lib32/pkgconfig/libraw1394.pc
 usr/lib32/pkgconfig/minizip.pc
 usr/lib32/pkgconfig/zlib.pc

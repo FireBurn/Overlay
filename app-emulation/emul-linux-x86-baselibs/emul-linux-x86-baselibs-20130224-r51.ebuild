@@ -1,6 +1,6 @@
 # Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-emulation/emul-linux-x86-baselibs/emul-linux-x86-baselibs-20130224-r1.ebuild,v 1.1 2013/07/28 14:06:48 aballier Exp $
+# $Header: /var/cvsroot/gentoo-x86/app-emulation/emul-linux-x86-baselibs/emul-linux-x86-baselibs-20130224-r5.ebuild,v 1.1 2013/08/01 15:55:32 aballier Exp $
 
 EAPI=5
 inherit emul-linux-x86
@@ -18,6 +18,15 @@ RDEPEND="!<app-emulation/emul-linux-x86-medialibs-10.2
 	abi_x86_32? (
 		>=sys-libs/zlib-1.2.8-r1[abi_x86_32(-)]
 		>=app-arch/bzip2-1.0.6-r4[abi_x86_32(-)]
+		>=media-libs/libpng-1.5.16-r1:0[abi_x86_32(-)]
+		>=dev-libs/udis86-1.7-r2[abi_x86_32(-)]
+		>=virtual/libffi-3.0.13-r1[abi_x86_32(-)]
+		>=sys-devel/llvm-3.3-r1[abi_x86_32(-)]
+		>=media-libs/libpng-1.2.50-r1:1.2[abi_x86_32(-)]
+		>=virtual/jpeg-0-r1[abi_x86_32(-)]
+		>=sys-libs/libraw1394-2.1.0-r1[abi_x86_32(-)]
+		>=sys-libs/libavc1394-0.5.4-r1[abi_x86_32(-)]
+		>=media-libs/jpeg-6b-r10:62[abi_x86_32(-)]
 	)
 	>=sys-libs/glibc-2.15" # bug 340613
 
