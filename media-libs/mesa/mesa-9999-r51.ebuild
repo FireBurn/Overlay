@@ -290,8 +290,6 @@ multilib_src_configure() {
 		llvmconfig="/usr/bin/llvm-config.${ABI}"
 	fi
 
-einfo ${llvmconfig}
-
 	LLVM_CONFIG=${llvmconfig} \
 	econf \
 		--enable-dri \
