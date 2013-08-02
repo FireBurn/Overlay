@@ -15,7 +15,9 @@ IUSE="abi_x86_32"
 
 DEPEND=""
 RDEPEND="!<app-emulation/emul-linux-x86-medialibs-10.2
-	abi_x86_32? (
+	>=sys-libs/glibc-2.15" # bug 340613
+
+PDEPEND="abi_x86_32? (
 		>=sys-libs/zlib-1.2.8-r1[abi_x86_32(-)]
 		>=app-arch/bzip2-1.0.6-r4[abi_x86_32(-)]
 		>=media-libs/libpng-1.5.16-r1:0[abi_x86_32(-)]
@@ -26,9 +28,7 @@ RDEPEND="!<app-emulation/emul-linux-x86-medialibs-10.2
 		>=virtual/jpeg-0-r1[abi_x86_32(-)]
 		>=sys-libs/libraw1394-2.1.0-r1[abi_x86_32(-)]
 		>=sys-libs/libavc1394-0.5.4-r1[abi_x86_32(-)]
-		>=media-libs/jpeg-6b-r10:62[abi_x86_32(-)]
-	)
-	>=sys-libs/glibc-2.15" # bug 340613
+	)"
 
 PYTHON_UPDATER_IGNORE="1"
 
