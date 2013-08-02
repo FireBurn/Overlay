@@ -24,7 +24,7 @@ fi
 
 LICENSE="SGI-B-2.0"
 SLOT="0"
-KEYWORDS="amd64"
+KEYWORDS=""
 IUSE="static-libs"
 
 DEPEND="media-libs/mesa[${MULTILIB_USEDEP}]"
