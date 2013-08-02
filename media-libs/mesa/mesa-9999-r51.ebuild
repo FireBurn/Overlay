@@ -77,7 +77,7 @@ REQUIRED_USE="
 	video_cards_vmware? ( gallium )
 "
 
-LIBDRM_DEPSTRING=">=x11-libs/libdrm-2.4.45"
+LIBDRM_DEPSTRING=">=x11-libs/libdrm-2.4.46"
 # keep correct libdrm and dri2proto dep
 # keep blocks in rdepend for binpkg
 RDEPEND="
@@ -125,7 +125,7 @@ DEPEND="${RDEPEND}
 		video_cards_radeonsi? ( sys-devel/llvm[video_cards_radeon,${MULTILIB_USEDEP}] )
 	)
 	opencl? (
-				>=sys-devel/llvm-3.3[clang,video_cards_radeon,${MULTILIB_USEDEP}]
+				>=sys-devel/llvm-3.3-r1[clang,video_cards_radeon,${MULTILIB_USEDEP}]
 				>=sys-devel/gcc-4.6
 	)
 	${PYTHON_DEPS}
