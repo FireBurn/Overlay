@@ -25,9 +25,10 @@ PDEPEND="abi_x86_32? (
 		>=virtual/libffi-3.0.13-r1[abi_x86_32(-)]
 		>=sys-devel/llvm-3.3-r1[abi_x86_32(-)]
 		>=media-libs/libpng-1.2.50-r1:1.2[abi_x86_32(-)]
-		>=virtual/jpeg-0-r1[abi_x86_32(-)]
+		>=media-libs/libjpeg-turbo-1.3.0-r2:0[abi_x86_32(-)]
 		>=sys-libs/libraw1394-2.1.0-r1[abi_x86_32(-)]
 		>=sys-libs/libavc1394-0.5.4-r1[abi_x86_32(-)]
+		dev-libs/glib[abi_x86_32(-)]
 	)"
 
 PYTHON_UPDATER_IGNORE="1"
