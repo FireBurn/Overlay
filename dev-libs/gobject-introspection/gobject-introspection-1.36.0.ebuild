@@ -35,7 +35,7 @@ DEPEND="${RDEPEND}
 	x11-proto/xproto[${MULTILIB_USEDEP}]
 "
 # PDEPEND to avoid circular dependencies, bug #391213
-PDEPEND="cairo? ( x11-libs/cairo[glib] )"
+PDEPEND="cairo? ( x11-libs/cairo[glib,${MULTILIB_USEDEP}] )"
 
 pkg_setup() {
 	python-single-r1_pkg_setup

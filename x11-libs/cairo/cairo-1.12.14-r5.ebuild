@@ -1,6 +1,6 @@
 # Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/x11-libs/cairo/cairo-9999.ebuild,v 1.30 2013/04/09 22:05:38 ssuominen Exp $
+# $Header: /var/cvsroot/gentoo-x86/x11-libs/cairo/cairo-1.12.14-r4.ebuild,v 1.2 2013/07/22 06:06:47 jlec Exp $
 
 EAPI=5
 
@@ -20,7 +20,7 @@ DESCRIPTION="A vector graphics library with cross-device output support"
 HOMEPAGE="http://cairographics.org/"
 LICENSE="|| ( LGPL-2.1 MPL-1.1 )"
 SLOT="0"
-IUSE="X aqua debug directfb doc drm gallium +glib legacy-drivers opengl openvg qt4 static-libs +svg xcb"
+IUSE="X aqua debug directfb doc drm gallium gles2 +glib legacy-drivers opengl openvg qt4 static-libs +svg valgrind xcb xlib-xcb"
 
 # Test causes a circular depend on gtk+... since gtk+ needs cairo but test needs gtk+ so we need to block it
 RESTRICT="test"
@@ -29,8 +29,9 @@ RDEPEND="media-libs/fontconfig
 	media-libs/freetype:2
 	media-libs/libpng:0=
 	sys-libs/zlib
-	>=x11-libs/pixman-0.22.0
+	>=x11-libs/pixman-0.28.0
 	directfb? ( dev-libs/DirectFB )
+	gles2? ( media-libs/mesa[gles2] )
 	glib? ( >=dev-libs/glib-2.28.6:2 )
 	opengl? ( || ( media-libs/mesa[egl] media-libs/opengl-apple ) )
 	openvg? ( media-libs/mesa[openvg] )
@@ -68,12 +69,17 @@ DEPEND="${RDEPEND}
 REQUIRED_USE="
 	drm? ( X )
 	gallium? ( drm )
+	gles2? ( !opengl )
+	openvg? ( || ( gles2 opengl ) )
+	xlib-xcb? ( xcb )
 "
 
 src_prepare() {
 	epatch "${FILESDIR}"/${PN}-1.8.8-interix.patch
 	use legacy-drivers && epatch "${FILESDIR}"/${PN}-1.10.0-buggy_gradients.patch
 	epatch "${FILESDIR}"/${PN}-respect-fontconfig.patch
+	epatch "${FILESDIR}"/${PN}-1.12.12-disable-test-suite.patch
+	epatch "${FILESDIR}"/${PN}-1.12.14-libpng16.patch
 	epatch_user
 
 	# Slightly messed build system YAY
@@ -93,33 +99,23 @@ src_prepare() {
 multilib_src_configure() {
 	local myopts
 
-	# SuperH doesn't have native atomics yet
-	use sh && myopts+=" --disable-atomic"
-
 	[[ ${CHOST} == *-interix* ]] && append-flags -D_REENTRANT
-	# http://bugs.freedesktop.org/show_bug.cgi?id=15463
-	[[ ${CHOST} == *-solaris* ]] && append-flags -D_POSIX_PTHREAD_SEMANTICS
-
-	#gets rid of fbmmx.c inlining warnings
-	append-flags -finline-limit=1200
-
-	use X && myopts+=" --enable-tee=yes"
 
 	use elibc_FreeBSD && myopts+=" --disable-symbol-lookup"
 
-	# --disable-xcb-lib:
-	#	do not override good xlib backed by hardforcing rendering over xcb
-	# --disable-valgrind:
-	#   valgrind code is busted as per upstream
 	econf \
 		--disable-dependency-tracking \
 		$(use_with X x) \
+		$(use_enable X tee) \
 		$(use_enable X xlib) \
 		$(use_enable X xlib-xrender) \
 		$(use_enable aqua quartz) \
 		$(use_enable aqua quartz-image) \
 		$(use_enable debug test-surfaces) \
+		$(use_enable drm) \
 		$(use_enable directfb) \
+		$(use_enable gallium) \
+		$(use_enable gles2 glesv2) \
 		$(use_enable glib gobject) \
 		$(use_enable doc gtk-doc) \
 		$(use_enable openvg vg) \
@@ -127,16 +123,14 @@ multilib_src_configure() {
 		$(use_enable qt4 qt) \
 		$(use_enable static-libs static) \
 		$(use_enable svg) \
+		$(use_enable valgrind) \
 		$(use_enable xcb) \
 		$(use_enable xcb xcb-shm) \
-		$(use_enable drm) \
-		$(use_enable gallium) \
+		$(use_enable xlib-xcb) \
 		--enable-ft \
 		--enable-pdf \
 		--enable-png \
 		--enable-ps \
-		--disable-xlib-xcb \
-		--disable-valgrind \
 		${myopts}
 }
 
