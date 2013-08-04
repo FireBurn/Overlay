@@ -3,7 +3,7 @@
 # $Header: $
 EAPI=5
 
-inherit mercurial versionator multilib-minimal
+inherit flag-o-matic toolchain-funcs mercurial versionator multilib-minimal
 
 MY_PV=${PV/_pre/-}
 EHG_REVISION=$(get_version_component_range 4 ${MY_PV})
@@ -31,6 +31,9 @@ src_prepare() {
 }
 
 multilib_src_configure() {
+	if version_is_at_least 4.8 $(gcc-version); then
+		append-flags "-fuse-ld=bfd"
+	fi
 	MISSING=true econf \
 		$(use_enable static-libs static) \
 		$(use_with X x)
