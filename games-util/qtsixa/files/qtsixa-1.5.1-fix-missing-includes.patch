@@ -1,0 +1,70 @@
+Fix missing includes.
+
+Signed-off-by: Markus Rathgeb <maggu2810@gmail.com>
+
+diff -Naur QtSixA-1.5.1.org/sixad/bluetooth.cpp QtSixA-1.5.1/sixad/bluetooth.cpp
+--- QtSixA-1.5.1.org/sixad/bluetooth.cpp	2011-10-12 18:03:39.000000000 +0200
++++ QtSixA-1.5.1/sixad/bluetooth.cpp	2013-03-29 10:23:10.828073530 +0100
+@@ -24,6 +24,7 @@
+ #include <poll.h>
+ #include <signal.h>
+ #include <syslog.h>
++#include <unistd.h>
+ #include <sys/ioctl.h>
+ 
+ #include <bluetooth/hidp.h>
+diff -Naur QtSixA-1.5.1.org/sixad/sixad-bin.cpp QtSixA-1.5.1/sixad/sixad-bin.cpp
+--- QtSixA-1.5.1.org/sixad/sixad-bin.cpp	2011-10-12 02:21:37.000000000 +0200
++++ QtSixA-1.5.1/sixad/sixad-bin.cpp	2013-03-29 10:11:37.603040474 +0100
+@@ -22,6 +22,7 @@
+ #include <signal.h>
+ #include <stdlib.h>
+ #include <syslog.h>
++#include <unistd.h>
+ 
+ #if 0
+ #include <sys/ioctl.h>
+diff -Naur QtSixA-1.5.1.org/sixad/sixad-sixaxis.cpp QtSixA-1.5.1/sixad/sixad-sixaxis.cpp
+--- QtSixA-1.5.1.org/sixad/sixad-sixaxis.cpp	2011-10-12 02:58:37.000000000 +0200
++++ QtSixA-1.5.1/sixad/sixad-sixaxis.cpp	2013-03-29 10:15:07.475050482 +0100
+@@ -26,6 +26,7 @@
+ #include <string.h>
+ #include <syslog.h>
+ #include <time.h>
++#include <unistd.h>
+ #include <sys/socket.h>
+ 
+ int csk = 0;
+diff -Naur QtSixA-1.5.1.org/sixad/sixad-remote.cpp QtSixA-1.5.1/sixad/sixad-remote.cpp
+--- QtSixA-1.5.1.org/sixad/sixad-remote.cpp	2011-10-12 15:22:19.000000000 +0200
++++ QtSixA-1.5.1/sixad/sixad-remote.cpp	2013-03-29 10:16:20.131053946 +0100
+@@ -26,6 +26,7 @@
+ #include <string.h>
+ #include <syslog.h>
+ #include <time.h>
++#include <unistd.h>
+ #include <sys/socket.h>
+ 
+ int csk = 0;
+diff -Naur QtSixA-1.5.1.org/sixad/sixad-raw.cpp QtSixA-1.5.1/sixad/sixad-raw.cpp
+--- QtSixA-1.5.1.org/sixad/sixad-raw.cpp	2011-10-11 22:00:41.000000000 +0200
++++ QtSixA-1.5.1/sixad/sixad-raw.cpp	2013-03-29 10:16:59.107055805 +0100
+@@ -22,6 +22,7 @@
+ #include <iostream>
+ #include <fcntl.h>
+ #include <syslog.h>
++#include <unistd.h>
+ 
+ int main(int argc, char **argv)
+ {
+diff -Naur QtSixA-1.5.1.org/sixad/sixad-3in1.cpp QtSixA-1.5.1/sixad/sixad-3in1.cpp
+--- QtSixA-1.5.1.org/sixad/sixad-3in1.cpp	2011-10-12 17:53:04.000000000 +0200
++++ QtSixA-1.5.1/sixad/sixad-3in1.cpp	2013-03-29 10:18:59.579061549 +0100
+@@ -25,6 +25,7 @@
+ #include <errno.h>
+ #include <fcntl.h>
+ #include <syslog.h>
++#include <unistd.h>
+ 
+ #define KEYMOTE_KEY_SELECT   1 << 0
+ #define KEYMOTE_KEY_START    1 << 1

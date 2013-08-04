@@ -1,0 +1,20 @@
+#!/sbin/runscript
+# Copyright 1999-2013 Gentoo Foundation
+# Distributed under the terms of the GNU General Public License v2
+# $Header: $
+
+depend() {
+	need bluetooth
+}
+
+start() {
+   	ebegin "Starting ${SVCNAME}"
+	start-stop-daemon --start --exec /usr/sbin/sixad-bin -- 0 0 0
+	eend $?
+}
+
+stop() {
+	ebegin "Shutting down ${SVCNAME}"
+	start-stop-daemon --stop --quiet --exec /usr/sbin/sixad-bin -- 0 0 0
+	eend $?
+}
