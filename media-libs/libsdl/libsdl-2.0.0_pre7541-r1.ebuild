@@ -4,28 +4,24 @@
 
 EAPI=5
 
-inherit cmake-multilib versionator
+inherit cmake-multilib eutils
 
-# This ebuild is based on the one from gamerlay. It multibuilds and
-# adds a symlink required for the steam client.
-
-MY_PN="SDL"
-REV="$(get_version_component_range 4)"
-MY_P="${MY_PN}-$(get_version_component_range 1-3)-${REV/pre/}"
+MY_PV=${PV/_pre/-}
 
 DESCRIPTION="Simple Direct Media Layer"
 HOMEPAGE="http://www.libsdl.org/"
-SRC_URI="http://www.libsdl.org/tmp/${MY_P}.tar.gz"
-
+SRC_URI="http://www.libsdl.org/tmp/SDL-${MY_PV}.tar.gz"
 LICENSE="ZLIB"
 SLOT="2"
 KEYWORDS="~amd64 ~x86"
-IUSE="3dnow alsa altivec +asm aqua fusionsound gles mmx nas opengl oss pulseaudio sse sse2 static-libs +threads tslib +video X +xcursor +xinput xinerama xscreensaver xrandr xvidmode"
+IUSE="3dnow alsa altivec +asm aqua fusionsound gles mmx nas opengl oss pulseaudio sse sse2 static-libs +threads tslib +video X xinerama xscreensaver"
 
 #FIXME: Replace "gles" deps with "virtual/opengles", after hitting Portage.
+#FIXME: media-libs/nas no have emul-* ebuild
+#FIXME: virtual/opengl for abi_x86_32 require additional handling
 RDEPEND="
 	nas? (
-		media-libs/nas[${MULTILIB_USEDEP}]
+		media-libs/nas
 		x11-libs/libX11[${MULTILIB_USEDEP}]
 		x11-libs/libXext[${MULTILIB_USEDEP}]
 		x11-libs/libXt[${MULTILIB_USEDEP}]
@@ -42,12 +38,12 @@ RDEPEND="
 	)
 	xinerama? ( x11-libs/libXinerama[${MULTILIB_USEDEP}] )
 	xscreensaver? ( x11-libs/libXScrnSaver[${MULTILIB_USEDEP}] )
-	alsa? ( media-libs/alsa-lib )
+	alsa? ( media-libs/alsa-lib[${MULTILIB_USEDEP}] )
 	fusionsound? ( >=media-libs/FusionSound-1.1.1 )
 	pulseaudio? ( >=media-sound/pulseaudio-0.9 )
-	gles? ( || ( media-libs/mesa[gles2] media-libs/mesa[gles] ) )
-	opengl? ( virtual/opengl )
-	tslib? ( x11-libs/tslib[${MULTILIB_USEDEP}] )
+	gles? ( || ( media-libs/mesa[gles2,${MULTILIB_USEDEP}] media-libs/mesa[gles,${MULTILIB_USEDEP}] ) )
+	opengl? ( virtual/opengl[${MULTILIB_USEDEP}] )
+	tslib? ( x11-libs/tslib )
 "
 
 DEPEND="${RDEPEND}
@@ -67,12 +63,17 @@ DEPEND="${RDEPEND}
 	xscreensaver? ( x11-proto/scrnsaverproto[${MULTILIB_USEDEP}] )
 "
 
-S=${WORKDIR}/${MY_P}
+S=${WORKDIR}/SDL-${MY_PV}
 
-#src_prepare() {
-#	einfo "Patching header to make them arch-independent"
-#	sed -i "s/#cmakedefine SIZEOF_VOIDP @SIZEOF_VOIDP@.*/#define SIZEOF_VOIDP sizeof(void*)/" ${S}/include/SDL_config.h.cmake || die asd
-#}
+DOCS=( BUGS.txt CREDITS.txt README.txt README-hg.txt README-SDL.txt TODO.txt WhatsNew.txt )
+
+src_prepare() {
+	# Make headers more universal for 32/64 archs.
+	# See http://bugzilla.libsdl.org/show_bug.cgi?id=1893
+	epatch "${FILESDIR}/${PN}-universal_xdata32_check.patch"
+
+	epatch_user
+}
 
 src_configure() {
 	mycmakeargs=(
@@ -103,27 +104,13 @@ src_configure() {
 		$(cmake-utils_use tslib INPUT_TSLIB)
 		$(cmake-utils_use video VIDEO_DUMMY)
 		$(cmake-utils_use X VIDEO_X11)
-		$(cmake-utils_use xcursor VIDEO_X11_XCURSOR)
+		$(cmake-utils_use X VIDEO_X11_XCURSOR)
 		$(cmake-utils_use xinerama VIDEO_X11_XINERAMA)
-		$(cmake-utils_use xinput VIDEO_X11_XINPUT)
-		$(cmake-utils_use xrandr VIDEO_X11_XRANDR)
+		$(cmake-utils_use X VIDEO_X11_XINPUT)
+		$(cmake-utils_use X VIDEO_X11_XRANDR)
 		$(cmake-utils_use xscreensaver VIDEO_X11_XSCRNSAVER)
-		$(cmake-utils_use xvidmode VIDEO_X11_XVM)
+		$(cmake-utils_use X VIDEO_X11_XVM)
 		#$(cmake-utils_use joystick SDL_JOYSTICK)
 	)
 	cmake-multilib_src_configure
-}
-
-#create_symlink_for_steam() {
-#	cd ${D}/usr/$(get_libdir)
-#	ln -s libSDL2.so.2.0.0 libSDL2-2.0.so.0
-#}
-
-src_install() {
-	cmake-multilib_src_install
-
-	dodoc BUGS.txt CREDITS.txt TODO.txt WhatsNew.txt README*
-
-	# create symlink for Valve's steam client
-#	multilib_foreach_abi create_symlink_for_steam
 }
