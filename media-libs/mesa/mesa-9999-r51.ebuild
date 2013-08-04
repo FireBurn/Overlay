@@ -129,7 +129,7 @@ DEPEND="${RDEPEND}
 				>=sys-devel/gcc-4.6
 	)
 	${PYTHON_DEPS}
-	dev-libs/libxml2[python,${PYTHON_USEDEP},${MULTILIB_USEDEP}]
+	dev-libs/libxml2[python,${PYTHON_USEDEP}]
 	sys-devel/bison
 	sys-devel/flex
 	virtual/pkgconfig
