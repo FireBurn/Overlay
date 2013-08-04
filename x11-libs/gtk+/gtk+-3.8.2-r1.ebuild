@@ -54,7 +54,7 @@ COMMON_DEPEND="
 	>=x11-libs/gtk+-2.24:2[${MULTILIB_USEDEP}]
 	media-libs/fontconfig[${MULTILIB_USEDEP}]
 	x11-misc/shared-mime-info
-	colord? ( >=x11-misc/colord-0.1.9[${MULTILIB_USEDEP}] )
+	colord? ( >=x11-misc/colord-0.1.9 )
 	cups? ( >=net-print/cups-1.2 )
 	introspection? ( >=dev-libs/gobject-introspection-1.32[${MULTILIB_USEDEP}] )
 "
@@ -139,9 +139,18 @@ multilib_src_configure() {
 	# Passing --disable-debug is not recommended for production use
 	# need libdir here to avoid a double slash in a path that libtool doesn't
 	# grok so well during install (// between $EPREFIX and usr ...)
+
+	if multilib_is_native_abi; then
+		myconf+="
+			$(use_enable colord)
+		"
+	else
+		myconf=""
+	fi
+
 	econf \
 		$(use_enable aqua quartz-backend) \
-		$(use_enable colord) \
+		${myconf} \
 		$(use_enable cups cups auto) \
 		$(usex debug --enable-debug=yes "") \
 		$(use_enable introspection) \
