@@ -30,7 +30,7 @@ KEYWORDS="~amd64 ~x86"
 IUSE=""
 
 RDEPEND="
-        sys-devel/llvm[clang,video_cards_radeon]"
+        sys-devel/llvm[clang,video_cards_radeon,${MULTILIB_USEDEP}]"
 DEPEND="${RDEPEND}"
 
 src_prepare() {

@@ -21,10 +21,9 @@ REQUIRED_USE="test? ( cairo )"
 
 RDEPEND="
 	>=dev-libs/gobject-introspection-common-${PV}
-	>=dev-libs/glib-2.36:2
+	>=dev-libs/glib-2.36:2[${MULTILIB_USEDEP}]
 	doctool? ( dev-python/mako )
-	virtual/libffi:=
-	dev-lang/vala:0.20
+	virtual/libffi:=[${MULTILIB_USEDEP}]
 "
 # Wants real bison, not virtual/yacc
 DEPEND="${RDEPEND}

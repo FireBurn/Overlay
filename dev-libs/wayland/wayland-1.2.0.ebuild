@@ -27,8 +27,8 @@ LICENSE="MIT"
 SLOT="0"
 IUSE="doc static-libs"
 
-RDEPEND="dev-libs/expat
-	virtual/libffi"
+RDEPEND="dev-libs/expat[${MULTILIB_USEDEP}]
+	virtual/libffi[${MULTILIB_USEDEP}]"
 DEPEND="${RDEPEND}
 	doc? ( app-doc/doxygen )"
 

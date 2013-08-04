@@ -21,9 +21,9 @@ IUSE="doctool test"
 
 RDEPEND="
 	>=dev-libs/gobject-introspection-common-${PV}
-	>=dev-libs/glib-2.34.1:2
+	>=dev-libs/glib-2.34.1:2[${MULTILIB_USEDEP}]
 	doctool? ( dev-python/mako )
-	virtual/libffi:=
+	virtual/libffi:=[${MULTILIB_USEDEP}]
 	${PYTHON_DEPS}
 "
 # Wants real bison, not virtual/yacc

@@ -1,0 +1,23 @@
+# ChangeLog for x11-libs/libxkbcommon
+# Copyright 1999-2013 Gentoo Foundation; Distributed under the GPL v2
+# $Header: /var/cvsroot/gentoo-x86/x11-libs/libxkbcommon/ChangeLog,v 1.4 2013/07/13 14:34:53 chithanh Exp $
+
+  13 Jul 2013; Chí-Thanh Christopher Nguyễn <chithanh@gentoo.org>
+  libxkbcommon-0.3.1.ebuild:
+  Keyword ~arm.
+
+*libxkbcommon-0.3.1 (11 Jun 2013)
+
+  11 Jun 2013; Kacper Kowalik <xarthisius@gentoo.org>
+  +libxkbcommon-0.3.1.ebuild:
+  Version bump wrt #470076 by Nikoli <nikoli@lavabit.com>
+
+  21 Apr 2013; Chí-Thanh Christopher Nguyễn <chithanh@gentoo.org>
+  libxkbcommon-0.2.0.ebuild:
+  set XORG_EAUTORECONF before inheriting the eclass
+
+*libxkbcommon-0.2.0 (27 Mar 2013)
+
+  27 Mar 2013; Alexey Shvetsov <alexxy@gentoo.org> +libxkbcommon-0.2.0.ebuild,
+  +metadata.xml:
+  Import to tree bug #439578

@@ -35,10 +35,10 @@ RDEPEND="!x11-apps/mesa-progs-32bit
 	gles2? ( media-libs/glew[${MULTILIB_USEDEP}] )
 	media-libs/mesa[egl?,gles1?,gles2?,${MULTILIB_USEDEP}]
 	virtual/opengl[${MULTILIB_USEDEP}]
-	x11-libs/libX11"
+	x11-libs/libX11[${MULTILIB_USEDEP}]"
 DEPEND="${RDEPEND}
 	virtual/glu[${MULTILIB_USEDEP}]
-	x11-proto/xproto"
+	x11-proto/xproto[${MULTILIB_USEDEP}]"
 
 S=${WORKDIR}/${MY_P}
 

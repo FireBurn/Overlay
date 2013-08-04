@@ -25,29 +25,29 @@ IUSE="X aqua debug directfb doc drm gallium gles2 +glib legacy-drivers opengl op
 # Test causes a circular depend on gtk+... since gtk+ needs cairo but test needs gtk+ so we need to block it
 RESTRICT="test"
 
-RDEPEND="media-libs/fontconfig
-	media-libs/freetype:2
-	media-libs/libpng:0=
-	sys-libs/zlib
-	>=x11-libs/pixman-0.28.0
-	directfb? ( dev-libs/DirectFB )
-	gles2? ( media-libs/mesa[gles2] )
-	glib? ( >=dev-libs/glib-2.28.6:2 )
-	opengl? ( || ( media-libs/mesa[egl] media-libs/opengl-apple ) )
-	openvg? ( media-libs/mesa[openvg] )
-	qt4? ( >=dev-qt/qtgui-4.8:4 )
+RDEPEND="media-libs/fontconfig[${MULTILIB_USEDEP}]
+	media-libs/freetype:2[${MULTILIB_USEDEP}]
+	media-libs/libpng:0=[${MULTILIB_USEDEP}]
+	sys-libs/zlib[${MULTILIB_USEDEP}]
+	>=x11-libs/pixman-0.28.0[${MULTILIB_USEDEP}]
+	directfb? ( dev-libs/DirectFB[${MULTILIB_USEDEP}] )
+	gles2? ( media-libs/mesa[gles2,${MULTILIB_USEDEP}] )
+	glib? ( >=dev-libs/glib-2.28.6:2[${MULTILIB_USEDEP}] )
+	opengl? ( || ( media-libs/mesa[egl,${MULTILIB_USEDEP}] media-libs/opengl-apple ) )
+	openvg? ( media-libs/mesa[openvg,${MULTILIB_USEDEP}] )
+	qt4? ( >=dev-qt/qtgui-4.8:4[${MULTILIB_USEDEP}] )
 	X? (
-		>=x11-libs/libXrender-0.6
-		x11-libs/libXext
-		x11-libs/libX11
+		>=x11-libs/libXrender-0.6[${MULTILIB_USEDEP}]
+		x11-libs/libXext[${MULTILIB_USEDEP}]
+		x11-libs/libX11[${MULTILIB_USEDEP}]
 		drm? (
 			>=virtual/udev-136
-			gallium? ( media-libs/mesa[gallium] )
+			gallium? ( media-libs/mesa[gallium,${MULTILIB_USEDEP}] )
 		)
 	)
 	xcb? (
-		x11-libs/libxcb
-		x11-libs/xcb-util
+		x11-libs/libxcb[${MULTILIB_USEDEP}]
+		x11-libs/xcb-util[${MULTILIB_USEDEP}]
 	)"
 DEPEND="${RDEPEND}
 	virtual/pkgconfig

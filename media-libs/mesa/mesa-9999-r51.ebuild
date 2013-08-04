@@ -86,24 +86,24 @@ RDEPEND="
 	classic? ( app-admin/eselect-mesa )
 	gallium? ( app-admin/eselect-mesa )
 	>=app-admin/eselect-opengl-1.2.7
-	dev-libs/expat
+	dev-libs/expat[${MULTILIB_USEDEP}]
 	gbm? ( virtual/udev )
-	>=x11-libs/libX11-1.3.99.901
-	x11-libs/libXdamage
-	x11-libs/libXext
-	x11-libs/libXxf86vm
-	>=x11-libs/libxcb-1.8.1
+	>=x11-libs/libX11-1.3.99.901[${MULTILIB_USEDEP}]
+	x11-libs/libXdamage[${MULTILIB_USEDEP}]
+	x11-libs/libXext[${MULTILIB_USEDEP}]
+	x11-libs/libXxf86vm[${MULTILIB_USEDEP}]
+	>=x11-libs/libxcb-1.8.1[${MULTILIB_USEDEP}]
 	opencl? (
 				app-admin/eselect-opencl
 				dev-libs/libclc[${MULTILIB_USEDEP}]
 			)
-	vdpau? ( >=x11-libs/libvdpau-0.4.1 )
+	vdpau? ( >=x11-libs/libvdpau-0.4.1[${MULTILIB_USEDEP}] )
 	wayland? ( >=dev-libs/wayland-1.0.3[${MULTILIB_USEDEP}] )
 	xorg? (
 		x11-base/xorg-server:=
-		x11-libs/libdrm[libkms]
+		x11-libs/libdrm[libkms,${MULTILIB_USEDEP}]
 	)
-	xvmc? ( >=x11-libs/libXvMC-1.0.6 )
+	xvmc? ( >=x11-libs/libXvMC-1.0.6[${MULTILIB_USEDEP}] )
 	${LIBDRM_DEPSTRING}[video_cards_freedreno?,video_cards_nouveau?,video_cards_vmware?,${MULTILIB_USEDEP}]
 "
 for card in ${INTEL_CARDS}; do
@@ -129,7 +129,7 @@ DEPEND="${RDEPEND}
 				>=sys-devel/gcc-4.6
 	)
 	${PYTHON_DEPS}
-	dev-libs/libxml2[python,${PYTHON_USEDEP}]
+	dev-libs/libxml2[python,${PYTHON_USEDEP},${MULTILIB_USEDEP}]
 	sys-devel/bison
 	sys-devel/flex
 	virtual/pkgconfig

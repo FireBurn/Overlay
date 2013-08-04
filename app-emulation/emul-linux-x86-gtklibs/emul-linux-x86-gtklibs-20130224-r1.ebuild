@@ -16,6 +16,13 @@ RDEPEND="~app-emulation/emul-linux-x86-baselibs-${PV}
 # RDEPEND on opengl stuff needed due cairo, bug #410213
 PDEPEND="abi_x86_32? (
 		x11-libs/cairo[abi_x86_32(-)]
+		x11-libs/gdk-pixbuf[abi_x86_32(-)]
+		x11-libs/pango[abi_x86_32(-)]
+		x11-libs/gtk+:1[abi_x86_32(-)]
+		x11-libs/gtk+:2[abi_x86_32(-)]
+		x11-libs/gtk+:3[abi_x86_32(-)]
+		x11-libs/pixman[abi_x86_32(-)]
+		x11-themes/gtk-engines[abi_x86_32(-)]
 	)"
 
 my_gdk_pixbuf_query_loaders() {
@@ -28,10 +35,10 @@ my_gdk_pixbuf_query_loaders() {
 		return 1
 	fi
 
-	if gdk-pixbuf-query-loaders32 > "${tmp_file}"; then
+	if gdk-pixbuf-query-loaders.x86 > "${tmp_file}"; then
 		cat "${tmp_file}" > "${ROOT}usr/lib32/gdk-pixbuf-2.0/2.10.0/loaders.cache"
 	else
-		ewarn "Warning, gdk-pixbuf-query-loaders32 failed."
+		ewarn "Warning, gdk-pixbuf-query-loaders.x86 failed."
 	fi
 	rm "${tmp_file}"
 }
@@ -48,7 +55,7 @@ my_pango_querymodules() {
 		return 1
 	fi
 
-	if pango-querymodules32 > "${tmp_file}"; then
+	if pango-querymodules.x86 > "${tmp_file}"; then
 		cat "${tmp_file}" > "${pango_conf}"
 	else
 		ewarn "Cannot update pango.modules, file generation failed"
@@ -68,7 +75,7 @@ my_gtk_query_immodules() {
 		return 1
 	fi
 
-	if gtk-query-immodules-2.0-32 > "${tmp_file}"; then
+	if gtk-query-immodules-2.0.x86 > "${tmp_file}"; then
 		cat "${tmp_file}" > "${gtk_conf}"
 	else
 		ewarn "Cannot update gtk.immodules, file generation failed"
