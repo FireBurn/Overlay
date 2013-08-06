@@ -189,6 +189,11 @@ src_prepare() {
 	# Tests fail against python-3, bug #407887
 	sed -i 's|/usr/bin/env python|/usr/bin/env python2|' src/glsl/tests/compare_ir || die
 
+	# Quick fix for llvm-3.4 (currently llvm-9999) since 
+	# https://github.com/llvm-mirror/llvm/commit/61fc8d670f1e991804c2ab753e567981e60962cb
+	# https://llvm.org/svn/llvm-project/llvm/trunk@187618 91177308-0d34-0410-b5e6-96231b3b80d8
+	epatch "${FILESDIR}"/llvm-3.4-realign-stack-removed.patch
+
 	base_src_prepare
 
 	eautoreconf

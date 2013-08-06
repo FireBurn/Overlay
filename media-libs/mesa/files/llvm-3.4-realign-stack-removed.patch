@@ -1,0 +1,11 @@
+diff -rupN work-old/Mesa-9999/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp work/Mesa-9999/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
+--- work-old/Mesa-9999/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp	2013-08-06 23:44:02.049368486 +0100
++++ work/Mesa-9999/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp	2013-08-06 23:48:51.592362157 +0100
+@@ -273,7 +273,6 @@ lp_build_create_jit_compiler_for_module(
+    TargetOptions options;
+ #if defined(PIPE_ARCH_X86)
+    options.StackAlignmentOverride = 4;
+-   options.RealignStack = true;
+ #endif
+ 
+ #if defined(DEBUG)
