@@ -1,7 +1,10 @@
-
 lib32/libbz2.so.1
 lib32/libbz2.so.1.0
 lib32/libbz2.so.1.0.6
+lib32/libudev.so.1
+lib32/libudev.so.1.2.1
+lib32/libusb-0.1.so.4
+lib32/libusb-0.1.so.4.4.4
 lib32/libz.so.1
 lib32/libz.so.1.2.7
 usr/lib32/glib-2.0/include/glibconfig.h
@@ -74,9 +77,14 @@ usr/lib32/libtiffxx.so.4
 usr/lib32/libtiffxx.so.5
 usr/lib32/libtiffxx.so.5.1.0
 usr/lib32/libturbojpeg.so
+usr/lib32/libudev.so
 usr/lib32/libudis86.so
 usr/lib32/libudis86.so.0
 usr/lib32/libudis86.so.0.0.0
+usr/lib32/libusb-1.0.so
+usr/lib32/libusb-1.0.so.0
+usr/lib32/libusb-1.0.so.0.1.0
+usr/lib32/libusb.so
 usr/lib32/libz.so
 usr/lib32/llvm/BugpointPasses.so
 usr/lib32/llvm/libLLVM-3.1.so
@@ -103,6 +111,9 @@ usr/lib32/pkgconfig/libpng15.pc
 usr/lib32/pkgconfig/libpng.pc
 usr/lib32/pkgconfig/libraw1394.pc
 usr/lib32/pkgconfig/libtiff-4.pc
+usr/lib32/pkgconfig/libudev.pc
+usr/lib32/pkgconfig/libusb-1.0.pc
+usr/lib32/pkgconfig/libusb.pc
 usr/lib32/pkgconfig/minizip.pc
 usr/lib32/pkgconfig/zlib.pc
 usr/lib32/python2.7/lib-dynload/pyexpat.so

@@ -40,7 +40,7 @@ RDEPEND="media-libs/fontconfig[${MULTILIB_USEDEP}]
 		x11-libs/libXext[${MULTILIB_USEDEP}]
 		x11-libs/libX11[${MULTILIB_USEDEP}]
 		drm? (
-			>=virtual/udev-136
+			>=virtual/udev-136[${MULTILIB_USEDEP}]
 			gallium? ( media-libs/mesa[gallium,${MULTILIB_USEDEP}] )
 		)
 	)

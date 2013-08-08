@@ -87,7 +87,7 @@ RDEPEND="
 	gallium? ( app-admin/eselect-mesa )
 	>=app-admin/eselect-opengl-1.2.7
 	dev-libs/expat[${MULTILIB_USEDEP}]
-	gbm? ( virtual/udev )
+	gbm? ( virtual/udev[${MULTILIB_USEDEP}] )
 	>=x11-libs/libX11-1.3.99.901[${MULTILIB_USEDEP}]
 	x11-libs/libXdamage[${MULTILIB_USEDEP}]
 	x11-libs/libXext[${MULTILIB_USEDEP}]

@@ -1,6 +1,6 @@
 # Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-emulation/emul-linux-x86-baselibs/emul-linux-x86-baselibs-20130224-r5.ebuild,v 1.1 2013/08/01 15:55:32 aballier Exp $
+# $Header: /var/cvsroot/gentoo-x86/app-emulation/emul-linux-x86-baselibs/emul-linux-x86-baselibs-20130224-r8.ebuild,v 1.1 2013/08/08 12:49:20 ssuominen Exp $
 
 EAPI=5
 inherit emul-linux-x86
@@ -28,10 +28,13 @@ PDEPEND="abi_x86_32? (
 		>=media-libs/libjpeg-turbo-1.3.0-r2:0[abi_x86_32(-)]
 		>=sys-libs/libraw1394-2.1.0-r1[abi_x86_32(-)]
 		>=sys-libs/libavc1394-0.5.4-r1[abi_x86_32(-)]
+		>=dev-libs/expat-2.1.0-r3[abi_x86_32(-)]
+		>=virtual/libusb-0-r1:0[abi_x86_32(-)]
+		>=virtual/libusb-1-r1:1[abi_x86_32(-)]
+		>=virtual/udev-206-r1[abi_x86_32(-)]
 		dev-libs/glib:1[abi_x86_32(-)]
 		dev-libs/glib:2[abi_x86_32(-)]
 		media-libs/tiff[abi_x86_32(-)]
-		dev-libs/expat[abi_x86_32(-)]
 	)"
 
 PYTHON_UPDATER_IGNORE="1"
