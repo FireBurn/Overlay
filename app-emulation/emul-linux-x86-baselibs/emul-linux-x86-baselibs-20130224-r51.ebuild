@@ -35,6 +35,9 @@ PDEPEND="abi_x86_32? (
 		dev-libs/glib:1[abi_x86_32(-)]
 		dev-libs/glib:2[abi_x86_32(-)]
 		dev-libs/libxml2[abi_x86_32(-)]
+		dev-libs/libgpg-error[abi_x86_32(-)]
+		dev-libs/libgcrypt[abi_x86_32(-)]
+		dev-libs/libxslt[abi_x86_32(-)]
 		media-libs/tiff[abi_x86_32(-)]
 	)"
 

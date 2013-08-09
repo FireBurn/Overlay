@@ -214,11 +214,11 @@ multilib_src_install() {
 	if multilib_is_native_abi; then
 		# Move files back.
 		if path_exists -o "${ED}"/tmp/gtk-query-immodules-2.0.*; then
- 			mv "${ED}"/tmp/gtk-query-immodules-2.0.* "${ED}"/usr/bin || die
- 		fi
+			mv "${ED}"/tmp/gtk-query-immodules-2.0.* "${ED}"/usr/bin || die
+		fi
 	else
 		# Preserve ABI-variant of gtk-query-immodules-2.0,
- 		# then drop all the executables
+		# then drop all the executables
 		mkdir -p "${ED}"/tmp || die
 		mv "${ED}"/usr/bin/gtk-query-immodules-2.0 "${ED}"/tmp/gtk-query-immodules-2.0.${ABI} || die
 		rm -r "${ED}"/usr/bin || die
