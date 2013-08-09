@@ -28,7 +28,7 @@ RDEPEND="virtual/libiconv[${MULTILIB_USEDEP}]
 	utils? ( >=dev-util/gdbus-codegen-${PV} )"
 DEPEND="${RDEPEND}
 	app-text/docbook-xml-dtd:4.1.2
-	>=dev-libs/libxslt-1.0
+	>=dev-libs/libxslt-1.0[${MULTILIB_USEDEP}]
 	>=sys-devel/gettext-0.11
 	>=dev-util/gtk-doc-am-1.15
 	systemtap? ( >=dev-util/systemtap-1.3 )

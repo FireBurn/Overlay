@@ -61,7 +61,7 @@ COMMON_DEPEND="
 DEPEND="${COMMON_DEPEND}
 	app-text/docbook-xsl-stylesheets
 	app-text/docbook-xml-dtd:4.1.2
-	dev-libs/libxslt
+	dev-libs/libxslt[${MULTILIB_USEDEP}]
 	virtual/pkgconfig
 	X? (
 		x11-proto/xextproto[${MULTILIB_USEDEP}]
