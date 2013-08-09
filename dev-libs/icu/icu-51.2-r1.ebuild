@@ -112,4 +112,17 @@ multilib_src_install() {
 	dohtml ../readme.html
 
 	use doc && dohtml -p api -r doc/html/
+
+	if multilib_is_native_abi; then
+		# Move files back.
+		if path_exists -o "${ED}"/tmp/icu-config.*; then
+			mv "${ED}"/tmp/icu-config.* "${ED}"/usr/bin || die
+		fi
+	else
+		# Preserve ABI-variant of icu-config,
+		# then drop all the executables
+		mkdir -p "${ED}"/tmp || die
+		mv "${ED}"/usr/bin/icu-config "${ED}"/tmp/icu-config.${ABI} || die
+		rm -r "${ED}"/usr/bin || die
+	fi
 }

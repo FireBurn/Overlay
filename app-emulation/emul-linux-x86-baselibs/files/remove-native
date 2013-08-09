@@ -88,6 +88,9 @@ usr/lib32/libusb-1.0.so
 usr/lib32/libusb-1.0.so.0
 usr/lib32/libusb-1.0.so.0.1.0
 usr/lib32/libusb.so
+usr/lib32/libxml2.so
+usr/lib32/libxml2.so.2
+usr/lib32/libxml2.so.2.8.0
 usr/lib32/libz.so
 usr/lib32/llvm/BugpointPasses.so
 usr/lib32/llvm/libLLVM-3.1.so
@@ -118,6 +121,8 @@ usr/lib32/pkgconfig/libtiff-4.pc
 usr/lib32/pkgconfig/libudev.pc
 usr/lib32/pkgconfig/libusb-1.0.pc
 usr/lib32/pkgconfig/libusb.pc
+usr/lib32/pkgconfig/libxml-2.0.pc
 usr/lib32/pkgconfig/minizip.pc
 usr/lib32/pkgconfig/zlib.pc
 usr/lib32/python2.7/lib-dynload/pyexpat.so
+usr/lib32/python2.7/site-packages/libxml2mod.so

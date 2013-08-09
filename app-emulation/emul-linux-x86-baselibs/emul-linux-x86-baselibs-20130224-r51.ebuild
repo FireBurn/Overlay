@@ -34,6 +34,7 @@ PDEPEND="abi_x86_32? (
 		>=virtual/udev-206-r1[abi_x86_32(-)]
 		dev-libs/glib:1[abi_x86_32(-)]
 		dev-libs/glib:2[abi_x86_32(-)]
+		dev-libs/libxml2[abi_x86_32(-)]
 		media-libs/tiff[abi_x86_32(-)]
 	)"
 
