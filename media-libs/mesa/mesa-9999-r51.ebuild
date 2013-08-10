@@ -4,7 +4,12 @@
 
 EAPI=5
 
-EGIT_REPO_URI="git://anongit.freedesktop.org/mesa/mesa"
+if use nine ; then
+	EGIT_REPO_URI="https://github.com/chrisbmr/Mesa-3D"
+	EGIT_BRANCH="gallium-nine"
+else
+	EGIT_REPO_URI="git://anongit.freedesktop.org/mesa/mesa"
+fi
 
 if [[ ${PV} = 9999* ]]; then
 	GIT_ECLASS="git-2"
@@ -48,12 +53,13 @@ for card in ${VIDEO_CARDS}; do
 done
 
 IUSE="${IUSE_VIDEO_CARDS}
-	bindist +classic debug +egl +gallium gbm gles1 gles2 +llvm +nptl opencl
-	openvg osmesa pax_kernel pic r600-llvm-compiler selinux vdpau
+	bindist +classic debug +egl +gallium gbm gles1 gles2 +llvm +nptl nine
+	opencl openvg osmesa pax_kernel pic r600-llvm-compiler selinux vdpau
 	wayland xvmc xa xorg kernel_FreeBSD"
 
 REQUIRED_USE="
 	llvm?   ( gallium )
+	nine?	( gallium )
 	openvg? ( egl gallium )
 	opencl? ( gallium r600-llvm-compiler )
 	gles1?  ( egl )
@@ -191,6 +197,11 @@ src_prepare() {
 
 	base_src_prepare
 
+	# Fix for llvm-3.4 required for nine build
+	if use nine; then
+		epatch "${FILESDIR}"/${PN}-llvm-3.4-fix.patch
+	fi
+
 	eautoreconf
 
 	multilib_copy_sources
@@ -233,6 +244,7 @@ multilib_src_configure() {
 	if use gallium; then
 		myconf+="
 			$(use_enable llvm gallium-llvm)
+			$(use_enable nine)
 			$(use_enable openvg)
 			$(use_enable r600-llvm-compiler)
 			$(use_enable vdpau)

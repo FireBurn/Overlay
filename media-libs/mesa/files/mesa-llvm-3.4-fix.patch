@@ -1,0 +1,30 @@
+From 2572e3b4a17e4b0de9b5ed7fe6f4edf01abd5655 Mon Sep 17 00:00:00 2001
+From: Laurent Carlier <lordheavym@gmail.com>
+Date: Tue, 06 Aug 2013 22:05:25 +0000
+Subject: gallivm: Fix build - Remove TargetOptions.RealignStack for llvm>=3.4
+
+Since llvm -3.4svn r187618, TargetOptions doesn't provide
+RealignStack, so only enable it with llvm<3.4
+
+This option must now be specified using function attributes, see LLVM
+commit r187618
+
+Reviewed-by: Tom Stellard <thomas.stellard@amd.com>
+---
+diff --git a/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp b/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
+index e09bb78..e8d2db2 100644
+--- a/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
++++ b/src/gallium/auxiliary/gallivm/lp_bld_misc.cpp
+@@ -273,8 +273,10 @@ lp_build_create_jit_compiler_for_module(LLVMExecutionEngineRef *OutJIT,
+    TargetOptions options;
+ #if defined(PIPE_ARCH_X86)
+    options.StackAlignmentOverride = 4;
++#if HAVE_LLVM < 0x0304
+    options.RealignStack = true;
+ #endif
++#endif
+ 
+ #if defined(DEBUG)
+    options.JITEmitDebugInfo = true;
+--
+cgit v0.9.0.2-2-gbebe
