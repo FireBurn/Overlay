@@ -79,10 +79,22 @@ multilib_src_install() {
 	fi
 }
 
-multilib_pkg_postinst() {
+pkg_postinst() {
 	# causes segfault if set, see bug 375615
 	unset __GL_NO_DSO_FINALIZER
 
+	multilib_foreach_abi gdk_pixbuf_query_loaders
+
+	# FIXME: use subslots to get rebuilds when really needed
+	# Every major version bump???
+	if [ -e "${EROOT}"usr/lib/gtk-2.0/2.*/loaders ]; then
+		elog "You need to rebuild ebuilds that installed into" "${EROOT}"usr/lib/gtk-2.0/2.*/loaders
+		elog "to do that you can use qfile from portage-utils:"
+		elog "emerge -va1 \$(qfile -qC ${EPREFIX}/usr/lib/gtk-2.0/2.*/loaders)"
+	fi
+}
+
+gdk_pixbuf_query_loaders() {
 	tmp_file=$(mktemp -t tmp_gdk_pixbuf_ebuild.XXXXXXXXXX)
 	# be atomic!
 
@@ -98,12 +110,4 @@ multilib_pkg_postinst() {
 		ewarn "Cannot update loaders.cache, gdk-pixbuf-query-loaders failed to run"
 	fi
 	rm "${tmp_file}"
-
-	# FIXME: use subslots to get rebuilds when really needed
-	# Every major version bump???
-	if [ -e "${EROOT}"usr/lib/gtk-2.0/2.*/loaders ]; then
-		elog "You need to rebuild ebuilds that installed into" "${EROOT}"usr/lib/gtk-2.0/2.*/loaders
-		elog "to do that you can use qfile from portage-utils:"
-		elog "emerge -va1 \$(qfile -qC ${EPREFIX}/usr/lib/gtk-2.0/2.*/loaders)"
-	fi
 }

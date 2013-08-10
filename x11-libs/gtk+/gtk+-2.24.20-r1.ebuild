@@ -225,31 +225,13 @@ multilib_src_install() {
 	fi
 }
 
-multilib_pkg_postinst() {
-	set_gtk2_confdir
-
-	if multilib_is_native_abi; then
-		querybin="gtk-query-immodules-2.0"
-	else
-		querybin="gtk-query-immodules-2.0.${ABI}"
-	fi
-
-	# gtk.immodules should be in their CHOST directories respectively.
-#	${querybin}  > "${EROOT%/}${GTK2_CONFDIR}/gtk.immodules" \
-#		|| ewarn "Failed to run" ${querybin}
-	${querybin} --update-cache || die "Update immodules cache failed"
+pkg_postinst() {
+	multilib_foreach_abi gtk_query_immodules
 
 	if [ -e "${EROOT%/}/etc/gtk-2.0/gtk.immodules" ]; then
 		elog "File /etc/gtk-2.0/gtk.immodules has been moved to \$CHOST"
 		elog "aware location. Removing deprecated file."
 		rm -f ${EROOT%/}/etc/gtk-2.0/gtk.immodules
-	fi
-
-	if [ -e "${EROOT%/}${GTK2_CONFDIR}/gtk.immodules" ]; then
-		elog "File /etc/gtk-2.0/gtk.immodules has been moved to"
-		elog "${EROOT%/}/usr/$(get_libdir)/gtk-2.0/2.10.0/immodules.cache"
-		elog "Removing deprecated file."
-		rm -f ${EROOT%/}${GTK2_CONFDIR}/gtk.immodules
 	fi
 
 	# pixbufs are now handled by x11-libs/gdk-pixbuf
@@ -266,12 +248,6 @@ multilib_pkg_postinst() {
 		rm -f ${EROOT%/}/etc/gtk-2.0/gdk-pixbuf.loaders
 	fi
 
-	if [ -e "${EROOT%/}"/usr/lib/gtk-2.0/2.[^1]* ]; then
-		elog "You need to rebuild ebuilds that installed into" "${EROOT%/}"/usr/lib/gtk-2.0/2.[^1]*
-		elog "to do that you can use qfile from portage-utils:"
-		elog "emerge -va1 \$(qfile -qC ${EPREFIX}/usr/lib/gtk-2.0/2.[^1]*)"
-	fi
-
 	if ! has_version "app-text/evince"; then
 		elog "Please install app-text/evince for print preview functionality."
 		elog "Alternatively, check \"gtk-print-preview-command\" documentation and"
@@ -279,4 +255,32 @@ multilib_pkg_postinst() {
 	fi
 
 	readme.gentoo_print_elog
+}
+
+gtk_query_immodules() {
+	set_gtk2_confdir
+
+	if multilib_is_native_abi; then
+		querybin="gtk-query-immodules-2.0"
+	else
+		querybin="gtk-query-immodules-2.0.${ABI}"
+	fi
+
+	# gtk.immodules should be in their CHOST directories respectively.
+#	${querybin}  > "${EROOT%/}${GTK2_CONFDIR}/gtk.immodules" \
+#		|| ewarn "Failed to run" ${querybin}
+	${querybin} --update-cache || die "Update immodules cache failed"
+
+	if [ -e "${EROOT%/}${GTK2_CONFDIR}/gtk.immodules" ]; then
+		elog "File /etc/gtk-2.0/gtk.immodules has been moved to"
+		elog "${EROOT%/}/usr/$(get_libdir)/gtk-2.0/2.10.0/immodules.cache"
+		elog "Removing deprecated file."
+		rm -f ${EROOT%/}${GTK2_CONFDIR}/gtk.immodules
+	fi
+
+	if [ -e "${EROOT%/}"/usr/$(get_libdir)/gtk-2.0/2.[^1]* ]; then
+		elog "You need to rebuild ebuilds that installed into" "${EROOT%/}"/usr/$(get_libdir)/gtk-2.0/2.[^1]*
+		elog "to do that you can use qfile from portage-utils:"
+		elog "emerge -va1 \$(qfile -qC ${EPREFIX}/usr/$(get_libdir)/gtk-2.0/2.[^1]*)"
+	fi
 }

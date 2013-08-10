@@ -79,9 +79,19 @@ multilib_src_install() {
 
 }
 
-multilib_pkg_postinst() {
+pkg_postinst() {
 	gnome2_pkg_postinst
 
+	multilib_foreach_abi pango_querymodules
+
+	if [[ ${REPLACING_VERSIONS} < 1.30.1 ]]; then
+		elog "In >=${PN}-1.30.1, default configuration file locations moved from"
+		elog "~/.pangorc and ~/.pangox_aliases to ~/.config/pango/pangorc and"
+		elog "~/.config/pango/pangox.aliases"
+	fi
+}
+
+pango_querymodules() {
 	einfo "Generating modules listing..."
 	local PANGO_CONFDIR="${EROOT}/etc/pango/${CHOST}"
 	local pango_conf="${PANGO_CONFDIR}/pango.modules"
@@ -102,10 +112,4 @@ multilib_pkg_postinst() {
 		ewarn "Cannot update pango.modules, file generation failed"
 	fi
 	rm "${tmp_file}"
-
-	if [[ ${REPLACING_VERSIONS} < 1.30.1 ]]; then
-		elog "In >=${PN}-1.30.1, default configuration file locations moved from"
-		elog "~/.pangorc and ~/.pangox_aliases to ~/.config/pango/pangorc and"
-		elog "~/.config/pango/pangox.aliases"
-	fi
 }
