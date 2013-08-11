@@ -28,6 +28,10 @@ DEPEND="${RDEPEND}
 "
 # audioparsers and qtmux moves
 
+src_prepare() {
+	multilib_copy_sources
+}
+
 multilib_src_configure() {
 	# gst doesnt handle optimisations well
 	strip-flags

@@ -26,6 +26,10 @@ DEPEND="${RDEPEND}
 	>=dev-util/gtk-doc-am-1.12
 "
 
+src_prepare() {
+	multilib_copy_sources
+}
+
 multilib_src_configure() {
 	# gst doesnt handle optimisations well
 	strip-flags

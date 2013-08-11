@@ -48,9 +48,6 @@ RDEPEND="~app-emulation/emul-linux-x86-baselibs-${PV}
 		>=dev-libs/libcdio-paranoia-0.90_p1-r1[abi_x86_32(-)]
 		media-libs/gstreamer:0.10[abi_x86_32(-)]
 		media-libs/gst-plugins-base:0.10[abi_x86_32(-)]
-		media-libs/gst-plugins-good:0.10[abi_x86_32(-)]
-		media-libs/gst-plugins-bad:0.10[abi_x86_32(-)]
-		media-libs/gst-plugins-ugly:0.10[abi_x86_32(-)]
 		)
 	"
 PDEPEND="~app-emulation/emul-linux-x86-soundlibs-${PV}"

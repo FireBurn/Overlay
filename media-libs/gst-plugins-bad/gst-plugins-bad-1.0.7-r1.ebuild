@@ -21,6 +21,10 @@ RDEPEND="
 "
 DEPEND="${RDEPEND}"
 
+src_prepare() {
+	multilib_copy_sources
+}
+
 multilib_src_configure() {
 	strip-flags
 	replace-flags "-O3" "-O2"

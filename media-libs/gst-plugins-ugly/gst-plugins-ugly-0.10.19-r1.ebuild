@@ -26,6 +26,10 @@ DEPEND="${RDEPEND}
 RDEPEND="${RDEPEND}
 	!<media-libs/gst-plugins-bad-0.10.13"
 
+src_prepare() {
+	multilib_copy_sources
+}
+
 multilib_src_configure() {
 	# gst doesnt handle optimisations well
 	strip-flags
