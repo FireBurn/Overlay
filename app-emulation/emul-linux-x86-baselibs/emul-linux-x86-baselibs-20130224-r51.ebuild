@@ -15,9 +15,7 @@ IUSE="abi_x86_32"
 
 DEPEND=""
 RDEPEND="!<app-emulation/emul-linux-x86-medialibs-10.2
-	>=sys-libs/glibc-2.15" # bug 340613
-
-PDEPEND="abi_x86_32? (
+	abi_x86_32? (
 		>=sys-libs/zlib-1.2.8-r1[abi_x86_32(-)]
 		>=app-arch/bzip2-1.0.6-r4[abi_x86_32(-)]
 		>=media-libs/libpng-1.5.16-r1:0[abi_x86_32(-)]
@@ -32,14 +30,22 @@ PDEPEND="abi_x86_32? (
 		>=virtual/libusb-0-r1:0[abi_x86_32(-)]
 		>=virtual/libusb-1-r1:1[abi_x86_32(-)]
 		>=virtual/udev-206-r1[abi_x86_32(-)]
+		>=media-libs/tiff-4.0.3-r3:0[abi_x86_32(-)]
+		>=sys-apps/attr-2.4.47-r1[abi_x86_32(-)]
+		>=dev-libs/glib-2.36.3-r2:2[abi_x86_32(-)]
+		>=media-libs/lcms-2.5-r1:2[abi_x86_32(-)]
+		>=app-text/libpaper-1.1.24-r2[abi_x86_32(-)]
+		>=media-libs/tiff-3.9.7-r1:3[abi_x86_32(-)]
+		|| (
+			>=dev-libs/elfutils-0.155-r1[abi_x86_32(-)]
+			>=dev-libs/libelf-0.8.13-r2[abi_x86_32(-)]
+		)
 		dev-libs/glib:1[abi_x86_32(-)]
-		dev-libs/glib:2[abi_x86_32(-)]
-		dev-libs/libxml2[abi_x86_32(-)]
 		dev-libs/libgpg-error[abi_x86_32(-)]
 		dev-libs/libgcrypt[abi_x86_32(-)]
 		dev-libs/libxslt[abi_x86_32(-)]
-		media-libs/tiff[abi_x86_32(-)]
-	)"
+	)
+	>=sys-libs/glibc-2.15" # bug 340613
 
 PYTHON_UPDATER_IGNORE="1"
 
