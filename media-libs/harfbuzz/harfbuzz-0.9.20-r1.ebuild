@@ -49,8 +49,7 @@ src_prepare() {
 			src/Makefile.in || die
 	fi
 
-	epatch "${FILESDIR}/${P}-ldadd.patch"
-	eautoreconf
+	[[ ${PV} == 9999 ]] && eautoreconf
 
 	multilib_copy_sources
 }
