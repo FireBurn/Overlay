@@ -118,6 +118,9 @@ usr/lib32/libjpeg.so
 usr/lib32/libjpeg.so.62
 usr/lib32/libjpeg.so.8
 usr/lib32/libjpeg.so.8.0.2
+usr/lib32/libjson.so
+usr/lib32/libjson.so.0
+usr/lib32/libjson.so.0.0.1
 usr/lib32/liblcms2.so
 usr/lib32/liblcms2.so.2
 usr/lib32/liblcms2.so.2.0.3
@@ -199,6 +202,7 @@ usr/lib32/pkgconfig/gmodule.pc
 usr/lib32/pkgconfig/gobject-2.0.pc
 usr/lib32/pkgconfig/gthread-2.0.pc
 usr/lib32/pkgconfig/gthread.pc
+usr/lib32/pkgconfig/json.pc
 usr/lib32/pkgconfig/lcms2.pc
 usr/lib32/pkgconfig/libavc1394.pc
 usr/lib32/pkgconfig/libexslt.pc
@@ -227,7 +231,3 @@ usr/lib32/pkgconfig/zlib.pc
 usr/lib32/python2.7/lib-dynload/pyexpat.so
 usr/lib32/python2.7/site-packages/libxml2mod.so
 usr/lib32/terminfo
-usr/lib32/libjson.so
-usr/lib32/libjson.so.0
-usr/lib32/libjson.so.0.0.1
-usr/lib32/pkgconfig/json.pc
