@@ -20,7 +20,7 @@ KEYWORDS="~amd64 ~x86"
 IUSE="showimage static-libs +bmp +gif +jpeg +lbm +pcx +png +pnm +tga +tiff +xcf +xv +xpm +webp"
 
 RDEPEND="
-	media-libs/libsdl:2[${MULTILIB_USEDEP}]
+	media-libs/libsdl2[${MULTILIB_USEDEP}]
 	jpeg? ( virtual/jpeg[${MULTILIB_USEDEP}] )
 	png?  ( >=media-libs/libpng-1.5.7[${MULTILIB_USEDEP}] >=sys-libs/zlib-1.2.5[${MULTILIB_USEDEP}] )
 	tiff? ( >=media-libs/tiff-4.0.0[${MULTILIB_USEDEP}] )

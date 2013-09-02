@@ -19,7 +19,7 @@ IUSE="alsa alstream coreaudio debug neon oss portaudio pulseaudio sse"
 RDEPEND="alsa? ( media-libs/alsa-lib[${MULTILIB_USEDEP}] )
 	alstream? ( virtual/ffmpeg[${MULTILIB_USEDEP}] )
 	portaudio? ( >=media-libs/portaudio-19_pre[${MULTILIB_USEDEP}] )
-	pulseaudio? ( media-sound/pulseaudio )"
+	pulseaudio? ( media-sound/pulseaudio[${MULTILIB_USEDEP}] )"
 DEPEND="${RDEPEND}
 	oss? ( virtual/os-headers )"
 

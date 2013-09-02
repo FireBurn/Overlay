@@ -29,7 +29,7 @@ RDEPEND="audio? ( >=media-libs/audiofile-0.1.9[${MULTILIB_USEDEP}] )
 		x11-libs/libXt[${MULTILIB_USEDEP}]
 		x11-libs/libXext[${MULTILIB_USEDEP}]
 		x11-libs/libX11[${MULTILIB_USEDEP}]
-		x11-libs/libXrandr
+		x11-libs/libXrandr[${MULTILIB_USEDEP}]
 	)
 	directfb? ( >=dev-libs/DirectFB-0.9.19[${MULTILIB_USEDEP}] )
 	ggi? ( >=media-libs/libggi-2.0_beta3[${MULTILIB_USEDEP}] )
@@ -39,7 +39,7 @@ RDEPEND="audio? ( >=media-libs/audiofile-0.1.9[${MULTILIB_USEDEP}] )
 	opengl? ( virtual/opengl[${MULTILIB_USEDEP}] virtual/glu[${MULTILIB_USEDEP}] )
 	ppc64? ( ps3? ( sys-libs/libspe2 ) )
 	tslib? ( x11-libs/tslib[${MULTILIB_USEDEP}] )
-	pulseaudio? ( media-sound/pulseaudio )"
+	pulseaudio? ( media-sound/pulseaudio[${MULTILIB_USEDEP}] )"
 DEPEND="${RDEPEND}
 	nas? (
 		x11-proto/xextproto[${MULTILIB_USEDEP}]

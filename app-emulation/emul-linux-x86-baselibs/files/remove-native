@@ -226,3 +226,8 @@ usr/lib32/pkgconfig/ss.pc
 usr/lib32/pkgconfig/zlib.pc
 usr/lib32/python2.7/lib-dynload/pyexpat.so
 usr/lib32/python2.7/site-packages/libxml2mod.so
+usr/lib32/terminfo
+usr/lib32/libjson.so
+usr/lib32/libjson.so.0
+usr/lib32/libjson.so.0.0.1
+usr/lib32/pkgconfig/json.pc

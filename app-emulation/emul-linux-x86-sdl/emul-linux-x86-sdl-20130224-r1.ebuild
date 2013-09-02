@@ -15,8 +15,8 @@ RDEPEND="~app-emulation/emul-linux-x86-xlibs-${PV}
 	~app-emulation/emul-linux-x86-soundlibs-${PV}
 	~app-emulation/emul-linux-x86-medialibs-${PV}"
 PDEPEND="abi_x86_32? (
-	media-libs/libsdl:0[abi_x86_32(-)]
-	media-libs/libsdl:2[abi_x86_32(-)]
+	media-libs/libsdl[abi_x86_32(-)]
+	media-libs/libsdl2[abi_x86_32(-)]
 	media-libs/sdl-image:0[abi_x86_32(-)]
 	media-libs/sdl-image:2[abi_x86_32(-)]
 	media-libs/sdl-mixer:0[abi_x86_32(-)]

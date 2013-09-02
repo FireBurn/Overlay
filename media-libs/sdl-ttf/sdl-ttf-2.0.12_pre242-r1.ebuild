@@ -20,7 +20,7 @@ KEYWORDS="~amd64 ~x86"
 IUSE="showfont static-libs X"
 
 RDEPEND="
-	media-libs/libsdl:2[${MULTILIB_USEDEP}]
+	media-libs/libsdl2[${MULTILIB_USEDEP}]
 	>=media-libs/freetype-2.3[${MULTILIB_USEDEP}]
 	X? ( x11-libs/libXt[${MULTILIB_USEDEP}] )
 "
