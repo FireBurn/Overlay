@@ -78,8 +78,6 @@ src_prepare() {
 	epatch "${FILESDIR}"/${PN}-1.8.8-interix.patch
 	use legacy-drivers && epatch "${FILESDIR}"/${PN}-1.10.0-buggy_gradients.patch
 	epatch "${FILESDIR}"/${PN}-respect-fontconfig.patch
-	epatch "${FILESDIR}"/${PN}-1.12.12-disable-test-suite.patch
-	epatch "${FILESDIR}"/${PN}-1.12.14-libpng16.patch
 	epatch_user
 
 	# Slightly messed build system YAY
