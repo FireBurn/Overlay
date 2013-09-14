@@ -1,0 +1,2 @@
+#There is no multilib dbus
+=dev-libs/dbus-glib-0.100.2-r1
