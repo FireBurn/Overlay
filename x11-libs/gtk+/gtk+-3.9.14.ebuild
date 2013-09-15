@@ -132,10 +132,10 @@ src_prepare() {
 		strip_builddir SRC_SUBDIRS demos Makefile.in
 	fi
 
-	multilib_copy_sources
-
 	#FIXME: it's below hacks works wrong, so better fix them
 	epatch "${FILESDIR}//gtk+-3.9.12-uite-makefile-fix.patch"
+
+	multilib_copy_sources
 }
 
 multilib_src_configure() {
