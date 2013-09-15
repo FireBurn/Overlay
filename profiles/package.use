@@ -1,1 +1,5 @@
+#Fails with perl
 media-gfx/graphite2 -perl
+
+#No multilib gconf
+media-sound/pulseaudio -gnome
