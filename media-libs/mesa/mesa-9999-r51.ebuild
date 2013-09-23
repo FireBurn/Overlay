@@ -18,7 +18,8 @@ fi
 
 PYTHON_COMPAT=( python{2_6,2_7} )
 
-inherit base autotools multilib flag-o-matic python-single-r1 toolchain-funcs ${GIT_ECLASS} multilib-minimal
+inherit base autotools multilib multilib-minimal flag-o-matic \
+	python-single-r1 toolchain-funcs ${GIT_ECLASS}
 
 OPENGL_DIR="xorg-x11"
 
@@ -61,7 +62,12 @@ REQUIRED_USE="
 	llvm?   ( gallium )
 	nine?	( gallium )
 	openvg? ( egl gallium )
-	opencl? ( gallium r600-llvm-compiler )
+	opencl? (
+		gallium
+		video_cards_r600? ( r600-llvm-compiler )
+		video_cards_radeon? ( r600-llvm-compiler )
+		video_cards_radeonsi? ( r600-llvm-compiler )
+	)
 	gles1?  ( egl )
 	gles2?  ( egl )
 	r600-llvm-compiler? ( gallium llvm || ( video_cards_r600 video_cards_radeonsi video_cards_radeon ) )
@@ -89,6 +95,7 @@ LIBDRM_DEPSTRING=">=x11-libs/libdrm-2.4.46"
 RDEPEND="
 	!<x11-base/xorg-server-1.7
 	!<=x11-proto/xf86driproto-2.0.3
+	abi_x86_32? ( !app-emulation/emul-linux-x86-opengl[-abi_x86_32(-)] )
 	classic? ( app-admin/eselect-mesa )
 	gallium? ( app-admin/eselect-mesa )
 	>=app-admin/eselect-opengl-1.2.7
@@ -104,7 +111,7 @@ RDEPEND="
 				dev-libs/libclc[${MULTILIB_USEDEP}]
 			)
 	vdpau? ( >=x11-libs/libvdpau-0.4.1[${MULTILIB_USEDEP}] )
-	wayland? ( >=dev-libs/wayland-1.0.3[${MULTILIB_USEDEP}] )
+	wayland? ( >=dev-libs/wayland-1.2.0[${MULTILIB_USEDEP}] )
 	xorg? (
 		x11-base/xorg-server:=
 		x11-libs/libdrm[libkms,${MULTILIB_USEDEP}]
@@ -131,7 +138,8 @@ DEPEND="${RDEPEND}
 		video_cards_radeonsi? ( sys-devel/llvm[video_cards_radeon,${MULTILIB_USEDEP}] )
 	)
 	opencl? (
-				>=sys-devel/llvm-3.3-r1[clang,video_cards_radeon,${MULTILIB_USEDEP}]
+				>=sys-devel/llvm-3.3-r1[video_cards_radeon,${MULTILIB_USEDEP}]
+				>=sys-devel/clang-3.3[${MULTILIB_USEDEP}]
 				>=sys-devel/gcc-4.6
 	)
 	${PYTHON_DEPS}
@@ -192,9 +200,6 @@ src_prepare() {
 		sed -i -e "s/-DSVR4/-D_POSIX_C_SOURCE=200112L/" configure.ac || die
 	fi
 
-	# Tests fail against python-3, bug #407887
-	sed -i 's|/usr/bin/env python|/usr/bin/env python2|' src/glsl/tests/compare_ir || die
-
 	base_src_prepare
 
 	# Fix for llvm-3.4 required for nine build
@@ -203,7 +208,6 @@ src_prepare() {
 	fi
 
 	eautoreconf
-
 	multilib_copy_sources
 }
 
@@ -286,23 +290,14 @@ multilib_src_configure() {
 		"
 	fi
 
-	# Only use the xorg statetracker on the default abi
-	if [[ ${ABI} == ${DEFAULT_ABI} ]] ; then
-		myconf+="
-			$(use_enable xorg)
-		"
-	fi
-
 	# build fails with BSD indent, bug #428112
 	use userland_GNU || export INDENT=cat
 
-	if multilib_is_native_abi; then
-		llvmconfig="/usr/bin/llvm-config"
-	else
-		llvmconfig="/usr/bin/llvm-config.${ABI}"
+	if ! multilib_is_native_abi; then
+		myconf+="--disable-xorg
+			LLVM_CONFIG=${EPREFIX}/usr/bin/llvm-config.${ABI}"
 	fi
 
-	LLVM_CONFIG=${llvmconfig} \
 	econf \
 		--enable-dri \
 		--enable-glx \
@@ -317,6 +312,7 @@ multilib_src_configure() {
 		$(use_enable osmesa) \
 		$(use_enable !pic asm) \
 		$(use_enable xa) \
+		$(use_enable xorg) \
 		--with-dri-drivers=${DRI_DRIVERS} \
 		--with-gallium-drivers=${GALLIUM_DRIVERS} \
 		PYTHON2="${PYTHON}" \
@@ -324,17 +320,7 @@ multilib_src_configure() {
 }
 
 multilib_src_install() {
-	base_src_install
-
-	find "${ED}" -name '*.la' -exec rm -f {} + || die
-
-	if use !bindist; then
-		dodoc docs/patents.txt
-	fi
-
-	# Install config file for eselect mesa
-	insinto /usr/share/mesa
-	newins "${FILESDIR}/eselect-mesa.conf.9.2" eselect-mesa.conf
+	emake install DESTDIR="${D}"
 
 	# Move libGL and others from /usr/lib to /usr/lib/opengl/blah/lib
 	# because user can eselect desired GL provider.
@@ -368,13 +354,13 @@ multilib_src_install() {
 			keepdir /usr/$(get_libdir)/dri
 			dodir /usr/$(get_libdir)/mesa
 			for x in ${gallium_drivers[@]}; do
-				if [ -f "${S}/$(get_libdir)/gallium/${x}" ]; then
+				if [ -f "$(get_libdir)/gallium/${x}" ]; then
 					mv -f "${ED}/usr/$(get_libdir)/dri/${x}" "${ED}/usr/$(get_libdir)/dri/${x/_dri.so/g_dri.so}" \
 						|| die "Failed to move ${x}"
 					insinto "/usr/$(get_libdir)/dri/"
-					if [ -f "${S}/$(get_libdir)/${x}" ]; then
+					if [ -f "$(get_libdir)/${x}" ]; then
 						insopts -m0755
-						doins "${S}/$(get_libdir)/${x}"
+						doins "$(get_libdir)/${x}"
 					fi
 				fi
 			done
@@ -396,24 +382,31 @@ multilib_src_install() {
 		eend $?
 	fi
 	if use opencl; then
-		ebegin "Moving Gallium/Clover OpenCL implentation for dynamic switching"
-
-		local cl_dir="/usr/$(get_libdir)/OpenCL/vendors/mesa/"
-		dodir ${cl_dir}/include/CL
-		for x in "${ED}"/usr/$(get_libdir)/libOpenCL.*; do
-			if [ -f ${x} -o -L ${x} ]; then
-				mv -f "${x}" "${ED}${cl_dir}" \
-					|| die "Failed to move ${x}"
-			fi
-		done
-		for x in "${ED}"/usr/include/CL/*; do
-			if [ -f ${x} -o -L ${x} ]; then
-				mv -f "${x}" "${ED}${cl_dir}"/include/CL \
-					|| die "Failed to move ${x}"
-			fi
-		done
+		ebegin "Moving Gallium/Clover OpenCL implementation for dynamic switching"
+		local cl_dir="/usr/$(get_libdir)/OpenCL/vendors/mesa"
+		dodir ${cl_dir}/{lib,include}
+		if [ -f "${ED}/usr/$(get_libdir)/libOpenCL.so" ]; then
+			mv -f "${ED}"/usr/$(get_libdir)/libOpenCL.so* \
+			"${ED}"${cl_dir}
+		fi
+		if [ -f "${ED}/usr/include/CL/opencl.h" ]; then
+			mv -f "${ED}"/usr/include/CL \
+			"${ED}"${cl_dir}/include
+		fi
 		eend $?
 	fi
+}
+
+multilib_src_install_all() {
+	find "${ED}" -name '*.la' -exec rm -f {} + || die
+
+	if use !bindist; then
+		dodoc docs/patents.txt
+	fi
+
+	# Install config file for eselect mesa
+	insinto /usr/share/mesa
+	newins "${FILESDIR}/eselect-mesa.conf.9.2" eselect-mesa.conf
 }
 
 pkg_postinst() {

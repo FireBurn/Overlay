@@ -10,6 +10,8 @@ LICENSE="BSD LGPL-2 MIT"
 
 KEYWORDS="~amd64"
 
+IUSE="abi_x86_32"
+
 DEPEND="!x11-libs/libdrm-32bit
         !media-libs/glew-32bit
         !media-libs/mesa-32bit
