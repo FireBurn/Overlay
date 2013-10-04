@@ -181,7 +181,7 @@ src_prepare() {
 	local PATCHES=(
 		"${FILESDIR}"/${PN}-1.5.26-winegcc.patch #260726
 		"${FILESDIR}"/${PN}-1.4_rc2-multilib-portage.patch #395615
-		"${FILESDIR}"/${PN}-1.5.17-osmesa-check.patch #429386
+		"${FILESDIR}"/${PN}-1.7.2-osmesa-check.patch #429386
 	)
 	[[ ${PV} == "9999" ]] || PATCHES+=(
 		"../${PULSE_PATCHES}"/*.patch #421365

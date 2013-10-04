@@ -1,6 +1,6 @@
 # Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/x11-libs/gtk+/gtk+-2.24.20.ebuild,v 1.2 2013/07/23 20:10:49 grobian Exp $
+# $Header: /var/cvsroot/gentoo-x86/x11-libs/gtk+/gtk+-2.24.21.ebuild,v 1.1 2013/09/28 21:02:10 pacho Exp $
 
 EAPI="5"
 inherit eutils flag-o-matic gnome2-utils gnome.org virtualx autotools readme.gentoo multilib-minimal
@@ -34,7 +34,7 @@ COMMON_DEPEND="
 		x11-libs/gdk-pixbuf:2[introspection?,${MULTILIB_USEDEP}]
 	)
 	xinerama? ( x11-libs/libXinerama[${MULTILIB_USEDEP}] )
-	>=dev-libs/glib-2.30:2[${MULTILIB_USEDEP}]
+	>=dev-libs/glib-2.34:2[${MULTILIB_USEDEP}]
 	>=x11-libs/pango-1.20[introspection?,${MULTILIB_USEDEP}]
 	>=dev-libs/atk-1.29.2[introspection?,${MULTILIB_USEDEP}]
 	media-libs/fontconfig[${MULTILIB_USEDEP}]
@@ -91,13 +91,6 @@ set_gtk2_confdir() {
 
 src_prepare() {
 	gnome2_environment_reset
-
-	# use an arch-specific config directory so that 32bit and 64bit versions
-	# dont clash on multilib systems
-#	epatch "${FILESDIR}/${PN}-2.21.3-multilib.patch"
-
-	# Don't break inclusion of gtkclist.h, upstream bug #536767
-	epatch "${FILESDIR}/${PN}-2.14.3-limit-gtksignal-includes.patch"
 
 	# Fix building due to moved definition, upstream bug #704766
 	epatch "${FILESDIR}"/${PN}-2.24.20-darwin-quartz-pasteboard.patch
@@ -187,10 +180,6 @@ multilib_src_test() {
 
 multilib_src_install() {
 	default
-
-#	set_gtk2_confdir
-#	dodir ${GTK2_CONFDIR}
-#	keepdir ${GTK2_CONFDIR}
 
 	# see bug #133241
 	echo 'gtk-fallback-icon-theme = "gnome"' > "${T}/gtkrc"
