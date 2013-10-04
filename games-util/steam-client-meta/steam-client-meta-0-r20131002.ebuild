@@ -91,7 +91,7 @@ RDEPEND="
 			x11-libs/pango
 			>=x11-libs/pixman-0.24.4
 
-			trayicon? ( dev-libs/libappindicator2 )
+			trayicon? ( dev-libs/libappindicator )
 			flash? ( www-plugins/adobe-flash )
 			video_cards_intel? ( >=media-libs/mesa-9 )
 			)"
