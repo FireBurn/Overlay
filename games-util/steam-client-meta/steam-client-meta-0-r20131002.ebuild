@@ -53,7 +53,7 @@ RDEPEND="
 				)
 			)
 
-			trayicon? ( dev-libs/libappindicator2[abi_x86_32] )
+			trayicon? ( dev-libs/libappindicator[abi_x86_32] )
 
 			flash? ( www-plugins/adobe-flash[abi_x86_32] )
 			)
