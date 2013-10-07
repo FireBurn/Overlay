@@ -202,11 +202,6 @@ src_prepare() {
 
 	base_src_prepare
 
-	# Fix for llvm-3.4 required for nine build
-	if use nine; then
-		epatch "${FILESDIR}"/${PN}-llvm-3.4-fix.patch
-	fi
-
 	eautoreconf
 	multilib_copy_sources
 }
