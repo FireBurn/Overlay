@@ -4,7 +4,7 @@
 
 EAPI=5
 
-PYTHON_COMPAT=( python{2_5,2_6,2_7} )
+PYTHON_COMPAT=( python{2_6,2_7} )
 
 GENTOO_DEPEND_ON_PERL="no"
 inherit base eutils cmake-utils perl-module python-any-r1 multilib-minimal
