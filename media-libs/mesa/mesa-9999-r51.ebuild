@@ -277,6 +277,7 @@ multilib_src_configure() {
 		if use opencl; then
 			myconf+="
 				$(use_enable opencl)
+				--with-llvm-shared-libs
 				--with-opencl-libdir="${EPREFIX}/usr/$(get_libdir)/OpenCL/vendors/mesa"
 				--with-clang-libdir="${EPREFIX}/usr/lib"
 				"
