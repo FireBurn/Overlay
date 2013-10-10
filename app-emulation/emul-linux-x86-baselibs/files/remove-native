@@ -170,6 +170,8 @@ usr/lib32/libudev.so
 usr/lib32/libudis86.so
 usr/lib32/libudis86.so.0
 usr/lib32/libudis86.so.0.0.0
+usr/lib32/libusb-0.1.so.4
+usr/lib32/libusb-0.1.so.4.4.4
 usr/lib32/libusb-1.0.so
 usr/lib32/libusb-1.0.so.0
 usr/lib32/libusb-1.0.so.0.1.0

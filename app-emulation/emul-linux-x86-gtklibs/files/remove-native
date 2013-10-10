@@ -1,4 +1,3 @@
-
 usr/bin/gdk-pixbuf-query-loaders32
 usr/bin/gtk-query-immodules-2.0-32
 usr/bin/pango-querymodules32
@@ -85,16 +84,16 @@ usr/lib32/gtk-3.0/3.0.0/printbackends/libprintbackend-lpr.so
 usr/lib32/gtk-3.0/3.0.0/theming-engines/libxfce.so
 usr/lib32/libatk-1.0.so
 usr/lib32/libatk-1.0.so.0
-usr/lib32/libatk-1.0.so.0.20409.1
+usr/lib32/libatk-1.0.so.0.20609.1
 usr/lib32/libcairo-gobject.so
 usr/lib32/libcairo-gobject.so.2
-usr/lib32/libcairo-gobject.so.2.11000.2
+usr/lib32/libcairo-gobject.so.2.11200.14
 usr/lib32/libcairo-script-interpreter.so
 usr/lib32/libcairo-script-interpreter.so.2
-usr/lib32/libcairo-script-interpreter.so.2.11000.2
+usr/lib32/libcairo-script-interpreter.so.2.11200.14
 usr/lib32/libcairo.so
 usr/lib32/libcairo.so.2
-usr/lib32/libcairo.so.2.11000.2
+usr/lib32/libcairo.so.2.11200.14
 usr/lib32/libgailutil-3.so
 usr/lib32/libgailutil-3.so.0
 usr/lib32/libgailutil-3.so.0.0.0
@@ -115,7 +114,7 @@ usr/lib32/libgdk_pixbuf_xlib-2.0.so.0.2600.4
 usr/lib32/libgdk.so
 usr/lib32/libgdk-x11-2.0.so
 usr/lib32/libgdk-x11-2.0.so.0
-usr/lib32/libgdk-x11-2.0.so.0.2400.12
+usr/lib32/libgdk-x11-2.0.so.0.2400.17
 usr/lib32/libgtk-1.2.so.0
 usr/lib32/libgtk-1.2.so.0.9.1
 usr/lib32/libgtk-3.so
@@ -124,7 +123,7 @@ usr/lib32/libgtk-3.so.0.400.4
 usr/lib32/libgtk.so
 usr/lib32/libgtk-x11-2.0.so
 usr/lib32/libgtk-x11-2.0.so.0
-usr/lib32/libgtk-x11-2.0.so.0.2400.12
+usr/lib32/libgtk-x11-2.0.so.0.2400.17
 usr/lib32/libpango-1.0.so
 usr/lib32/libpango-1.0.so.0
 usr/lib32/libpango-1.0.so.0.3000.1
@@ -142,7 +141,7 @@ usr/lib32/libpangoxft-1.0.so.0
 usr/lib32/libpangoxft-1.0.so.0.3000.1
 usr/lib32/libpixman-1.so
 usr/lib32/libpixman-1.so.0
-usr/lib32/libpixman-1.so.0.28.0
+usr/lib32/libpixman-1.so.0.30.2
 usr/lib32/pango/1.6.0/modules/pango-arabic-fc.so
 usr/lib32/pango/1.6.0/modules/pango-arabic-lang.so
 usr/lib32/pango/1.6.0/modules/pango-basic-fc.so
