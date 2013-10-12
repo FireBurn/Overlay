@@ -27,7 +27,7 @@ RDEPEND="
 	introspection? ( >=dev-libs/gobject-introspection-1.31.1[${MULTILIB_USEDEP}] )
 	ivorbis? ( media-libs/tremor[${MULTILIB_USEDEP}] )
 	ogg? ( >=media-libs/libogg-1[${MULTILIB_USEDEP}] )
-	orc? ( >=dev-lang/orc-0.4.16[${MULTILIB_USEDEP}] )
+	orc? ( >=dev-lang/orc-0.4.17[${MULTILIB_USEDEP}] )
 	pango? ( >=x11-libs/pango-1.22[${MULTILIB_USEDEP}] )
 	theora? ( >=media-libs/libtheora-1.1[encode,${MULTILIB_USEDEP}] )
 	vorbis? ( >=media-libs/libvorbis-1[${MULTILIB_USEDEP}] )

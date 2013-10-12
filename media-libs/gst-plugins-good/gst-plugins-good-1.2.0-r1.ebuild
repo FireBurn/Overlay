@@ -1,6 +1,6 @@
 # Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/media-libs/gst-plugins-good/gst-plugins-good-1.0.7.ebuild,v 1.1 2013/06/08 18:58:57 eva Exp $
+# $Header: /var/cvsroot/gentoo-x86/media-libs/gst-plugins-good/gst-plugins-good-1.2.0.ebuild,v 1.4 2013/10/04 14:49:39 tetromino Exp $
 
 EAPI="5"
 
@@ -14,13 +14,16 @@ LICENSE="LGPL-2.1+"
 KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-fbsd"
 IUSE="+orc"
 
+# dtmf plugin moved from bad to good in 1.2
 RDEPEND="
 	>=dev-libs/glib-2.32:2[${MULTILIB_USEDEP}]
-	>=media-libs/gst-plugins-base-1:${SLOT}[${MULTILIB_USEDEP}]
-	>=media-libs/gstreamer-1:${SLOT}[${MULTILIB_USEDEP}]
+	>=media-libs/gst-plugins-base-1.2:${SLOT}[${MULTILIB_USEDEP}]
+	>=media-libs/gstreamer-1.2:${SLOT}[${MULTILIB_USEDEP}]
 	app-arch/bzip2[${MULTILIB_USEDEP}]
 	sys-libs/zlib[${MULTILIB_USEDEP}]
-	orc? ( >=dev-lang/orc-0.4.16[${MULTILIB_USEDEP}] )
+	orc? ( >=dev-lang/orc-0.4.17[${MULTILIB_USEDEP}] )
+
+	!<media-libs/gst-plugins-bad-1.1:${SLOT}
 "
 DEPEND="${RDEPEND}
 	>=dev-util/gtk-doc-am-1.12
