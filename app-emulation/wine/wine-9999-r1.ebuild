@@ -12,7 +12,7 @@ inherit autotools-multilib eutils fdo-mime flag-o-matic gnome2-utils l10n multil
 
 if [[ ${PV} == "9999" ]] ; then
 	if use nine ; then
-		EGIT_REPO_URI="https://github.com/chrisbmr/wine.git"
+		EGIT_REPO_URI="https://github.com/okias/wine.git"
 		EGIT_BRANCH="d3dadapter9-wip"
 	else
 		EGIT_REPO_URI="git://source.winehq.org/git/wine.git"

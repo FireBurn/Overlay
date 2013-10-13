@@ -5,7 +5,7 @@
 EAPI=5
 
 if use nine ; then
-	EGIT_REPO_URI="https://github.com/chrisbmr/Mesa-3D"
+	EGIT_REPO_URI="https://github.com/okias/Mesa-3D"
 	EGIT_BRANCH="gallium-nine"
 else
 	EGIT_REPO_URI="git://anongit.freedesktop.org/mesa/mesa"
@@ -199,11 +199,6 @@ src_prepare() {
 	fi
 
 	base_src_prepare
-
-	# Fix for llvm-3.4 required for nine build
-	if use nine; then
-		epatch "${FILESDIR}"/${PN}-llvm-3.4-fix.patch
-	fi
 
 	eautoreconf
 	multilib_copy_sources
