@@ -19,7 +19,7 @@ fi
 PYTHON_COMPAT=( python{2_6,2_7} )
 
 inherit base autotools multilib multilib-minimal flag-o-matic \
-	python-single-r1 toolchain-funcs ${GIT_ECLASS}
+	python-any-r1 toolchain-funcs ${GIT_ECLASS}
 
 OPENGL_DIR="xorg-x11"
 
@@ -114,7 +114,7 @@ RDEPEND="
 	wayland? ( >=dev-libs/wayland-1.2.0[${MULTILIB_USEDEP}] )
 	xorg? (
 		x11-base/xorg-server:=
-		x11-libs/libdrm[libkms,${MULTILIB_USEDEP}]
+		x11-libs/libdrm[libkms]
 	)
 	xvmc? ( >=x11-libs/libXvMC-1.0.6[${MULTILIB_USEDEP}] )
 	${LIBDRM_DEPSTRING}[video_cards_freedreno?,video_cards_nouveau?,video_cards_vmware?,${MULTILIB_USEDEP}]
@@ -142,22 +142,20 @@ DEPEND="${RDEPEND}
 				>=sys-devel/clang-3.3[${MULTILIB_USEDEP}]
 				>=sys-devel/gcc-4.6
 	)
-	${PYTHON_DEPS}
-	dev-libs/libxml2[python,${PYTHON_USEDEP}]
 	sys-devel/bison
 	sys-devel/flex
 	virtual/pkgconfig
 	>=x11-proto/dri2proto-2.6[${MULTILIB_USEDEP}]
 	>=x11-proto/glproto-1.4.15-r1[${MULTILIB_USEDEP}]
 	>=x11-proto/xextproto-7.0.99.1[${MULTILIB_USEDEP}]
-	x11-proto/xproto[${MULTILIB_USEDEP}]
 	x11-proto/xf86driproto[${MULTILIB_USEDEP}]
 	x11-proto/xf86vidmodeproto[${MULTILIB_USEDEP}]
-	x11-proto/kbproto[${MULTILIB_USEDEP}]
-	x11-proto/damageproto[${MULTILIB_USEDEP}]
-	x11-proto/fixesproto[${MULTILIB_USEDEP}]
-	xvmc? ( x11-proto/videoproto[${MULTILIB_USEDEP}] )
+	$(python_gen_any_dep 'dev-libs/libxml2[python,${PYTHON_USEDEP}]')
 "
+
+python_check_deps() {
+	has_version "dev-libs/libxml2[python,${PYTHON_USEDEP}]"
+}
 
 S="${WORKDIR}/${MY_P}"
 
@@ -172,7 +170,7 @@ pkg_setup() {
 	# workaround toc-issue wrt #386545
 	use ppc64 && append-flags -mminimal-toc
 
-	python-single-r1_pkg_setup
+	python-any-r1_pkg_setup
 }
 
 src_unpack() {
@@ -277,7 +275,6 @@ multilib_src_configure() {
 		if use opencl; then
 			myconf+="
 				$(use_enable opencl)
-				--with-llvm-shared-libs
 				--with-opencl-libdir="${EPREFIX}/usr/$(get_libdir)/OpenCL/vendors/mesa"
 				--with-clang-libdir="${EPREFIX}/usr/lib"
 				"
@@ -316,6 +313,7 @@ multilib_src_configure() {
 		$(use_enable xorg) \
 		--with-dri-drivers=${DRI_DRIVERS} \
 		--with-gallium-drivers=${GALLIUM_DRIVERS} \
+		--with-llvm-shared-libs \
 		PYTHON2="${PYTHON}" \
 		${myconf}
 }
