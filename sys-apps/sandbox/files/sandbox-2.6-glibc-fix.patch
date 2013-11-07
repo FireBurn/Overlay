@@ -1,0 +1,16 @@
+--- sandbox-2.6.orig/configure.ac	2012-07-03 21:43:15.000000000 +0200
++++ sandbox-2.6/configure.ac	2013-10-01 10:29:55.720113237 +0200
+@@ -108,9 +108,12 @@
+ 	sys/user.h
+ 	sys/wait.h
+ 	asm/ptrace.h
+-	linux/ptrace.h
+ ]))
+ 
++if test "$HAVE_LINUX_PTRACE_H" = ""; then
++	AC_CHECK_HEADER([linux/ptrace.h])
++fi
++
+ dnl Checks for typedefs, structures, and compiler characteristics.
+ dnl Do this after all headers have been checked.
+ AC_C_CONST
