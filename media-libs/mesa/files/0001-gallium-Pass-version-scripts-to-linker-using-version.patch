@@ -1,0 +1,61 @@
+From 002cad59a8ce3efe5dca34eafce42d59481b4b50 Mon Sep 17 00:00:00 2001
+From: Tom Stellard <thomas.stellard@amd.com>
+Date: Tue, 12 Nov 2013 11:29:21 -0800
+Subject: [PATCH] gallium: Pass version scripts to linker using
+ --version-script=
+
+This fixes build failures with the gold linker.
+---
+ src/gallium/targets/egl-static/Makefile.am  | 2 +-
+ src/gallium/targets/egl-static/egl.link     | 2 +-
+ src/gallium/targets/pipe-loader/Makefile.am | 2 +-
+ src/gallium/targets/pipe-loader/pipe.link   | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/src/gallium/targets/egl-static/Makefile.am b/src/gallium/targets/egl-static/Makefile.am
+index 760c477..fdd5a1d 100644
+--- a/src/gallium/targets/egl-static/Makefile.am
++++ b/src/gallium/targets/egl-static/Makefile.am
+@@ -30,7 +30,7 @@
+ #
+ include $(top_srcdir)/src/gallium/Automake.inc
+ 
+-LDFLAGS += -Wl,$(top_srcdir)/src/gallium/targets/egl-static/egl.link
++LDFLAGS += -Wl,--version-script=$(top_srcdir)/src/gallium/targets/egl-static/egl.link
+ 
+ AM_CFLAGS = $(PTHREAD_CFLAGS)
+ AM_CPPFLAGS = \
+diff --git a/src/gallium/targets/egl-static/egl.link b/src/gallium/targets/egl-static/egl.link
+index 78d155d..5be917f 100644
+--- a/src/gallium/targets/egl-static/egl.link
++++ b/src/gallium/targets/egl-static/egl.link
+@@ -1,3 +1,3 @@
+ VERSION {
+-{ global: _eglMain; local: *; };
++	global: _eglMain; local: *;
+ };
+diff --git a/src/gallium/targets/pipe-loader/Makefile.am b/src/gallium/targets/pipe-loader/Makefile.am
+index 970ff0e..1c2f31b 100644
+--- a/src/gallium/targets/pipe-loader/Makefile.am
++++ b/src/gallium/targets/pipe-loader/Makefile.am
+@@ -22,7 +22,7 @@
+ 
+ include $(top_srcdir)/src/gallium/Automake.inc
+ 
+-LDFLAGS += -Wl,$(top_srcdir)/src/gallium/targets/pipe-loader/pipe.link
++LDFLAGS += -Wl,--version-script=$(top_srcdir)/src/gallium/targets/pipe-loader/pipe.link
+ 
+ AM_CPPFLAGS = \
+ 	$(GALLIUM_CFLAGS) \
+diff --git a/src/gallium/targets/pipe-loader/pipe.link b/src/gallium/targets/pipe-loader/pipe.link
+index 1c98da6..d6dd2af 100644
+--- a/src/gallium/targets/pipe-loader/pipe.link
++++ b/src/gallium/targets/pipe-loader/pipe.link
+@@ -1,3 +1,3 @@
+ VERSION {
+-	{global: driver_descriptor; local: *;  };
++	global: driver_descriptor; local: *;
+ };
+-- 
+1.8.1.4
+
