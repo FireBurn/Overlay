@@ -196,9 +196,6 @@ src_prepare() {
 		sed -i -e "s/-DSVR4/-D_POSIX_C_SOURCE=200112L/" configure.ac || die
 	fi
 
-	# Fix for using ld.gold
-	epatch "${FILESDIR}"/0001-gallium-Pass-version-scripts-to-linker-using-version.patch
-
 	base_src_prepare
 
 	eautoreconf
