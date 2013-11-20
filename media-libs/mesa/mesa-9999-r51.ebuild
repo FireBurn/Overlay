@@ -108,7 +108,7 @@ RDEPEND="
 	>=x11-libs/libxcb-1.9.2[${MULTILIB_USEDEP}]
 	opencl? (
 				app-admin/eselect-opencl
-				dev-libs/libclc[${MULTILIB_USEDEP}]
+				dev-libs/libclc
 			)
 	vdpau? ( >=x11-libs/libvdpau-0.4.1[${MULTILIB_USEDEP}] )
 	wayland? ( >=dev-libs/wayland-1.2.0[${MULTILIB_USEDEP}] )
