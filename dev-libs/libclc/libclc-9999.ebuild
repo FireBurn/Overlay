@@ -40,6 +40,8 @@ src_unpack() {
 		default
 		mv ${PN}-*/ ${P} || die
 	fi
+	cd "${S}"
+	epatch "${FILESDIR}"/${PN}-fix.patch
 }
 
 src_configure() {

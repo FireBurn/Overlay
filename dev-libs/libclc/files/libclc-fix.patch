@@ -1,0 +1,12 @@
+--- a/configure.py	2013-12-23 20:54:47.072228588 +0000
++++ b/configure.py	2013-12-23 20:55:32.040228747 +0000
+@@ -64,7 +64,8 @@
+ 
+ llvm_bindir = llvm_config(['--bindir'])
+ llvm_core_libs = llvm_config(['--libs', 'core', 'bitreader', 'bitwriter']) + ' ' + \
+-                 llvm_config(['--ldflags'])
++                 llvm_config(['--ldflags'])  + ' ' + \
++                 llvm_config(['--system-libs'])
+ llvm_cxxflags = llvm_config(['--cxxflags']) + ' -fno-exceptions -fno-rtti'
+ 
+ llvm_clang = os.path.join(llvm_bindir, 'clang')
