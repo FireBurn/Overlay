@@ -214,6 +214,8 @@ usr/lib32/llvm/libLLVM-3.1.so
 usr/lib32/llvm/libLTO.so
 usr/lib32/llvm/libprofile_rt.so
 usr/lib32/llvm/LLVMHello.so
+usr/lib32/perl5/5.12.4/i686-linux/auto/GDBM_File/GDBM_File.so
+usr/lib32/perl5/5.12.4/i686-linux/auto/NDBM_File/NDBM_File.so
 usr/lib32/pkgconfig/com_err.pc
 usr/lib32/pkgconfig/dbus-1.pc
 usr/lib32/pkgconfig/expat.pc
@@ -262,6 +264,10 @@ usr/lib32/pkgconfig/panel.pc
 usr/lib32/pkgconfig/panelw.pc
 usr/lib32/pkgconfig/ss.pc
 usr/lib32/pkgconfig/zlib.pc
+usr/lib32/python2.7/lib-dynload/dbm.so
+usr/lib32/python2.7/lib-dynload/gdbm.so
 usr/lib32/python2.7/lib-dynload/pyexpat.so
 usr/lib32/python2.7/site-packages/libxml2mod.so
+usr/lib32/python3.2/lib-dynload/_dbm.cpython-32.so
+usr/lib32/python3.2/lib-dynload/_gdbm.cpython-32.so
 usr/lib32/terminfo
