@@ -5,8 +5,6 @@
 EAPI=5
 inherit eutils autotools multilib-minimal
 
-AYATANA_VALA_VERSION=0.20
-
 DESCRIPTION="A library to allow applications to export a menu into the Unity Menu bar"
 HOMEPAGE="http://launchpad.net/libappindicator"
 SRC_URI="http://launchpad.net/${PN}/${PV%.*}/${PV}/+download/${P}.tar.gz"
@@ -25,7 +23,7 @@ RDEPEND=">=dev-libs/dbus-glib-0.98[${MULTILIB_USEDEP}]
 	introspection? ( >=dev-libs/gobject-introspection-1[${MULTILIB_USEDEP}] )"
 DEPEND="${RDEPEND}
 	virtual/pkgconfig
-	introspection? ( dev-lang/vala:${AYATANA_VALA_VERSION}[vapigen] )"
+	introspection? ( dev-lang/vala[vapigen] )"
 
 ECONF_SOURCE=${S}
 

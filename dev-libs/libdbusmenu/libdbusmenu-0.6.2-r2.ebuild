@@ -4,8 +4,6 @@
 
 EAPI=5
 
-AYATANA_VALA_VERSION=0.20
-
 inherit eutils flag-o-matic multilib-minimal
 
 DESCRIPTION="Library to pass menu structure across DBus"
@@ -28,7 +26,7 @@ DEPEND="${RDEPEND}
 	app-text/gnome-doc-utils
 	dev-util/intltool
 	virtual/pkgconfig
-	introspection? ( dev-lang/vala:${AYATANA_VALA_VERSION}[vapigen] )"
+	introspection? ( dev-lang/vala[vapigen] )"
 REQUIRED_USE="gtk3? ( gtk )"
 
 ECONF_SOURCE=${S}

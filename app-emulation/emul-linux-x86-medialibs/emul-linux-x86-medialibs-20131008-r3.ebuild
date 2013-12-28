@@ -50,6 +50,7 @@ RDEPEND="~app-emulation/emul-linux-x86-baselibs-${PV}
 		>=media-libs/libdv-1.0.0-r3[abi_x86_32(-)]
 		media-libs/gstreamer:0.10[abi_x86_32(-)]
 		media-libs/gst-plugins-base:0.10[abi_x86_32(-)]
+		media-video/mjpegtools[abi_x86_32(-)]
 	)
 	"
 PDEPEND="~app-emulation/emul-linux-x86-soundlibs-${PV}"
