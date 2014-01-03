@@ -41,7 +41,6 @@ src_unpack() {
 		mv ${PN}-*/ ${P} || die
 	fi
 	cd "${S}"
-	epatch "${FILESDIR}"/${PN}-fix.patch
 }
 
 src_configure() {
