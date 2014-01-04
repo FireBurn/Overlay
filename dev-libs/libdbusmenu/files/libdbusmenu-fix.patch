@@ -1,0 +1,36 @@
+diff -ur a/libdbusmenu-gtk/parser.c b/libdbusmenu-gtk/parser.c
+--- a/libdbusmenu-gtk/parser.c	2014-01-04 01:25:11.649053061 +0000
++++ b/libdbusmenu-gtk/parser.c	2014-01-04 01:25:53.204053208 +0000
+@@ -93,9 +93,7 @@
+                                                 gpointer            data);
+ static void           item_inserted_cb         (GtkContainer *      menu,
+                                                 GtkWidget *         widget,
+-#ifdef HAVE_GTK3
+                                                 gint                position,
+-#endif
+                                                 gpointer            data);
+ static void           item_removed_cb          (GtkContainer *      menu,
+                                                 GtkWidget *         widget,
+@@ -385,11 +383,7 @@
+ 
+ 	pdata->shell = menu;
+ 	pdata->item_inserted_handler_id = g_signal_connect (G_OBJECT (menu),
+-#ifdef HAVE_GTK3
+                           "insert",
+-#else
+-                          "child-added",
+-#endif
+ 		          G_CALLBACK (item_inserted_cb),
+ 		          mi);
+ 	pdata->item_removed_handler_id = g_signal_connect (G_OBJECT (menu),
+@@ -1286,9 +1280,7 @@
+ static void
+ item_inserted_cb (GtkContainer *menu,
+                   GtkWidget    *widget,
+-#ifdef HAVE_GTK3
+                   gint          position,
+-#endif
+                   gpointer      data)
+ {
+ 	DbusmenuMenuitem *menuitem = (DbusmenuMenuitem *)data;
+Only in work/libdbusmenu-0.6.2/libdbusmenu-gtk: parser.c.orig

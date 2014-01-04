@@ -29,7 +29,11 @@ DEPEND="${RDEPEND}
 	introspection? ( dev-lang/vala[vapigen] )"
 REQUIRED_USE="gtk3? ( gtk )"
 
-ECONF_SOURCE=${S}
+src_prepare() {
+	epatch "${FILESDIR}"/${PN}-fix.patch
+
+	multilib_copy_sources
+}
 
 multilib_src_configure() {
 	append-flags -Wno-error #414323
@@ -37,7 +41,7 @@ multilib_src_configure() {
 
 	use introspection && export VALA_API_GEN="$(type -P vapigen-${AYATANA_VALA_VERSION})"
 	use gtk3 && GTK_SWITCH="--with-gtk=3" || GTK_SWITCH="--with-gtk=2"
-	
+
 	# dumper extra tool is only for GTK+-2.x, tests use valgrind which is stupid
 	econf \
 		--docdir=/usr/share/doc/${PF} \
