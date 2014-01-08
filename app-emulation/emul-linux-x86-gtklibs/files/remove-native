@@ -199,3 +199,12 @@ usr/lib32/pkgconfig/pango.pc
 usr/lib32/pkgconfig/pangoxft.pc
 usr/lib32/pkgconfig/pangox.pc
 usr/lib32/pkgconfig/pixman-1.pc
+usr/lib32/GConf/2/libgconfbackend-evoldap.so
+usr/lib32/GConf/2/libgconfbackend-oldxml.so
+usr/lib32/GConf/2/libgconfbackend-xml.so
+usr/lib32/gio/modules/libgsettingsgconfbackend.so
+usr/lib32/libgconf-2.so
+usr/lib32/libgconf-2.so.4
+usr/lib32/libgconf-2.so.4.1.5
+usr/lib32/pkgconfig/gconf-2.0.pc
+

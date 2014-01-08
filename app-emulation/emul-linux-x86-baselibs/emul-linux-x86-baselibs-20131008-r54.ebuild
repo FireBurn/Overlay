@@ -58,6 +58,7 @@ RDEPEND="!<app-emulation/emul-linux-x86-medialibs-10.2
 		dev-libs/libgpg-error[abi_x86_32(-)]
 		dev-libs/libgcrypt[abi_x86_32(-)]
 		dev-libs/libxslt[abi_x86_32(-)]
+		dev-libs/nspr[abi_x86_32(-)]
 		media-libs/lcms:0[abi_x86_32(-)]
 		media-libs/libmng[abi_x86_32(-)]
 	)

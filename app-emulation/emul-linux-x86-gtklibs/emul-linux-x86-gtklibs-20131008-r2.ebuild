@@ -23,6 +23,7 @@ PDEPEND="abi_x86_32? (
 		x11-libs/gtk+:3[abi_x86_32(-)]
 		x11-libs/pixman[abi_x86_32(-)]
 		x11-themes/gtk-engines[abi_x86_32(-)]
+		gnome-base/gconf[abi_x86_32(-)]
 	)"
 
 my_gdk_pixbuf_query_loaders() {
