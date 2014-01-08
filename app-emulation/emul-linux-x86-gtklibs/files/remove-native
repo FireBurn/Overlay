@@ -1,3 +1,4 @@
+
 usr/bin/gdk-pixbuf-query-loaders32
 usr/bin/gtk-query-immodules-2.0-32
 usr/bin/pango-querymodules32
@@ -10,6 +11,9 @@ usr/lib32/cairo/cairo-sphinx.so.0.0.0
 usr/lib32/cairo/libcairo-trace.so
 usr/lib32/cairo/libcairo-trace.so.0
 usr/lib32/cairo/libcairo-trace.so.0.0.0
+usr/lib32/GConf/2/libgconfbackend-evoldap.so
+usr/lib32/GConf/2/libgconfbackend-oldxml.so
+usr/lib32/GConf/2/libgconfbackend-xml.so
 usr/lib32/gdk-pixbuf-2.0/2.10.0/loaders/libpixbufloader-ani.so
 usr/lib32/gdk-pixbuf-2.0/2.10.0/loaders/libpixbufloader-bmp.so
 usr/lib32/gdk-pixbuf-2.0/2.10.0/loaders/libpixbufloader-gif.so
@@ -26,6 +30,7 @@ usr/lib32/gdk-pixbuf-2.0/2.10.0/loaders/libpixbufloader-tiff.so
 usr/lib32/gdk-pixbuf-2.0/2.10.0/loaders/libpixbufloader-wbmp.so
 usr/lib32/gdk-pixbuf-2.0/2.10.0/loaders/libpixbufloader-xbm.so
 usr/lib32/gdk-pixbuf-2.0/2.10.0/loaders/libpixbufloader-xpm.so
+usr/lib32/gio/modules/libgsettingsgconfbackend.so
 usr/lib32/gtk-2.0/2.10.0/engines/libclearlooks.so
 usr/lib32/gtk-2.0/2.10.0/engines/libcrux-engine.so
 usr/lib32/gtk-2.0/2.10.0/engines/libglide.so
@@ -100,6 +105,9 @@ usr/lib32/libgailutil-3.so.0.0.0
 usr/lib32/libgailutil.so
 usr/lib32/libgailutil.so.18
 usr/lib32/libgailutil.so.18.0.1
+usr/lib32/libgconf-2.so
+usr/lib32/libgconf-2.so.4
+usr/lib32/libgconf-2.so.4.1.5
 usr/lib32/libgdk-1.2.so.0
 usr/lib32/libgdk-1.2.so.0.9.1
 usr/lib32/libgdk-3.so
@@ -175,6 +183,7 @@ usr/lib32/pkgconfig/cairo-xlib.pc
 usr/lib32/pkgconfig/cairo-xlib-xrender.pc
 usr/lib32/pkgconfig/gail-3.0.pc
 usr/lib32/pkgconfig/gail.pc
+usr/lib32/pkgconfig/gconf-2.0.pc
 usr/lib32/pkgconfig/gdk-2.0.pc
 usr/lib32/pkgconfig/gdk-3.0.pc
 usr/lib32/pkgconfig/gdk.pc
@@ -199,12 +208,3 @@ usr/lib32/pkgconfig/pango.pc
 usr/lib32/pkgconfig/pangoxft.pc
 usr/lib32/pkgconfig/pangox.pc
 usr/lib32/pkgconfig/pixman-1.pc
-usr/lib32/GConf/2/libgconfbackend-evoldap.so
-usr/lib32/GConf/2/libgconfbackend-oldxml.so
-usr/lib32/GConf/2/libgconfbackend-xml.so
-usr/lib32/gio/modules/libgsettingsgconfbackend.so
-usr/lib32/libgconf-2.so
-usr/lib32/libgconf-2.so.4
-usr/lib32/libgconf-2.so.4.1.5
-usr/lib32/pkgconfig/gconf-2.0.pc
-

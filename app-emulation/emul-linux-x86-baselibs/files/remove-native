@@ -164,6 +164,7 @@ usr/lib32/libmng.so.1
 usr/lib32/libmng.so.1.0.0
 usr/lib32/libncurses.so
 usr/lib32/libncursesw.so
+usr/lib32/libnspr4.so
 usr/lib32/libpanel.so
 usr/lib32/libpanel.so.5
 usr/lib32/libpanel.so.5.9
@@ -180,6 +181,8 @@ usr/lib32/libpcreposix.so
 usr/lib32/libpcreposix.so.0
 usr/lib32/libpcreposix.so.0.0.2
 usr/lib32/libpcre.so
+usr/lib32/libplc4.so
+usr/lib32/libplds4.so
 usr/lib32/libpng12.so.0
 usr/lib32/libpng.so
 usr/lib32/libraw1394.so
@@ -270,6 +273,7 @@ usr/lib32/pkgconfig/ncurses.pc
 usr/lib32/pkgconfig/ncurses++.pc
 usr/lib32/pkgconfig/ncurses++w.pc
 usr/lib32/pkgconfig/ncursesw.pc
+usr/lib32/pkgconfig/nspr.pc
 usr/lib32/pkgconfig/panel.pc
 usr/lib32/pkgconfig/panelw.pc
 usr/lib32/pkgconfig/ss.pc
@@ -282,7 +286,3 @@ usr/lib32/python3.2/lib-dynload/_dbm.cpython-32.so
 usr/lib32/python3.2/lib-dynload/_gdbm.cpython-32.so
 usr/lib32/python*/site-packages/libxml2mod.so
 usr/lib32/terminfo
-usr/lib32/libnspr4.so
-usr/lib32/libplc4.so
-usr/lib32/libplds4.so
-usr/lib32/pkgconfig/nspr.pc
