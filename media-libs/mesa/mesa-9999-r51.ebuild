@@ -185,6 +185,9 @@ src_prepare() {
 		epatch
 	fi
 
+	# dlsyn udev to prevent crashes
+	epatch "${FILESDIR}"/${P}-dlsym-libudev.patch
+
 	# relax the requirement that r300 must have llvm, bug 380303
 	epatch "${FILESDIR}"/${P}-dont-require-llvm-for-r300.patch
 
