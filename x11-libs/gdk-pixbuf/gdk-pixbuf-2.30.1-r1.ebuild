@@ -1,9 +1,10 @@
 # Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/x11-libs/gdk-pixbuf/gdk-pixbuf-2.28.2.ebuild,v 1.1 2013/06/09 11:11:43 pacho Exp $
+# $Header: /var/cvsroot/gentoo-x86/x11-libs/gdk-pixbuf/gdk-pixbuf-2.30.1.ebuild,v 1.1 2013/12/23 23:16:00 eva Exp $
 
 EAPI="5"
-inherit gnome.org libtool multilib-minimal
+
+inherit gnome.org gnome2-utils libtool multilib-minimal
 
 DESCRIPTION="Image loading library for GTK+"
 HOMEPAGE="http://www.gtk.org/"
@@ -14,7 +15,7 @@ KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86
 IUSE="+X debug +introspection jpeg jpeg2k tiff test"
 
 COMMON_DEPEND="
-	>=dev-libs/glib-2.34.0:2[${MULTILIB_USEDEP}]
+	>=dev-libs/glib-2.37.2:2[${MULTILIB_USEDEP}]
 	>=media-libs/libpng-1.4:0=[${MULTILIB_USEDEP}]
 	introspection? ( >=dev-libs/gobject-introspection-0.9.3[${MULTILIB_USEDEP}] )
 	jpeg? ( virtual/jpeg:=[${MULTILIB_USEDEP}] )
@@ -62,7 +63,8 @@ multilib_src_configure() {
 }
 
 multilib_src_install() {
-	default
+	# Parallel install fails when no gdk-pixbuf is already installed, bug #481372
+	MAKEOPTS+=" -j1" default
 	prune_libtool_files --modules
 
 	if multilib_is_native_abi; then

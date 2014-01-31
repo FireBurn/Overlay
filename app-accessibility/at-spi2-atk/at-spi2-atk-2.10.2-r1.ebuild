@@ -1,6 +1,6 @@
 # Copyright 1999-2013 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-accessibility/at-spi2-atk/at-spi2-atk-2.8.1.ebuild,v 1.1 2013/04/17 16:57:53 pacho Exp $
+# $Header: /var/cvsroot/gentoo-x86/app-accessibility/at-spi2-atk/at-spi2-atk-2.10.2.ebuild,v 1.1 2013/12/24 15:11:49 pacho Exp $
 
 EAPI="5"
 GCONF_DEBUG="no"
@@ -17,8 +17,8 @@ KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~sh ~sparc ~x86 ~amd6
 IUSE=""
 
 COMMON_DEPEND="
-	>=app-accessibility/at-spi2-core-2.7.5[${MULTILIB_USEDEP}]
-	>=dev-libs/atk-2.7.90[${MULTILIB_USEDEP}]
+	>=app-accessibility/at-spi2-core-2.9.4[${MULTILIB_USEDEP}]
+	>=dev-libs/atk-2.9.4[${MULTILIB_USEDEP}]
 	>=dev-libs/glib-2.32:2[${MULTILIB_USEDEP}]
 	>=sys-apps/dbus-1
 "
