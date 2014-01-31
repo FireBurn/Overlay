@@ -16,7 +16,7 @@ IUSE="+introspection gtk3"
 
 RDEPEND=">=dev-libs/dbus-glib-0.98[${MULTILIB_USEDEP}]
 	>=dev-libs/glib-2.26[${MULTILIB_USEDEP}]
-	=dev-libs/libdbusmenu-0.6.2-r2[gtk3=,gtk,${MULTILIB_USEDEP}]
+	=dev-libs/libdbusmenu-0.6.2-r3[gtk3=,gtk,${MULTILIB_USEDEP}]
 	=dev-libs/libindicator-12.10.0-r2[gtk3=,${MULTILIB_USEDEP}]
 	gtk3? ( >=x11-libs/gtk+-3.2:3[${MULTILIB_USEDEP}] )
 	!gtk3? ( >=x11-libs/gtk+-2.18:2[${MULTILIB_USEDEP}] )
