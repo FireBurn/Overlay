@@ -9,8 +9,6 @@ if use nine ; then
 	EGIT_BRANCH="gallium-nine"
 else
 	EGIT_REPO_URI="git://anongit.freedesktop.org/mesa/mesa"
-#	EGIT_REPO_URI="git://people.freedesktop.org/~airlied/mesa"
-#	EGIT_BRANCH="r600-geom-shaders"
 fi
 
 if [[ ${PV} = 9999* ]]; then
