@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/x11-libs/pango/pango-1.36.1.ebuild,v 1.2 2014/01/20 19:21:20 vapier Exp $
+# $Header: /var/cvsroot/gentoo-x86/x11-libs/pango/pango-1.36.2.ebuild,v 1.1 2014/02/06 22:27:06 eva Exp $
 
 EAPI="5"
 GCONF_DEBUG="yes"
@@ -37,7 +37,7 @@ DEPEND="${RDEPEND}
 "
 
 src_prepare() {
-	epatch "${FILESDIR}/${PN}-1.32.1-lib64.patch"
+	epatch "${FILESDIR}/${P}-lib64.patch"
 	eautoreconf
 
 	gnome2_src_prepare
