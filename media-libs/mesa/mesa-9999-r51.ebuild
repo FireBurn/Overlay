@@ -107,7 +107,7 @@ RDEPEND="
 	x11-libs/libXext[${MULTILIB_USEDEP}]
 	x11-libs/libXxf86vm[${MULTILIB_USEDEP}]
 	>=x11-libs/libxcb-1.9.2[${MULTILIB_USEDEP}]
-	omxil? ( media-libs/libomxil-bellagio )
+	omxil? ( media-libs/libomxil-bellagio[${MULTILIB_USEDEP}] )
 	opencl? (
 				app-admin/eselect-opencl
 				dev-libs/libclc
