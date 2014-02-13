@@ -55,12 +55,13 @@ done
 
 IUSE="${IUSE_VIDEO_CARDS}
 	bindist +classic debug +egl +gallium gbm gles1 gles2 +llvm +nptl nine
-	opencl openvg osmesa pax_kernel pic r600-llvm-compiler selinux vdpau
-	wayland xvmc xa kernel_FreeBSD"
+	omx opencl openvg osmesa pax_kernel pic r600-llvm-compiler selinux
+	vdpau wayland xvmc xa kernel_FreeBSD"
 
 REQUIRED_USE="
 	llvm?   ( gallium )
 	nine?	( gallium )
+	omx?	( gallium )
 	openvg? ( egl gallium )
 	opencl? (
 		gallium
@@ -237,6 +238,7 @@ multilib_src_configure() {
 		myconf+="
 			$(use_enable llvm gallium-llvm)
 			$(use_enable nine)
+			$(use_enable omx)
 			$(use_enable openvg)
 			$(use_enable openvg gallium-egl)
 			$(use_enable r600-llvm-compiler)
