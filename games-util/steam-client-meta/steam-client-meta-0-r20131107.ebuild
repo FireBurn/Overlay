@@ -103,7 +103,7 @@ RDEPEND="
 				x11-libs/libXrender
 				x11-libs/pango
 
-				trayicon? ( dev-libs/libappindicator2 )
+				trayicon? ( dev-libs/libappindicator )
 				)
 			)
 		"
