@@ -142,8 +142,6 @@ usr/lib32/libgthread.so
 usr/lib32/libhistory.so
 usr/lib32/libjpeg.so
 usr/lib32/libjpeg.so.62
-usr/lib32/libjpeg.so.8
-usr/lib32/libjpeg.so.8.0.2
 usr/lib32/libjson.so
 usr/lib32/libjson.so.0
 usr/lib32/libjson.so.0.0.1
