@@ -55,6 +55,9 @@ usr/lib32/glib/include/glibconfig.h
 usr/lib32/libasm-0.149.so
 usr/lib32/libasm.so
 usr/lib32/libasm.so.1
+usr/lib32/libasprintf.so
+usr/lib32/libasprintf.so.0
+usr/lib32/libasprintf.so.0.0.0
 usr/lib32/libattr.so
 usr/lib32/libavc1394.so
 usr/lib32/libavc1394.so.0
@@ -192,6 +195,9 @@ usr/lib32/libreadline.so
 usr/lib32/librom1394.so
 usr/lib32/librom1394.so.0
 usr/lib32/librom1394.so.0.3.0
+usr/lib32/libsqlite3.so
+usr/lib32/libsqlite3.so.0
+usr/lib32/libsqlite3.so.0.8.6
 usr/lib32/libss.so
 usr/lib32/libsystemd-daemon.so
 usr/lib32/libtiff.so
@@ -214,9 +220,7 @@ usr/lib32/libusb-1.0.so.0
 usr/lib32/libusb-1.0.so.0.1.0
 usr/lib32/libusb.so
 usr/lib32/libwrap.so
-usr/lib32/libxml2.so
-usr/lib32/libxml2.so.2
-usr/lib32/libxml2.so.2.9.1
+usr/lib32/libxml2.so*
 usr/lib32/libxslt.so
 usr/lib32/libxslt.so.1
 usr/lib32/libxslt.so.1.1.28
@@ -276,6 +280,7 @@ usr/lib32/pkgconfig/ncursesw.pc
 usr/lib32/pkgconfig/nspr.pc
 usr/lib32/pkgconfig/panel.pc
 usr/lib32/pkgconfig/panelw.pc
+usr/lib32/pkgconfig/sqlite3.pc
 usr/lib32/pkgconfig/ss.pc
 usr/lib32/pkgconfig/zlib.pc
 usr/lib32/python2.7/lib-dynload/dbm.so
