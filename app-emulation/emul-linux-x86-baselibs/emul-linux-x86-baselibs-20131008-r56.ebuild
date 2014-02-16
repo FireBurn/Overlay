@@ -57,6 +57,8 @@ RDEPEND="!<app-emulation/emul-linux-x86-medialibs-10.2
 		>=sys-devel/gettext-0.18.3.2[abi_x86_32(-)]
 		>=dev-libs/libgpg-error-1.12-r1[abi_x86_32(-)]
 		>=dev-db/sqlite-3.8.3:3[abi_x86_32(-)]
+		>=dev-libs/nettle-2.7.1-r1[abi_x86_32(-)]
+		>=dev-libs/libtasn1-3.4-r1[abi_x86_32(-)]
 		dev-libs/glib:1[abi_x86_32(-)]
 		dev-libs/libgcrypt[abi_x86_32(-)]
 		dev-libs/libxslt[abi_x86_32(-)]

@@ -140,6 +140,9 @@ usr/lib32/libgthread-2.0.so.0
 usr/lib32/libgthread-2.0.so.0.3200.4
 usr/lib32/libgthread.so
 usr/lib32/libhistory.so
+usr/lib32/libhogweed.so
+usr/lib32/libhogweed.so.2
+usr/lib32/libhogweed.so.2.5
 usr/lib32/libjpeg.so
 usr/lib32/libjpeg.so.62
 usr/lib32/libjson.so
@@ -165,6 +168,9 @@ usr/lib32/libmng.so.1
 usr/lib32/libmng.so.1.0.0
 usr/lib32/libncurses.so
 usr/lib32/libncursesw.so
+usr/lib32/libnettle.so
+usr/lib32/libnettle.so.4
+usr/lib32/libnettle.so.4.7
 usr/lib32/libnspr4.so
 usr/lib32/libpanel.so
 usr/lib32/libpanel.so.5
@@ -198,6 +204,9 @@ usr/lib32/libsqlite3.so.0
 usr/lib32/libsqlite3.so.0.8.6
 usr/lib32/libss.so
 usr/lib32/libsystemd-daemon.so
+usr/lib32/libtasn1.so
+usr/lib32/libtasn1.so.3
+usr/lib32/libtasn1.so.3.2.0
 usr/lib32/libtiff.so
 usr/lib32/libtiff.so.3
 usr/lib32/libtiff.so.4
@@ -249,6 +258,7 @@ usr/lib32/pkgconfig/gmodule.pc
 usr/lib32/pkgconfig/gobject-2.0.pc
 usr/lib32/pkgconfig/gthread-2.0.pc
 usr/lib32/pkgconfig/gthread.pc
+usr/lib32/pkgconfig/hogweed.pc
 usr/lib32/pkgconfig/json.pc
 usr/lib32/pkgconfig/lcms2.pc
 usr/lib32/pkgconfig/lcms.pc
@@ -262,6 +272,7 @@ usr/lib32/pkgconfig/libpng15.pc
 usr/lib32/pkgconfig/libpng.pc
 usr/lib32/pkgconfig/libraw1394.pc
 usr/lib32/pkgconfig/libsystemd-daemon.pc
+usr/lib32/pkgconfig/libtasn1.pc
 usr/lib32/pkgconfig/libtiff-4.pc
 usr/lib32/pkgconfig/libudev.pc
 usr/lib32/pkgconfig/libusb-1.0.pc
@@ -275,6 +286,7 @@ usr/lib32/pkgconfig/ncurses.pc
 usr/lib32/pkgconfig/ncurses++.pc
 usr/lib32/pkgconfig/ncurses++w.pc
 usr/lib32/pkgconfig/ncursesw.pc
+usr/lib32/pkgconfig/nettle.pc
 usr/lib32/pkgconfig/nspr.pc
 usr/lib32/pkgconfig/panel.pc
 usr/lib32/pkgconfig/panelw.pc
