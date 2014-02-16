@@ -1,0 +1,13 @@
+diff -Naur a/src/glsl/glcpp/glcpp-parse.y b/src/glsl/glcpp/glcpp-parse.y
+--- a/src/glsl/glcpp/glcpp-parse.y	2014-02-16 12:32:19.428189812 +0000
++++ b/src/glsl/glcpp/glcpp-parse.y	2014-02-16 12:35:29.242185663 +0000
+@@ -1773,9 +1773,6 @@
+ 	/* According to the GLSL specification, macro names starting with "__"
+ 	 * or "GL_" are reserved for future use.  So, don't allow them.
+ 	 */
+-	if (strstr(identifier, "__")) {
+-		glcpp_error (loc, parser, "Macro names containing \"__\" are reserved.\n");
+-	}
+ 	if (strncmp(identifier, "GL_", 3) == 0) {
+ 		glcpp_error (loc, parser, "Macro names starting with \"GL_\" are reserved.\n");
+ 	}
