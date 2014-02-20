@@ -198,8 +198,6 @@ src_prepare() {
 		sed -i -e "s/-DSVR4/-D_POSIX_C_SOURCE=200112L/" configure.ac || die
 	fi
 
-	epatch "${FILESDIR}"/underscore.patch
-
 	base_src_prepare
 
 	eautoreconf
