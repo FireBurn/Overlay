@@ -1,4 +1,4 @@
-# Copyright 1999-2013 Gentoo Foundation
+# Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
@@ -54,14 +54,14 @@ for card in ${VIDEO_CARDS}; do
 done
 
 IUSE="${IUSE_VIDEO_CARDS}
-	bindist +classic debug +egl +gallium gbm gles1 gles2 +llvm +nptl nine
-	omxil opencl openvg osmesa pax_kernel pic r600-llvm-compiler selinux
-	vdpau wayland xvmc xa kernel_FreeBSD"
+	bindist +classic debug +egl +gallium gbm gles1 gles2 +llvm
+	+llvm-shared-libs nine +nptl opencl openvg osmesa openmax
+	pax_kernel pic r600-llvm-compiler selinux vdpau wayland xa 
+	xvmc kernel_FreeBSD"
 
 REQUIRED_USE="
 	llvm?   ( gallium )
 	nine?	( gallium )
-	omxil?	( gallium )
 	openvg? ( egl gallium )
 	opencl? (
 		gallium
@@ -69,10 +69,11 @@ REQUIRED_USE="
 		video_cards_radeon? ( r600-llvm-compiler )
 		video_cards_radeonsi? ( r600-llvm-compiler )
 	)
+	openmax? ( gallium )
 	gles1?  ( egl )
 	gles2?  ( egl )
 	r600-llvm-compiler? ( gallium llvm || ( video_cards_r600 video_cards_radeonsi video_cards_radeon ) )
-	wayland? ( egl )
+	wayland? ( egl gbm )
 	xa?  ( gallium )
 	video_cards_freedreno?  ( gallium )
 	video_cards_intel?  ( || ( classic gallium ) )
@@ -87,9 +88,10 @@ REQUIRED_USE="
 	video_cards_r600?   ( gallium )
 	video_cards_radeonsi?   ( gallium llvm )
 	video_cards_vmware? ( gallium )
+	${PYTHON_REQUIRED_USE}
 "
 
-LIBDRM_DEPSTRING=">=x11-libs/libdrm-2.4.46"
+LIBDRM_DEPSTRING=">=x11-libs/libdrm-2.4.52"
 # keep correct libdrm and dri2proto dep
 # keep blocks in rdepend for binpkg
 RDEPEND="
@@ -107,11 +109,28 @@ RDEPEND="
 	x11-libs/libXext[${MULTILIB_USEDEP}]
 	x11-libs/libXxf86vm[${MULTILIB_USEDEP}]
 	>=x11-libs/libxcb-1.9.2[${MULTILIB_USEDEP}]
-	omxil? ( media-libs/libomxil-bellagio[${MULTILIB_USEDEP}] )
+	llvm? (
+		video_cards_radeonsi? ( || (
+			dev-libs/elfutils[${MULTILIB_USEDEP}]
+			dev-libs/libelf[${MULTILIB_USEDEP}]
+			) )
+		video_cards_r600? ( || (
+			dev-libs/elfutils[${MULTILIB_USEDEP}]
+			dev-libs/libelf[${MULTILIB_USEDEP}]
+			) )
+		!video_cards_r600? (
+			video_cards_radeon? ( || (
+				dev-libs/elfutils[${MULTILIB_USEDEP}]
+				dev-libs/libelf[${MULTILIB_USEDEP}]
+				) )
+		)
+		llvm-shared-libs? ( >=sys-devel/llvm-2.9[${MULTILIB_USEDEP}] )
+	)
 	opencl? (
 				app-admin/eselect-opencl
 				dev-libs/libclc
 			)
+	openmax? ( media-libs/libomxil-bellagio[${MULTILIB_USEDEP}] )
 	vdpau? ( >=x11-libs/libvdpau-0.4.1[${MULTILIB_USEDEP}] )
 	wayland? ( >=dev-libs/wayland-1.2.0[${MULTILIB_USEDEP}] )
 	xvmc? ( >=x11-libs/libXvMC-1.0.6[${MULTILIB_USEDEP}] )
@@ -154,7 +173,7 @@ DEPEND="${RDEPEND}
 "
 
 python_check_deps() {
-	has_version "dev-libs/libxml2[python,${PYTHON_USEDEP}]"
+	has_version --host-root "dev-libs/libxml2[python,${PYTHON_USEDEP}]"
 }
 
 S="${WORKDIR}/${MY_P}"
@@ -169,6 +188,12 @@ QA_WX_LOAD="usr/lib*/opengl/xorg-x11/lib/libGL.so*"
 pkg_setup() {
 	# workaround toc-issue wrt #386545
 	use ppc64 && append-flags -mminimal-toc
+
+	# warning message for bug 459306
+	if use llvm && has_version sys-devel/llvm[!debug=]; then
+		ewarn "Mismatch between debug USE flags in media-libs/mesa and sys-devel/llvm"
+		ewarn "detected! This can cause problems. For details, see bug 459306."
+	fi
 
 	python-any-r1_pkg_setup
 }
@@ -239,9 +264,9 @@ multilib_src_configure() {
 		myconf+="
 			$(use_enable llvm gallium-llvm)
 			$(use_enable nine)
-			$(use_enable omxil omx)
 			$(use_enable openvg)
 			$(use_enable openvg gallium-egl)
+			$(use_enable openmax omx)
 			$(use_enable r600-llvm-compiler)
 			$(use_enable vdpau)
 			$(use_enable xa)
@@ -303,9 +328,9 @@ multilib_src_configure() {
 		$(use_enable nptl glx-tls) \
 		$(use_enable osmesa) \
 		$(use_enable !pic asm) \
+		$(use_enable llvm-shared-libs) \
 		--with-dri-drivers=${DRI_DRIVERS} \
 		--with-gallium-drivers=${GALLIUM_DRIVERS} \
-		--with-llvm-shared-libs \
 		PYTHON2="${PYTHON}" \
 		${myconf}
 }
@@ -348,13 +373,11 @@ multilib_src_install() {
 				if [ -f "$(get_libdir)/gallium/${x}" ]; then
 					mv -f "${ED}/usr/$(get_libdir)/dri/${x}" "${ED}/usr/$(get_libdir)/dri/${x/_dri.so/g_dri.so}" \
 						|| die "Failed to move ${x}"
-					insinto "/usr/$(get_libdir)/dri/"
-					if [ -f "$(get_libdir)/${x}" ]; then
-						insopts -m0755
-						doins "$(get_libdir)/${x}"
-					fi
 				fi
 			done
+			if use classic; then
+				emake -C "${BUILD_DIR}/src/mesa/drivers/dri" DESTDIR="${D}" install
+			fi
 			for x in "${ED}"/usr/$(get_libdir)/dri/*.so; do
 				if [ -f ${x} -o -L ${x} ]; then
 					mv -f "${x}" "${x/dri/mesa}" \
@@ -399,6 +422,10 @@ multilib_src_install_all() {
 	# Install config file for eselect mesa
 	insinto /usr/share/mesa
 	newins "${FILESDIR}/eselect-mesa.conf.9.2" eselect-mesa.conf
+}
+
+multilib_src_test() {
+	emake check
 }
 
 pkg_postinst() {
