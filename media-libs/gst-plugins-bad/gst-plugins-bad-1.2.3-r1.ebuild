@@ -31,15 +31,6 @@ DEPEND="${RDEPEND}
 "
 
 src_prepare() {
-	# Make dependency on mesa optional, only needed by eglglessink
-	epatch "${FILESDIR}"/${PN}-1.2.0-optional-egl.patch
-	eautoreconf
-
-	# gettextize removes this line making gst-plugins-bad install
-	# translation file .mo instead of gst-plugins-bad-1.0.mo
-	sed -e '/SHELL =.*/ a\GETTEXT_PACKAGE = @GETTEXT_PACKAGE@\' \
-		-i po/Makefile.in.in || die
-
 	multilib_copy_sources
 }
 
