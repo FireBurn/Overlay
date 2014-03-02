@@ -1,30 +1,30 @@
-# Copyright 1999-2013 Gentoo Foundation
+# Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-emulation/emul-linux-x86-gtklibs/emul-linux-x86-gtklibs-20130224.ebuild,v 1.2 2013/03/16 15:20:30 pacho Exp $
+# $Header: /var/cvsroot/gentoo-x86/app-emulation/emul-linux-x86-gtklibs/emul-linux-x86-gtklibs-20131008-r4.ebuild,v 1.1 2014/03/01 13:34:05 mgorny Exp $
 
 EAPI=5
 inherit emul-linux-x86
 
 LICENSE="GPL-2 LGPL-2 FTL LGPL-2.1 LGPL-3 MPL-1.1 MIT"
-KEYWORDS="-* amd64"
+KEYWORDS="-* ~amd64"
 IUSE="abi_x86_32"
 
 DEPEND=""
 RDEPEND="~app-emulation/emul-linux-x86-baselibs-${PV}
 	~app-emulation/emul-linux-x86-xlibs-${PV}
-	~app-emulation/emul-linux-x86-opengl-${PV}"
-# RDEPEND on opengl stuff needed due cairo, bug #410213
-PDEPEND="abi_x86_32? (
-		x11-libs/cairo[abi_x86_32(-)]
-		x11-libs/gdk-pixbuf[abi_x86_32(-)]
-		x11-libs/pango[abi_x86_32(-)]
+	~app-emulation/emul-linux-x86-opengl-${PV}
+	abi_x86_32? (
+		>=x11-libs/pixman-0.30.2-r1[abi_x86_32(-)]
+		>=x11-libs/cairo-1.12.16-r1[abi_x86_32(-)]
+		>=x11-libs/gdk-pixbuf-2.30.5-r1[abi_x86_32(-)]
+		>=x11-libs/pango-1.36.2-r1[abi_x86_32(-)]
 		x11-libs/gtk+:1[abi_x86_32(-)]
 		x11-libs/gtk+:2[abi_x86_32(-)]
 		x11-libs/gtk+:3[abi_x86_32(-)]
-		x11-libs/pixman[abi_x86_32(-)]
 		x11-themes/gtk-engines[abi_x86_32(-)]
 		gnome-base/gconf[abi_x86_32(-)]
 	)"
+# RDEPEND on opengl stuff needed due cairo, bug #410213
 
 my_gdk_pixbuf_query_loaders() {
 	# causes segfault if set

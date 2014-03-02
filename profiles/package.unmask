@@ -1,9 +1,10 @@
-dev-libs/libgcrypt1
-dev-libs/lzo
 app-emulation/emul-linux-x86-baselibs
-x11-libs/cairo
 app-emulation/emul-linux-x86-gtklibs
-x11-libs/gdk-pixbuf
+dev-libs/libgcrypt
+dev-libs/libtasn1
+dev-libs/lzo
 media-gfx/graphite2
 media-libs/harfbuzz
+x11-libs/cairo
+x11-libs/gdk-pixbuf
 x11-libs/pango

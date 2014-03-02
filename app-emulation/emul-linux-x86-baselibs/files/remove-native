@@ -126,6 +126,18 @@ usr/lib32/libgmodule-2.0.so.0.3200.4
 usr/lib32/libgmodule.so
 usr/lib32/libgmp.so*
 usr/lib32/libgmpxx.so*
+usr/lib32/libgnutls-extra.so
+usr/lib32/libgnutls-extra.so.26
+usr/lib32/libgnutls-extra.so.26.22.6
+usr/lib32/libgnutls-openssl.so
+usr/lib32/libgnutls-openssl.so.27
+usr/lib32/libgnutls-openssl.so.27.0.0
+usr/lib32/libgnutls.so
+usr/lib32/libgnutls.so.26
+usr/lib32/libgnutls.so.26.22.6
+usr/lib32/libgnutlsxx.so
+usr/lib32/libgnutlsxx.so.27
+usr/lib32/libgnutlsxx.so.27.0.0
 usr/lib32/libgobject-2.0.so
 usr/lib32/libgobject-2.0.so.0
 usr/lib32/libgobject-2.0.so.0.3200.4
@@ -154,6 +166,9 @@ usr/lib32/liblcms2.so.2.0.3
 usr/lib32/liblcms.so
 usr/lib32/liblcms.so.1
 usr/lib32/liblcms.so.1.0.19
+usr/lib32/liblzo2.so
+usr/lib32/liblzo2.so.2
+usr/lib32/liblzo2.so.2.0.0
 usr/lib32/libmenu.so
 usr/lib32/libmenu.so.5
 usr/lib32/libmenu.so.5.9
@@ -164,8 +179,6 @@ usr/lib32/libminizip.so
 usr/lib32/libminizip.so.1
 usr/lib32/libminizip.so.1.0.0
 usr/lib32/libmng.so
-usr/lib32/libmng.so.1
-usr/lib32/libmng.so.1.0.0
 usr/lib32/libncurses.so
 usr/lib32/libncursesw.so
 usr/lib32/libnettle.so
@@ -255,6 +268,7 @@ usr/lib32/pkgconfig/gmodule-2.0.pc
 usr/lib32/pkgconfig/gmodule-export-2.0.pc
 usr/lib32/pkgconfig/gmodule-no-export-2.0.pc
 usr/lib32/pkgconfig/gmodule.pc
+usr/lib32/pkgconfig/gnutls.pc
 usr/lib32/pkgconfig/gobject-2.0.pc
 usr/lib32/pkgconfig/gthread-2.0.pc
 usr/lib32/pkgconfig/gthread.pc

@@ -45,7 +45,7 @@ RDEPEND="
 				media-libs/libsdl2[abi_x86_32]
 				>=app-emulation/steam-runtime-bin-20131109
 				=sys-fs/steam-runtime-udev-175[abi_x86_32,gudev]
-				dev-libs/steam-runtime-gcrypt:0/11[abi_x86_32]
+				dev-libs/libgcrypt:11[abi_x86_32]
 				>=app-emulation/emul-linux-x86-baselibs-20121202
 				>=app-emulation/emul-linux-x86-gtklibs-20121202
 				>=app-emulation/emul-linux-x86-sdl-20121202
@@ -72,7 +72,7 @@ RDEPEND="
 			x86? (
 				dev-libs/glib:2
 				dev-libs/dbus-glib
-				dev-libs/steam-runtime-gcrypt:0/11
+				dev-libs/libgcrypt:11
 				virtual/libusb
 				dev-libs/nspr
 				dev-libs/nss
