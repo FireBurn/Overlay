@@ -1,4 +1,4 @@
-# Copyright 1999-2013 Gentoo Foundation
+# Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
@@ -8,7 +8,7 @@ PYTHON_COMPAT=( python{2_5,2_6,2_7} )
 EGIT_REPO_URI="http://llvm.org/git/${PN}.git"
 
 if [[ ${PV} = 9999* ]]; then
-	GIT_ECLASS="git-2"
+	GIT_ECLASS="git-r3"
 	EXPERIMENTAL="true"
 fi
 
@@ -29,18 +29,18 @@ KEYWORDS="~amd64 ~x86"
 IUSE=""
 
 RDEPEND="
-	>=sys-devel/clang-3.2
-	>=sys-devel/llvm-3.2"
-DEPEND="${RDEPEND}"
+	>=sys-devel/clang-3.4
+	>=sys-devel/llvm-3.4"
+DEPEND="${RDEPEND}
+	${PYTHON_DEPS}"
 
 src_unpack() {
 	if [[ $PV = 9999* ]]; then
-		git-2_src_unpack
+		git-r3_src_unpack
 	else
 		default
 		mv ${PN}-*/ ${P} || die
 	fi
-	cd "${S}"
 }
 
 src_configure() {

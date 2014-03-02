@@ -1,4 +1,4 @@
-# Copyright 1999-2013 Gentoo Foundation
+# Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
 # $Header: $
 
@@ -7,10 +7,9 @@ EAPI=5
 MY_PN=${PN/progs/demos}
 MY_P=${MY_PN}-${PV}
 EGIT_REPO_URI="git://anongit.freedesktop.org/${MY_PN/-//}"
-EGIT_PROJECT="mesa-progs"
 
 if [[ ${PV} = 9999* ]]; then
-	GIT_ECLASS="git-2"
+	GIT_ECLASS="git-r3"
 	EXPERIMENTAL="true"
 fi
 
@@ -29,7 +28,7 @@ SLOT="0"
 KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~sh ~sparc ~x86 ~x86-fbsd ~x86-freebsd ~amd64-linux ~ia64-linux ~x86-linux"
 IUSE="egl gles1 gles2"
 
-RDEPEND="!x11-apps/mesa-progs-32bit
+RDEPEND="
 	egl? ( media-libs/glew[${MULTILIB_USEDEP}] )
 	gles1? ( media-libs/glew[${MULTILIB_USEDEP}] )
 	gles2? ( media-libs/glew[${MULTILIB_USEDEP}] )
@@ -41,10 +40,11 @@ DEPEND="${RDEPEND}
 	x11-proto/xproto[${MULTILIB_USEDEP}]"
 
 S=${WORKDIR}/${MY_P}
+EGIT_CHECKOUT_DIR=${S}
 
 src_unpack() {
 	default
-	[[ $PV = 9999* ]] && git-2_src_unpack
+	[[ $PV = 9999* ]] && git-r3_src_unpack
 }
 
 src_prepare() {
@@ -92,7 +92,7 @@ multilib_src_compile() {
 }
 
 multilib_src_install() {
-	if [[ ${ABI} == ${DEFAULT_ABI} ]] ; then
+	if multilib_is_native_abi; then
 		dobin src/xdemos/{glxgears,glxinfo}
 		if use egl; then
 			dobin src/egl/opengl/egl{info,gears_{screen,x11}}
