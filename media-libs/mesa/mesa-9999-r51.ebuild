@@ -213,7 +213,7 @@ src_prepare() {
 	fi
 
 	# relax the requirement that r300 must have llvm, bug 380303
-	epatch "${FILESDIR}"/${P}-dont-require-llvm-for-r300.patch
+	#epatch "${FILESDIR}"/${P}-dont-require-llvm-for-r300.patch
 
 	# fix for hardened pax_kernel, bug 240956
 	[[ ${PV} != 9999* ]] && epatch "${FILESDIR}"/glx_ro_text_segm.patch
