@@ -2,6 +2,7 @@ app-emulation/emul-linux-x86-baselibs
 app-emulation/emul-linux-x86-gtklibs
 dev-libs/libgcrypt
 dev-libs/libtasn1
+dev-libs/libxslt
 dev-libs/lzo
 media-gfx/graphite2
 media-libs/harfbuzz
