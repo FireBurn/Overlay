@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-emulation/emul-linux-x86-baselibs/emul-linux-x86-baselibs-20131008-r20.ebuild,v 1.1 2014/02/28 20:45:47 mgorny Exp $
+# $Header: /var/cvsroot/gentoo-x86/app-emulation/emul-linux-x86-baselibs/emul-linux-x86-baselibs-20131008-r21.ebuild,v 1.1 2014/03/04 05:51:01 tetromino Exp $
 
 EAPI=5
 inherit emul-linux-x86
@@ -60,10 +60,10 @@ RDEPEND="!<app-emulation/emul-linux-x86-medialibs-10.2
 		>=dev-libs/nettle-2.7.1-r1[abi_x86_32(-)]
 		>=dev-libs/libtasn1-3.4-r1[abi_x86_32(-)]
 		dev-libs/libgcrypt:11[abi_x86_32(-)]
-		>=dev-libs/libgcrypt-1.6.1-r1[abi_x86_32(-)]
+		>=dev-libs/libgcrypt-1.6.1-r1:0[abi_x86_32(-)]
 		>=dev-libs/lzo-2.06-r1[abi_x86_32(-)]
+		>=dev-libs/libxslt-1.1.28-r2[abi_x86_32(-)]
 		dev-libs/glib:1[abi_x86_32(-)]
-		dev-libs/libxslt[abi_x86_32(-)]
 		dev-libs/nspr[abi_x86_32(-)]
 		media-libs/lcms:0[abi_x86_32(-)]
 		media-libs/libmng[abi_x86_32(-)]

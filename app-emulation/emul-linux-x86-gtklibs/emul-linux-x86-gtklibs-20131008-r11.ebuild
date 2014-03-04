@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-emulation/emul-linux-x86-gtklibs/emul-linux-x86-gtklibs-20131008-r4.ebuild,v 1.1 2014/03/01 13:34:05 mgorny Exp $
+# $Header: /var/cvsroot/gentoo-x86/app-emulation/emul-linux-x86-gtklibs/emul-linux-x86-gtklibs-20131008-r4.ebuild,v 1.2 2014/03/04 03:25:28 tetromino Exp $
 
 EAPI=5
 inherit emul-linux-x86
@@ -18,6 +18,7 @@ RDEPEND="~app-emulation/emul-linux-x86-baselibs-${PV}
 		>=x11-libs/cairo-1.12.16-r1[abi_x86_32(-)]
 		>=x11-libs/gdk-pixbuf-2.30.5-r1[abi_x86_32(-)]
 		>=x11-libs/pango-1.36.2-r1[abi_x86_32(-)]
+		>=x11-libs/pangox-compat-0.0.2-r1[abi_x86_32(-)]
 		x11-libs/gtk+:1[abi_x86_32(-)]
 		x11-libs/gtk+:2[abi_x86_32(-)]
 		x11-libs/gtk+:3[abi_x86_32(-)]
@@ -36,10 +37,10 @@ my_gdk_pixbuf_query_loaders() {
 		return 1
 	fi
 
-	if gdk-pixbuf-query-loaders.x86 > "${tmp_file}"; then
+	if gdk-pixbuf-query-loaders32 > "${tmp_file}"; then
 		cat "${tmp_file}" > "${ROOT}usr/lib32/gdk-pixbuf-2.0/2.10.0/loaders.cache"
 	else
-		ewarn "Warning, gdk-pixbuf-query-loaders.x86 failed."
+		ewarn "Warning, gdk-pixbuf-query-loaders32 failed."
 	fi
 	rm "${tmp_file}"
 }
@@ -56,7 +57,7 @@ my_pango_querymodules() {
 		return 1
 	fi
 
-	if pango-querymodules.x86 > "${tmp_file}"; then
+	if pango-querymodules32 > "${tmp_file}"; then
 		cat "${tmp_file}" > "${pango_conf}"
 	else
 		ewarn "Cannot update pango.modules, file generation failed"
@@ -76,7 +77,7 @@ my_gtk_query_immodules() {
 		return 1
 	fi
 
-	if gtk-query-immodules-2.0.x86 > "${tmp_file}"; then
+	if gtk-query-immodules-2.0-32 > "${tmp_file}"; then
 		cat "${tmp_file}" > "${gtk_conf}"
 	else
 		ewarn "Cannot update gtk.immodules, file generation failed"
@@ -106,9 +107,11 @@ pkg_preinst() {
 }
 
 pkg_postinst() {
-	my_pango_querymodules
 	my_gtk_query_immodules
-	my_gdk_pixbuf_query_loaders
+	if ! use abi_x86_32; then
+		my_pango_querymodules
+		my_gdk_pixbuf_query_loaders
+	fi
 
 	# gdk-pixbuf.loaders should be in their CHOST directories respectively.
 	if [[ -e "${ROOT}/etc/gtk-2.0/gdk-pixbuf.loaders" ]] ; then

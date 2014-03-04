@@ -1,6 +1,4 @@
-
 usr/bin/gdk-pixbuf-query-loaders32
-usr/bin/gtk-query-immodules-2.0-32
 usr/bin/pango-querymodules32
 usr/lib32/cairo/cairo-fdr.so
 usr/lib32/cairo/cairo-fdr.so.0
