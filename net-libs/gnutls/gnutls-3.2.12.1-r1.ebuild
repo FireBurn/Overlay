@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/net-libs/gnutls/gnutls-3.2.11.ebuild,v 1.4 2014/02/17 09:35:44 alonbl Exp $
+# $Header: /var/cvsroot/gentoo-x86/net-libs/gnutls/gnutls-3.2.12.1.ebuild,v 1.1 2014/03/05 19:42:46 radhermit Exp $
 
 EAPI=5
 
@@ -39,6 +39,8 @@ DEPEND="${RDEPEND}
 	test? ( app-misc/datefudge )"
 
 DOCS=( AUTHORS ChangeLog NEWS README THANKS doc/TODO )
+
+S=${WORKDIR}/${PN}-$(get_version_component_range 1-3)
 
 src_prepare() {
 	# tests/suite directory is not distributed
