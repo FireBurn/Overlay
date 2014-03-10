@@ -104,7 +104,7 @@ RDEPEND="
 	dev-libs/expat[${MULTILIB_USEDEP}]
 	gbm? ( virtual/udev[${MULTILIB_USEDEP}] )
 	>=x11-libs/libX11-1.3.99.901[${MULTILIB_USEDEP}]
-	>=x11-libs/libxshmfence-1.0[${MULTILIB_USEDEP}]
+	>=x11-libs/libxshmfence-1.1[${MULTILIB_USEDEP}]
 	x11-libs/libXdamage[${MULTILIB_USEDEP}]
 	x11-libs/libXext[${MULTILIB_USEDEP}]
 	x11-libs/libXxf86vm[${MULTILIB_USEDEP}]
