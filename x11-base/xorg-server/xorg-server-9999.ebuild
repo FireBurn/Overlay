@@ -47,6 +47,7 @@ RDEPEND="!x11-libs/glamor
 		>=x11-libs/libXres-1.0.3
 		>=x11-libs/libXtst-1.0.99.2
 	)
+	glamor? ( media-libs/libepoxy )
 	kdrive? (
 		>=x11-libs/libXext-1.0.5
 		x11-libs/libXv
