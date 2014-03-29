@@ -169,6 +169,7 @@ usr/lib32/liblcms.so.1.0.19
 usr/lib32/liblzo2.so
 usr/lib32/liblzo2.so.2
 usr/lib32/liblzo2.so.2.0.0
+usr/lib32/libmagic.so*
 usr/lib32/libmenu.so
 usr/lib32/libmenu.so.5
 usr/lib32/libmenu.so.5.9
