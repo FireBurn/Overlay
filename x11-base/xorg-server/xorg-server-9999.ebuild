@@ -13,7 +13,7 @@ SLOT="0/${PV}"
 KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux ~arm-linux ~x86-linux"
 
 IUSE_SERVERS="dmx kdrive xnest xorg xvfb"
-IUSE="${IUSE_SERVERS} glamor ipv6 minimal nptl selinux +suid systemd tslib +udev unwind"
+IUSE="${IUSE_SERVERS} glamor ipv6 minimal nptl selinux +suid systemd tslib +udev unwind wayland"
 
 RDEPEND="!x11-libs/glamor
 	>=app-admin/eselect-opengl-1.0.8
@@ -62,7 +62,11 @@ RDEPEND="!x11-libs/glamor
 	unwind? ( sys-libs/libunwind )
 	>=x11-apps/xinit-1.3
 	selinux? ( sec-policy/selinux-xserver )
-	systemd? ( sys-apps/systemd )"
+	systemd? ( sys-apps/systemd )
+	wayland? (
+		dev-libs/wayland 
+		media-libs/libepoxy 
+	)"
 
 DEPEND="${RDEPEND}
 	sys-devel/flex
@@ -156,6 +160,7 @@ src_configure() {
 		$(use_enable xvfb)
 		$(use_enable nptl glx-tls)
 		$(use_enable udev config-udev)
+		$(use_enable wayland xwayland)
 		$(use_with doc doxygen)
 		$(use_with doc xmlto)
 		$(use_with systemd systemd-daemon)
