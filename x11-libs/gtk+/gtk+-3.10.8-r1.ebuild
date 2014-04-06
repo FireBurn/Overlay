@@ -1,10 +1,12 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/x11-libs/gtk+/gtk+-3.10.6.ebuild,v 1.2 2014/01/20 21:23:54 pacho Exp $
+# $Header: /var/cvsroot/gentoo-x86/x11-libs/gtk+/gtk+-3.10.8.ebuild,v 1.1 2014/04/06 10:15:57 pacho Exp $
 
 EAPI="5"
+GCONF_DEBUG="no"
+GNOME2_LA_PUNT="yes"
 
-inherit eutils flag-o-matic gnome.org gnome2-utils virtualx multilib-minimal
+inherit flag-o-matic gnome2 virtualx multilib-minimal
 
 DESCRIPTION="Gimp ToolKit +"
 HOMEPAGE="http://www.gtk.org/"
@@ -98,8 +100,6 @@ strip_builddir() {
 }
 
 src_prepare() {
-	gnome2_environment_reset
-
 	# -O3 and company cause random crashes in applications. Bug #133469
 	replace-flags -O3 -O2
 	strip-flags
@@ -116,8 +116,11 @@ src_prepare() {
 		# don't waste time building demos
 		strip_builddir SRC_SUBDIRS demos Makefile.am
 		strip_builddir SRC_SUBDIRS demos Makefile.in
+		strip_builddir SRC_SUBDIRS examples Makefile.am
+		strip_builddir SRC_SUBDIRS examples Makefile.in
 	fi
 
+	gnome2_src_prepare
 	multilib_copy_sources
 }
 
@@ -134,7 +137,7 @@ multilib_src_configure() {
 		myconf=""
 	fi
 
-	econf \
+	gnome2_src_configure \
 		$(use_enable aqua quartz-backend) \
 		${myconf} \
 		$(use_enable cups cups auto) \
@@ -149,7 +152,6 @@ multilib_src_configure() {
 		$(use_enable X xkb) \
 		$(use_enable X xrandr) \
 		$(use_enable xinerama) \
-		--disable-gtk-doc \
 		--disable-papi \
 		--enable-man \
 		--enable-gtk2-dependency \
@@ -176,14 +178,12 @@ multilib_src_test() {
 }
 
 multilib_src_install() {
-	emake DESTDIR="${D}" install
+	gnome2_src_install
 
 	insinto /etc/gtk-3.0
 	doins "${FILESDIR}"/settings.ini
 
 	dodoc AUTHORS ChangeLog* HACKING NEWS* README*
-
-	prune_libtool_files --modules
 
 	# add -framework Carbon to the .pc files
 	if use aqua ; then
@@ -195,7 +195,7 @@ multilib_src_install() {
 }
 
 pkg_preinst() {
-	gnome2_schemas_savelist
+	gnome2_pkg_preinst
 
 	# Make sure loaders.cache belongs to gdk-pixbuf alone
 	local cache="usr/$(get_libdir)/gtk-3.0/3.0.0/immodules.cache"
@@ -208,7 +208,7 @@ pkg_preinst() {
 }
 
 pkg_postinst() {
-	gnome2_schemas_update
+	gnome2_pkg_postinst
 	gnome2_query_immodules_gtk3
 
 	if ! has_version "app-text/evince"; then
@@ -219,7 +219,7 @@ pkg_postinst() {
 }
 
 pkg_postrm() {
-	gnome2_schemas_update
+	gnome2_pkg_postrm
 
 	if [[ -z ${REPLACED_BY_VERSIONS} ]]; then
 		rm -f "${EROOT}"usr/$(get_libdir)/gtk-3.0/3.0.0/immodules.cache
