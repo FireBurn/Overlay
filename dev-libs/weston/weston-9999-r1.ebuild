@@ -5,8 +5,7 @@
 EAPI=5
 
 if [[ ${PV} = 9999* ]]; then
-	EGIT_REPO_URI="git://people.freedesktop.org/~krh/${PN}"
-	EGIT_BRANCH="xwayland-ddx"
+	EGIT_REPO_URI="git://anongit.freedesktop.org/wayland/${PN}"
 	GIT_ECLASS="git-r3"
 	EXPERIMENTAL="true"
 fi
