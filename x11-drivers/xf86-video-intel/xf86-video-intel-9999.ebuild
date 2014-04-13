@@ -40,8 +40,6 @@ DEPEND="${RDEPEND}
 	>=x11-proto/dri2proto-2.6
 	x11-proto/resourceproto"
 
-PATCHES=( "${FILESDIR}"/xorg-server-glamor.patch )
-
 src_configure() {
 	XORG_CONFIGURE_OPTIONS=(
 		$(use_enable debug)
