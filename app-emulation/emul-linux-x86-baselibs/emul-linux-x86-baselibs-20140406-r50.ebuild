@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-emulation/emul-linux-x86-baselibs/emul-linux-x86-baselibs-20131008-r22.ebuild,v 1.1 2014/03/27 14:45:24 ssuominen Exp $
+# $Header: /var/cvsroot/gentoo-x86/app-emulation/emul-linux-x86-baselibs/emul-linux-x86-baselibs-20140406-r2.ebuild,v 1.2 2014/04/20 12:19:03 mgorny Exp $
 
 EAPI=5
 inherit emul-linux-x86
@@ -13,8 +13,13 @@ LICENSE="Artistic GPL-1 GPL-2 GPL-3 BSD BSD-2 BZIP2 AFL-2.1 LGPL-2.1 BSD-4 MIT
 KEYWORDS="-* ~amd64"
 IUSE="abi_x86_32"
 
+SRC_URI="${SRC_URI} http://dev.gentoo.org/~pacho/emul/openssl-1.0.1g.tbz2"
+
 DEPEND=""
 RDEPEND="!<app-emulation/emul-linux-x86-medialibs-10.2
+	!abi_x86_32? (
+		!>=app-arch/xz-utils-5.0.5-r1[abi_x86_32(-)]
+	)
 	abi_x86_32? (
 		>=sys-libs/zlib-1.2.8-r1[abi_x86_32(-)]
 		>=app-arch/bzip2-1.0.6-r4[abi_x86_32(-)]
@@ -64,6 +69,9 @@ RDEPEND="!<app-emulation/emul-linux-x86-medialibs-10.2
 		>=dev-libs/lzo-2.06-r1[abi_x86_32(-)]
 		>=dev-libs/libxslt-1.1.28-r2[abi_x86_32(-)]
 		>=sys-apps/file-5.18-r1[abi_x86_32(-)]
+		>=app-arch/xz-utils-5.0.5-r1[abi_x86_32(-)]
+		>=media-libs/giflib-4.2.3-r1[abi_x86_32(-)]
+		>=sys-libs/slang-2.2.4-r1[abi_x86_32(-)]
 		dev-libs/glib:1[abi_x86_32(-)]
 		dev-libs/nspr[abi_x86_32(-)]
 		media-libs/lcms:0[abi_x86_32(-)]
@@ -86,4 +94,9 @@ src_prepare() {
 
 	# Remove migrated stuff.
 	use abi_x86_32 && rm -f $(cat "${FILESDIR}/remove-native")
+}
+
+src_install() {
+	emul-linux-x86_src_install
+	rm -rf "${ED}"/usr/include # needed for openssl tbz2
 }

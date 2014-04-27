@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/net-libs/gnutls/gnutls-3.2.12.1.ebuild,v 1.1 2014/03/05 19:42:46 radhermit Exp $
+# $Header: /var/cvsroot/gentoo-x86/net-libs/gnutls/gnutls-3.3.1.ebuild,v 1.2 2014/04/25 19:05:35 alonbl Exp $
 
 EAPI=5
 
@@ -8,7 +8,7 @@ inherit autotools libtool eutils versionator multilib-minimal
 
 DESCRIPTION="A TLS 1.2 and SSL 3.0 implementation for the GNU project"
 HOMEPAGE="http://www.gnutls.org/"
-SRC_URI="ftp://ftp.gnutls.org/gcrypt/gnutls/v$(get_version_component_range 1-2)/${P}.tar.xz"
+SRC_URI="mirror://gnupg/gnutls/v$(get_version_component_range 1-2)/${P}.tar.xz"
 
 # LGPL-3 for libgnutls library and GPL-3 for libgnutls-extra library.
 # soon to be relicensed as LGPL-2.1 unless heartbeat extension enabled.
@@ -43,12 +43,6 @@ DOCS=( AUTHORS ChangeLog NEWS README THANKS doc/TODO )
 S=${WORKDIR}/${PN}-$(get_version_component_range 1-3)
 
 src_prepare() {
-	# tests/suite directory is not distributed
-	sed -i \
-		-e ':AC_CONFIG_FILES(\[tests/suite/Makefile\]):d' \
-		-e '/^AM_INIT_AUTOMAKE/s/-Werror//' \
-		configure.ac || die
-
 	sed -i \
 		-e 's/imagesdir = $(infodir)/imagesdir = $(htmldir)/' \
 		doc/Makefile.am || die
@@ -58,6 +52,8 @@ src_prepare() {
 	for file in $(grep -l AutoGen-ed src/*.c) ; do
 		rm src/$(basename ${file} .c).{c,h} || die
 	done
+
+	epatch "${FILESDIR}/${P}-guile.patch"
 
 	# support user patches
 	epatch_user
