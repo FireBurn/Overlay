@@ -1,6 +1,6 @@
-# Copyright 1999-2013 Gentoo Foundation
+# Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/dev-lang/spidermonkey/spidermonkey-17.0.0-r1.ebuild,v 1.3 2013/12/24 20:16:28 blueness Exp $
+# $Header: /var/cvsroot/gentoo-x86/dev-lang/spidermonkey/spidermonkey-17.0.0-r3.ebuild,v 1.7 2014/04/19 17:43:30 ago Exp $
 
 EAPI="5"
 WANT_AUTOCONF="2.1"
@@ -16,16 +16,19 @@ SRC_URI="http://ftp.mozilla.org/pub/mozilla.org/js/${MY_PN}${PV}.tar.gz"
 
 LICENSE="NPL-1.1"
 SLOT="17"
-KEYWORDS="~alpha ~amd64 ~arm ~hppa -ia64 -mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~x86-fbsd"
+# "MIPS, MacroAssembler is not supported" wrt #491294 for -mips
+KEYWORDS="alpha amd64 arm -hppa ia64 -mips ppc ppc64 ~s390 ~sh sparc x86 ~x86-fbsd"
 IUSE="debug jit minimal static-libs test"
 
 REQUIRED_USE="debug? ( jit )"
+RESTRICT="ia64? ( test )"
 
 S="${WORKDIR}/${MY_P}"
 BUILDDIR="${S}/js/src"
 
 RDEPEND=">=dev-libs/nspr-4.9.4[${MULTILIB_USEDEP}]
-	virtual/libffi"
+	virtual/libffi
+	>=sys-libs/zlib-1.1.4[${MULTILIB_USEDEP}]"
 DEPEND="${RDEPEND}
 	${PYTHON_DEPS}
 	app-arch/zip
@@ -40,6 +43,10 @@ pkg_setup(){
 
 src_prepare() {
 	epatch "${FILESDIR}"/${PN}-${SLOT}-js-config-shebang.patch
+	epatch "${FILESDIR}"/${PN}-${SLOT}-ia64-mmap.patch
+	epatch "${FILESDIR}"/${PN}-17.0.0-fix-file-permissions.patch
+	# Remove obsolete jsuword bug #506160
+	sed -i -e '/jsuword/d' "${BUILDDIR}"/jsval.h ||die "sed failed"
 	epatch_user
 
 	if [[ ${CHOST} == *-freebsd* ]]; then
