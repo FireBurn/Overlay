@@ -1,5 +1,9 @@
+lib32/libacl.so.1
+lib32/libacl.so.1.1.0
 lib32/libattr.so.1
 lib32/libattr.so.1.1.0
+lib32/libblkid.so.1
+lib32/libblkid.so.1.1.0
 lib32/libbz2.so.1
 lib32/libbz2.so.1.0
 lib32/libbz2.so.1.0.6
@@ -11,6 +15,8 @@ lib32/libhistory.so.6
 lib32/libhistory.so.6.2
 lib32/liblzma.so.5
 lib32/liblzma.so.5.0.5
+lib32/libmount.so.1
+lib32/libmount.so.1.1.0
 lib32/libncurses.so.5
 lib32/libncurses.so.5.9
 lib32/libncursesw.so.5
@@ -23,11 +29,14 @@ lib32/libss.so.2
 lib32/libss.so.2.0
 lib32/libsystemd-daemon.so.0
 lib32/libsystemd-daemon.so.0.0.7
-lib32/libudev.so.1*
+lib32/libudev.so.1
+lib32/libudev.so.1.4.0
 lib32/libusb-0.1.so.4
 lib32/libusb-0.1.so.4.4.4
 lib32/libusb-1.0.so.0
 lib32/libusb-1.0.so.0.1.0
+lib32/libuuid.so.1
+lib32/libuuid.so.1.3.0
 lib32/libwrap.so
 lib32/libwrap.so.0
 lib32/libwrap.so.0.7.6
@@ -60,6 +69,7 @@ usr/lib32/elfutils/libebl_x86_64-0.158.so
 usr/lib32/elfutils/libebl_x86_64.so
 usr/lib32/glib-2.0/include/glibconfig.h
 usr/lib32/glib/include/glibconfig.h
+usr/lib32/libacl.so
 usr/lib32/libasm-0.158.so
 usr/lib32/libasm.so
 usr/lib32/libasm.so.1
@@ -70,6 +80,7 @@ usr/lib32/libattr.so
 usr/lib32/libavc1394.so
 usr/lib32/libavc1394.so.0
 usr/lib32/libavc1394.so.0.3.0
+usr/lib32/libblkid.so
 usr/lib32/libbz2.so
 usr/lib32/libcom_err.so
 usr/lib32/libcurses.so
@@ -137,11 +148,9 @@ usr/lib32/libgmodule-2.0.so.0.3200.4
 usr/lib32/libgmodule-2.0.so.0.3800.2
 usr/lib32/libgmodule.so
 usr/lib32/libgmp.so
-usr/lib32/libgmp.so*
 usr/lib32/libgmp.so.10
 usr/lib32/libgmp.so.10.1.2
 usr/lib32/libgmpxx.so
-usr/lib32/libgmpxx.so*
 usr/lib32/libgmpxx.so.4
 usr/lib32/libgmpxx.so.4.3.2
 usr/lib32/libgnutls-extra.so
@@ -187,6 +196,9 @@ usr/lib32/liblcms.so
 usr/lib32/liblcms.so.1
 usr/lib32/liblcms.so.1.0.19
 usr/lib32/libLLVM-3.3.so
+usr/lib32/libltdl.so
+usr/lib32/libltdl.so.7
+usr/lib32/libltdl.so.7.3.0
 usr/lib32/libLTO.so
 usr/lib32/liblzma.so
 usr/lib32/liblzo2.so
@@ -205,6 +217,7 @@ usr/lib32/libminizip.so
 usr/lib32/libminizip.so.1
 usr/lib32/libminizip.so.1.0.0
 usr/lib32/libmng.so
+usr/lib32/libmount.so
 usr/lib32/libncurses.so
 usr/lib32/libncursesw.so
 usr/lib32/libnettle.so
@@ -270,11 +283,11 @@ usr/lib32/libudev.so
 usr/lib32/libudis86.so
 usr/lib32/libudis86.so.0
 usr/lib32/libudis86.so.0.0.0
-usr/lib32/libusb-0.1.so.4*
 usr/lib32/libusb-1.0.so
 usr/lib32/libusb-1.0.so.0
 usr/lib32/libusb-1.0.so.0.1.0
 usr/lib32/libusb.so
+usr/lib32/libuuid.so
 usr/lib32/libwrap.so
 usr/lib32/libxml2.so
 usr/lib32/libxml2.so.2
@@ -284,12 +297,13 @@ usr/lib32/libxslt.so.1
 usr/lib32/libxslt.so.1.1.28
 usr/lib32/libz.so
 usr/lib32/llvm/BugpointPasses.so
+usr/lib32/LLVMHello.so
 usr/lib32/llvm/libLLVM-3.1.so
 usr/lib32/llvm/libLTO.so
 usr/lib32/llvm/libprofile_rt.so
-usr/lib32/LLVMHello.so
 usr/lib32/perl5/5.12.4/i686-linux/auto/GDBM_File/GDBM_File.so
 usr/lib32/perl5/5.12.4/i686-linux/auto/NDBM_File/NDBM_File.so
+usr/lib32/pkgconfig/blkid.pc
 usr/lib32/pkgconfig/com_err.pc
 usr/lib32/pkgconfig/dbus-1.pc
 usr/lib32/pkgconfig/dbus-glib-1.pc
@@ -335,6 +349,7 @@ usr/lib32/pkgconfig/libxslt.pc
 usr/lib32/pkgconfig/menu.pc
 usr/lib32/pkgconfig/menuw.pc
 usr/lib32/pkgconfig/minizip.pc
+usr/lib32/pkgconfig/mount.pc
 usr/lib32/pkgconfig/ncurses.pc
 usr/lib32/pkgconfig/ncurses++.pc
 usr/lib32/pkgconfig/ncurses++w.pc
@@ -346,6 +361,7 @@ usr/lib32/pkgconfig/panelw.pc
 usr/lib32/pkgconfig/slang.pc
 usr/lib32/pkgconfig/sqlite3.pc
 usr/lib32/pkgconfig/ss.pc
+usr/lib32/pkgconfig/uuid.pc
 usr/lib32/pkgconfig/zlib.pc
 usr/lib32/python2.7/lib-dynload/dbm.so
 usr/lib32/python2.7/lib-dynload/gdbm.so
