@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-emulation/emul-linux-x86-baselibs/emul-linux-x86-baselibs-20140406-r3.ebuild,v 1.2 2014/05/03 13:04:10 pacho Exp $
+# $Header: /var/cvsroot/gentoo-x86/app-emulation/emul-linux-x86-baselibs/emul-linux-x86-baselibs-20140506.ebuild,v 1.1 2014/05/06 20:45:24 pacho Exp $
 
 EAPI=5
 inherit emul-linux-x86
@@ -12,8 +12,6 @@ LICENSE="Artistic GPL-1 GPL-2 GPL-3 BSD BSD-2 BZIP2 AFL-2.1 LGPL-2.1 BSD-4 MIT
 
 KEYWORDS="-* ~amd64"
 IUSE="abi_x86_32"
-
-SRC_URI="${SRC_URI} http://dev.gentoo.org/~pacho/emul/openssl-1.0.1g.tbz2"
 
 DEPEND=""
 RDEPEND="!<app-emulation/emul-linux-x86-medialibs-10.2
@@ -98,9 +96,4 @@ src_prepare() {
 
 	# Remove migrated stuff.
 	use abi_x86_32 && rm -f $(cat "${FILESDIR}/remove-native")
-}
-
-src_install() {
-	emul-linux-x86_src_install
-	rm -rf "${ED}"/usr/include # needed for openssl tbz2
 }
