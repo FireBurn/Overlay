@@ -1,3 +1,5 @@
+usr/include/i686-pc-linux-gnu/cdio/cdio_config.h
+usr/include/i686-pc-linux-gnu/cdio/version.h
 usr/lib32/gstreamer-0.10/libgstadder.so
 usr/lib32/gstreamer-0.10/libgstapp.so
 usr/lib32/gstreamer-0.10/libgstaudioconvert.so
@@ -49,8 +51,8 @@ usr/lib32/libcdio.so
 usr/lib32/libcdio++.so
 usr/lib32/libcdio++.so.0
 usr/lib32/libcdio++.so.0.0.2
-usr/lib32/libcdio.so.14
-usr/lib32/libcdio.so.14.0.0
+usr/lib32/libcdio.so.15
+usr/lib32/libcdio.so.15.0.0
 usr/lib32/libcuefile.so
 usr/lib32/libcuefile.so.0
 usr/lib32/libcuefile.so.0.0.0
@@ -147,8 +149,8 @@ usr/lib32/libiso9660.so
 usr/lib32/libiso9660++.so
 usr/lib32/libiso9660++.so.0
 usr/lib32/libiso9660++.so.0.0.0
-usr/lib32/libiso9660.so.8
-usr/lib32/libiso9660.so.8.0.0
+usr/lib32/libiso9660.so.9
+usr/lib32/libiso9660.so.9.0.0
 usr/lib32/liblavfile-2.1.so.0
 usr/lib32/liblavfile-2.1.so.0.0.0
 usr/lib32/liblavfile.so
