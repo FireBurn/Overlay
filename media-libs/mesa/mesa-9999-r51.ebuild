@@ -4,12 +4,7 @@
 
 EAPI=5
 
-if use nine ; then
-	EGIT_REPO_URI="https://github.com/okias/Mesa-3D"
-	EGIT_BRANCH="gallium-nine"
-else
-	EGIT_REPO_URI="git://anongit.freedesktop.org/mesa/mesa"
-fi
+EGIT_REPO_URI="git://anongit.freedesktop.org/mesa/mesa"
 
 if [[ ${PV} = 9999* ]]; then
 	GIT_ECLASS="git-r3"
@@ -19,7 +14,7 @@ fi
 PYTHON_COMPAT=( python{2_6,2_7} )
 
 inherit base autotools multilib multilib-minimal flag-o-matic \
-	python-any-r1 toolchain-funcs ${GIT_ECLASS}
+	python-any-r1 toolchain-funcs pax-utils ${GIT_ECLASS}
 
 OPENGL_DIR="xorg-x11"
 
@@ -54,14 +49,12 @@ for card in ${VIDEO_CARDS}; do
 done
 
 IUSE="${IUSE_VIDEO_CARDS}
-	bindist +classic debug dri3 +egl +gallium gbm gles1 gles2 +llvm
-	+llvm-shared-libs nine +nptl opencl openvg osmesa openmax
-	pax_kernel pic r600-llvm-compiler selinux vdpau wayland xa 
-	xvmc kernel_FreeBSD"
+	bindist +classic debug dri3 +egl +gallium gbm gles1 gles2 +llvm +nptl
+	opencl openvg osmesa pax_kernel openmax pic r600-llvm-compiler selinux
+	vdpau wayland xvmc xa kernel_FreeBSD"
 
 REQUIRED_USE="
 	llvm?   ( gallium )
-	nine?	( gallium )
 	openvg? ( egl gallium )
 	opencl? (
 		gallium
@@ -91,7 +84,7 @@ REQUIRED_USE="
 	${PYTHON_REQUIRED_USE}
 "
 
-LIBDRM_DEPSTRING=">=x11-libs/libdrm-2.4.52"
+LIBDRM_DEPSTRING=">=x11-libs/libdrm-2.4.53"
 # keep correct libdrm and dri2proto dep
 # keep blocks in rdepend for binpkg
 RDEPEND="
@@ -125,7 +118,7 @@ RDEPEND="
 				dev-libs/libelf[${MULTILIB_USEDEP}]
 				) )
 		)
-		llvm-shared-libs? ( >=sys-devel/llvm-2.9[${MULTILIB_USEDEP}] )
+		>=sys-devel/llvm-3.3-r3[${MULTILIB_USEDEP}]
 	)
 	opencl? (
 				app-admin/eselect-opencl
@@ -150,13 +143,13 @@ for card in ${RADEON_CARDS}; do
 done
 
 DEPEND="${RDEPEND}
+	${PYTHON_DEPS}
 	llvm? (
-		>=sys-devel/llvm-2.9[${MULTILIB_USEDEP}]
-		r600-llvm-compiler? ( sys-devel/llvm[video_cards_radeon,${MULTILIB_USEDEP}] )
-		video_cards_radeonsi? ( sys-devel/llvm[video_cards_radeon,${MULTILIB_USEDEP}] )
+		r600-llvm-compiler? ( sys-devel/llvm[video_cards_radeon] )
+		video_cards_radeonsi? ( sys-devel/llvm[video_cards_radeon] )
 	)
 	opencl? (
-				>=sys-devel/llvm-3.3-r1[video_cards_radeon,${MULTILIB_USEDEP}]
+				>=sys-devel/llvm-3.3-r3[video_cards_radeon,${MULTILIB_USEDEP}]
 				>=sys-devel/clang-3.3[${MULTILIB_USEDEP}]
 				>=sys-devel/gcc-4.6
 	)
@@ -172,12 +165,8 @@ DEPEND="${RDEPEND}
 	>=x11-proto/xextproto-7.0.99.1[${MULTILIB_USEDEP}]
 	x11-proto/xf86driproto[${MULTILIB_USEDEP}]
 	x11-proto/xf86vidmodeproto[${MULTILIB_USEDEP}]
-	$(python_gen_any_dep 'dev-libs/libxml2[python,${PYTHON_USEDEP}]')
+	sys-devel/gettext
 "
-
-python_check_deps() {
-	has_version --host-root "dev-libs/libxml2[python,${PYTHON_USEDEP}]"
-}
 
 S="${WORKDIR}/${MY_P}"
 EGIT_CHECKOUT_DIR=${S}
@@ -267,7 +256,6 @@ multilib_src_configure() {
 	if use gallium; then
 		myconf+="
 			$(use_enable llvm gallium-llvm)
-			$(use_enable nine)
 			$(use_enable openvg)
 			$(use_enable openvg gallium-egl)
 			$(use_enable openmax omx)
@@ -315,10 +303,6 @@ multilib_src_configure() {
 	# build fails with BSD indent, bug #428112
 	use userland_GNU || export INDENT=cat
 
-	if ! multilib_is_native_abi; then
-		myconf+="LLVM_CONFIG=${EPREFIX}/usr/bin/llvm-config.${ABI}"
-	fi
-
 	econf \
 		--enable-dri \
 		--enable-glx \
@@ -333,7 +317,7 @@ multilib_src_configure() {
 		$(use_enable nptl glx-tls) \
 		$(use_enable osmesa) \
 		$(use_enable !pic asm) \
-		$(use_enable llvm-shared-libs) \
+		--enable-llvm-shared-libs \
 		--with-dri-drivers=${DRI_DRIVERS} \
 		--with-gallium-drivers=${GALLIUM_DRIVERS} \
 		PYTHON2="${PYTHON}" \
@@ -430,6 +414,13 @@ multilib_src_install_all() {
 }
 
 multilib_src_test() {
+	if use llvm; then
+		local llvm_tests='lp_test_arit lp_test_arit lp_test_blend lp_test_blend lp_test_conv lp_test_conv lp_test_format lp_test_format lp_test_printf lp_test_printf'
+		pushd src/gallium/drivers/llvmpipe >/dev/null || die
+		emake ${llvm_tests}
+		pax-mark m ${llvm_tests}
+		popd >/dev/null || die
+	fi
 	emake check
 }
 
