@@ -13,7 +13,7 @@ DESCRIPTION="Installer, launcher and supplementary files for Valve's Steam clien
 HOMEPAGE="http://steampowered.com"
 SRC_URI="http://repo.steampowered.com/steam/archive/precise/steam_${PV}.tar.gz"
 
-KEYWORDS="-* ~amd64 ~x86"
+KEYWORDS="amd64 x86"
 LICENSE="ValveSteamLicense"
 
 RESTRICT="bindist mirror"
@@ -25,7 +25,7 @@ RDEPEND="
 		app-shells/bash
 		net-misc/curl
 		|| (
-			gnome-extra/zenity
+			>=gnome-extra/zenity-3
 			x11-terms/xterm
 			)
 
@@ -58,8 +58,10 @@ S=${WORKDIR}/steam/
 
 src_prepare() {
 	if ! use steamruntime; then
-		# use system libraries
+		# use system libraries if user has not set the variable otherwise
 		sed -i -r "s/(export TEXTDOMAIN=steam)/\1\nif \[ -z \"\$STEAM_RUNTIME\" \]; then export STEAM_RUNTIME=0; fi/" steam || die
+		# use violent force to load the system's SDL library
+		sed -i '/export STEAM_RUNTIME=0; fi/a if \[ \"$STEAM_RUNTIME\" == "0" \]; then export LD_PRELOAD="/usr/lib32/libSDL2-2.0.so.0"; fi' steam || die
 	fi
 
 	# we use our ebuild functions to install the files

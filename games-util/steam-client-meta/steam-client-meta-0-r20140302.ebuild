@@ -16,13 +16,20 @@ LICENSE="metapackage"
 
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="flash steamruntime trayicon video_cards_intel"
+IUSE="flash steamfonts +steamruntime streaming trayicon video_cards_intel"
 
 RDEPEND="
 		media-fonts/font-mutt-misc
 		|| ( media-fonts/font-bitstream-100dpi media-fonts/font-adobe-100dpi )
 
 		trayicon? ( sys-apps/dbus )
+
+		steamfonts? ( media-fonts/steamfonts )
+
+		streaming? (
+				amd64? ( x11-libs/libva[abi_x86_32] )
+				x86? ( x11-libs/libva )
+			)
 
 		amd64? (
 			|| (
