@@ -1,4 +1,3 @@
-
 lib32/libacl.so.1
 lib32/libacl.so.1.1.0
 lib32/libattr.so.1
@@ -89,6 +88,8 @@ usr/lib32/libavc1394.so.0.3.0
 usr/lib32/libblkid.so
 usr/lib32/libbz2.so
 usr/lib32/libcom_err.so
+usr/lib32/libcrypto.so
+usr/lib32/libcrypto.so.1.0.0
 usr/lib32/libcurses.so
 usr/lib32/libdbus-1.so
 usr/lib32/libdbus-1.so.3
@@ -267,6 +268,8 @@ usr/lib32/libslang.so.2.2.4
 usr/lib32/libsqlite3.so
 usr/lib32/libsqlite3.so.0
 usr/lib32/libsqlite3.so.0.8.6
+usr/lib32/libssl.so
+usr/lib32/libssl.so.1.0.0
 usr/lib32/libss.so
 usr/lib32/libsystemd-daemon.so
 usr/lib32/libtasn1.so
@@ -335,6 +338,7 @@ usr/lib32/pkgconfig/json-c.pc
 usr/lib32/pkgconfig/lcms2.pc
 usr/lib32/pkgconfig/lcms.pc
 usr/lib32/pkgconfig/libavc1394.pc
+usr/lib32/pkgconfig/libcrypto.pc
 usr/lib32/pkgconfig/libexslt.pc
 usr/lib32/pkgconfig/libffi.pc
 usr/lib32/pkgconfig/liblzma.pc
@@ -344,6 +348,7 @@ usr/lib32/pkgconfig/libpcreposix.pc
 usr/lib32/pkgconfig/libpng16.pc
 usr/lib32/pkgconfig/libpng.pc
 usr/lib32/pkgconfig/libraw1394.pc
+usr/lib32/pkgconfig/libssl.pc
 usr/lib32/pkgconfig/libsystemd-daemon.pc
 usr/lib32/pkgconfig/libtasn1.pc
 usr/lib32/pkgconfig/libtiff-4.pc
@@ -362,6 +367,7 @@ usr/lib32/pkgconfig/ncurses++w.pc
 usr/lib32/pkgconfig/ncursesw.pc
 usr/lib32/pkgconfig/nettle.pc
 usr/lib32/pkgconfig/nspr.pc
+usr/lib32/pkgconfig/openssl.pc
 usr/lib32/pkgconfig/panel.pc
 usr/lib32/pkgconfig/panelw.pc
 usr/lib32/pkgconfig/slang.pc
