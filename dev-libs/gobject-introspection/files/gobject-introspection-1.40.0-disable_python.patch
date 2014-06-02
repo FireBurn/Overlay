@@ -1,0 +1,34 @@
+diff -Naur oldwork/gobject-introspection-1.38.0/configure.ac work/gobject-introspection-1.38.0/configure.ac
+--- oldwork/gobject-introspection-1.38.0/configure.ac	2013-09-24 14:50:27.000000000 +0100
++++ work/gobject-introspection-1.38.0/configure.ac	2014-01-31 00:43:31.394497783 +0000
+@@ -247,18 +247,18 @@
+ AC_CHECK_FUNCS([backtrace backtrace_symbols])
+ 
+ # Python
+-AM_PATH_PYTHON([2.6])
+-case "$host" in
+-*-*-mingw*)
+-	# Change backslashes to forward slashes in pyexecdir to avoid
+-	# quoting issues
+-	pyexecdir=`echo $pyexecdir | tr '\\\\' '/'`
+-	;;
+-esac
+-AM_CHECK_PYTHON_HEADERS(, AC_MSG_ERROR([Python headers not found]))
+-if test "x$os_win32" = "xyes"; then
+-  AM_CHECK_PYTHON_LIBS(, AC_MSG_ERROR([Python libs not found. Windows requires Python modules to be explicitly linked to libpython.]))
+-fi
++#AM_PATH_PYTHON([2.6])
++#case "$host" in
++#*-*-mingw*)
++#	# Change backslashes to forward slashes in pyexecdir to avoid
++#	# quoting issues
++#	pyexecdir=`echo $pyexecdir | tr '\\\\' '/'`
++#	;;
++#esac
++#AM_CHECK_PYTHON_HEADERS(, AC_MSG_ERROR([Python headers not found]))
++#if test "x$os_win32" = "xyes"; then
++#  AM_CHECK_PYTHON_LIBS(, AC_MSG_ERROR([Python libs not found. Windows requires Python modules to be explicitly linked to libpython.]))
++#fi
+ 
+ dnl Not enabled by default until 3.6 cycle when we can propose mako as
+ dnl an external dependency

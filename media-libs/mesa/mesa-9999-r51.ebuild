@@ -84,7 +84,7 @@ REQUIRED_USE="
 	${PYTHON_REQUIRED_USE}
 "
 
-LIBDRM_DEPSTRING=">=x11-libs/libdrm-2.4.53"
+LIBDRM_DEPSTRING=">=x11-libs/libdrm-2.4.54"
 # keep correct libdrm and dri2proto dep
 # keep blocks in rdepend for binpkg
 RDEPEND="
@@ -155,6 +155,7 @@ DEPEND="${RDEPEND}
 	)
 	sys-devel/bison
 	sys-devel/flex
+	sys-devel/gettext
 	virtual/pkgconfig
 	>=x11-proto/dri2proto-2.6[${MULTILIB_USEDEP}]
 	dri3? (
@@ -165,7 +166,6 @@ DEPEND="${RDEPEND}
 	>=x11-proto/xextproto-7.0.99.1[${MULTILIB_USEDEP}]
 	x11-proto/xf86driproto[${MULTILIB_USEDEP}]
 	x11-proto/xf86vidmodeproto[${MULTILIB_USEDEP}]
-	sys-devel/gettext
 "
 
 S="${WORKDIR}/${MY_P}"
@@ -303,6 +303,10 @@ multilib_src_configure() {
 	# build fails with BSD indent, bug #428112
 	use userland_GNU || export INDENT=cat
 
+	if ! multilib_is_native_abi; then
+ 		myconf+="LLVM_CONFIG=${EPREFIX}/usr/bin/llvm-config.${ABI}"
+ 	fi
+ 
 	econf \
 		--enable-dri \
 		--enable-glx \

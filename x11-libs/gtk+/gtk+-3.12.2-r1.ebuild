@@ -18,10 +18,11 @@ SLOT="3"
 #  * http://mail.gnome.org/archives/gtk-devel-list/2010-November/msg00099.html
 # I tried this and got it all compiling, but the end result is unusable as it
 # horribly mixes up the backends -- grobian
-IUSE="aqua colord cups debug examples +introspection packagekit test vim-syntax wayland X xinerama"
+IUSE="aqua cloudprint colord cups debug examples +introspection test vim-syntax wayland X xinerama"
 REQUIRED_USE="
 	|| ( aqua wayland X )
-	xinerama? ( X )"
+	xinerama? ( X )
+"
 
 KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-fbsd ~x86-freebsd ~x86-interix ~amd64-linux ~arm-linux ~x86-linux ~ppc-macos ~x86-macos ~sparc-solaris ~sparc64-solaris ~x64-solaris ~x86-solaris"
 
@@ -30,7 +31,7 @@ KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86
 # Use gtk+:2 for gtk-update-icon-cache
 COMMON_DEPEND="
 	>=dev-libs/atk-2.7.5[introspection?,${MULTILIB_USEDEP}]
-	>=dev-libs/glib-2.37.5:2[${MULTILIB_USEDEP}]
+	>=dev-libs/glib-2.39.5:2[${MULTILIB_USEDEP}]
 	media-libs/fontconfig[${MULTILIB_USEDEP}]
 	>=x11-libs/cairo-1.12[aqua?,glib,svg,X?,${MULTILIB_USEDEP}]
 	>=x11-libs/gdk-pixbuf-2.27.1:2[introspection?,X?,${MULTILIB_USEDEP}]
@@ -38,11 +39,14 @@ COMMON_DEPEND="
 	>=x11-libs/pango-1.32.4[introspection?,${MULTILIB_USEDEP}]
 	x11-misc/shared-mime-info
 
-	colord? ( >=x11-misc/colord-0.1.9 )
+	cloudprint? (
+		>=net-libs/rest-0.7
+		>=dev-libs/json-glib-1.0 )
+	colord? ( >=x11-misc/colord-0.1.9:0= )
 	cups? ( >=net-print/cups-1.2 )
-	introspection? ( >=dev-libs/gobject-introspection-1.32[${MULTILIB_USEDEP}] )
+	introspection? ( >=dev-libs/gobject-introspection-1.39[${MULTILIB_USEDEP}] )
 	wayland? (
-		>=dev-libs/wayland-1.2[${MULTILIB_USEDEP}]
+		>=dev-libs/wayland-1.3.90[${MULTILIB_USEDEP}]
 		media-libs/mesa[wayland,${MULTILIB_USEDEP}]
 		>=x11-libs/libxkbcommon-0.2[${MULTILIB_USEDEP}]
 	)
@@ -65,7 +69,8 @@ DEPEND="${COMMON_DEPEND}
 	app-text/docbook-xml-dtd:4.1.2
 	dev-libs/libxslt
 	dev-util/gdbus-codegen
-	>=dev-util/gtk-doc-am-1.11
+	>=dev-util/gtk-doc-am-1.20
+	sys-devel/gettext
 	virtual/pkgconfig
 	X? (
 		x11-proto/xextproto[${MULTILIB_USEDEP}]
@@ -85,7 +90,6 @@ DEPEND="${COMMON_DEPEND}
 RDEPEND="${COMMON_DEPEND}
 	!<gnome-base/gail-1000
 	!<x11-libs/vte-0.31.0:2.90
-	packagekit? ( app-admin/packagekit-base )
 	X? ( !<x11-base/xorg-server-1.11.4 )
 "
 PDEPEND="vim-syntax? ( app-vim/gtk-syntax )"
@@ -131,6 +135,7 @@ multilib_src_configure() {
 
 	if multilib_is_native_abi; then
 		myconf+="
+			$(use_enable cloudprint)
 			$(use_enable colord)
 		"
 	else
@@ -143,7 +148,6 @@ multilib_src_configure() {
 		$(use_enable cups cups auto) \
 		$(usex debug --enable-debug=yes "") \
 		$(use_enable introspection) \
-		$(use_enable packagekit) \
 		$(use_enable wayland wayland-backend) \
 		$(use_enable X x11-backend) \
 		$(use_enable X xcomposite) \
@@ -156,7 +160,7 @@ multilib_src_configure() {
 		--enable-man \
 		--enable-gtk2-dependency \
 		--with-xml-catalog="${EPREFIX}"/etc/xml/catalog \
-		--libdir="${EPREFIX}/usr/$(get_libdir)"
+		--libdir="${EPREFIX}"/usr/$(get_libdir)
 }
 
 multilib_src_test() {
