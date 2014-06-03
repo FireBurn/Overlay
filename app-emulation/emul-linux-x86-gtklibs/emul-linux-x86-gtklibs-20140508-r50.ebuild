@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-emulation/emul-linux-x86-gtklibs/emul-linux-x86-gtklibs-20140406-r1.ebuild,v 1.1 2014/04/18 21:53:45 mgorny Exp $
+# $Header: /var/cvsroot/gentoo-x86/app-emulation/emul-linux-x86-gtklibs/emul-linux-x86-gtklibs-20140508-r1.ebuild,v 1.1 2014/05/14 13:37:33 mgorny Exp $
 
 EAPI=5
 inherit emul-linux-x86
@@ -26,8 +26,9 @@ RDEPEND="~app-emulation/emul-linux-x86-baselibs-${PV}
 		>=x11-libs/pango-1.36.2-r1[abi_x86_32(-)]
 		>=x11-libs/pangox-compat-0.0.2-r1[abi_x86_32(-)]
 		>=media-libs/imlib-1.9.15-r4[abi_x86_32(-)]
+		>=dev-libs/atk-2.10.0-r1[abi_x86_32(-)]
+		>=x11-libs/gtk+-2.24.23-r1:2[abi_x86_32(-)]
 		x11-libs/gtk+:1[abi_x86_32(-)]
-		x11-libs/gtk+:2[abi_x86_32(-)]
 		x11-libs/gtk+:3[abi_x86_32(-)]
 		x11-themes/gtk-engines[abi_x86_32(-)]
 		gnome-base/gconf[abi_x86_32(-)]
@@ -93,7 +94,7 @@ my_gtk_query_immodules() {
 }
 
 src_prepare() {
-	query_tools="${S}/usr/bin/gtk-query-immodules-2.0|${S}/usr/bin/gdk-pixbuf-query-loaders|${S}/usr/bin/pango-querymodules"
+	query_tools="${S}/usr/bin/gtk-query-immodules-2.0|${S}/usr/bin/gdk-pixbuf-query-loaders|${S}/usr/bin/i686-pc-linux-gnu-gdk-pixbuf-query-loaders|${S}/usr/bin/pango-querymodules"
 	ALLOWED="(${S}/etc/env.d|${S}/etc/gtk-2.0|${S}/etc/pango/i686-pc-linux-gnu|${query_tools})"
 	emul-linux-x86_src_prepare
 
@@ -114,10 +115,10 @@ pkg_preinst() {
 }
 
 pkg_postinst() {
-	my_gtk_query_immodules
 	if ! use abi_x86_32; then
 		my_pango_querymodules
 		my_gdk_pixbuf_query_loaders
+		my_gtk_query_immodules
 	fi
 
 	# gdk-pixbuf.loaders should be in their CHOST directories respectively.

@@ -1,6 +1,6 @@
 # Copyright 1999-2014 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/app-emulation/emul-linux-x86-baselibs/emul-linux-x86-baselibs-20140508.ebuild,v 1.2 2014/05/13 18:03:30 mgorny Exp $
+# $Header: /var/cvsroot/gentoo-x86/app-emulation/emul-linux-x86-baselibs/emul-linux-x86-baselibs-20140508-r8.ebuild,v 1.1 2014/05/30 14:37:35 mgorny Exp $
 
 EAPI=5
 inherit emul-linux-x86
@@ -74,12 +74,25 @@ RDEPEND="!<app-emulation/emul-linux-x86-medialibs-10.2
 		>=sys-apps/util-linux-2.24.1-r3[abi_x86_32(-)]
 		>=sys-devel/libtool-2.4.2-r1[abi_x86_32(-)]
 		>=virtual/acl-0-r2[abi_x86_32(-)]
-		>=dev-libs/openssl-1.0.1g-r1[abi_x86_32(-)]
+		>=dev-libs/openssl-1.0.1g-r1:0[abi_x86_32(-)]
+		>=dev-libs/openssl-0.9.8y-r1:0.9.8[abi_x86_32(-)]
+		>=net-libs/gnutls-3.3.1-r1[abi_x86_32(-)]
+		>=net-print/cups-1.7.1-r2[abi_x86_32(-)]
+		>=sys-libs/talloc-2.1.0-r1[abi_x86_32(-)]
+		>=sys-apps/keyutils-1.5.9-r1[abi_x86_32(-)]
+		>=virtual/krb5-0-r1[abi_x86_32(-)]
+		>=sys-libs/db-4.8.30-r1:4.8[abi_x86_32(-)]
+		>=net-nds/openldap-2.4.38-r2[abi_x86_32(-)]
+		>=net-dns/libidn-1.28-r1[abi_x86_32(-)]
+		>=dev-libs/libnl-3.2.24-r1[abi_x86_32(-)]
+		>=media-libs/libart_lgpl-2.3.21-r2[abi_x86_32(-)]
+		>=sys-libs/cracklib-2.9.1-r1[abi_x86_32(-)]
+		>=net-libs/libtirpc-0.2.4-r2[abi_x86_32(-)]
+		>=sys-libs/pam-1.1.8-r2[abi_x86_32(-)]
 		dev-libs/glib:1[abi_x86_32(-)]
 		dev-libs/nspr[abi_x86_32(-)]
 		media-libs/lcms:0[abi_x86_32(-)]
 		media-libs/libmng[abi_x86_32(-)]
-		net-libs/gnutls[abi_x86_32(-)]
 	)
 	>=sys-libs/glibc-2.16" # bug 340613
 
