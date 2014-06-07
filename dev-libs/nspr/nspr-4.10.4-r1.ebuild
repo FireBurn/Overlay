@@ -45,7 +45,7 @@ src_prepare() {
 }
 
 multilib_src_configure() {
-	cd "${S}-${ABI}"/build
+	cd "${BUILD_DIR}"/build
 
 	# We use the standard BUILD_xxx but nspr uses HOST_xxx
 	tc-export_build_env BUILD_CC
@@ -77,14 +77,14 @@ multilib_src_configure() {
 }
 
 multilib_src_compile() {
-	cd "${S}-${ABI}"/build
+	cd "${BUILD_DIR}"/build
 	emake || die "failed to build"
 }
 
 multilib_src_install() {
 	# Their build system is royally confusing, as usual
 	MINOR_VERSION=${MIN_PV} # Used for .so version
-	cd "${S}-${ABI}"/build
+	cd "${BUILD_DIR}"/build
 	emake DESTDIR="${D}" install || die "emake install failed"
 
 	cd "${ED}"/usr/$(get_libdir)
@@ -93,9 +93,9 @@ multilib_src_install() {
 
 	# install nspr-config
 	if multilib_is_native_abi; then
-		dobin "${S}-${ABI}"/build/config/nspr-config || die "failed to install nspr-config"
+		dobin "${BUILD_DIR}"/build/config/nspr-config || die "failed to install nspr-config"
 	else
-		newbin "${S}-${ABI}"/build/config/nspr-config nspr-config.${ABI} || die "failed to install nspr-config.${ABI}"
+		newbin "${BUILD_DIR}"/build/config/nspr-config nspr-config.${ABI} || die "failed to install nspr-config.${ABI}"
 	fi
 
 	# Remove stupid files in /usr/bin

@@ -58,7 +58,7 @@ src_prepare() {
 }
 
 multilib_src_configure() {
-	BUILDDIR="${S}-${ABI}/js/src"
+	BUILDDIR="${BUILD_DIR}/js/src"
 	cd "${BUILDDIR}" || die
 
 	CC="$(tc-getCC)" CXX="$(tc-getCXX)" \
@@ -80,7 +80,7 @@ multilib_src_configure() {
 }
 
 multilib_src_compile() {
-	BUILDDIR="${S}-${ABI}/js/src"
+	BUILDDIR="${BUILD_DIR}/js/src"
 	cd "${BUILDDIR}" || die
 	if tc-is-cross-compiler; then
 		make CFLAGS="" CXXFLAGS="" \
@@ -109,13 +109,13 @@ multilib_src_compile() {
 }
 
 multilib_src_test() {
-	BUILDDIR="${S}-${ABI}/js/src"
+	BUILDDIR="${BUILD_DIR}/js/src"
 	cd "${BUILDDIR}/jsapi-tests" || die
 	emake check
 }
 
 multilib_src_install() {
-	BUILDDIR="${S}-${ABI}/js/src"
+	BUILDDIR="${BUILD_DIR}/js/src"
 	cd "${BUILDDIR}" || die
 	emake DESTDIR="${D}" install
 
