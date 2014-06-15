@@ -44,7 +44,7 @@ COMMON_DEPEND="
 		>=dev-libs/json-glib-1.0 )
 	colord? ( >=x11-misc/colord-0.1.9:0= )
 	cups? ( >=net-print/cups-1.2 )
-	introspection? ( >=dev-libs/gobject-introspection-1.39 )
+	introspection? ( >=dev-libs/gobject-introspection-1.39[${MULTILIB_USEDEP}] )
 	wayland? (
 		>=dev-libs/wayland-1.3.90[${MULTILIB_USEDEP}]
 		media-libs/mesa[wayland,${MULTILIB_USEDEP}]
