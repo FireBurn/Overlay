@@ -1,0 +1,193 @@
+# ChangeLog for x11-libs/gtk+
+# Copyright 1999-2013 Gentoo Foundation; Distributed under the GPL v2
+# $Header: /var/cvsroot/gentoo-x86/x11-libs/gtk+/ChangeLog,v 1.672 2013/07/24 21:32:44 eva Exp $
+
+  24 Jul 2013; Gilles Dartiguelongue <eva@gentoo.org> gtk+-3.8.2.ebuild:
+  Move configure options to econf call direclty.
+
+  23 Jul 2013; Fabian Groffen <grobian@gentoo.org>
+  +files/gtk+-3.6.3-darwin-gtksettings.patch, gtk+-3.6.3-r2.ebuild:
+  Fix installation on Darwin, bug #422541
+
+  23 Jul 2013; Fabian Groffen <grobian@gentoo.org>
+  +files/gtk+-2.24.20-darwin-quartz-pasteboard.patch, gtk+-2.24.20.ebuild:
+  Fix install on Darwin
+
+*gtk+-2.24.20 (07 Jul 2013)
+
+  07 Jul 2013; Pacho Ramos <pacho@gentoo.org> +gtk+-2.24.20.ebuild:
+  Version bump (this has various changes from upstream that affect our multilib
+  patch and behavior of immodules stuff)
+
+  23 Jun 2013; Pacho Ramos <pacho@gentoo.org> -gtk+-2.24.18.ebuild,
+  gtk+-2.24.19.ebuild:
+  Fix typo, drop old
+
+  20 Jun 2013; Alexandre Rostovtsev <tetromino@gentoo.org> gtk+-2.24.18.ebuild,
+  gtk+-2.24.19.ebuild:
+  Remove unnecessary gobject-introspection-common dependency (bug #473862,
+  thanks to grey dot).
+
+*gtk+-2.24.19 (18 Jun 2013)
+
+  18 Jun 2013; Pacho Ramos <pacho@gentoo.org> +gtk+-2.24.19.ebuild,
+  -gtk+-3.8.1.ebuild:
+  Version bump, drop old.
+
+  05 Jun 2013; Mike Frysinger <vapier@gentoo.org> metadata.xml:
+  Add upstream CPE tag (security info) from ChromiumOS.
+
+*gtk+-3.8.2 (13 May 2013)
+
+  13 May 2013; Pacho Ramos <pacho@gentoo.org> +gtk+-3.8.2.ebuild,
+  -files/gtk+-3.2.1-failing-tests.patch, -files/gtk+-3.2.1-selector.errors,
+  -files/gtk+-3.2.4-fallback-theme.patch, -gtk+-3.2.4-r1.ebuild,
+  -gtk+-3.6.2.ebuild, -gtk+-3.6.3-r1.ebuild, -gtk+-3.8.0.ebuild:
+  Version bump, drop old
+
+*gtk+-2.24.18 (13 May 2013)
+
+  13 May 2013; Pacho Ramos <pacho@gentoo.org> +gtk+-2.24.18.ebuild:
+  Version bump
+
+  01 May 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-2.24.17.ebuild:
+  Stable for sh, wrt bug #466510
+
+  01 May 2013; Alexandre Rostovtsev <tetromino@gentoo.org>
+  gtk+-1.2.10-r12.ebuild, -gtk+-2.24.12.ebuild,
+  +files/gtk+-1.2.10-automake-1.13.patch, -files/gtk+-2.24.10-gold.patch:
+  Fix gtk+-1.2.10-r12's build failure with automake-1.13 (bug #467520, thanks
+  to Ted Tanberry) and remove obsolete version.
+
+  23 Apr 2013; Jeroen Roovers <jer@gentoo.org> gtk+-2.24.17.ebuild:
+  Stable for HPPA (bug #466510).
+
+  23 Apr 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-2.24.17.ebuild:
+  Stable for alpha, wrt bug #466510
+
+  23 Apr 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-2.24.17.ebuild:
+  Stable for arm, wrt bug #466510
+
+  22 Apr 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-2.24.17.ebuild:
+  Stable for sparc, wrt bug #466510
+
+  22 Apr 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-2.24.17.ebuild:
+  Stable for ppc64, wrt bug #466510
+
+  22 Apr 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-2.24.17.ebuild:
+  Stable for ppc, wrt bug #466510
+
+  22 Apr 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-2.24.17.ebuild:
+  Stable for ia64, wrt bug #466510
+
+  21 Apr 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-2.24.17.ebuild:
+  Stable for x86, wrt bug #466510
+
+  21 Apr 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-2.24.17.ebuild:
+  Stable for amd64, wrt bug #466510
+
+*gtk+-3.8.1 (20 Apr 2013)
+
+  20 Apr 2013; Pacho Ramos <pacho@gentoo.org> +gtk+-3.8.1.ebuild:
+  Version bump
+
+  10 Apr 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-2.24.16.ebuild,
+  gtk+-3.4.4.ebuild:
+  Stable for s390, wrt bug #458992
+
+  09 Apr 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-2.24.16.ebuild:
+  Stable for sh, wrt bug #458984
+
+  02 Apr 2013; Pacho Ramos <pacho@gentoo.org> gtk+-2.24.17.ebuild:
+  Add missing x11-themes/hicolor-icon-theme DEPEND for tests (#461768 by Roman
+  Zilka and Patrick Lauer)
+
+  01 Apr 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-2.24.16.ebuild:
+  Stable for sparc, wrt bug #458984
+
+  01 Apr 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-2.24.16.ebuild:
+  Stable for alpha, wrt bug #458984
+
+  29 Mar 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-2.24.16.ebuild:
+  Stable for ia64, wrt bug #458984
+
+*gtk+-3.8.0 (28 Mar 2013)
+
+  28 Mar 2013; Pacho Ramos <pacho@gentoo.org> +gtk+-3.8.0.ebuild:
+  Version bump for Gnome 3.8
+
+  28 Mar 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-2.24.16.ebuild:
+  Stable for arm, wrt bug #458984
+
+  27 Mar 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-2.24.16.ebuild:
+  Stable for ppc64, wrt bug #458984
+
+  26 Mar 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-2.24.16.ebuild:
+  Stable for ppc, wrt bug #458984
+
+  26 Mar 2013; Jeroen Roovers <jer@gentoo.org> gtk+-2.24.16.ebuild:
+  Stable for HPPA (bug #458984).
+
+  25 Mar 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-2.24.16.ebuild:
+  Stable for x86, wrt bug #458984
+
+  25 Mar 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-2.24.16.ebuild:
+  Stable for amd64, wrt bug #458984
+
+*gtk+-2.24.17 (19 Mar 2013)
+
+  19 Mar 2013; Alexandre Rostovtsev <tetromino@gentoo.org>
+  -gtk+-2.24.15.ebuild, +gtk+-2.24.17.ebuild:
+  Version bump with file chooser fixes (bug #462174, thanks to Rafał
+  Mużyło). Drop old.
+
+  22 Feb 2013; Zac Medico <zmedico@gentoo.org> gtk+-2.24.15.ebuild,
+  gtk+-2.24.16.ebuild, gtk+-3.6.3-r2.ebuild:
+  Add ~arm-linux keywords.
+
+*gtk+-2.24.16 (18 Feb 2013)
+
+  18 Feb 2013; Alexandre Rostovtsev <tetromino@gentoo.org>
+  -files/gtk+-2.24.13-gold.patch, -gtk+-2.24.14.ebuild, +gtk+-2.24.16.ebuild:
+  Version bump with minor bugfixes. Drop old.
+
+*gtk+-2.24.15 (10 Feb 2013)
+
+  10 Feb 2013; Alexandre Rostovtsev <tetromino@gentoo.org>
+  -gtk+-2.24.13-r1.ebuild, -files/gtk+-2.24.13-gtk3-bookmarks.patch,
+  +gtk+-2.24.15.ebuild:
+  Version bump with minor bugfixes. Drop old.
+
+  04 Feb 2013; Benda Xu <heroxbd@gentoo.org> gtk+-3.6.3-r2.ebuild:
+  Specify xml catalog explicitly for Prefix. bug 455292. Credits to Linpeng Tang
+  and Rafał Mużyło.
+
+  28 Jan 2013; Alexis Ballier <aballier@gentoo.org> gtk+-3.6.3-r2.ebuild:
+  keyword ~amd64-fbsd
+
+*gtk+-3.6.3-r2 (07 Jan 2013)
+
+  07 Jan 2013; Alexandre Rostovtsev <tetromino@gentoo.org> -gtk+-3.6.3.ebuild,
+  gtk+-3.6.3-r1.ebuild, +gtk+-3.6.3-r2.ebuild,
+  +files/gtk+-3.6.3-stylecontext-font-crash.patch:
+  Add upstream fix for print and other dialog window crash. Propagate ~sparc
+  keyword to 3.6.3-rx ebuilds.
+
+  06 Jan 2013; Agostino Sarubbo <ago@gentoo.org> gtk+-3.6.2.ebuild:
+  Add ~sparc, wrt bug #449220
+
+*gtk+-3.6.3-r1 (05 Jan 2013)
+
+  05 Jan 2013; Alexandre Rostovtsev <tetromino@gentoo.org>
+  +gtk+-3.6.3-r1.ebuild, +files/gtk+-3.6.3-revert-recompute-font.patch:
+  Fix crash when opening printing dilog (bug #450370, thanks to poncho).
+
+*gtk+-3.6.3 (04 Jan 2013)
+
+  04 Jan 2013; Alexandre Rostovtsev <tetromino@gentoo.org> +gtk+-3.6.3.ebuild:
+  Version bump with various bugfixes.
+
+  01 Jan 2013; Andreas K. Huettel <dilfridge@gentoo.org> +ChangeLog-2012:
+  Split ChangeLog.
+
+  For previous entries, please see ChangeLog-2012.
