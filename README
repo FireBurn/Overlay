@@ -1,8 +1,4 @@
-Simple overlay for 32bit mesa drivers including llvmpipe
-
-The overlay compiles 32bit libraries for 64bit systems - it doesn't install includes and only installs binaries when they're really needed
-
-It's recommended that you keep you're 32bit and 64bit libaries in sync ie using the 9999 versions for both
+This Overlay has been retired - I'm only keeping it around for a few bug fixes on my machines
 
 Please report all bugs via https://github.com/FireBurn/Overlay/issues
 
