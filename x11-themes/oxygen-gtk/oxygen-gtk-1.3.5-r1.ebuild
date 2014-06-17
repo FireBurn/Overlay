@@ -24,7 +24,7 @@ RDEPEND="
 	dev-libs/glib:2[${MULTILIB_USEDEP}]
 	x11-libs/cairo[${MULTILIB_USEDEP}]
 	x11-libs/gdk-pixbuf[${MULTILIB_USEDEP}]
-	>=x11-libs/gtk+-3.10:3[${MULTILIB_USEDEP}]
+	>=x11-libs/gtk+-3.10:3
 	x11-libs/libX11[${MULTILIB_USEDEP}]
 	x11-libs/pango[${MULTILIB_USEDEP}]
 "
