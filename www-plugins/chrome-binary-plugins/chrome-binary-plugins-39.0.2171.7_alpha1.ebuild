@@ -79,7 +79,7 @@ src_install() {
 		doins libwidevinecdmadapter.so
 		doins libwidevinecdm.so
 
-		version="1.4.6.667"
+		version="1.4.7.703"
 		flapper="${ROOT}usr/$(get_libdir)/chromium-browser/pepper/libwidevinecdmadapter.so"
 		echo -n "CHROMIUM_FLAGS=\"\${CHROMIUM_FLAGS} " > widevine
 		echo -n "--register-pepper-plugins=$flapper" >> widevine
