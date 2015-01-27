@@ -1,6 +1,6 @@
-# Copyright 1999-2014 Gentoo Foundation
+# Copyright 1999-2015 Gentoo Foundation
 # Distributed under the terms of the GNU General Public License v2
-# $Header: /var/cvsroot/gentoo-x86/www-plugins/chrome-binary-plugins/chrome-binary-plugins-40.0.2188.2_alpha1.ebuild,v 1.1 2014/10/15 00:36:10 floppym Exp $
+# $Header: /var/cvsroot/gentoo-x86/www-plugins/chrome-binary-plugins/chrome-binary-plugins-41.0.2272.17_beta1.ebuild,v 1.1 2015/01/27 21:10:02 floppym Exp $
 
 EAPI=5
 
@@ -46,7 +46,7 @@ KEYWORDS="~amd64 ~x86"
 fi
 
 LICENSE="google-chrome"
-IUSE="+drm +flash"
+IUSE="+flash +widevine"
 RESTRICT="bindist mirror strip"
 
 for x in 0 beta stable unstable; do
@@ -74,12 +74,12 @@ fi
 src_install() {
 	local version flapper
 
-	if use drm; then
+	if use widevine; then
 		insinto /usr/$(get_libdir)/chromium-browser/pepper/
 		doins libwidevinecdmadapter.so
 		doins libwidevinecdm.so
 
-		version="1.4.6.713"
+		version="1.4.7.771"
 		flapper="${ROOT}usr/$(get_libdir)/chromium-browser/pepper/libwidevinecdmadapter.so"
 		echo -n "CHROMIUM_FLAGS=\"\${CHROMIUM_FLAGS} " > widevine
 		echo -n "--register-pepper-plugins=$flapper" >> widevine
