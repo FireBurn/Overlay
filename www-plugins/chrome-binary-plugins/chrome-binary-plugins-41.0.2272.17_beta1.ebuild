@@ -88,7 +88,7 @@ src_install() {
 		insinto /etc/chromium/
 		doins widevine
 	fi
-	
+
 	if use flash; then
 		insinto /usr/$(get_libdir)/chromium-browser/
 		doins -r PepperFlash
