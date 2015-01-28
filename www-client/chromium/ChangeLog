@@ -1,0 +1,76 @@
+# ChangeLog for www-client/chromium
+# Copyright 1999-2015 Gentoo Foundation; Distributed under the GPL v2
+# $Header: /var/cvsroot/gentoo-x86/www-client/chromium/ChangeLog,v 1.1188 2015/01/23 21:07:47 floppym Exp $
+
+  23 Jan 2015; Mike Gilbert <floppym@gentoo.org> -chromium-39.0.2171.65.ebuild,
+  -chromium-39.0.2171.99.ebuild, -chromium-40.0.2214.85-r1.ebuild,
+  -chromium-40.0.2214.85.ebuild:
+  Remove old.
+
+  23 Jan 2015; Agostino Sarubbo <ago@gentoo.org> chromium-40.0.2214.91.ebuild:
+  Stable for x86, wrt bug #537366
+
+  23 Jan 2015; Agostino Sarubbo <ago@gentoo.org> chromium-40.0.2214.91.ebuild:
+  Stable for amd64, wrt bug #537366
+
+*chromium-40.0.2214.91 (23 Jan 2015)
+
+  23 Jan 2015; Mike Gilbert <floppym@gentoo.org> +chromium-40.0.2214.91.ebuild,
+  -chromium-40.0.2214.69.ebuild:
+  Stable channel bump.
+
+*chromium-41.0.2272.12-r1 (22 Jan 2015)
+*chromium-40.0.2214.85-r1 (22 Jan 2015)
+
+  22 Jan 2015; Pawel Hajdan jr <phajdan.jr@gentoo.org>
+  +chromium-40.0.2214.85-r1.ebuild, +chromium-41.0.2272.12-r1.ebuild,
+  +files/chromium-cups-r0.patch:
+  Fix crash with USE="-cups", bug #530682 by Jakub Kadlcik.
+
+*chromium-41.0.2272.12 (21 Jan 2015)
+
+  21 Jan 2015; Pawel Hajdan jr <phajdan.jr@gentoo.org>
+  -chromium-41.0.2267.0.ebuild, +chromium-41.0.2272.12.ebuild:
+  Dev channel bump. Remove old.
+
+  18 Jan 2015; Pawel Hajdan jr <phajdan.jr@gentoo.org>
+  chromium-41.0.2272.3.ebuild, metadata.xml:
+  Add optional hidpi support, bug #531950 by Bjoern Olausson.
+
+  18 Jan 2015; Pawel Hajdan jr <phajdan.jr@gentoo.org>
+  chromium-40.0.2214.85.ebuild, chromium-41.0.2272.3.ebuild:
+  Require at least gcc-4.8, bug #535730 by Anton Kochkov.
+
+*chromium-40.0.2214.85 (16 Jan 2015)
+
+  16 Jan 2015; Mike Gilbert <floppym@gentoo.org> +chromium-40.0.2214.85.ebuild,
+  -chromium-40.0.2214.45.ebuild:
+  Beta channel bump.
+
+*chromium-39.0.2171.99 (15 Jan 2015)
+
+  15 Jan 2015; Mike Gilbert <floppym@gentoo.org> +chromium-39.0.2171.99.ebuild:
+  Stable channel bump.
+
+*chromium-41.0.2272.3 (14 Jan 2015)
+
+  14 Jan 2015; Pawel Hajdan jr <phajdan.jr@gentoo.org>
+  -chromium-41.0.2251.0.ebuild, +chromium-41.0.2272.3.ebuild:
+  Dev channel bump. Remove old.
+
+*chromium-40.0.2214.69 (09 Jan 2015)
+
+  09 Jan 2015; Mike Gilbert <floppym@gentoo.org> +chromium-40.0.2214.69.ebuild,
+  -chromium-40.0.2214.28.ebuild:
+  Beta channel bump.
+
+*chromium-41.0.2267.0 (07 Jan 2015)
+
+  07 Jan 2015; Pawel Hajdan jr <phajdan.jr@gentoo.org>
+  -chromium-41.0.2243.0.ebuild, +chromium-41.0.2267.0.ebuild:
+  Dev channel bump. Remove old.
+
+  01 Jan 2015; Andreas K. Huettel <dilfridge@gentoo.org> +ChangeLog-2014,
+  ChangeLog: Split ChangeLog
+
+  For previous entries, please see ChangeLog-2014.
