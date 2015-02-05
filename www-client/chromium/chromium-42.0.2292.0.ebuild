@@ -188,6 +188,7 @@ src_prepare() {
 	epatch "${FILESDIR}/${PN}-system-jinja-r7.patch"
 	epatch "${FILESDIR}/${PN}-libsecret-r0.patch"
 	epatch "${FILESDIR}/${PN}-widevine.patch"
+	epatch "${FILESDIR}/${PN}-vaapi.patch"
 
 	mkdir -p third_party/widevine/cdm/linux/x64 || die
 	cp -a third_party/widevine/cdm/widevine*h third_party/widevine/cdm/linux/x64 || die
@@ -280,6 +281,7 @@ src_prepare() {
 		'third_party/trace-viewer/third_party/tvcm/third_party/beautifulsoup/polymer_soup.py' \
 		'third_party/undoview' \
 		'third_party/usrsctp' \
+		'third_party/libva' \
 		'third_party/webdriver' \
 		'third_party/webrtc' \
 		'third_party/widevine' \
