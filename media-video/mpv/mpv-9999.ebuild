@@ -21,8 +21,8 @@ LICENSE="GPL-2"
 SLOT="0"
 [[ ${PV} == *9999* ]] || \
 KEYWORDS="~alpha ~amd64 ~arm ~ppc ~ppc64 ~sparc ~x86 ~amd64-linux"
-IUSE="+alsa bluray bs2b cdio -doc-pdf dvb +dvd dvdnav +enca encode +iconv jack -joystick
-jpeg ladspa lcms +libass libcaca libguess libmpv lirc lua luajit +mpg123 -openal +opengl
+IUSE="+alsa bluray bs2b cdio -doc-pdf dvb +dvd dvdnav +enca encode +iconv jack 
+jpeg ladspa lcms +libass libcaca libguess libmpv lua luajit -openal +opengl
 oss pulseaudio pvr samba sdl selinux +shm v4l vaapi vdpau
 vf-dlopen wayland +X xinerama +xscreensaver +xv"
 
@@ -83,12 +83,10 @@ RDEPEND+="
 	)
 	libcaca? ( >=media-libs/libcaca-0.99_beta18 )
 	libguess? ( >=app-i18n/libguess-1.0 )
-	lirc? ( app-misc/lirc )
 	lua? (
 		!luajit? ( >=dev-lang/lua-5.1 )
 		luajit? ( dev-lang/luajit:2 )
 	)
-	mpg123? ( >=media-sound/mpg123-1.14.0 )
 	openal? ( >=media-libs/openal-1.13 )
 	pulseaudio? ( media-sound/pulseaudio )
 	samba? ( net-fs/samba )
@@ -155,10 +153,8 @@ src_configure() {
 		--disable-rsound \
 		--disable-vapoursynth \
 		$(use_enable encode encoding) \
-		$(use_enable joystick) \
 		$(use_enable bluray libbluray) \
 		$(use_enable samba libsmbclient) \
-		$(use_enable lirc) \
 		$(use_enable lua) \
 		$(usex luajit '--lua=luajit' '') \
 		$(use_enable doc-pdf pdf-build) \
@@ -176,7 +172,6 @@ src_configure() {
 		$(use_enable v4l libv4l2) \
 		$(use_enable v4l tv) \
 		$(use_enable v4l tv-v4l2) \
-		$(use_enable mpg123) \
 		$(use_enable jpeg) \
 		$(use_enable libcaca caca) \
 		$(use_enable alsa) \
