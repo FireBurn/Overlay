@@ -56,21 +56,11 @@ src_prepare() {
 }
 
 multilib_src_configure() {
-	# We're not using the complete buildsystem if we only want to build
-	# glxinfo and glxgears.
-	if use egl || use gles1 || use gles2; then
-		default_src_configure
-	fi
+	default_src_configure
 }
 
 multilib_src_compile() {
-	if ! use egl && ! use gles1 && ! use gles2; then
-		tc-export CC
-		emake LDLIBS='-lX11 -lGL' src/xdemos/glxinfo
-		emake LDLIBS='-lX11 -lGL -lm' src/xdemos/glxgears
-	else
-		emake -C src/xdemos glxgears glxinfo
-	fi
+	emake -C src/xdemos glxgears glxinfo
 
 	if use egl; then
 		emake LDLIBS="-lEGL" -C src/egl/opengl/ eglinfo
