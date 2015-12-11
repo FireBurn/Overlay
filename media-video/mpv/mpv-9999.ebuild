@@ -23,7 +23,7 @@ SLOT="0"
 KEYWORDS="~alpha ~amd64 ~arm ~ppc ~ppc64 ~sparc ~x86 ~amd64-linux"
 IUSE="+alsa bluray cdio -doc-pdf dvb +dvd dvdnav +enca encode +iconv jack 
 jpeg lcms +libass libcaca libguess libmpv lua luajit -openal +opengl
-oss pulseaudio pvr samba sdl selinux +shm v4l vaapi vdpau
+oss pulseaudio samba sdl selinux +shm v4l vaapi vdpau
 vf-dlopen wayland +X xinerama +xscreensaver +xv"
 
 REQUIRED_USE="
@@ -33,7 +33,6 @@ REQUIRED_USE="
 	libguess? ( iconv )
 	luajit? ( lua )
 	opengl? ( || ( wayland X ) )
-	pvr? ( v4l )
 	vaapi? ( X )
 	vdpau? ( X )
 	wayland? ( opengl )
@@ -166,7 +165,6 @@ src_configure() {
 		$(use_enable libguess) \
 		$(use_enable libmpv libmpv-shared) \
 		$(use_enable dvb) \
-		$(use_enable pvr) \
 		$(use_enable v4l libv4l2) \
 		$(use_enable v4l tv) \
 		$(use_enable v4l tv-v4l2) \
