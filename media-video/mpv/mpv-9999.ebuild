@@ -107,7 +107,7 @@ DEPEND="${RDEPEND}
 		xscreensaver? ( x11-proto/scrnsaverproto )
 	)
 "
-DOCS=( Copyright README.md etc/example.conf etc/input.conf )
+DOCS=( Copyright README.md etc/input.conf )
 
 pkg_setup() {
 	if use !libass; then
