@@ -1,0 +1,13 @@
+diff --git a/src/gallium/drivers/radeonsi/si_pipe.c b/src/gallium/drivers/radeonsi/si_pipe.c
+index 94bd666..b789d4c 100644
+--- a/src/gallium/drivers/radeonsi/si_pipe.c
++++ b/src/gallium/drivers/radeonsi/si_pipe.c
+@@ -338,7 +338,7 @@ static int si_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
+ 		return HAVE_LLVM >= 0x0309 ? 4 : 0;
+ 
+ 	case PIPE_CAP_GLSL_FEATURE_LEVEL:
+-		return HAVE_LLVM >= 0x0309 ? 420 :
++		return HAVE_LLVM >= 0x0309 ? 430 :
+ 		       HAVE_LLVM >= 0x0307 ? 410 : 330;
+ 
+ 	case PIPE_CAP_MAX_TEXTURE_BUFFER_SIZE:

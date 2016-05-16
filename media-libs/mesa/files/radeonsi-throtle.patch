@@ -1,0 +1,13 @@
+diff --git a/src/gallium/targets/pipe-loader/pipe_radeonsi.c b/src/gallium/targets/pipe-loader/pipe_radeonsi.c
+index 31077af..337f289 100644
+--- a/src/gallium/targets/pipe-loader/pipe_radeonsi.c
++++ b/src/gallium/targets/pipe-loader/pipe_radeonsi.c
+@@ -21,7 +21,7 @@ create_screen(int fd)
+ 
+ static const struct drm_conf_ret throttle_ret = {
+    .type = DRM_CONF_INT,
+-   .val.val_int = 2,
++   .val.val_int = 0,
+ };
+ 
+ static const struct drm_conf_ret share_fd_ret = {
