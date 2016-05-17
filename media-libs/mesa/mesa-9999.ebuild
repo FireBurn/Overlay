@@ -178,6 +178,8 @@ x86? (
 src_prepare() {
 	epatch "${FILESDIR}"/radeonsi-4.3.patch
 	epatch "${FILESDIR}"/radeonsi-throtle.patch
+	epatch "${FILESDIR}"/Mesa-dev-glsl-handle-same-struct-redeclaration.patch
+	epatch "${FILESDIR}"/Mesa-dev-glsl-linker-attempt-to-match-anonymous-structures-at-link.patch
 	[[ ${PV} == 9999 ]] && eautoreconf
 }
 

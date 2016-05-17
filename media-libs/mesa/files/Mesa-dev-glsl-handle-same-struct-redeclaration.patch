@@ -1,0 +1,59 @@
+diff --git a/src/compiler/glsl/ast_to_hir.cpp b/src/compiler/glsl/ast_to_hir.cpp
+index 338edc8..1724019 100644
+--- a/src/compiler/glsl/ast_to_hir.cpp
++++ b/src/compiler/glsl/ast_to_hir.cpp
+@@ -6918,7 +6918,11 @@ ast_struct_specifier::hir(exec_list *instructions,
+       glsl_type::get_record_instance(fields, decl_count, this->name);
+ 
+    if (!state->symbols->add_type(name, t)) {
+-      _mesa_glsl_error(& loc, state, "struct `%s' previously defined", name);
++      const glsl_type *match = state->symbols->get_type(name);
++      if (!match->record_compare(t, false))
++         _mesa_glsl_error(& loc, state, "struct `%s' previously defined", name);
++      else
++         _mesa_glsl_warning(& loc, state, "struct `%s' previously defined", name);
+    } else {
+       const glsl_type **s = reralloc(state, state->user_structures,
+                                      const glsl_type *,
+diff --git a/src/compiler/glsl_types.cpp b/src/compiler/glsl_types.cpp
+index c058283..11f1e85 100644
+--- a/src/compiler/glsl_types.cpp
++++ b/src/compiler/glsl_types.cpp
+@@ -856,7 +856,7 @@ glsl_type::get_array_instance(const glsl_type *base, unsigned array_size)
+ 
+ 
+ bool
+-glsl_type::record_compare(const glsl_type *b) const
++glsl_type::record_compare(const glsl_type *b, bool match_locations) const
+ {
+    if (this->length != b->length)
+       return false;
+@@ -887,7 +887,7 @@ glsl_type::record_compare(const glsl_type *b) const
+       if (this->fields.structure[i].matrix_layout
+          != b->fields.structure[i].matrix_layout)
+         return false;
+-      if (this->fields.structure[i].location
++      if (match_locations && this->fields.structure[i].location
+           != b->fields.structure[i].location)
+          return false;
+       if (this->fields.structure[i].offset
+diff --git a/src/compiler/glsl_types.h b/src/compiler/glsl_types.h
+index a47b0ff..eb133dd 100644
+--- a/src/compiler/glsl_types.h
++++ b/src/compiler/glsl_types.h
+@@ -740,8 +740,14 @@ struct glsl_type {
+     * Compare a record type against another record type.
+     *
+     * This is useful for matching record types declared across shader stages.
++    * The option to not match locations is to deal with places where the
++    * same struct is defined in a block which has a location set on it.
+     */
+-   bool record_compare(const glsl_type *b) const;
++   bool record_compare(const glsl_type *b, bool match_locations) const;
++
++   bool record_compare(const glsl_type *b) const {
++      return record_compare(b, true);
++   }
+ 
+ private:
+ 
