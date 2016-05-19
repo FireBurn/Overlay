@@ -19,37 +19,42 @@ DEPEND="dev-util/cmake
 	>=dev-lang/python-3"
 
 src_unpack() {
+	git-r3_fetch ${EGIT_REPO_URI}
 	git-r3_fetch "https://github.com/KhronosGroup/glslang.git"
 	git-r3_fetch "https://github.com/KhronosGroup/SPIRV-Tools.git"
-	git-r3_fetch ${EGIT_REPO_URI}
+	git-r3_fetch "https://github.com/google/googletest.git"
 
+	git-r3_checkout ${EGIT_REPO_URI}
 	git-r3_checkout https://github.com/KhronosGroup/glslang.git \
-		"${S}"/glslang
+		"${S}"/external/glslang
 	git-r3_checkout https://github.com/KhronosGroup/SPIRV-Tools.git \
-		"${S}"/spirv-tools
-	git-r3_checkout ${EGIT_REPO_URI} "${S}"/sdk
+		"${S}"/external/spirv-tools
+	git-r3_checkout https://github.com/google/googletest.git \
+		"${S}"/external/googletest
+	git-r3_checkout https://github.com/google/googletest.git \
+		"${S}"/external/spirv-tools/external/googletest
 }
 
 src_prepare() {
-	sed -i -e 's#./libVk#libVk#g' "${S}"/sdk/layers/linux/*.json
+	sed -i -e 's#./libVk#libVk#g' "${S}"/layers/linux/*.json
 	eapply_user
 }
 
 src_compile() {
 	einfo "Building glslang"
-	cd "${S}"/glslang
+	cd "${S}"/external/glslang
 	cmake -H. -Bbuild
-	cd "${S}"/glslang/build	
+	cd "${S}"/external/glslang/build	
 	emake || die "cannot build glslang"
 	make install || die "cannot install glslang"
 
 	einfo "Building SPIRV-Tools"
-	cd "${S}"/spirv-tools
+	cd "${S}"/external/spirv-tools
 	cmake -H. -Bbuild
-	cd "${S}"/spirv-tools/build
+	cd "${S}"/external/spirv-tools/build
 	emake || die "cannot build SPIRV-Tools"
 	
-	cd "${S}"/sdk
+	cd "${S}"
 	cmake	\
 		-DBUILD_WSI_XCB_SUPPORT=ON	\
 		-DBUILD_WSI_XLIB_SUPPORT=ON	\
@@ -61,39 +66,37 @@ src_compile() {
 		-DBUILD_DEMOS=ON		\
 		-DBUILD_TESTS=ON		\
 		-H. -Bbuild
-	cd "${S}"/sdk/build
+	cd "${S}"/build
 	emake || die "cannot build Vulkan Loader"
 }
 
 src_install() {
 	mkdir -p "${D}"/etc/vulkan/{icd.d,implicit_layer.d,explicit_layer.d}
 	mkdir -p "${D}"/usr/share/vulkan/{icd.d,implicit_layer.d,explicit_layer.d}
-	mkdir -p "${D}"/usr/lib64/vulkan/layers
+	mkdir -p "${D}"/usr/$(get_libdir)/vulkan/layers
 	mkdir -p "${D}"/usr/bin
 	mkdir -p "${D}"/usr/include
 	mkdir -p "${D}"/etc/env.d
 
 	#rename the tri and cube examples
-	mv "${S}"/sdk/build/demos/cube "${S}"/sdk/build/demos/vulkancube
-	mv "${S}"/sdk/build/demos/tri "${S}"/sdk/build/demos/vulkantri
-	dobin "${S}"/sdk/build/demos/vulkan{info,cube,tri}
+	mv "${S}"/build/demos/cube "${S}"/build/demos/vulkancube
+	mv "${S}"/build/demos/tri "${S}"/build/demos/vulkantri
+	dobin "${S}"/build/demos/vulkan{info,cube,tri}
 	#dobin "${S}"/spirv-tools/build/spirv-*
 
 	insinto /usr/include
-	cp -R "${S}"/sdk/include/vulkan "${D}"/usr/include
+	cp -R "${S}"/include/vulkan "${D}"/usr/include
 
-	dolib.so "${S}"/sdk/build/loader/lib*.so*
+	dolib.so "${S}"/build/loader/lib*.so*
 
-	exeinto /usr/$(get_libdir)/vulkan
-	doexe "${S}"/sdk/build/layers/liblayer*.so*
 	exeinto /usr/$(get_libdir)/vulkan/layers
-	doexe "${S}"/sdk/build/layers/libVk*.so*
+	doexe "$S"/build/layers/lib*.so*
 
 	insinto /usr/share/vulkan/explicit_layer.d
-	doins "${S}"/sdk/layers/linux/*.json
+	doins "${S}"/layers/linux/*.json
 
 	docinto /
-	dodoc "${S}"/sdk/LICENSE.txt
+	dodoc "${S}"/LICENSE.txt
 
 	# create an entry for the newly created vulkan libs
 	cat << EOF > "${D}"/etc/env.d/89vulkan
