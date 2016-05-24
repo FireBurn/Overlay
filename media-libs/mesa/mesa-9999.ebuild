@@ -177,8 +177,7 @@ x86? (
 
 src_prepare() {
 	epatch "${FILESDIR}"/radeonsi-4.3.patch
-	#epatch "${FILESDIR}"/radeonsi-throtle.patch
-	epatch "${FILESDIR}"/Mesa-dev-glsl-handle-same-struct-redeclaration.patch
+	epatch "${FILESDIR}"/radeonsi-throtle.patch
 	[[ ${PV} == 9999 ]] && eautoreconf
 }
 
