@@ -11,7 +11,9 @@ if [[ ${PV} = 9999 ]]; then
 	EXPERIMENTAL="true"
 fi
 
-inherit autotools multilib-minimal pax-utils ${GIT_ECLASS}
+PYTHON_COMPAT=( python2_7 )
+
+inherit autotools multilib-minimal python-any-r1 pax-utils ${GIT_ECLASS}
 
 OPENGL_DIR="xorg-x11"
 
@@ -35,15 +37,15 @@ RESTRICT="!bindist? ( bindist )"
 
 INTEL_CARDS="i915 i965 ilo intel"
 RADEON_CARDS="r100 r200 r300 r600 radeon radeonsi"
-VIDEO_CARDS="${INTEL_CARDS} ${RADEON_CARDS} freedreno nouveau vmware"
+VIDEO_CARDS="${INTEL_CARDS} ${RADEON_CARDS} freedreno nouveau vc4 vmware"
 for card in ${VIDEO_CARDS}; do
 	IUSE_VIDEO_CARDS+=" video_cards_${card}"
 done
 
 IUSE="${IUSE_VIDEO_CARDS}
 	bindist +classic d3d9 debug +dri3 +egl +gallium +gbm gles1 gles2 +llvm
-	+nptl opencl osmesa pax_kernel openmax pic selinux +udev vaapi vdpau vulkan
-	wayland xvmc xa kernel_FreeBSD"
+	+nptl opencl osmesa pax_kernel openmax pic selinux +udev vaapi valgrind
+	vdpau vulkan wayland xvmc xa kernel_FreeBSD"
 
 REQUIRED_USE="
 	d3d9?   ( dri3 gallium )
@@ -70,6 +72,7 @@ REQUIRED_USE="
 	video_cards_r600?   ( gallium )
 	video_cards_radeonsi?   ( gallium llvm )
 	video_cards_vmware? ( gallium )
+	${PYTHON_REQUIRED_USE}
 "
 
 LIBDRM_DEPSTRING=">=x11-libs/libdrm-2.4.67"
@@ -117,7 +120,7 @@ RDEPEND="
 	vdpau? ( >=x11-libs/libvdpau-1.1:=[${MULTILIB_USEDEP}] )
 	wayland? ( >=dev-libs/wayland-1.2.0:=[${MULTILIB_USEDEP}] )
 	xvmc? ( >=x11-libs/libXvMC-1.0.8:=[${MULTILIB_USEDEP}] )
-	${LIBDRM_DEPSTRING}[video_cards_freedreno?,video_cards_nouveau?,video_cards_vmware?,${MULTILIB_USEDEP}]
+	${LIBDRM_DEPSTRING}[video_cards_freedreno?,video_cards_nouveau?,video_cards_vc4?,video_cards_vmware?,${MULTILIB_USEDEP}]
 "
 for card in ${INTEL_CARDS}; do
 	RDEPEND="${RDEPEND}
@@ -145,6 +148,7 @@ DEPEND="${RDEPEND}
 	)
 	sys-devel/gettext
 	virtual/pkgconfig
+	valgrind? ( dev-util/valgrind )
 	>=x11-proto/dri2proto-2.8-r1:=[${MULTILIB_USEDEP}]
 	dri3? (
 		>=x11-proto/dri3proto-1.0:=[${MULTILIB_USEDEP}]
@@ -158,7 +162,8 @@ DEPEND="${RDEPEND}
 [[ ${PV} == 9999 ]] && DEPEND+="
 	sys-devel/bison
 	sys-devel/flex
-	>=dev-python/mako-0.7.3
+	${PYTHON_DEPS}
+	$(python_gen_any_dep ">=dev-python/mako-0.7.3[\${PYTHON_USEDEP}]")
 "
 
 S="${WORKDIR}/${MY_P}"
@@ -175,9 +180,19 @@ x86? (
 	)
 )"
 
+pkg_setup() {
+	# warning message for bug 459306
+	if use llvm && has_version sys-devel/llvm[!debug=]; then
+		ewarn "Mismatch between debug USE flags in media-libs/mesa and sys-devel/llvm"
+		ewarn "detected! This can cause problems. For details, see bug 459306."
+	fi
+
+	python-any-r1_pkg_setup
+}
+
 src_prepare() {
-	epatch "${FILESDIR}"/radeonsi-4.3.patch
 	epatch "${FILESDIR}"/radeonsi-throtle.patch
+
 	[[ ${PV} == 9999 ]] && eautoreconf
 }
 
@@ -225,6 +240,7 @@ multilib_src_configure() {
 		use vaapi && myconf+=" --with-va-libdir=/usr/$(get_libdir)/va/drivers"
 
 		gallium_enable swrast
+		gallium_enable video_cards_vc4 vc4
 		gallium_enable video_cards_vmware svga
 		gallium_enable video_cards_nouveau nouveau
 		gallium_enable video_cards_i915 i915
@@ -243,12 +259,6 @@ multilib_src_configure() {
 		fi
 
 		gallium_enable video_cards_freedreno freedreno
-
-	    if use vulkan; then
-			vulkan_enable video_cards_i965 intel
-			vulkan_enable video_cards_intel intel
-		fi
-
 		# opencl stuff
 		if use opencl; then
 			myconf+="
@@ -256,6 +266,11 @@ multilib_src_configure() {
 				--with-clang-libdir="${EPREFIX}/usr/lib"
 				"
 		fi
+	fi
+
+	if use vulkan; then
+		vulkan_enable video_cards_i965 intel
+		vulkan_enable video_cards_intel intel
 	fi
 
 	# x86 hardened pax_kernel needs glx-rts, bug 240956
@@ -293,10 +308,12 @@ multilib_src_configure() {
 		$(use_enable gles2) \
 		$(use_enable nptl glx-tls) \
 		$(use_enable !udev sysfs) \
+		--enable-valgrind=$(usex valgrind auto no) \
 		--enable-llvm-shared-libs \
 		--with-dri-drivers=${DRI_DRIVERS} \
 		--with-gallium-drivers=${GALLIUM_DRIVERS} \
 		--with-vulkan-drivers=${VULKAN_DRIVERS} \
+		PYTHON2="${PYTHON}" \
 		${myconf}
 }
 
@@ -461,18 +478,18 @@ gallium_enable() {
 }
 
 vulkan_enable() {
-    case $# in
-        # for enabling unconditionally
-        1)
-            VULKAN_DRIVERS+=",$1"
-            ;;
-        *)
-            if use $1; then
-                shift
-                for i in $@; do
-                    VULKAN_DRIVERS+=",${i}"
-                done
-            fi
-            ;;
-    esac
+	case $# in
+		# for enabling unconditionally
+		1)
+			VULKAN_DRIVERS+=",$1"
+			;;
+		*)
+			if use $1; then
+				shift
+				for i in $@; do
+					VULKAN_DRIVERS+=",${i}"
+				done
+			fi
+			;;
+	esac
 }
