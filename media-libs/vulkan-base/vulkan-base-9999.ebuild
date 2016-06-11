@@ -75,7 +75,7 @@ src_compile() {
 
 src_install() {
 	mkdir -p "${D}"/etc/vulkan/{icd.d,implicit_layer.d,explicit_layer.d}
-	mkdir -p "${D}"/usr/share/vulkan/{icd.d,implicit_layer.d,explicit_layer.d}
+	mkdir -p "${D}"/usr/share/vulkan/{icd.d,implicit_layer.d,explicit_layer.d,demos}
 	mkdir -p "${D}"/usr/$(get_libdir)/vulkan/layers
 	mkdir -p "${D}"/usr/bin
 	mkdir -p "${D}"/usr/include
@@ -84,8 +84,11 @@ src_install() {
 	#rename the tri and cube examples
 	mv "${S}"/build/demos/cube "${S}"/build/demos/vulkancube
 	mv "${S}"/build/demos/tri "${S}"/build/demos/vulkantri
-	dobin "${S}"/build/demos/vulkan{info,cube,tri}
-	#dobin "${S}"/spirv-tools/build/spirv-*
+	insinto /usr/share/vulkan/demos
+	doins "${S}"/build/demos/*.spv
+	doins "${S}"/build/demos/lunarg.ppm
+	exeinto /usr/share/vulkan/demos
+	doexe "${S}"/build/demos/vulkan{info,cube,tri}
 
 	insinto /usr/include
 	cp -R "${S}"/include/vulkan "${D}"/usr/include
@@ -104,6 +107,7 @@ src_install() {
 	# create an entry for the newly created vulkan libs
 	cat << EOF > "${D}"/etc/env.d/89vulkan
 LDPATH="/usr/$(get_libdir)/vulkan;/usr/$(get_libdir)/vulkan/layers"
+PATH="/usr/share/vulkan/demos"
 EOF
 }
 
