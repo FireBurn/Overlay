@@ -145,7 +145,7 @@ src_prepare() {
 	# Fix libdir for ocaml bindings install, bug #559134
 	eapply "${FILESDIR}"/cmake/${PN}-3.7.0-ocaml-multilib.patch
 	# Do not build/install ocaml docs with USE=-doc, bug #562008
-	eapply "${FILESDIR}"/cmake/${PN}-3.7.0-ocaml-build_doc.patch
+	#eapply "${FILESDIR}"/cmake/${PN}-3.7.0-ocaml-build_doc.patch
 
 	# Make it possible to override Sphinx HTML install dirs
 	# https://llvm.org/bugs/show_bug.cgi?id=23780
