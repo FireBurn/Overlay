@@ -185,6 +185,7 @@ pkg_setup() {
 }
 
 src_prepare() {
+	#epatch "${FILESDIR}/blit.patch"
 	[[ ${PV} == 9999 ]] && eautoreconf
 }
 

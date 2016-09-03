@@ -1,0 +1,103 @@
+From 12b30bdb32e1daf05c4cf28c79c972266caba63c Mon Sep 17 00:00:00 2001
+From: Chris Wilson <chris@chris-wilson.co.uk>
+Date: Mon, 15 Aug 2016 20:10:07 +0100
+Subject: [PATCH] blit
+
+---
+ src/loader/loader_dri3_helper.c          |  2 +-
+ src/mesa/drivers/dri/i965/intel_screen.c | 52 +++++++++++++++++++++++++++++++-
+ 2 files changed, 52 insertions(+), 2 deletions(-)
+
+diff --git a/src/loader/loader_dri3_helper.c b/src/loader/loader_dri3_helper.c
+index e9fb97b..a55719a 100644
+--- a/src/loader/loader_dri3_helper.c
++++ b/src/loader/loader_dri3_helper.c
+@@ -149,7 +149,7 @@ loader_dri3_drawable_init(xcb_connection_t *conn,
+    draw->vtable = vtable;
+    draw->drawable = drawable;
+    draw->dri_screen = dri_screen;
+-   draw->is_different_gpu = is_different_gpu;
++   draw->is_different_gpu = is_different_gpu || true;
+ 
+    draw->have_back = 0;
+    draw->have_fake_front = 0;
+diff --git a/src/mesa/drivers/dri/i965/intel_screen.c b/src/mesa/drivers/dri/i965/intel_screen.c
+index ae51c40..e1ee27b 100644
+--- a/src/mesa/drivers/dri/i965/intel_screen.c
++++ b/src/mesa/drivers/dri/i965/intel_screen.c
+@@ -38,6 +38,9 @@
+ #include "brw_shader.h"
+ #include "compiler/nir/nir.h"
+ 
++#include "intel_blit.h"
++#include "intel_mipmap_tree.h"
++
+ #include "utils.h"
+ #include "xmlpool.h"
+ 
+@@ -649,6 +652,53 @@ intel_dup_image(__DRIimage *orig_image, void *loaderPrivate)
+    return image;
+ }
+ 
++static void
++intel_blit_image(__DRIcontext *context, __DRIimage *dst, __DRIimage *src,
++                 int dstX0, int dstY0, int dstWidth, int dstHeight,
++                 int srcX0, int srcY0, int srcWidth, int srcHeight,
++                 int flush_flag)
++{
++   struct brw_context *brw = context->driverPrivate;
++   struct intel_mipmap_tree *src_mt, *dst_mt;
++
++   if (!dst || !src)
++      return;
++
++   if (srcWidth != dstWidth || srcHeight != dstHeight)
++      return;
++
++   src_mt = intel_miptree_create_for_bo(brw, src->bo, src->format, 0,
++                                        src->width, src->height,
++                                        1, src->pitch, 0);
++   if (!src_mt)
++      goto out;
++
++   dst_mt = intel_miptree_create_for_bo(brw, dst->bo, dst->format, 0,
++                                        dst->width, dst->height,
++                                        1, dst->pitch, 0);
++   if (!dst_mt)
++      goto out_src_mt;
++
++   if (intel_miptree_blit(brw,
++                          src_mt, 0, 0, srcX0, srcY0, false,
++                          dst_mt, 0, 0, dstX0, dstY0, false,
++                          dstWidth, dstHeight, GL_COPY))
++      goto out_dst_mt;
++
++   if (flush_flag) {
++      intel_batchbuffer_flush(brw);
++      if (flush_flag == __BLIT_FLAG_FINISH && brw->batch.last_bo)
++         drm_intel_bo_wait_rendering(brw->batch.last_bo);
++   }
++
++out_dst_mt:
++   intel_miptree_release(&dst_mt);
++out_src_mt:
++   intel_miptree_release(&src_mt);
++out:
++   return;
++}
++
+ static GLboolean
+ intel_validate_usage(__DRIimage *image, unsigned int use)
+ {
+@@ -863,7 +913,7 @@ static const __DRIimageExtension intelImageExtension = {
+     .createImageFromTexture             = intel_create_image_from_texture,
+     .createImageFromFds                 = intel_create_image_from_fds,
+     .createImageFromDmaBufs             = intel_create_image_from_dma_bufs,
+-    .blitImage                          = NULL,
++    .blitImage                          = intel_blit_image,
+     .getCapabilities                    = NULL
+ };
+ 
+-- 
+2.8.1
+
