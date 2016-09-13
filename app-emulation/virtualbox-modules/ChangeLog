@@ -1,0 +1,395 @@
+# ChangeLog for app-emulation/virtualbox-modules
+# Copyright 1999-2016 Gentoo Foundation; Distributed under the GPL v2
+# (auto-generated from git log)
+
+*virtualbox-modules-5.0.0 (09 Aug 2015)
+*virtualbox-modules-4.3.30 (09 Aug 2015)
+*virtualbox-modules-4.3.28 (09 Aug 2015)
+
+  09 Aug 2015; Robin H. Johnson <robbat2@gentoo.org>
+  +files/create_vbox_modules_tarball.sh, +files/virtualbox-modules-3.17.patch,
+  +files/virtualbox-modules-4.1.4-pax-const.patch, +files/virtualbox.conf,
+  +metadata.xml, +virtualbox-modules-4.3.28.ebuild,
+  +virtualbox-modules-4.3.30.ebuild, +virtualbox-modules-5.0.0.ebuild:
+  proj/gentoo: Initial commit
+
+  This commit represents a new era for Gentoo:
+  Storing the gentoo-x86 tree in Git, as converted from CVS.
+
+  This commit is the start of the NEW history.
+  Any historical data is intended to be grafted onto this point.
+
+  Creation process:
+  1. Take final CVS checkout snapshot
+  2. Remove ALL ChangeLog* files
+  3. Transform all Manifests to thin
+  4. Remove empty Manifests
+  5. Convert all stale $Header$/$Id$ CVS keywords to non-expanded Git $Id$
+  5.1. Do not touch files with -kb/-ko keyword flags.
+
+  Signed-off-by: Robin H. Johnson <robbat2@gentoo.org>
+  X-Thanks: Alec Warner <antarus@gentoo.org> - did the GSoC 2006 migration
+  tests
+  X-Thanks: Robin H. Johnson <robbat2@gentoo.org> - infra guy, herding this
+  project
+  X-Thanks: Nguyen Thai Ngoc Duy <pclouds@gentoo.org> - Former Gentoo
+  developer, wrote Git features for the migration
+  X-Thanks: Brian Harring <ferringb@gentoo.org> - wrote much python to improve
+  cvs2svn
+  X-Thanks: Rich Freeman <rich0@gentoo.org> - validation scripts
+  X-Thanks: Patrick Lauer <patrick@gentoo.org> - Gentoo dev, running new 2014
+  work in migration
+  X-Thanks: Michał Górny <mgorny@gentoo.org> - scripts, QA, nagging
+  X-Thanks: All of other Gentoo developers - many ideas and lots of paint on
+  the bikeshed
+
+*virtualbox-modules-5.0.2 (17 Aug 2015)
+
+  17 Aug 2015; Lars Wendler <polynomial-c@gentoo.org>
+  +virtualbox-modules-5.0.2.ebuild:
+  virtualbox packages: Version bump to version 5.0.2
+
+  app-emulation/virtualbox
+  app-emulation/virtualbox-additions
+  app-emulation/virtualbox-bin
+  app-emulation/virtualbox-extpack-oracle
+  app-emulation/virtualbox-guest-additions
+  app-emulation/virtualbox-modules
+  x11-drivers/xf86-video-virtualbox
+
+  Fixed the following bugs:
+  https://bugs.gentoo.org/554952
+  https://bugs.gentoo.org/555052
+  https://bugs.gentoo.org/555682
+
+  24 Aug 2015; Justin Lecher <jlec@gentoo.org> metadata.xml,
+  virtualbox-modules-4.3.28.ebuild, virtualbox-modules-4.3.30.ebuild,
+  virtualbox-modules-5.0.0.ebuild, virtualbox-modules-5.0.2.ebuild:
+  Use https by default
+
+  Convert all URLs for sites supporting encrypted connections from http to
+  https
+
+  Signed-off-by: Justin Lecher <jlec@gentoo.org>
+
+  24 Aug 2015; Mike Gilbert <floppym@gentoo.org> metadata.xml:
+  Revert DOCTYPE SYSTEM https changes in metadata.xml
+
+  repoman does not yet accept the https version.
+  This partially reverts eaaface92ee81f30a6ac66fe7acbcc42c00dc450.
+
+  Bug: https://bugs.gentoo.org/552720
+
+*virtualbox-modules-5.0.4 (08 Sep 2015)
+
+  08 Sep 2015; Lars Wendler <polynomial-c@gentoo.org>
+  +virtualbox-modules-5.0.4.ebuild:
+  virtualbox packages: Bump to version 5.0.4
+
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  08 Sep 2015; Lars Wendler <polynomial-c@gentoo.org>
+  -virtualbox-modules-5.0.0.ebuild:
+  virtualbox packages: Removed old
+
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+*virtualbox-modules-5.0.6 (02 Oct 2015)
+
+  02 Oct 2015; Lars Wendler <polynomial-c@gentoo.org>
+  +virtualbox-modules-5.0.6.ebuild:
+  virtualbox: Bump to version 5.0.6
+
+  Package-Manager: portage-2.2.22
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  02 Oct 2015; Lars Wendler <polynomial-c@gentoo.org>
+  -virtualbox-modules-5.0.2.ebuild:
+  virtualbox: Removed old.
+
+  Package-Manager: portage-2.2.22
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+*virtualbox-modules-5.0.8 (20 Oct 2015)
+
+  20 Oct 2015; Lars Wendler <polynomial-c@gentoo.org>
+  +virtualbox-modules-5.0.8.ebuild:
+  virtualbox packages: Bump to version 5.0.8
+
+  Package-Manager: portage-2.2.23
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  20 Oct 2015; Lars Wendler <polynomial-c@gentoo.org>
+  -virtualbox-modules-5.0.4.ebuild:
+  virtualbox packages: Removed old.
+
+  Package-Manager: portage-2.2.23
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+*virtualbox-modules-4.3.32 (21 Oct 2015)
+
+  21 Oct 2015; Lars Wendler <polynomial-c@gentoo.org>
+  +virtualbox-modules-4.3.32.ebuild:
+  virtualbox packages: Bump to version 4.3.32
+
+  Package-Manager: portage-2.2.23
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  26 Oct 2015; Lars Wendler <polynomial-c@gentoo.org>
+  virtualbox-modules-4.3.28.ebuild, virtualbox-modules-4.3.30.ebuild,
+  virtualbox-modules-4.3.32.ebuild, virtualbox-modules-5.0.6.ebuild,
+  virtualbox-modules-5.0.8.ebuild:
+  Enabled verbose build.
+
+  Package-Manager: portage-2.2.23
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  06 Nov 2015; Mikle Kolyada <zlogene@gentoo.org>
+  virtualbox-modules-4.3.32.ebuild:
+  amd64 stable wrt bug #564156
+
+  Package-Manager: portage-2.2.20.1
+
+*virtualbox-modules-5.0.10 (11 Nov 2015)
+
+  11 Nov 2015; Lars Wendler <polynomial-c@gentoo.org>
+  +virtualbox-modules-5.0.10.ebuild:
+  virtualbox packages: Bump to version 5.0.10
+
+  Package-Manager: portage-2.2.24
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  11 Nov 2015; Lars Wendler <polynomial-c@gentoo.org>
+  -virtualbox-modules-5.0.6.ebuild:
+  virtualbox packages: Removed old.
+
+  Package-Manager: portage-2.2.24
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+*virtualbox-modules-4.3.34 (13 Nov 2015)
+
+  13 Nov 2015; Lars Wendler <polynomial-c@gentoo.org>
+  +virtualbox-modules-4.3.34.ebuild:
+  virtualbox packages: Bump to version 4.3.34
+
+  Package-Manager: portage-2.2.24
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  13 Nov 2015; Lars Wendler <polynomial-c@gentoo.org>
+  -virtualbox-modules-4.3.30.ebuild:
+  virtualbox packages: Removed old.
+
+  Package-Manager: portage-2.2.24
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+*virtualbox-modules-5.0.12 (21 Dec 2015)
+
+  21 Dec 2015; Lars Wendler <polynomial-c@gentoo.org>
+  +virtualbox-modules-5.0.12.ebuild:
+  virtualbox packages: Bump to version 5.0.12
+
+  Package-Manager: portage-2.2.26
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  21 Dec 2015; Lars Wendler <polynomial-c@gentoo.org>
+  -virtualbox-modules-5.0.8.ebuild:
+  virtualbox packages: Removed old.
+
+  Package-Manager: portage-2.2.26
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+*virtualbox-modules-5.0.14 (20 Jan 2016)
+
+  20 Jan 2016; Lars Wendler <polynomial-c@gentoo.org>
+  +virtualbox-modules-5.0.14.ebuild:
+  virtualbox packages: Bump to version 5.0.14
+
+  Package-Manager: portage-2.2.27
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  20 Jan 2016; Lars Wendler <polynomial-c@gentoo.org>
+  -virtualbox-modules-5.0.10.ebuild:
+  virtualbox packages: Removed old.
+
+  Package-Manager: portage-2.2.27
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  24 Jan 2016; Michał Górny <mgorny@gentoo.org> metadata.xml:
+  Set appropriate maintainer types in metadata.xml (GLEP 67)
+
+  22 Feb 2016; Patrick Lauer <patrick@gentoo.org> metadata.xml:
+  Remove myself from metadata
+
+  Package-Manager: portage-2.2.27
+
+  05 Mar 2016; Mikle Kolyada <zlogene@gentoo.org>
+  virtualbox-modules-4.3.32.ebuild:
+  x86 stable wrt bug #564156
+
+  Package-Manager: portage-2.2.26
+
+*virtualbox-modules-5.0.16 (06 Mar 2016)
+*virtualbox-modules-4.3.36 (06 Mar 2016)
+
+  06 Mar 2016; Lars Wendler <polynomial-c@gentoo.org>
+  +virtualbox-modules-4.3.36.ebuild, +virtualbox-modules-5.0.16.ebuild:
+  virtualbox packages: Bump to versions 4.3.36 and 5.0.16
+
+  Package-Manager: portage-2.2.27
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  06 Mar 2016; Lars Wendler <polynomial-c@gentoo.org>
+  -virtualbox-modules-4.3.28.ebuild, -virtualbox-modules-5.0.12.ebuild:
+  virtualbox packages: Removed old.
+
+  Package-Manager: portage-2.2.27
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+*virtualbox-modules-5.0.18 (19 Apr 2016)
+
+  19 Apr 2016; Lars Wendler <polynomial-c@gentoo.org>
+  +virtualbox-modules-5.0.18.ebuild:
+  virtualbox packages: Bump to version 5.0.18
+
+  Package-Manager: portage-2.2.28
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  19 Apr 2016; Lars Wendler <polynomial-c@gentoo.org>
+  -virtualbox-modules-5.0.14.ebuild:
+  virtualbox packages: Removed old.
+
+  Package-Manager: portage-2.2.28
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+*virtualbox-modules-5.0.20 (01 May 2016)
+
+  01 May 2016; Lars Wendler <polynomial-c@gentoo.org>
+  +virtualbox-modules-5.0.20.ebuild:
+  virtualbox packages: Bump to version 5.0.20
+
+  Package-Manager: portage-2.2.28
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  01 May 2016; Lars Wendler <polynomial-c@gentoo.org>
+  -virtualbox-modules-4.3.34.ebuild, -virtualbox-modules-5.0.18.ebuild:
+  virtualbox packages: Removed old.
+
+  Package-Manager: portage-2.2.28
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+*virtualbox-modules-5.1.0 (13 Jul 2016)
+*virtualbox-modules-5.0.24 (13 Jul 2016)
+
+  13 Jul 2016; Lars Wendler <polynomial-c@gentoo.org>
+  +virtualbox-modules-5.0.24.ebuild, +virtualbox-modules-5.1.0.ebuild:
+  Bump to versions 5.0.24 and 5.1.0
+
+  bug #586630
+
+  Package-Manager: portage-2.3.0
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+*virtualbox-modules-4.3.38 (14 Jul 2016)
+
+  14 Jul 2016; Lars Wendler <polynomial-c@gentoo.org>
+  +virtualbox-modules-4.3.38.ebuild:
+  Bump to version 4.3.38
+
+  Package-Manager: portage-2.3.0
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+*virtualbox-modules-5.1.0-r1 (14 Jul 2016)
+*virtualbox-modules-5.0.24-r1 (14 Jul 2016)
+
+  14 Jul 2016; Lars Wendler <polynomial-c@gentoo.org> files/virtualbox.conf,
+  -virtualbox-modules-5.0.24.ebuild, +virtualbox-modules-5.0.24-r1.ebuild,
+  -virtualbox-modules-5.1.0.ebuild, +virtualbox-modules-5.1.0-r1.ebuild:
+  Added vboxpci to virtualbox.conf
+
+  and mention it in the pkg_postinst elog messages.
+
+  Change suggested by masterzorag.
+
+  Package-Manager: portage-2.3.0
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  15 Jul 2016; Lars Wendler <polynomial-c@gentoo.org> metadata.xml:
+  virtualbox packages: Added masterzorag as proxy maintainer.
+
+  Package-Manager: portage-2.3.0
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+*virtualbox-modules-5.1.2 (22 Jul 2016)
+*virtualbox-modules-5.0.26 (22 Jul 2016)
+
+  22 Jul 2016; Lars Wendler <polynomial-c@gentoo.org>
+  +virtualbox-modules-5.0.26.ebuild, +virtualbox-modules-5.1.2.ebuild:
+  virtualbox host packages: Bump to versions 5.0.26 and 5.1.2
+
+  Package-Manager: portage-2.3.0
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  22 Jul 2016; Lars Wendler <polynomial-c@gentoo.org>
+  -virtualbox-modules-5.0.20.ebuild:
+  virtualbox host packages: Removed old.
+
+  Package-Manager: portage-2.3.0
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  11 Aug 2016; Patrice Clement <monsieurp@gentoo.org>
+  -files/virtualbox-modules-3.17.patch:
+  remove unused patch
+
+  Closes: https://github.com/gentoo/gentoo/pull/1861
+
+  Signed-off-by: Patrice Clement <monsieurp@gentoo.org>
+
+*virtualbox-modules-5.1.4 (17 Aug 2016)
+
+  17 Aug 2016; Lars Wendler <polynomial-c@gentoo.org>
+  +virtualbox-modules-5.1.4.ebuild:
+  virtualbox host packages: Bump to version 5.1.4
+
+  Package-Manager: portage-2.3.0
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  17 Aug 2016; Lars Wendler <polynomial-c@gentoo.org>
+  -virtualbox-modules-5.1.0-r1.ebuild:
+  virtualbox host packages: Removed old.
+
+  Package-Manager: portage-2.3.0
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+*virtualbox-modules-4.3.40 (24 Aug 2016)
+
+  24 Aug 2016; Lars Wendler <polynomial-c@gentoo.org>
+  +virtualbox-modules-4.3.40.ebuild:
+  virtualbox packages: Bump to version 4.3.40
+
+  Package-Manager: portage-2.3.0
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  24 Aug 2016; Lars Wendler <polynomial-c@gentoo.org>
+  virtualbox-modules-4.3.38.ebuild:
+  virtualbox packages: version 4.3.38 stable on amd64 and x86 (bug #578666).
+
+  Package-Manager: portage-2.3.0
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  24 Aug 2016; Lars Wendler <polynomial-c@gentoo.org>
+  -virtualbox-modules-4.3.32.ebuild, -virtualbox-modules-4.3.36.ebuild,
+  -virtualbox-modules-5.0.24-r1.ebuild:
+  virtualbox packages: Removed old.
+
+  Package-Manager: portage-2.3.0
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
+  26 Aug 2016; Lars Wendler <polynomial-c@gentoo.org>
+  virtualbox-modules-4.3.40.ebuild, virtualbox-modules-5.1.4.ebuild:
+  CONFIG_TRIM_UNUSED_KSYMS breaks modules.
+
+  See bug #592138.
+
+  Package-Manager: portage-2.3.0
+  Signed-off-by: Lars Wendler <polynomial-c@gentoo.org>
+
