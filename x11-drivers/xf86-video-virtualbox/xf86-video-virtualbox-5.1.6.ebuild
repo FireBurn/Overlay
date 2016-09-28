@@ -26,6 +26,7 @@ DEPEND="${RDEPEND}
 	${PYTHON_DEPS}
 	>=dev-lang/yasm-0.6.2
 	>=sys-devel/gcc-4.9.0
+	sys-fs/lvm2
 	sys-power/iasl
 	x11-proto/fontsproto
 	x11-proto/randrproto
