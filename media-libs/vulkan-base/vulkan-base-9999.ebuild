@@ -81,14 +81,13 @@ src_install() {
 	mkdir -p "${D}"/usr/include
 	mkdir -p "${D}"/etc/env.d
 
-	#rename the tri and cube examples
+	#rename the cube example
 	mv "${S}"/build/demos/cube "${S}"/build/demos/vulkancube
-	mv "${S}"/build/demos/tri "${S}"/build/demos/vulkantri
 	insinto /usr/share/vulkan/demos
 	doins "${S}"/build/demos/*.spv
 	doins "${S}"/build/demos/lunarg.ppm
 	exeinto /usr/share/vulkan/demos
-	doexe "${S}"/build/demos/vulkan{info,cube,tri}
+	doexe "${S}"/build/demos/vulkan{info,cube}
 
 	insinto /usr/include
 	cp -R "${S}"/include/vulkan "${D}"/usr/include
