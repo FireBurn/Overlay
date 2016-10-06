@@ -4,7 +4,9 @@
 
 EAPI=5
 
-EGIT_REPO_URI="git://anongit.freedesktop.org/mesa/mesa"
+#EGIT_REPO_URI="git://anongit.freedesktop.org/mesa/mesa"
+EGIT_REPO_URI="https://github.com/airlied/mesa.git"
+EGIT_BRANCH="radv-submit2"
 
 if [[ ${PV} = 9999 ]]; then
 	GIT_ECLASS="git-r3"
@@ -267,6 +269,8 @@ multilib_src_configure() {
 	if use vulkan; then
 		vulkan_enable video_cards_i965 intel
 		vulkan_enable video_cards_intel intel
+	    vulkan_enable video_cards_radeon radeon
+	    vulkan_enable video_cards_radeonsi radeon
 	fi
 
 	# x86 hardened pax_kernel needs glx-rts, bug 240956
