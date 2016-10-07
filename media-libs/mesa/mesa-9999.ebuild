@@ -4,9 +4,7 @@
 
 EAPI=5
 
-#EGIT_REPO_URI="git://anongit.freedesktop.org/mesa/mesa"
-EGIT_REPO_URI="https://github.com/airlied/mesa.git"
-EGIT_BRANCH="radv-submit2"
+EGIT_REPO_URI="git://anongit.freedesktop.org/mesa/mesa"
 
 if [[ ${PV} = 9999 ]]; then
 	GIT_ECLASS="git-r3"
