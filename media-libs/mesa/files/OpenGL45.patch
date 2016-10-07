@@ -1,0 +1,1337 @@
+diff --git a/src/compiler/glsl/ir_print_visitor.cpp b/src/compiler/glsl/ir_print_visitor.cpp
+index fc01be9..c238c16 100644
+--- a/src/compiler/glsl/ir_print_visitor.cpp
++++ b/src/compiler/glsl/ir_print_visitor.cpp
+@@ -165,10 +165,14 @@ void ir_print_visitor::visit(ir_variable *ir)
+ {
+    fprintf(f, "(declare ");
+ 
+-   char loc[256] = {0};
++   char loc[32] = {0};
+    if (ir->data.location != -1)
+       snprintf(loc, sizeof(loc), "location=%i ", ir->data.location);
+ 
++   char component[32] = {0};
++   if (ir->data.explicit_component)
++      snprintf(component, sizeof(component), "component=%i ", ir->data.location_frac);
++
+    const char *const cent = (ir->data.centroid) ? "centroid " : "";
+    const char *const samp = (ir->data.sample) ? "sample " : "";
+    const char *const patc = (ir->data.patch) ? "patch " : "";
+@@ -183,8 +187,8 @@ void ir_print_visitor::visit(ir_variable *ir)
+    const char *const interp[] = { "", "smooth", "flat", "noperspective" };
+    STATIC_ASSERT(ARRAY_SIZE(interp) == INTERP_MODE_COUNT);
+ 
+-   fprintf(f, "(%s%s%s%s%s%s%s%s%s) ",
+-           loc, cent, samp, patc, inv, prec, mode[ir->data.mode],
++   fprintf(f, "(%s%s%s%s%s%s%s%s%s%s) ",
++           loc, component, cent, samp, patc, inv, prec, mode[ir->data.mode],
+            stream[ir->data.stream],
+            interp[ir->data.interpolation]);
+ 
+diff --git a/src/gallium/auxiliary/tgsi/tgsi_scan.c b/src/gallium/auxiliary/tgsi/tgsi_scan.c
+index c7745ce..85ab329 100644
+--- a/src/gallium/auxiliary/tgsi/tgsi_scan.c
++++ b/src/gallium/auxiliary/tgsi/tgsi_scan.c
+@@ -401,12 +401,9 @@ scan_declaration(struct tgsi_shader_info *info,
+          info->input_cylindrical_wrap[reg] = (ubyte)fulldecl->Interp.CylindricalWrap;
+ 
+          /* Vertex shaders can have inputs with holes between them. */
+-         if (info->processor == PIPE_SHADER_VERTEX)
+-            info->num_inputs = MAX2(info->num_inputs, reg + 1);
+-         else {
+-            info->num_inputs++;
++         info->num_inputs = MAX2(info->num_inputs, reg + 1);
++         if (info->processor != PIPE_SHADER_VERTEX)
+             assert(reg < info->num_inputs);
+-         }
+ 
+          if (semName == TGSI_SEMANTIC_PRIMID)
+             info->uses_primid = TRUE;
+@@ -456,7 +453,7 @@ scan_declaration(struct tgsi_shader_info *info,
+       else if (file == TGSI_FILE_OUTPUT) {
+          info->output_semantic_name[reg] = (ubyte) semName;
+          info->output_semantic_index[reg] = (ubyte) semIndex;
+-         info->num_outputs++;
++         info->num_outputs = MAX2(info->num_outputs, reg + 1);
+          assert(reg < info->num_outputs);
+ 
+          if (semName == TGSI_SEMANTIC_COLOR)
+diff --git a/src/gallium/auxiliary/tgsi/tgsi_ureg.c b/src/gallium/auxiliary/tgsi/tgsi_ureg.c
+index 6ad514d..323d43a 100644
+--- a/src/gallium/auxiliary/tgsi/tgsi_ureg.c
++++ b/src/gallium/auxiliary/tgsi/tgsi_ureg.c
+@@ -77,9 +77,9 @@ struct ureg_tokens {
+    unsigned count;
+ };
+ 
+-#define UREG_MAX_INPUT PIPE_MAX_SHADER_INPUTS
++#define UREG_MAX_INPUT (4 * PIPE_MAX_SHADER_INPUTS)
+ #define UREG_MAX_SYSTEM_VALUE PIPE_MAX_ATTRIBS
+-#define UREG_MAX_OUTPUT PIPE_MAX_SHADER_OUTPUTS
++#define UREG_MAX_OUTPUT (4 * PIPE_MAX_SHADER_OUTPUTS)
+ #define UREG_MAX_CONSTANT_RANGE 32
+ #define UREG_MAX_IMMEDIATE 4096
+ #define UREG_MAX_ADDR 3
+@@ -108,6 +108,7 @@ struct ureg_program
+       unsigned semantic_index;
+       unsigned interp;
+       unsigned char cylindrical_wrap;
++      unsigned char usage_mask;
+       unsigned interp_location;
+       unsigned first;
+       unsigned last;
+@@ -269,25 +270,33 @@ ureg_property(struct ureg_program *ureg, unsigned name, unsigned value)
+ }
+ 
+ struct ureg_src
+-ureg_DECL_fs_input_cyl_centroid(struct ureg_program *ureg,
++ureg_DECL_fs_input_cyl_centroid_layout(struct ureg_program *ureg,
+                        unsigned semantic_name,
+                        unsigned semantic_index,
+                        unsigned interp_mode,
+                        unsigned cylindrical_wrap,
+                        unsigned interp_location,
++                       unsigned index,
+                        unsigned array_id,
+-                       unsigned array_size)
++                       unsigned array_size,
++                       unsigned usage_mask)
+ {
+    unsigned i;
+ 
++   assert(usage_mask != 0);
++   assert(usage_mask <= TGSI_WRITEMASK_XYZW);
++
+    for (i = 0; i < ureg->nr_inputs; i++) {
+       if (ureg->input[i].semantic_name == semantic_name &&
+           ureg->input[i].semantic_index == semantic_index) {
+          assert(ureg->input[i].interp == interp_mode);
+          assert(ureg->input[i].cylindrical_wrap == cylindrical_wrap);
+          assert(ureg->input[i].interp_location == interp_location);
+-         assert(ureg->input[i].array_id == array_id);
+-         goto out;
++         if (ureg->input[i].array_id == array_id) {
++            ureg->input[i].usage_mask |= usage_mask;
++            goto out;
++         }
++         assert((ureg->input[i].usage_mask & usage_mask) == 0);
+       }
+    }
+ 
+@@ -298,10 +307,11 @@ ureg_DECL_fs_input_cyl_centroid(struct ureg_program *ureg,
+       ureg->input[i].interp = interp_mode;
+       ureg->input[i].cylindrical_wrap = cylindrical_wrap;
+       ureg->input[i].interp_location = interp_location;
+-      ureg->input[i].first = ureg->nr_input_regs;
+-      ureg->input[i].last = ureg->nr_input_regs + array_size - 1;
++      ureg->input[i].first = index;
++      ureg->input[i].last = index + array_size - 1;
+       ureg->input[i].array_id = array_id;
+-      ureg->nr_input_regs += array_size;
++      ureg->input[i].usage_mask = usage_mask;
++      ureg->nr_input_regs = MAX2(ureg->nr_input_regs, index + array_size);
+       ureg->nr_inputs++;
+    } else {
+       set_bad(ureg);
+@@ -312,6 +322,21 @@ out:
+                                   array_id);
+ }
+ 
++struct ureg_src
++ureg_DECL_fs_input_cyl_centroid(struct ureg_program *ureg,
++                       unsigned semantic_name,
++                       unsigned semantic_index,
++                       unsigned interp_mode,
++                       unsigned cylindrical_wrap,
++                       unsigned interp_location,
++                       unsigned array_id,
++                       unsigned array_size)
++{
++   return ureg_DECL_fs_input_cyl_centroid_layout(ureg,
++         semantic_name, semantic_index, interp_mode, cylindrical_wrap, interp_location,
++         ureg->nr_input_regs, array_id, array_size, TGSI_WRITEMASK_XYZW);
++}
++
+ 
+ struct ureg_src 
+ ureg_DECL_vs_input( struct ureg_program *ureg,
+@@ -326,6 +351,21 @@ ureg_DECL_vs_input( struct ureg_program *ureg,
+ 
+ 
+ struct ureg_src
++ureg_DECL_input_layout(struct ureg_program *ureg,
++                unsigned semantic_name,
++                unsigned semantic_index,
++                unsigned index,
++                unsigned array_id,
++                unsigned array_size,
++                unsigned usage_mask)
++{
++   return ureg_DECL_fs_input_cyl_centroid_layout(ureg,
++               semantic_name, semantic_index, 0, 0, 0,
++               index, array_id, array_size, usage_mask);
++}
++
++
++struct ureg_src
+ ureg_DECL_input(struct ureg_program *ureg,
+                 unsigned semantic_name,
+                 unsigned semantic_index,
+@@ -365,35 +405,38 @@ out:
+ }
+ 
+ 
+-struct ureg_dst 
+-ureg_DECL_output_masked(struct ureg_program *ureg,
+-                        unsigned name,
++struct ureg_dst
++ureg_DECL_output_layout(struct ureg_program *ureg,
++                        unsigned semantic_name,
++                        unsigned semantic_index,
+                         unsigned index,
+-                        unsigned usage_mask,
+                         unsigned array_id,
+-                        unsigned array_size)
++                        unsigned array_size,
++                        unsigned usage_mask)
+ {
+    unsigned i;
+ 
+    assert(usage_mask != 0);
+ 
+    for (i = 0; i < ureg->nr_outputs; i++) {
+-      if (ureg->output[i].semantic_name == name &&
+-          ureg->output[i].semantic_index == index) {
+-         assert(ureg->output[i].array_id == array_id);
+-         ureg->output[i].usage_mask |= usage_mask;
+-         goto out;
++      if (ureg->output[i].semantic_name == semantic_name &&
++          ureg->output[i].semantic_index == semantic_index) {
++         if (ureg->output[i].array_id == array_id) {
++            ureg->output[i].usage_mask |= usage_mask;
++            goto out;
++         }
++         assert((ureg->output[i].usage_mask & usage_mask) == 0);
+       }
+    }
+ 
+    if (ureg->nr_outputs < UREG_MAX_OUTPUT) {
+-      ureg->output[i].semantic_name = name;
+-      ureg->output[i].semantic_index = index;
++      ureg->output[i].semantic_name = semantic_name;
++      ureg->output[i].semantic_index = semantic_index;
+       ureg->output[i].usage_mask = usage_mask;
+-      ureg->output[i].first = ureg->nr_output_regs;
+-      ureg->output[i].last = ureg->nr_output_regs + array_size - 1;
++      ureg->output[i].first = index;
++      ureg->output[i].last = index + array_size - 1;
+       ureg->output[i].array_id = array_id;
+-      ureg->nr_output_regs += array_size;
++      ureg->nr_output_regs = MAX2(ureg->nr_output_regs, index + array_size);
+       ureg->nr_outputs++;
+    }
+    else {
+@@ -406,6 +449,19 @@ out:
+ }
+ 
+ 
++struct ureg_dst
++ureg_DECL_output_masked(struct ureg_program *ureg,
++                        unsigned name,
++                        unsigned index,
++                        unsigned usage_mask,
++                        unsigned array_id,
++                        unsigned array_size)
++{
++   return ureg_DECL_output_layout(ureg, name, index,
++                                  ureg->nr_output_regs, array_id, array_size, usage_mask);
++}
++
++
+ struct ureg_dst 
+ ureg_DECL_output(struct ureg_program *ureg,
+                  unsigned name,
+@@ -1536,7 +1592,8 @@ emit_decl_fs(struct ureg_program *ureg,
+              unsigned interpolate,
+              unsigned cylindrical_wrap,
+              unsigned interpolate_location,
+-             unsigned array_id)
++             unsigned array_id,
++             unsigned usage_mask)
+ {
+    union tgsi_any_token *out = get_tokens(ureg, DOMAIN_DECL,
+                                           array_id ? 5 : 4);
+@@ -1545,7 +1602,7 @@ emit_decl_fs(struct ureg_program *ureg,
+    out[0].decl.Type = TGSI_TOKEN_TYPE_DECLARATION;
+    out[0].decl.NrTokens = 4;
+    out[0].decl.File = file;
+-   out[0].decl.UsageMask = TGSI_WRITEMASK_XYZW; /* FIXME! */
++   out[0].decl.UsageMask = usage_mask;
+    out[0].decl.Interpolate = 1;
+    out[0].decl.Semantic = 1;
+    out[0].decl.Array = array_id != 0;
+@@ -1792,7 +1849,8 @@ static void emit_decls( struct ureg_program *ureg )
+                          ureg->input[i].interp,
+                          ureg->input[i].cylindrical_wrap,
+                          ureg->input[i].interp_location,
+-                         ureg->input[i].array_id);
++                         ureg->input[i].array_id,
++                         ureg->input[i].usage_mask);
+          }
+       }
+       else {
+@@ -1806,7 +1864,8 @@ static void emit_decls( struct ureg_program *ureg )
+                             (j - ureg->input[i].first),
+                             ureg->input[i].interp,
+                             ureg->input[i].cylindrical_wrap,
+-                            ureg->input[i].interp_location, 0);
++                            ureg->input[i].interp_location, 0,
++                            ureg->input[i].usage_mask);
+             }
+          }
+       }
+diff --git a/src/gallium/auxiliary/tgsi/tgsi_ureg.h b/src/gallium/auxiliary/tgsi/tgsi_ureg.h
+index c2c2f1a..4e5b894 100644
+--- a/src/gallium/auxiliary/tgsi/tgsi_ureg.h
++++ b/src/gallium/auxiliary/tgsi/tgsi_ureg.h
+@@ -173,6 +173,18 @@ ureg_property(struct ureg_program *ureg, unsigned name, unsigned value);
+  */
+ 
+ struct ureg_src
++ureg_DECL_fs_input_cyl_centroid_layout(struct ureg_program *,
++                       unsigned semantic_name,
++                       unsigned semantic_index,
++                       unsigned interp_mode,
++                       unsigned cylindrical_wrap,
++                       unsigned interp_location,
++                       unsigned index,
++                       unsigned array_id,
++                       unsigned array_size,
++                       unsigned usage_mask);
++
++struct ureg_src
+ ureg_DECL_fs_input_cyl_centroid(struct ureg_program *,
+                        unsigned semantic_name,
+                        unsigned semantic_index,
+@@ -215,6 +227,15 @@ ureg_DECL_vs_input( struct ureg_program *,
+                     unsigned index );
+ 
+ struct ureg_src
++ureg_DECL_input_layout(struct ureg_program *,
++                unsigned semantic_name,
++                unsigned semantic_index,
++                unsigned index,
++                unsigned array_id,
++                unsigned array_size,
++                unsigned usage_mask);
++
++struct ureg_src
+ ureg_DECL_input(struct ureg_program *,
+                 unsigned semantic_name,
+                 unsigned semantic_index,
+@@ -227,6 +248,15 @@ ureg_DECL_system_value(struct ureg_program *,
+                        unsigned semantic_index);
+ 
+ struct ureg_dst
++ureg_DECL_output_layout(struct ureg_program *,
++                        unsigned semantic_name,
++                        unsigned semantic_index,
++                        unsigned index,
++                        unsigned array_id,
++                        unsigned array_size,
++                        unsigned usage_mask);
++
++struct ureg_dst
+ ureg_DECL_output_masked(struct ureg_program *,
+                         unsigned semantic_name,
+                         unsigned semantic_index,
+diff --git a/src/gallium/docs/source/screen.rst b/src/gallium/docs/source/screen.rst
+index cfc0a1b..d79e75e 100644
+--- a/src/gallium/docs/source/screen.rst
++++ b/src/gallium/docs/source/screen.rst
+@@ -353,6 +353,14 @@ The integer capabilities:
+   32-bit. If set to off, that means that a B5G6R5 + Z24 or RGBA8 + Z16
+   combination will require a driver fallback, and should not be
+   advertised in the GLX/EGL config list.
++* ``PIPE_CAP_TGSI_ARRAY_COMPONENTS``: If true, the driver interprets the
++  UsageMask of input and output declarations and allows declaring arrays
++  in overlapping ranges. The components must be a contiguous range, e.g. a
++  UsageMask of  xy or yzw is allowed, but xz or yw isn't. Declarations with
++  overlapping locations must have matching semantic names and indices, and
++  equal interpolation qualifiers.
++  Components may overlap, notably when the gaps in an array of dvec3 are
++  filled in.
+ 
+ 
+ .. _pipe_capf:
+diff --git a/src/gallium/drivers/freedreno/freedreno_screen.c b/src/gallium/drivers/freedreno/freedreno_screen.c
+index bc54539..1f7c2a5 100644
+--- a/src/gallium/drivers/freedreno/freedreno_screen.c
++++ b/src/gallium/drivers/freedreno/freedreno_screen.c
+@@ -287,6 +287,7 @@ fd_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
+ 	case PIPE_CAP_MAX_WINDOW_RECTANGLES:
+ 	case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
+ 	case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
++	case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+ 		return 0;
+ 
+ 	case PIPE_CAP_MAX_VIEWPORTS:
+diff --git a/src/gallium/drivers/i915/i915_screen.c b/src/gallium/drivers/i915/i915_screen.c
+index 9f801a9..003f855 100644
+--- a/src/gallium/drivers/i915/i915_screen.c
++++ b/src/gallium/drivers/i915/i915_screen.c
+@@ -277,6 +277,7 @@ i915_get_param(struct pipe_screen *screen, enum pipe_cap cap)
+    case PIPE_CAP_TGSI_VOTE:
+    case PIPE_CAP_MAX_WINDOW_RECTANGLES:
+    case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
++   case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+       return 0;
+ 
+    case PIPE_CAP_MAX_DUAL_SOURCE_RENDER_TARGETS:
+diff --git a/src/gallium/drivers/ilo/ilo_screen.c b/src/gallium/drivers/ilo/ilo_screen.c
+index 85357fa..1904cd6 100644
+--- a/src/gallium/drivers/ilo/ilo_screen.c
++++ b/src/gallium/drivers/ilo/ilo_screen.c
+@@ -515,6 +515,7 @@ ilo_get_param(struct pipe_screen *screen, enum pipe_cap param)
+    case PIPE_CAP_MAX_WINDOW_RECTANGLES:
+    case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
+    case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
++   case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+       return 0;
+ 
+    case PIPE_CAP_VENDOR_ID:
+diff --git a/src/gallium/drivers/llvmpipe/lp_screen.c b/src/gallium/drivers/llvmpipe/lp_screen.c
+index 18837a2..10b87fa 100644
+--- a/src/gallium/drivers/llvmpipe/lp_screen.c
++++ b/src/gallium/drivers/llvmpipe/lp_screen.c
+@@ -330,6 +330,7 @@ llvmpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
+    case PIPE_CAP_MAX_WINDOW_RECTANGLES:
+    case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
+    case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
++   case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+       return 0;
+    }
+    /* should only get here on unhandled cases */
+diff --git a/src/gallium/drivers/nouveau/nv30/nv30_screen.c b/src/gallium/drivers/nouveau/nv30/nv30_screen.c
+index 2ced8f1..961c22c 100644
+--- a/src/gallium/drivers/nouveau/nv30/nv30_screen.c
++++ b/src/gallium/drivers/nouveau/nv30/nv30_screen.c
+@@ -201,6 +201,7 @@ nv30_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
+    case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
+    case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
+    case PIPE_CAP_MIXED_COLOR_DEPTH_BITS:
++   case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+       return 0;
+ 
+    case PIPE_CAP_VENDOR_ID:
+diff --git a/src/gallium/drivers/nouveau/nv50/nv50_screen.c b/src/gallium/drivers/nouveau/nv50/nv50_screen.c
+index 6eb18ea..99ad90a 100644
+--- a/src/gallium/drivers/nouveau/nv50/nv50_screen.c
++++ b/src/gallium/drivers/nouveau/nv50/nv50_screen.c
+@@ -253,6 +253,7 @@ nv50_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
+    case PIPE_CAP_TGSI_VOTE:
+    case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
+    case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
++   case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+       return 0;
+ 
+    case PIPE_CAP_VENDOR_ID:
+diff --git a/src/gallium/drivers/nouveau/nvc0/nvc0_screen.c b/src/gallium/drivers/nouveau/nvc0/nvc0_screen.c
+index afcb08b..1011054 100644
+--- a/src/gallium/drivers/nouveau/nvc0/nvc0_screen.c
++++ b/src/gallium/drivers/nouveau/nvc0/nvc0_screen.c
+@@ -272,6 +272,7 @@ nvc0_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
+    case PIPE_CAP_PCI_DEVICE:
+    case PIPE_CAP_PCI_FUNCTION:
+    case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
++   case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+       return 0;
+ 
+    case PIPE_CAP_VENDOR_ID:
+diff --git a/src/gallium/drivers/r300/r300_screen.c b/src/gallium/drivers/r300/r300_screen.c
+index 4d41693..0b147f9 100644
+--- a/src/gallium/drivers/r300/r300_screen.c
++++ b/src/gallium/drivers/r300/r300_screen.c
+@@ -223,6 +223,7 @@ static int r300_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
+         case PIPE_CAP_MAX_WINDOW_RECTANGLES:
+         case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
+         case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
++        case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+             return 0;
+ 
+         /* SWTCL-only features. */
+diff --git a/src/gallium/drivers/r600/r600_pipe.c b/src/gallium/drivers/r600/r600_pipe.c
+index a350080..95c6d99 100644
+--- a/src/gallium/drivers/r600/r600_pipe.c
++++ b/src/gallium/drivers/r600/r600_pipe.c
+@@ -373,6 +373,7 @@ static int r600_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
+ 	case PIPE_CAP_PRIMITIVE_RESTART_FOR_PATCHES:
+ 	case PIPE_CAP_TGSI_VOTE:
+ 	case PIPE_CAP_MAX_WINDOW_RECTANGLES:
++	case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+ 		return 0;
+ 
+ 	case PIPE_CAP_MAX_SHADER_PATCH_VARYINGS:
+diff --git a/src/gallium/drivers/radeonsi/si_pipe.c b/src/gallium/drivers/radeonsi/si_pipe.c
+index 2aa679c..0096937 100644
+--- a/src/gallium/drivers/radeonsi/si_pipe.c
++++ b/src/gallium/drivers/radeonsi/si_pipe.c
+@@ -440,7 +440,7 @@ static int si_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
+ 		if (pscreen->get_shader_param(pscreen, PIPE_SHADER_COMPUTE,
+ 		                              PIPE_SHADER_CAP_SUPPORTED_IRS) &
+ 		    (1 << PIPE_SHADER_IR_TGSI))
+-			return 430;
++			return 450;
+ 		return HAVE_LLVM >= 0x0309 ? 420 :
+ 		       HAVE_LLVM >= 0x0307 ? 410 : 330;
+ 
+@@ -460,6 +460,7 @@ static int si_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
+ 	case PIPE_CAP_PRIMITIVE_RESTART_FOR_PATCHES:
+ 	case PIPE_CAP_TGSI_VOTE:
+ 	case PIPE_CAP_MAX_WINDOW_RECTANGLES:
++	case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+ 		return 0;
+ 
+ 	case PIPE_CAP_QUERY_BUFFER_OBJECT:
+diff --git a/src/gallium/drivers/softpipe/sp_screen.c b/src/gallium/drivers/softpipe/sp_screen.c
+index 6ffc777..499a945 100644
+--- a/src/gallium/drivers/softpipe/sp_screen.c
++++ b/src/gallium/drivers/softpipe/sp_screen.c
+@@ -280,6 +280,7 @@ softpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
+    case PIPE_CAP_MAX_WINDOW_RECTANGLES:
+    case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
+    case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
++   case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+       return 0;
+    case PIPE_CAP_SHADER_BUFFER_OFFSET_ALIGNMENT:
+       return 4;
+diff --git a/src/gallium/drivers/svga/svga_screen.c b/src/gallium/drivers/svga/svga_screen.c
+index 6d5c73b..f969dd3 100644
+--- a/src/gallium/drivers/svga/svga_screen.c
++++ b/src/gallium/drivers/svga/svga_screen.c
+@@ -417,6 +417,7 @@ svga_get_param(struct pipe_screen *screen, enum pipe_cap param)
+    case PIPE_CAP_MAX_WINDOW_RECTANGLES:
+    case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
+    case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
++   case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+       return 0;
+    }
+ 
+diff --git a/src/gallium/drivers/swr/swr_screen.cpp b/src/gallium/drivers/swr/swr_screen.cpp
+index 90fc77e..2495efb 100644
+--- a/src/gallium/drivers/swr/swr_screen.cpp
++++ b/src/gallium/drivers/swr/swr_screen.cpp
+@@ -367,6 +367,7 @@ swr_get_param(struct pipe_screen *screen, enum pipe_cap param)
+    case PIPE_CAP_MAX_WINDOW_RECTANGLES:
+    case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
+    case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
++   case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+       return 0;
+    }
+ 
+diff --git a/src/gallium/drivers/vc4/vc4_screen.c b/src/gallium/drivers/vc4/vc4_screen.c
+index 045f3fb..72fd09a 100644
+--- a/src/gallium/drivers/vc4/vc4_screen.c
++++ b/src/gallium/drivers/vc4/vc4_screen.c
+@@ -238,6 +238,7 @@ vc4_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
+         case PIPE_CAP_MAX_WINDOW_RECTANGLES:
+         case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
+         case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
++        case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+                 return 0;
+ 
+                 /* Stream output. */
+diff --git a/src/gallium/drivers/virgl/virgl_screen.c b/src/gallium/drivers/virgl/virgl_screen.c
+index 5f98754..81935ec 100644
+--- a/src/gallium/drivers/virgl/virgl_screen.c
++++ b/src/gallium/drivers/virgl/virgl_screen.c
+@@ -248,6 +248,7 @@ virgl_get_param(struct pipe_screen *screen, enum pipe_cap param)
+    case PIPE_CAP_MAX_WINDOW_RECTANGLES:
+    case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
+    case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
++   case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+       return 0;
+    case PIPE_CAP_VENDOR_ID:
+       return 0x1af4;
+diff --git a/src/gallium/include/pipe/p_defines.h b/src/gallium/include/pipe/p_defines.h
+index db96c51..cdad415 100644
+--- a/src/gallium/include/pipe/p_defines.h
++++ b/src/gallium/include/pipe/p_defines.h
+@@ -737,6 +737,7 @@ enum pipe_cap
+    PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED,
+    PIPE_CAP_VIEWPORT_SUBPIXEL_BITS,
+    PIPE_CAP_MIXED_COLOR_DEPTH_BITS,
++   PIPE_CAP_TGSI_ARRAY_COMPONENTS,
+ };
+ 
+ #define PIPE_QUIRK_TEXTURE_BORDER_COLOR_SWIZZLE_NV50 (1 << 0)
+diff --git a/src/mesa/drivers/dri/i965/intel_extensions.c b/src/mesa/drivers/dri/i965/intel_extensions.c
+index eef81e2..f489912 100644
+--- a/src/mesa/drivers/dri/i965/intel_extensions.c
++++ b/src/mesa/drivers/dri/i965/intel_extensions.c
+@@ -271,7 +271,7 @@ intelInitExtensions(struct gl_context *ctx)
+    ctx->Extensions.OES_texture_half_float_linear = true;
+ 
+    if (brw->gen >= 8)
+-      ctx->Const.GLSLVersion = 440;
++      ctx->Const.GLSLVersion = 450;
+    else if (brw->gen >= 6)
+       ctx->Const.GLSLVersion = 330;
+    else
+diff --git a/src/mesa/drivers/dri/i965/intel_screen.c b/src/mesa/drivers/dri/i965/intel_screen.c
+index 9b23bac..e1c3c19 100644
+--- a/src/mesa/drivers/dri/i965/intel_screen.c
++++ b/src/mesa/drivers/dri/i965/intel_screen.c
+@@ -1439,7 +1439,7 @@ set_max_gl_versions(struct intel_screen *screen)
+    switch (screen->devinfo.gen) {
+    case 9:
+    case 8:
+-      dri_screen->max_gl_core_version = 44;
++      dri_screen->max_gl_core_version = 45;
+       dri_screen->max_gl_compat_version = 30;
+       dri_screen->max_gl_es1_version = 11;
+       dri_screen->max_gl_es2_version = has_astc ? 32 : 31;
+diff --git a/src/mesa/state_tracker/st_glsl_to_tgsi.cpp b/src/mesa/state_tracker/st_glsl_to_tgsi.cpp
+index f869892..e60ba44 100644
+--- a/src/mesa/state_tracker/st_glsl_to_tgsi.cpp
++++ b/src/mesa/state_tracker/st_glsl_to_tgsi.cpp
+@@ -67,19 +67,34 @@ class st_dst_reg;
+ 
+ static int swizzle_for_size(int size);
+ 
++static int swizzle_for_type(const glsl_type *type, int component = 0)
++{
++   unsigned num_elements = 4;
++
++   if (type) {
++      type = type->without_array();
++      if (type->is_scalar() || type->is_vector() || type->is_matrix())
++         num_elements = type->vector_elements;
++   }
++
++   int swizzle = swizzle_for_size(num_elements);
++   assert(num_elements + component <= 4);
++
++   swizzle += component * MAKE_SWIZZLE4(1, 1, 1, 1);
++   return swizzle;
++}
++
+ /**
+  * This struct is a corresponding struct to TGSI ureg_src.
+  */
+ class st_src_reg {
+ public:
+-   st_src_reg(gl_register_file file, int index, const glsl_type *type)
++   st_src_reg(gl_register_file file, int index, const glsl_type *type,
++              int component = 0)
+    {
+       this->file = file;
+       this->index = index;
+-      if (type && (type->is_scalar() || type->is_vector() || type->is_matrix()))
+-         this->swizzle = swizzle_for_size(type->vector_elements);
+-      else
+-         this->swizzle = SWIZZLE_XYZW;
++      this->swizzle = swizzle_for_type(type, component);
+       this->negate = 0;
+       this->index2D = 0;
+       this->type = type ? type->base_type : GLSL_TYPE_ERROR;
+@@ -255,6 +270,7 @@ public:
+    ir_instruction *ir;
+    GLboolean cond_update;
+    bool saturate;
++   bool is_64bit_expanded;
+    st_src_reg sampler; /**< sampler register */
+    int sampler_base;
+    int sampler_array_size; /**< 1-based size of sampler array, 1 if not array */
+@@ -278,13 +294,19 @@ class variable_storage : public exec_node {
+ public:
+    variable_storage(ir_variable *var, gl_register_file file, int index,
+                     unsigned array_id = 0)
+-      : file(file), index(index), var(var), array_id(array_id)
++      : file(file), index(index), component(0), var(var), array_id(array_id)
+    {
+       /* empty */
+    }
+ 
+    gl_register_file file;
+    int index;
++
++   /* Explicit component location. This is given in terms of the GLSL-style
++    * swizzles where each double is a single component, i.e. for 64-bit types
++    * it can only be 0 or 1.
++    */
++   int component;
+    ir_variable *var; /* variable that maps to this, if any */
+    unsigned array_id;
+ };
+@@ -339,25 +361,38 @@ public:
+ static st_src_reg undef_src = st_src_reg(PROGRAM_UNDEFINED, 0, GLSL_TYPE_ERROR);
+ static st_dst_reg undef_dst = st_dst_reg(PROGRAM_UNDEFINED, SWIZZLE_NOOP, GLSL_TYPE_ERROR);
+ 
+-struct array_decl {
++struct inout_decl {
+    unsigned mesa_index;
+-   unsigned array_id;
++   unsigned array_id; /* TGSI ArrayID; 1-based: 0 means not an array */
+    unsigned array_size;
+-   enum glsl_base_type array_type;
++   enum glsl_base_type base_type;
++   ubyte usage_mask; /* GLSL-style usage-mask,  i.e. single bit per double */
+ };
+ 
+-static enum glsl_base_type
+-find_array_type(struct array_decl *arrays, unsigned count, unsigned array_id)
++static struct inout_decl *
++find_inout_array(struct inout_decl *decls, unsigned count, unsigned array_id)
+ {
+-   unsigned i;
++   assert(array_id != 0);
+ 
+-   for (i = 0; i < count; i++) {
+-      struct array_decl *decl = &arrays[i];
++   for (unsigned i = 0; i < count; i++) {
++      struct inout_decl *decl = &decls[i];
+ 
+       if (array_id == decl->array_id) {
+-         return decl->array_type;
++         return decl;
+       }
+    }
++
++   return NULL;
++}
++
++static enum glsl_base_type
++find_array_type(struct inout_decl *decls, unsigned count, unsigned array_id)
++{
++   if (!array_id)
++      return GLSL_TYPE_ERROR;
++   struct inout_decl *decl = find_inout_array(decls, count, array_id);
++   if (decl)
++      return decl->base_type;
+    return GLSL_TYPE_ERROR;
+ }
+ 
+@@ -385,9 +420,11 @@ public:
+    unsigned max_num_arrays;
+    unsigned next_array;
+ 
+-   struct array_decl input_arrays[PIPE_MAX_SHADER_INPUTS];
++   struct inout_decl inputs[4 * PIPE_MAX_SHADER_INPUTS];
++   unsigned num_inputs;
+    unsigned num_input_arrays;
+-   struct array_decl output_arrays[PIPE_MAX_SHADER_OUTPUTS];
++   struct inout_decl outputs[4 * PIPE_MAX_SHADER_OUTPUTS];
++   unsigned num_outputs;
+    unsigned num_output_arrays;
+ 
+    int num_address_regs;
+@@ -670,6 +707,7 @@ glsl_to_tgsi_visitor::emit_asm(ir_instruction *ir, unsigned op,
+    inst->src[1] = src1;
+    inst->src[2] = src2;
+    inst->src[3] = src3;
++   inst->is_64bit_expanded = false;
+    inst->ir = ir;
+    inst->dead_mask = 0;
+    /* default to float, for paths where this is not initialized
+@@ -734,7 +772,7 @@ glsl_to_tgsi_visitor::emit_asm(ir_instruction *ir, unsigned op,
+    for (j = 0; j < 2; j++) {
+       dst_is_64bit[j] = glsl_base_type_is_64bit(inst->dst[j].type);
+       if (!dst_is_64bit[j] && inst->dst[j].file == PROGRAM_OUTPUT && inst->dst[j].type == GLSL_TYPE_ARRAY) {
+-         enum glsl_base_type type = find_array_type(this->output_arrays, this->num_output_arrays, inst->dst[j].array_id);
++         enum glsl_base_type type = find_array_type(this->outputs, this->num_outputs, inst->dst[j].array_id);
+          if (glsl_base_type_is_64bit(type))
+             dst_is_64bit[j] = true;
+       }
+@@ -790,6 +828,7 @@ glsl_to_tgsi_visitor::emit_asm(ir_instruction *ir, unsigned op,
+             dinst->prev = NULL;
+          }
+          this->instructions.push_tail(dinst);
++         dinst->is_64bit_expanded = true;
+ 
+          /* modify the destination if we are splitting */
+          for (j = 0; j < 2; j++) {
+@@ -2359,7 +2398,7 @@ glsl_to_tgsi_visitor::visit(ir_dereference_variable *ir)
+                                                var->data.param_index);
+          this->variables.push_tail(entry);
+          break;
+-      case ir_var_shader_in:
++      case ir_var_shader_in: {
+          /* The linker assigns locations for varyings and attributes,
+           * including deprecated builtins (like gl_Color), user-assign
+           * generic attributes (glBindVertexLocation), and
+@@ -2367,63 +2406,79 @@ glsl_to_tgsi_visitor::visit(ir_dereference_variable *ir)
+           */
+          assert(var->data.location != -1);
+ 
+-         if (is_inout_array(shader->Stage, var, &is_2d)) {
+-            struct array_decl *decl = &input_arrays[num_input_arrays];
++         const glsl_type *type_without_array = var->type->without_array();
++         struct inout_decl *decl = &inputs[num_inputs];
++         unsigned component = var->data.location_frac;
++         num_inputs++;
+ 
+-            decl->mesa_index = var->data.location;
++         if (type_without_array->is_64bit())
++            component = component / 2;
++
++         decl->mesa_index = var->data.location;
++         decl->base_type = type_without_array->base_type;
++         decl->usage_mask = u_bit_consecutive(component,
++                                              type_without_array->vector_elements);
++
++         if (is_inout_array(shader->Stage, var, &is_2d)) {
+             decl->array_id = num_input_arrays + 1;
+             if (is_2d) {
+                decl->array_size = type_size(var->type->fields.array);
+-               decl->array_type = var->type->fields.array->without_array()->base_type;
+             } else {
+                decl->array_size = type_size(var->type);
+-               decl->array_type = var->type->without_array()->base_type;
+             }
+             num_input_arrays++;
+-
+-            entry = new(mem_ctx) variable_storage(var,
+-                                                  PROGRAM_INPUT,
+-                                                  var->data.location,
+-                                                  decl->array_id);
+-         }
+-         else {
+-            entry = new(mem_ctx) variable_storage(var,
+-                                                  PROGRAM_INPUT,
+-                                                  var->data.location);
++         } else {
++            decl->array_id = 0;
++            decl->array_size = 0;
+          }
++
++         entry = new(mem_ctx) variable_storage(var,
++                                               PROGRAM_INPUT,
++                                               decl->mesa_index,
++                                               decl->array_id);
++         entry->component = component;
++
+          this->variables.push_tail(entry);
+          break;
+-      case ir_var_shader_out:
++      }
++      case ir_var_shader_out: {
+          assert(var->data.location != -1);
+ 
+-         if (is_inout_array(shader->Stage, var, &is_2d)) {
+-            struct array_decl *decl = &output_arrays[num_output_arrays];
++         const glsl_type *type_without_array = var->type->without_array();
++         struct inout_decl *decl = &outputs[num_outputs];
++         unsigned component = var->data.location_frac;
++         num_outputs++;
++
++         if (type_without_array->is_64bit())
++            component = component / 2;
++
++         decl->mesa_index = var->data.location + FRAG_RESULT_MAX * var->data.index;
++         decl->base_type = type_without_array->base_type;
++         decl->usage_mask = u_bit_consecutive(component,
++                                              type_without_array->vector_elements);
+ 
+-            decl->mesa_index = var->data.location;
++         if (is_inout_array(shader->Stage, var, &is_2d)) {
+             decl->array_id = num_output_arrays + 1;
+             if (is_2d) {
+                decl->array_size = type_size(var->type->fields.array);
+-               decl->array_type = var->type->fields.array->without_array()->base_type;
+             } else {
+                decl->array_size = type_size(var->type);
+-               decl->array_type = var->type->without_array()->base_type;
+             }
+             num_output_arrays++;
+-
+-            entry = new(mem_ctx) variable_storage(var,
+-                                                  PROGRAM_OUTPUT,
+-                                                  var->data.location,
+-                                                  decl->array_id);
+-         }
+-         else {
+-            entry = new(mem_ctx) variable_storage(var,
+-                                                  PROGRAM_OUTPUT,
+-                                                  var->data.location
+-                                                  + FRAG_RESULT_MAX *
+-                                                    var->data.index);
++         } else {
++            decl->array_id = 0;
++            decl->array_size = 0;
+          }
++
++         entry = new(mem_ctx) variable_storage(var,
++                                               PROGRAM_OUTPUT,
++                                               decl->mesa_index,
++                                               decl->array_id);
++         entry->component = component;
++
+          this->variables.push_tail(entry);
+          break;
++      }
+       case ir_var_system_value:
+          entry = new(mem_ctx) variable_storage(var,
+                                                PROGRAM_SYSTEM_VALUE,
+@@ -2445,7 +2500,7 @@ glsl_to_tgsi_visitor::visit(ir_dereference_variable *ir)
+       }
+    }
+ 
+-   this->result = st_src_reg(entry->file, entry->index, var->type);
++   this->result = st_src_reg(entry->file, entry->index, var->type, entry->component);
+    this->result.array_id = entry->array_id;
+    if (this->shader->Stage == MESA_SHADER_VERTEX && var->data.mode == ir_var_shader_in && var->type->is_double())
+       this->result.is_double_vertex_input = true;
+@@ -2454,10 +2509,10 @@ glsl_to_tgsi_visitor::visit(ir_dereference_variable *ir)
+ }
+ 
+ static void
+-shrink_array_declarations(struct array_decl *arrays, unsigned count,
+-                          GLbitfield64 usage_mask,
++shrink_array_declarations(struct inout_decl *decls, unsigned count,
++                          GLbitfield64* usage_mask,
+                           GLbitfield64 double_usage_mask,
+-                          GLbitfield patch_usage_mask)
++                          GLbitfield* patch_usage_mask)
+ {
+    unsigned i;
+    int j;
+@@ -2466,17 +2521,19 @@ shrink_array_declarations(struct array_decl *arrays, unsigned count,
+     * of the arrays. For example, mat4[3] where only mat[1] is used.
+     */
+    for (i = 0; i < count; i++) {
+-      struct array_decl *decl = &arrays[i];
++      struct inout_decl *decl = &decls[i];
++      if (!decl->array_id)
++         continue;
+ 
+       /* Shrink the beginning. */
+       for (j = 0; j < (int)decl->array_size; j++) {
+          if (decl->mesa_index >= VARYING_SLOT_PATCH0) {
+-            if (patch_usage_mask &
++            if (*patch_usage_mask &
+                 BITFIELD64_BIT(decl->mesa_index - VARYING_SLOT_PATCH0 + j))
+                break;
+          }
+          else {
+-            if (usage_mask & BITFIELD64_BIT(decl->mesa_index+j))
++            if (*usage_mask & BITFIELD64_BIT(decl->mesa_index+j))
+                break;
+             if (double_usage_mask & BITFIELD64_BIT(decl->mesa_index+j-1))
+                break;
+@@ -2490,12 +2547,12 @@ shrink_array_declarations(struct array_decl *arrays, unsigned count,
+       /* Shrink the end. */
+       for (j = decl->array_size-1; j >= 0; j--) {
+          if (decl->mesa_index >= VARYING_SLOT_PATCH0) {
+-            if (patch_usage_mask &
++            if (*patch_usage_mask &
+                 BITFIELD64_BIT(decl->mesa_index - VARYING_SLOT_PATCH0 + j))
+                break;
+          }
+          else {
+-            if (usage_mask & BITFIELD64_BIT(decl->mesa_index+j))
++            if (*usage_mask & BITFIELD64_BIT(decl->mesa_index+j))
+                break;
+             if (double_usage_mask & BITFIELD64_BIT(decl->mesa_index+j-1))
+                break;
+@@ -2503,6 +2560,22 @@ shrink_array_declarations(struct array_decl *arrays, unsigned count,
+ 
+          decl->array_size--;
+       }
++
++      /* When not all entries of an array are accessed, we mark them as uesd
++       * here anyway, to ensure that the input/output mapping logic doesn't get
++       * confused.
++       *
++       * TODO This happens when an array isn't used via indirect access, which
++       * some game ports do (at least eON-based). There is an optimization
++       * opportunity here by replacing the array declaration with non-array
++       * declarations of those slots that are actually used.
++       */
++      for (j = 1; j < (int)decl->array_size; ++j) {
++         if (decl->mesa_index >= VARYING_SLOT_PATCH0)
++            *patch_usage_mask |= BITFIELD64_BIT(decl->mesa_index - VARYING_SLOT_PATCH0 + j);
++         else
++            *usage_mask |= BITFIELD64_BIT(decl->mesa_index + j);
++      }
+    }
+ }
+ 
+@@ -2591,12 +2664,6 @@ glsl_to_tgsi_visitor::visit(ir_dereference_array *ir)
+       }
+    }
+ 
+-   /* If the type is smaller than a vec4, replicate the last channel out. */
+-   if (ir->type->is_scalar() || ir->type->is_vector())
+-      src.swizzle = swizzle_for_size(ir->type->vector_elements);
+-   else
+-      src.swizzle = SWIZZLE_NOOP;
+-
+    /* Change the register type to the element type of the array. */
+    src.type = ir->type->base_type;
+ 
+@@ -2634,7 +2701,7 @@ glsl_to_tgsi_visitor::visit(ir_dereference_record *ir)
+  * ir_dereference handler.
+  */
+ static st_dst_reg
+-get_assignment_lhs(ir_dereference *ir, glsl_to_tgsi_visitor *v)
++get_assignment_lhs(ir_dereference *ir, glsl_to_tgsi_visitor *v, int *component)
+ {
+    /* The LHS must be a dereference.  If the LHS is a variable indexed array
+     * access of a vector, it must be separated into a series conditional moves
+@@ -2646,10 +2713,12 @@ get_assignment_lhs(ir_dereference *ir, glsl_to_tgsi_visitor *v)
+       assert(!deref_array->array->type->is_vector());
+    }
+ 
+-   /* Use the rvalue deref handler for the most part.  We'll ignore
+-    * swizzles in it and write swizzles using writemask, though.
++   /* Use the rvalue deref handler for the most part.  We write swizzles using
++    * the writemask, but we do extract the base component for enhanced layouts
++    * from the source swizzle.
+     */
+    ir->accept(v);
++   *component = GET_SWZ(v->result.swizzle, 0);
+    return st_dst_reg(v->result);
+ }
+ 
+@@ -2834,53 +2903,46 @@ glsl_to_tgsi_visitor::emit_block_mov(ir_assignment *ir, const struct glsl_type *
+ void
+ glsl_to_tgsi_visitor::visit(ir_assignment *ir)
+ {
++   int dst_component;
+    st_dst_reg l;
+    st_src_reg r;
+ 
+    ir->rhs->accept(this);
+    r = this->result;
+ 
+-   l = get_assignment_lhs(ir->lhs, this);
++   l = get_assignment_lhs(ir->lhs, this, &dst_component);
+ 
+-   /* FINISHME: This should really set to the correct maximal writemask for each
+-    * FINISHME: component written (in the loops below).  This case can only
+-    * FINISHME: occur for matrices, arrays, and structures.
+-    */
+-   if (ir->write_mask == 0) {
+-      assert(!ir->lhs->type->is_scalar() && !ir->lhs->type->is_vector());
+-
+-      if (ir->lhs->type->is_array() || ir->lhs->type->without_array()->is_matrix()) {
+-         if (ir->lhs->type->without_array()->is_64bit()) {
+-            switch (ir->lhs->type->without_array()->vector_elements) {
+-            case 1:
+-               l.writemask = WRITEMASK_X;
+-               break;
+-            case 2:
+-               l.writemask = WRITEMASK_XY;
+-               break;
+-            case 3:
+-               l.writemask = WRITEMASK_XYZ;
+-               break;
+-            case 4:
+-               l.writemask = WRITEMASK_XYZW;
+-               break;
+-            }
+-         } else
+-            l.writemask = WRITEMASK_XYZW;
+-      }
+-   } else if (ir->lhs->type->is_scalar() &&
+-              !ir->lhs->type->is_64bit() &&
+-              ir->lhs->variable_referenced()->data.mode == ir_var_shader_out) {
+-      /* FINISHME: This hack makes writing to gl_FragDepth, which lives in the
+-       * FINISHME: W component of fragment shader output zero, work correctly.
+-       */
+-      l.writemask = WRITEMASK_XYZW;
+-   } else {
++   {
+       int swizzles[4];
+       int first_enabled_chan = 0;
+       int rhs_chan = 0;
++      ir_variable *variable = ir->lhs->variable_referenced();
+ 
+-      l.writemask = ir->write_mask;
++      if (shader->Stage == MESA_SHADER_FRAGMENT &&
++          variable->data.mode == ir_var_shader_out &&
++          (variable->data.location == FRAG_RESULT_DEPTH ||
++           variable->data.location == FRAG_RESULT_STENCIL)) {
++         assert(ir->lhs->type->is_scalar());
++         assert(ir->write_mask == WRITEMASK_X);
++
++         if (variable->data.location == FRAG_RESULT_DEPTH)
++            l.writemask = WRITEMASK_Z;
++         else {
++            assert(variable->data.location == FRAG_RESULT_STENCIL);
++            l.writemask = WRITEMASK_Y;
++         }
++      } else if (ir->write_mask == 0) {
++         assert(!ir->lhs->type->is_scalar() && !ir->lhs->type->is_vector());
++
++         if (ir->lhs->type->is_array() || ir->lhs->type->is_matrix()) {
++            unsigned num_elements = ir->lhs->type->without_array()->vector_elements;
++            l.writemask = u_bit_consecutive(0, num_elements);
++         } else {
++            l.writemask = WRITEMASK_XYZW;
++         }
++      } else {
++         l.writemask = ir->write_mask;
++      }
+ 
+       for (int i = 0; i < 4; i++) {
+          if (l.writemask & (1 << i)) {
+@@ -2889,6 +2951,8 @@ glsl_to_tgsi_visitor::visit(ir_assignment *ir)
+          }
+       }
+ 
++      l.writemask = l.writemask << dst_component;
++
+       /* Swizzle a small RHS vector into the channels being written.
+        *
+        * glsl ir treats write_mask as dictating how many channels are
+@@ -2916,6 +2980,7 @@ glsl_to_tgsi_visitor::visit(ir_assignment *ir)
+    } else if (ir->rhs->as_expression() &&
+               this->instructions.get_tail() &&
+               ir->rhs == ((glsl_to_tgsi_instruction *)this->instructions.get_tail())->ir &&
++              !((glsl_to_tgsi_instruction *)this->instructions.get_tail())->is_64bit_expanded &&
+               type_size(ir->lhs->type) == 1 &&
+               l.writemask == ((glsl_to_tgsi_instruction *)this->instructions.get_tail())->dst[0].writemask) {
+       /* To avoid emitting an extra MOV when assigning an expression to a
+@@ -4329,6 +4394,8 @@ glsl_to_tgsi_visitor::glsl_to_tgsi_visitor()
+    array_sizes = NULL;
+    max_num_arrays = 0;
+    next_array = 0;
++   num_inputs = 0;
++   num_outputs = 0;
+    num_input_arrays = 0;
+    num_output_arrays = 0;
+    next_signature_id = 1;
+@@ -5201,8 +5268,10 @@ struct st_translate {
+    struct ureg_src shared_memory;
+    struct tgsi_texture_offset tex_offsets[MAX_GLSL_TEXTURE_OFFSET];
+    unsigned *array_sizes;
+-   struct array_decl *input_arrays;
+-   struct array_decl *output_arrays;
++   struct inout_decl *input_decls;
++   unsigned num_input_decls;
++   struct inout_decl *output_decls;
++   unsigned num_output_decls;
+ 
+    const GLuint *inputMapping;
+    const GLuint *outputMapping;
+@@ -5431,13 +5500,15 @@ dst_register(struct st_translate *t, gl_register_file file, unsigned index,
+          return t->outputs[t->outputMapping[index]];
+       }
+       else {
+-         struct array_decl *decl = &t->output_arrays[array_id-1];
++         struct inout_decl *decl = find_inout_array(t->output_decls, t->num_output_decls, array_id);
+          unsigned mesa_index = decl->mesa_index;
+          int slot = t->outputMapping[mesa_index];
+ 
+          assert(slot != -1 && t->outputs[slot].File == TGSI_FILE_OUTPUT);
+-         assert(t->outputs[slot].ArrayID == array_id);
+-         return ureg_dst_array_offset(t->outputs[slot], index - mesa_index);
++
++         struct ureg_dst dst = t->outputs[slot];
++         dst.ArrayID = array_id;
++         return ureg_dst_array_offset(dst, index - mesa_index);
+       }
+ 
+    case PROGRAM_ADDRESS:
+@@ -5494,13 +5565,15 @@ src_register(struct st_translate *t, const st_src_reg *reg)
+          return t->inputs[t->inputMapping[index] + double_reg2];
+       }
+       else {
+-         struct array_decl *decl = &t->input_arrays[reg->array_id-1];
++         struct inout_decl *decl = find_inout_array(t->input_decls, t->num_input_decls, reg->array_id);
+          unsigned mesa_index = decl->mesa_index;
+          int slot = t->inputMapping[mesa_index];
+ 
+          assert(slot != -1 && t->inputs[slot].File == TGSI_FILE_INPUT);
+-         assert(t->inputs[slot].ArrayID == reg->array_id);
+-         return ureg_src_array_offset(t->inputs[slot], index + double_reg2 - mesa_index);
++
++         struct ureg_src src = t->inputs[slot];
++         src.ArrayID = reg->array_id;
++         return ureg_src_array_offset(src, index + double_reg2 - mesa_index);
+       }
+ 
+    case PROGRAM_ADDRESS:
+@@ -5995,25 +6068,6 @@ emit_face_var(struct gl_context *ctx, struct st_translate *t)
+    t->inputs[t->inputMapping[VARYING_SLOT_FACE]] = ureg_src(face_temp);
+ }
+ 
+-static bool
+-find_array(unsigned attr, struct array_decl *arrays, unsigned count,
+-           unsigned *array_id, unsigned *array_size)
+-{
+-   unsigned i;
+-
+-   for (i = 0; i < count; i++) {
+-      struct array_decl *decl = &arrays[i];
+-
+-      if (attr == decl->mesa_index) {
+-         *array_id = decl->array_id;
+-         *array_size = decl->array_size;
+-         assert(*array_size);
+-         return true;
+-      }
+-   }
+-   return false;
+-}
+-
+ static void
+ emit_compute_block_size(const struct gl_program *program,
+                         struct ureg_program *ureg) {
+@@ -6097,48 +6151,37 @@ st_translate_program(
+     */
+    switch (procType) {
+    case PIPE_SHADER_FRAGMENT:
+-      for (i = 0; i < numInputs; i++) {
+-         unsigned array_id = 0;
+-         unsigned array_size;
+-
+-         if (find_array(inputSlotToAttr[i], program->input_arrays,
+-                        program->num_input_arrays, &array_id, &array_size)) {
+-            /* We've found an array. Declare it so. */
+-            t->inputs[i] = ureg_DECL_fs_input_cyl_centroid(ureg,
+-                              inputSemanticName[i], inputSemanticIndex[i],
+-                              interpMode[i], 0, interpLocation[i],
+-                              array_id, array_size);
+-
+-            GLuint base_attr = inputSlotToAttr[i];
+-            while (i + 1 < numInputs &&
+-                   inputSlotToAttr[i + 1] < base_attr + array_size)
+-               ++i;
+-         }
+-         else {
+-            t->inputs[i] = ureg_DECL_fs_input_cyl_centroid(ureg,
+-                              inputSemanticName[i], inputSemanticIndex[i],
+-                              interpMode[i], 0, interpLocation[i], 0, 1);
+-         }
+-      }
+-      break;
+    case PIPE_SHADER_GEOMETRY:
+    case PIPE_SHADER_TESS_EVAL:
+    case PIPE_SHADER_TESS_CTRL:
+-      for (i = 0; i < numInputs; i++) {
+-         unsigned array_id = 0;
+-         unsigned array_size;
+-
+-         if (find_array(inputSlotToAttr[i], program->input_arrays,
+-                        program->num_input_arrays, &array_id, &array_size)) {
+-            /* We've found an array. Declare it so. */
+-            t->inputs[i] = ureg_DECL_input(ureg, inputSemanticName[i],
+-                                           inputSemanticIndex[i],
+-                                           array_id, array_size);
+-            i += array_size - 1;
++      for (i = 0; i < program->num_inputs; ++i) {
++         struct inout_decl *decl = &program->inputs[i];
++         unsigned slot = inputMapping[decl->mesa_index];
++         struct ureg_src src;
++         ubyte tgsi_usage_mask = decl->usage_mask;
++         unsigned size = decl->array_id ? decl->array_size : 1;
++
++         if (glsl_base_type_is_64bit(decl->base_type)) {
++            if (tgsi_usage_mask == 1)
++               tgsi_usage_mask = TGSI_WRITEMASK_XY;
++            else if (tgsi_usage_mask == 2)
++               tgsi_usage_mask = TGSI_WRITEMASK_ZW;
++            else {
++               if (!decl->array_id && (tgsi_usage_mask & TGSI_WRITEMASK_ZW))
++                  size = 2;
++               tgsi_usage_mask = TGSI_WRITEMASK_XYZW;
++            }
+          }
+-         else {
+-            t->inputs[i] = ureg_DECL_input(ureg, inputSemanticName[i],
+-                                           inputSemanticIndex[i], 0, 1);
++
++         src = ureg_DECL_fs_input_cyl_centroid_layout(ureg,
++                  inputSemanticName[slot], inputSemanticIndex[slot],
++                  interpMode ? interpMode[slot] : 0, 0, interpLocation ? interpLocation[slot] : 0,
++                  slot, decl->array_id, size, tgsi_usage_mask);
++
++         if (t->inputs[slot].File != TGSI_FILE_INPUT) {
++            /* The ArrayID is set up in dst_register */
++            src.ArrayID = 0;
++            t->inputs[slot] = src;
+          }
+       }
+       break;
+@@ -6164,23 +6207,33 @@ st_translate_program(
+    case PIPE_SHADER_TESS_EVAL:
+    case PIPE_SHADER_TESS_CTRL:
+    case PIPE_SHADER_VERTEX:
+-      for (i = 0; i < numOutputs; i++) {
+-         unsigned array_id = 0;
+-         unsigned array_size;
+-
+-         if (find_array(outputSlotToAttr[i], program->output_arrays,
+-                        program->num_output_arrays, &array_id, &array_size)) {
+-            /* We've found an array. Declare it so. */
+-            t->outputs[i] = ureg_DECL_output_array(ureg,
+-                                                   outputSemanticName[i],
+-                                                   outputSemanticIndex[i],
+-                                                   array_id, array_size);
+-            i += array_size - 1;
++      for (i = 0; i < program->num_outputs; ++i) {
++         struct inout_decl *decl = &program->outputs[i];
++         unsigned slot = outputMapping[decl->mesa_index];
++         struct ureg_dst dst;
++         ubyte tgsi_usage_mask = decl->usage_mask;
++         unsigned size = decl->array_id ? decl->array_size : 1;
++
++         if (glsl_base_type_is_64bit(decl->base_type)) {
++            if (tgsi_usage_mask == 1)
++               tgsi_usage_mask = TGSI_WRITEMASK_XY;
++            else if (tgsi_usage_mask == 2)
++               tgsi_usage_mask = TGSI_WRITEMASK_ZW;
++            else {
++               if (!decl->array_id && (tgsi_usage_mask & TGSI_WRITEMASK_ZW))
++                  size = 2;
++               tgsi_usage_mask = TGSI_WRITEMASK_XYZW;
++            }
+          }
+-         else {
+-            t->outputs[i] = ureg_DECL_output(ureg,
+-                                             outputSemanticName[i],
+-                                             outputSemanticIndex[i]);
++
++         dst = ureg_DECL_output_layout(ureg,
++                     outputSemanticName[slot], outputSemanticIndex[slot],
++                     slot, decl->array_id, size, tgsi_usage_mask);
++
++         if (t->outputs[slot].File != TGSI_FILE_OUTPUT) {
++            /* The ArrayID is set up in dst_register */
++            dst.ArrayID = 0;
++            t->outputs[slot] = dst;
+          }
+       }
+       break;
+@@ -6303,8 +6356,10 @@ st_translate_program(
+    }
+ 
+    t->array_sizes = program->array_sizes;
+-   t->input_arrays = program->input_arrays;
+-   t->output_arrays = program->output_arrays;
++   t->input_decls = program->inputs;
++   t->num_input_decls = program->num_inputs;
++   t->output_decls = program->outputs;
++   t->num_output_decls = program->num_outputs;
+ 
+    /* Emit constants and uniforms.  TGSI uses a single index space for these,
+     * so we put all the translated regs in t->constants.
+@@ -6636,10 +6691,10 @@ get_mesa_program_tgsi(struct gl_context *ctx,
+    prog->NumInstructions = 0;
+ 
+    do_set_program_inouts(shader->ir, prog, shader->Stage);
+-   shrink_array_declarations(v->input_arrays, v->num_input_arrays,
+-                             prog->InputsRead, prog->DoubleInputsRead, prog->PatchInputsRead);
+-   shrink_array_declarations(v->output_arrays, v->num_output_arrays,
+-                             prog->OutputsWritten, 0ULL, prog->PatchOutputsWritten);
++   shrink_array_declarations(v->inputs, v->num_inputs,
++                             &prog->InputsRead, prog->DoubleInputsRead, &prog->PatchInputsRead);
++   shrink_array_declarations(v->outputs, v->num_outputs,
++                             &prog->OutputsWritten, 0ULL, &prog->PatchOutputsWritten);
+    count_resources(v, prog);
+ 
+    /* The GLSL IR won't be needed anymore. */
