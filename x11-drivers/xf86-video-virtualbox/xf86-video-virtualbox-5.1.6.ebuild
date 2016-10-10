@@ -130,7 +130,7 @@ src_compile() {
 	use dri && targets+=( Additions/linux/drm )
 
 	for each in ${targets[@]} ; do
-		pushd "${S}"/src/VBox/${each} $>/dev/null || die
+		pushd "${S}"/src/VBox/${each} || die
 		MAKE="kmk" \
 		emake TOOL_YASM_AS=yasm \
 		VBOX_USE_SYSTEM_XORG_HEADERS=1 \
