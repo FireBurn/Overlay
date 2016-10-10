@@ -438,17 +438,26 @@ index 6eb18ea..99ad90a 100644
  
     case PIPE_CAP_VENDOR_ID:
 diff --git a/src/gallium/drivers/nouveau/nvc0/nvc0_screen.c b/src/gallium/drivers/nouveau/nvc0/nvc0_screen.c
-index afcb08b..1011054 100644
+index afcb08b..5daeac7 100644
 --- a/src/gallium/drivers/nouveau/nvc0/nvc0_screen.c
 +++ b/src/gallium/drivers/nouveau/nvc0/nvc0_screen.c
-@@ -272,6 +272,7 @@ nvc0_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
-    case PIPE_CAP_PCI_DEVICE:
-    case PIPE_CAP_PCI_FUNCTION:
-    case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
+@@ -126,7 +126,7 @@ nvc0_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
+       return 128 * 1024 * 1024;
+    case PIPE_CAP_GLSL_FEATURE_LEVEL:
+       if (class_3d <= NVF0_3D_CLASS)
+-         return 430;
++         return 450;
+       return 410;
+    case PIPE_CAP_MAX_RENDER_TARGETS:
+       return 8;
+@@ -240,6 +240,7 @@ nvc0_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
+    case PIPE_CAP_ROBUST_BUFFER_ACCESS_BEHAVIOR:
+    case PIPE_CAP_TGSI_VOTE:
+    case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
 +   case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
-       return 0;
- 
-    case PIPE_CAP_VENDOR_ID:
+       return 1;
+    case PIPE_CAP_COMPUTE:
+       return (class_3d < GP100_3D_CLASS);
 diff --git a/src/gallium/drivers/r300/r300_screen.c b/src/gallium/drivers/r300/r300_screen.c
 index 4d41693..0b147f9 100644
 --- a/src/gallium/drivers/r300/r300_screen.c
