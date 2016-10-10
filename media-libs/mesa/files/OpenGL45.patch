@@ -402,17 +402,17 @@ index 85357fa..1904cd6 100644
  
     case PIPE_CAP_VENDOR_ID:
 diff --git a/src/gallium/drivers/llvmpipe/lp_screen.c b/src/gallium/drivers/llvmpipe/lp_screen.c
-index 18837a2..10b87fa 100644
+index 18837a2..4daef1d 100644
 --- a/src/gallium/drivers/llvmpipe/lp_screen.c
 +++ b/src/gallium/drivers/llvmpipe/lp_screen.c
-@@ -330,6 +330,7 @@ llvmpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
-    case PIPE_CAP_MAX_WINDOW_RECTANGLES:
-    case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
-    case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
+@@ -265,6 +265,7 @@ llvmpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
+    case PIPE_CAP_FAKE_SW_MSAA:
+       return 1;
+    case PIPE_CAP_CONDITIONAL_RENDER_INVERTED:
 +   case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
-       return 0;
-    }
-    /* should only get here on unhandled cases */
+       return 1;
+ 
+    case PIPE_CAP_VENDOR_ID:
 diff --git a/src/gallium/drivers/nouveau/nv30/nv30_screen.c b/src/gallium/drivers/nouveau/nv30/nv30_screen.c
 index 2ced8f1..961c22c 100644
 --- a/src/gallium/drivers/nouveau/nv30/nv30_screen.c
@@ -474,10 +474,18 @@ index a350080..95c6d99 100644
  
  	case PIPE_CAP_MAX_SHADER_PATCH_VARYINGS:
 diff --git a/src/gallium/drivers/radeonsi/si_pipe.c b/src/gallium/drivers/radeonsi/si_pipe.c
-index 2aa679c..0096937 100644
+index 2aa679c..1c22bb9 100644
 --- a/src/gallium/drivers/radeonsi/si_pipe.c
 +++ b/src/gallium/drivers/radeonsi/si_pipe.c
-@@ -440,7 +440,7 @@ static int si_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
+@@ -409,6 +409,7 @@ static int si_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
+ 	case PIPE_CAP_STRING_MARKER:
+ 	case PIPE_CAP_CLEAR_TEXTURE:
+ 	case PIPE_CAP_CULL_DISTANCE:
++	case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+ 		return 1;
+ 
+ 	case PIPE_CAP_RESOURCE_FROM_USER_MEMORY:
+@@ -440,7 +441,7 @@ static int si_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
  		if (pscreen->get_shader_param(pscreen, PIPE_SHADER_COMPUTE,
  		                              PIPE_SHADER_CAP_SUPPORTED_IRS) &
  		    (1 << PIPE_SHADER_IR_TGSI))
@@ -486,26 +494,18 @@ index 2aa679c..0096937 100644
  		return HAVE_LLVM >= 0x0309 ? 420 :
  		       HAVE_LLVM >= 0x0307 ? 410 : 330;
  
-@@ -460,6 +460,7 @@ static int si_get_param(struct pipe_screen* pscreen, enum pipe_cap param)
- 	case PIPE_CAP_PRIMITIVE_RESTART_FOR_PATCHES:
- 	case PIPE_CAP_TGSI_VOTE:
- 	case PIPE_CAP_MAX_WINDOW_RECTANGLES:
-+	case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
- 		return 0;
- 
- 	case PIPE_CAP_QUERY_BUFFER_OBJECT:
 diff --git a/src/gallium/drivers/softpipe/sp_screen.c b/src/gallium/drivers/softpipe/sp_screen.c
-index 6ffc777..499a945 100644
+index 6ffc777..ca5c7de 100644
 --- a/src/gallium/drivers/softpipe/sp_screen.c
 +++ b/src/gallium/drivers/softpipe/sp_screen.c
-@@ -280,6 +280,7 @@ softpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
-    case PIPE_CAP_MAX_WINDOW_RECTANGLES:
-    case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
-    case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
-+   case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+@@ -248,6 +248,7 @@ softpipe_get_param(struct pipe_screen *screen, enum pipe_cap param)
+    case PIPE_CAP_POLYGON_OFFSET_CLAMP:
        return 0;
-    case PIPE_CAP_SHADER_BUFFER_OFFSET_ALIGNMENT:
-       return 4;
+    case PIPE_CAP_COPY_BETWEEN_COMPRESSED_AND_PLAIN_FORMATS:
++   case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
+       return 1;
+    case PIPE_CAP_MULTISAMPLE_Z_RESOLVE:
+    case PIPE_CAP_RESOURCE_FROM_USER_MEMORY:
 diff --git a/src/gallium/drivers/svga/svga_screen.c b/src/gallium/drivers/svga/svga_screen.c
 index 6d5c73b..f969dd3 100644
 --- a/src/gallium/drivers/svga/svga_screen.c
@@ -592,6 +592,24 @@ index 9b23bac..e1c3c19 100644
        dri_screen->max_gl_compat_version = 30;
        dri_screen->max_gl_es1_version = 11;
        dri_screen->max_gl_es2_version = has_astc ? 32 : 31;
+diff --git a/src/mesa/state_tracker/st_extensions.c b/src/mesa/state_tracker/st_extensions.c
+index b9befa1..b87a3db 100644
+--- a/src/mesa/state_tracker/st_extensions.c
++++ b/src/mesa/state_tracker/st_extensions.c
+@@ -892,6 +892,13 @@ void st_init_extensions(struct pipe_screen *screen,
+       extensions->AMD_vertex_shader_layer = GL_TRUE;
+    }
+ 
++   if (consts->GLSLVersion >= 140) {
++      if (screen->get_param(screen, PIPE_CAP_TGSI_ARRAY_COMPONENTS) &&
++         screen->get_shader_param(screen, PIPE_SHADER_FRAGMENT,
++                                   PIPE_SHADER_CAP_PREFERRED_IR) == PIPE_SHADER_IR_TGSI)
++         extensions->ARB_enhanced_layouts = GL_TRUE;
++   }
++
+    if (consts->GLSLVersion >= 130) {
+       consts->NativeIntegers = GL_TRUE;
+       consts->MaxClipPlanes = 8;
 diff --git a/src/mesa/state_tracker/st_glsl_to_tgsi.cpp b/src/mesa/state_tracker/st_glsl_to_tgsi.cpp
 index f869892..e60ba44 100644
 --- a/src/mesa/state_tracker/st_glsl_to_tgsi.cpp
