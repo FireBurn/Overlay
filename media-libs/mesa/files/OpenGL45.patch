@@ -1,5 +1,5 @@
 diff --git a/src/gallium/drivers/nouveau/nvc0/nvc0_screen.c b/src/gallium/drivers/nouveau/nvc0/nvc0_screen.c
-index 1011054..5daeac7 100644
+index cfa2f76..5daeac7 100644
 --- a/src/gallium/drivers/nouveau/nvc0/nvc0_screen.c
 +++ b/src/gallium/drivers/nouveau/nvc0/nvc0_screen.c
 @@ -126,7 +126,7 @@ nvc0_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
@@ -11,22 +11,6 @@ index 1011054..5daeac7 100644
        return 410;
     case PIPE_CAP_MAX_RENDER_TARGETS:
        return 8;
-@@ -240,6 +240,7 @@ nvc0_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
-    case PIPE_CAP_ROBUST_BUFFER_ACCESS_BEHAVIOR:
-    case PIPE_CAP_TGSI_VOTE:
-    case PIPE_CAP_POLYGON_OFFSET_UNITS_UNSCALED:
-+   case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
-       return 1;
-    case PIPE_CAP_COMPUTE:
-       return (class_3d < GP100_3D_CLASS);
-@@ -272,7 +273,6 @@ nvc0_screen_get_param(struct pipe_screen *pscreen, enum pipe_cap param)
-    case PIPE_CAP_PCI_DEVICE:
-    case PIPE_CAP_PCI_FUNCTION:
-    case PIPE_CAP_VIEWPORT_SUBPIXEL_BITS:
--   case PIPE_CAP_TGSI_ARRAY_COMPONENTS:
-       return 0;
- 
-    case PIPE_CAP_VENDOR_ID:
 diff --git a/src/gallium/drivers/radeonsi/si_pipe.c b/src/gallium/drivers/radeonsi/si_pipe.c
 index 5a3f101..6e7f6a3 100644
 --- a/src/gallium/drivers/radeonsi/si_pipe.c
