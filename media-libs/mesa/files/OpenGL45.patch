@@ -24,29 +24,3 @@ index 5a3f101..6e7f6a3 100644
  		return HAVE_LLVM >= 0x0309 ? 420 :
  		       HAVE_LLVM >= 0x0307 ? 410 : 330;
  
-diff --git a/src/mesa/drivers/dri/i965/intel_extensions.c b/src/mesa/drivers/dri/i965/intel_extensions.c
-index eef81e2..f489912 100644
---- a/src/mesa/drivers/dri/i965/intel_extensions.c
-+++ b/src/mesa/drivers/dri/i965/intel_extensions.c
-@@ -271,7 +271,7 @@ intelInitExtensions(struct gl_context *ctx)
-    ctx->Extensions.OES_texture_half_float_linear = true;
- 
-    if (brw->gen >= 8)
--      ctx->Const.GLSLVersion = 440;
-+      ctx->Const.GLSLVersion = 450;
-    else if (brw->gen >= 6)
-       ctx->Const.GLSLVersion = 330;
-    else
-diff --git a/src/mesa/drivers/dri/i965/intel_screen.c b/src/mesa/drivers/dri/i965/intel_screen.c
-index 9b23bac..e1c3c19 100644
---- a/src/mesa/drivers/dri/i965/intel_screen.c
-+++ b/src/mesa/drivers/dri/i965/intel_screen.c
-@@ -1439,7 +1439,7 @@ set_max_gl_versions(struct intel_screen *screen)
-    switch (screen->devinfo.gen) {
-    case 9:
-    case 8:
--      dri_screen->max_gl_core_version = 44;
-+      dri_screen->max_gl_core_version = 45;
-       dri_screen->max_gl_compat_version = 30;
-       dri_screen->max_gl_es1_version = 11;
-       dri_screen->max_gl_es2_version = has_astc ? 32 : 31;
