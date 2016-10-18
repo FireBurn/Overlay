@@ -1,0 +1,52 @@
+[Unit]
+Description=Logstash
+Documentation=http://www.elastic.co
+Wants=network.target
+After=network.target
+
+[Service]
+Environment=LS_HEAP_SIZE=${LS_HEAP_SIZE:-500m}
+Environment=LS_HOME=${LS_HOME:-/var/lib/logstash}
+Environment=LS_JAVA_OPTS=${LS_JAVA_OPTS:-"-Djava.io.tmpdir=${LS_HOME}"}
+Environment=LS_CONF_DIR=/etc/logstash/conf.d
+Environment=CONF_DIR=/etc/logstash
+Environment=DATA_DIR=/var/lib/logstash
+Environment=LOG_DIR=/var/log/logstash
+Environment=PID_DIR=/run/logstash
+EnvironmentFile=-/etc/conf.d/logstash
+
+WorkingDirectory=/usr/share/elasticsearch
+
+User=logstash
+Group=logstash
+
+ExecStart=/opt/logstash/bin/logstash \
+				--path.config ${LS_CONF_DIR} \
+				--path.logs ${LOG_DIR} \
+				--path.data ${DATA_DIR}
+
+StandardOutput=journal
+StandardError=inherit
+
+# Specifies the maximum file descriptor number that can be opened by this process
+LimitNOFILE=65535
+
+# Specifies the maximum number of bytes of memory that may be locked into RAM
+# Set to "infinity" if you use the 'bootstrap.mlockall: true' option
+# in elasticsearch.yml and 'MAX_LOCKED_MEMORY=unlimited' in /etc/conf.d/elasticsearch
+#LimitMEMLOCK=infinity
+
+# Disable timeout logic and wait until process is stopped
+TimeoutStopSec=0
+
+# SIGTERM signal is used to stop the Java process
+KillSignal=SIGTERM
+
+# Java process is never killed
+SendSIGKILL=no
+
+# When a JVM receives a SIGTERM signal it exits with code 143
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target
