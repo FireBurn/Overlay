@@ -37,6 +37,7 @@ src_install() {
 
 	newconfd "${FILESDIR}/${MY_PN}.confd" ${MY_PN}
 	newinitd "${FILESDIR}/${MY_PN}.initd" ${MY_PN}
+	systemd_newunit "${FILESDIR}"/${MY_PN}.service "${MY_PN}.service"
 
 	insinto /etc/${MY_PN}
 	newins ${MY_PN}.yml ${MY_PN}.yml.example
