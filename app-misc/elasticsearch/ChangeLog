@@ -1,0 +1,266 @@
+# ChangeLog for app-misc/elasticsearch
+# Copyright 1999-2016 Gentoo Foundation; Distributed under the GPL v2
+# (auto-generated from git log)
+
+*elasticsearch-1.7.1 (09 Aug 2015)
+*elasticsearch-1.6.2 (09 Aug 2015)
+
+  09 Aug 2015; Robin H. Johnson <robbat2@gentoo.org>
+  +elasticsearch-1.6.2.ebuild, +elasticsearch-1.7.1.ebuild,
+  +files/elasticsearch.conf, +files/elasticsearch.init4,
+  +files/elasticsearch.service4, +metadata.xml:
+  proj/gentoo: Initial commit
+
+  This commit represents a new era for Gentoo:
+  Storing the gentoo-x86 tree in Git, as converted from CVS.
+
+  This commit is the start of the NEW history.
+  Any historical data is intended to be grafted onto this point.
+
+  Creation process:
+  1. Take final CVS checkout snapshot
+  2. Remove ALL ChangeLog* files
+  3. Transform all Manifests to thin
+  4. Remove empty Manifests
+  5. Convert all stale $Header$/$Id$ CVS keywords to non-expanded Git $Id$
+  5.1. Do not touch files with -kb/-ko keyword flags.
+
+  Signed-off-by: Robin H. Johnson <robbat2@gentoo.org>
+  X-Thanks: Alec Warner <antarus@gentoo.org> - did the GSoC 2006 migration
+  tests
+  X-Thanks: Robin H. Johnson <robbat2@gentoo.org> - infra guy, herding this
+  project
+  X-Thanks: Nguyen Thai Ngoc Duy <pclouds@gentoo.org> - Former Gentoo
+  developer, wrote Git features for the migration
+  X-Thanks: Brian Harring <ferringb@gentoo.org> - wrote much python to improve
+  cvs2svn
+  X-Thanks: Rich Freeman <rich0@gentoo.org> - validation scripts
+  X-Thanks: Patrick Lauer <patrick@gentoo.org> - Gentoo dev, running new 2014
+  work in migration
+  X-Thanks: Michał Górny <mgorny@gentoo.org> - scripts, QA, nagging
+  X-Thanks: All of other Gentoo developers - many ideas and lots of paint on
+  the bikeshed
+
+  24 Aug 2015; Justin Lecher <jlec@gentoo.org> metadata.xml:
+  Use https by default
+
+  Convert all URLs for sites supporting encrypted connections from http to
+  https
+
+  Signed-off-by: Justin Lecher <jlec@gentoo.org>
+
+  24 Aug 2015; Mike Gilbert <floppym@gentoo.org> metadata.xml:
+  Revert DOCTYPE SYSTEM https changes in metadata.xml
+
+  repoman does not yet accept the https version.
+  This partially reverts eaaface92ee81f30a6ac66fe7acbcc42c00dc450.
+
+  Bug: https://bugs.gentoo.org/552720
+
+*elasticsearch-1.7.3 (05 Nov 2015)
+
+  05 Nov 2015; Ian Delaney <idella4@gentoo.org> +elasticsearch-1.7.3.ebuild:
+  bump to 1.7.3, fixes gentoo bug
+
+  Gentoo bug: #562658
+
+  Package-Manager: portage-2.2.23
+
+  16 Dec 2015; Ian Delaney <idella4@gentoo.org> metadata.xml:
+  Drop set maintainer, add proxy-maintainers herd
+
+  Arrangement made directly by consult with Chainsaw via irc channel today,
+  Dec 16. proxy maintainer remains unchanged
+
+  Package-Manager: portage-2.2.24
+
+*elasticsearch-2.1.0 (16 Dec 2015)
+
+  16 Dec 2015; Ian Delaney <idella4@gentoo.org> +elasticsearch-2.1.0.ebuild,
+  metadata.xml:
+  bump to version 2.1.0
+
+  ebuild written by the proxy maintainer, submitted via the gentoo bug
+  Also informed has been runtested by 'Patrick'
+
+  Gentoo bug: #564604
+
+  Package-Manager: portage-2.2.24
+
+  16 Dec 2015; Ian Delaney <idella4@gentoo.org> +files/elasticsearch.init5:
+  add the elasticsearch.init5 script to FILESDIR
+
+  Notes from the bug;
+  ebuild based on the 2.0.0 ebuild by Julian Simioni
+  updated SRC_URI, preferring Java 8 if not installed yet
+  cleaned up src_prepare.
+  updated initscript (added here)
+
+  Gentoo bug: 564604
+
+  Package-Manager: portage-2.2.24
+
+  17 Dec 2015; Ian Delaney <idella4@gentoo.org> files/elasticsearch.init4,
+  files/elasticsearch.init5:
+  switch to correct file elasticsearch.init5
+
+  file mistakenly mixed with ".service5", now obsoleted in the gentoo bug
+
+  Gentoo bug: 564604
+
+  Package-Manager: portage-2.2.24
+
+  20 Dec 2015; Ian Delaney <idella4@gentoo.org> -elasticsearch-1.6.2.ebuild,
+  -elasticsearch-1.7.1.ebuild:
+  remove old vns. 1.6.2, 1.7.1
+
+  request by newly set proxy maintainer requested via the gentoo bug
+
+  Gentoo bug: #568418
+
+  Package-Manager: portage-2.2.24
+
+*elasticsearch-2.1.1 (06 Jan 2016)
+
+  06 Jan 2016; Patrick Lauer <patrick@gentoo.org> +elasticsearch-2.1.1.ebuild:
+  Bump
+
+  Package-Manager: portage-2.2.26
+
+*elasticsearch-1.7.4 (08 Jan 2016)
+
+  08 Jan 2016; Patrick Lauer <patrick@gentoo.org> +elasticsearch-1.7.4.ebuild:
+  Bump
+
+  Package-Manager: portage-2.2.26
+
+  24 Jan 2016; Michał Górny <mgorny@gentoo.org> metadata.xml:
+  Replace all herds with appropriate projects (GLEP 67)
+
+  Replace all uses of herd with appropriate project maintainers, or no
+  maintainers in case of herds requested to be disbanded.
+
+  24 Jan 2016; Michał Górny <mgorny@gentoo.org> metadata.xml:
+  Set appropriate maintainer types in metadata.xml (GLEP 67)
+
+*elasticsearch-2.2.0 (05 Feb 2016)
+*elasticsearch-2.1.2 (05 Feb 2016)
+*elasticsearch-1.7.5 (05 Feb 2016)
+
+  05 Feb 2016; Patrick Lauer <patrick@gentoo.org> +elasticsearch-1.7.5.ebuild,
+  +elasticsearch-2.1.2.ebuild, +elasticsearch-2.2.0.ebuild:
+  Bump #573896
+
+  Package-Manager: portage-2.2.27
+
+  05 Feb 2016; Patrick Lauer <patrick@gentoo.org> -elasticsearch-1.7.3.ebuild,
+  -elasticsearch-2.1.0.ebuild:
+  Old
+
+  Package-Manager: portage-2.2.27
+
+*elasticsearch-2.2.2 (01 Apr 2016)
+
+  01 Apr 2016; Patrick Lauer <patrick@gentoo.org> +elasticsearch-2.2.2.ebuild:
+  Bump to 2.2.2
+
+  Package-Manager: portage-2.2.28
+
+*elasticsearch-2.3.0 (01 Apr 2016)
+
+  01 Apr 2016; Patrick Lauer <patrick@gentoo.org> +elasticsearch-2.3.0.ebuild:
+  Bump to 2.3.0
+
+  Package-Manager: portage-2.2.28
+
+*elasticsearch-2.3.1 (19 Apr 2016)
+
+  19 Apr 2016; Patrick Lauer <patrick@gentoo.org> +elasticsearch-2.3.1.ebuild:
+  Bump
+
+  Package-Manager: portage-2.2.28
+
+*elasticsearch-2.3.2 (06 May 2016)
+
+  06 May 2016; Patrick Lauer <patrick@gentoo.org> +elasticsearch-2.3.2.ebuild,
+  +files/elasticsearch-systemd-pre-exec, +files/elasticsearch.conf2,
+  +files/elasticsearch.init6, +files/elasticsearch.service5:
+  Bump
+
+  Fix #569116
+  New init script and systemd unit, closer to upstream
+  Small bugfixes etc.
+  Thanks to Ferenc Erki for preparing and testing
+
+  Package-Manager: portage-2.2.28
+
+  18 May 2016; Austin English <wizardedit@gentoo.org>
+  files/elasticsearch.init4, files/elasticsearch.init5,
+  files/elasticsearch.init6:
+  use #!/sbin/openrc-run instead of #!/sbin/runscript
+
+*elasticsearch-2.3.3 (25 May 2016)
+
+  25 May 2016; Patrick Lauer <patrick@gentoo.org> +elasticsearch-2.3.3.ebuild:
+  Bump
+
+  Package-Manager: portage-2.3.0_rc1
+
+*elasticsearch-2.3.4 (11 Jul 2016)
+
+  11 Jul 2016; Patrick Lauer <patrick@gentoo.org> +elasticsearch-2.3.4.ebuild:
+  Bump
+
+  Package-Manager: portage-2.3.0
+
+*elasticsearch-2.3.5 (09 Aug 2016)
+
+  09 Aug 2016; Patrick Lauer <patrick@gentoo.org> +elasticsearch-2.3.5.ebuild,
+  +files/elasticsearch.sysctl.d, +files/elasticsearch.tmpfiles.d:
+  Bump, fix #585824
+
+  Package-Manager: portage-2.3.0
+
+*elasticsearch-2.4.0 (01 Sep 2016)
+
+  01 Sep 2016; Patrick Lauer <patrick@gentoo.org> +elasticsearch-2.4.0.ebuild:
+  Bump
+
+  Package-Manager: portage-2.3.0
+
+  02 Sep 2016; Patrick Lauer <patrick@gentoo.org> metadata.xml:
+  Fix maintainers
+
+  Package-Manager: portage-2.3.0
+
+*elasticsearch-5.0.0_beta1 (01 Oct 2016)
+
+  01 Oct 2016; Patrick Lauer <patrick@gentoo.org>
+  +elasticsearch-5.0.0_beta1.ebuild:
+  Add 5.0.0_beta1
+
+  Package-Manager: portage-2.3.0
+
+*elasticsearch-2.4.1 (01 Oct 2016)
+
+  01 Oct 2016; Patrick Lauer <patrick@gentoo.org> +elasticsearch-2.4.1.ebuild:
+  Bump
+
+  Package-Manager: portage-2.3.0
+
+  02 Oct 2016; Göktürk Yüksek <gokturk@gentoo.org> metadata.xml:
+  add proxy-maint back as a maintainer
+
+  Please do not remove projects/developers from the metadata without
+  consulting them first. Thank you!
+
+  Package-Manager: portage-2.3.0
+
+*elasticsearch-5.0.0_rc1 (15 Oct 2016)
+
+  15 Oct 2016; Patrick Lauer <patrick@gentoo.org>
+  -elasticsearch-5.0.0_beta1.ebuild, +elasticsearch-5.0.0_rc1.ebuild:
+  Bump to 5.0.0_rc1
+
+  Package-Manager: portage-2.3.2
+
