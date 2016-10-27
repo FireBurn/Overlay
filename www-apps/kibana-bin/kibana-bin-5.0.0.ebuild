@@ -4,7 +4,7 @@
 
 EAPI=6
 
-inherit pax-utils user
+inherit pax-utils user systemd
 
 MY_PN="kibana"
 MY_P=${MY_PN}-${PV/_/-}
@@ -50,6 +50,7 @@ src_install() {
 
 	newconfd "${FILESDIR}"/${MY_PN}.confd ${MY_PN}
 	newinitd "${FILESDIR}"/${MY_PN}.initd-r3 ${MY_PN}
+	systemd_newunit "${FILESDIR}"/${MY_PN}.service "${MY_PN}.service"
 
 	mv * "${ED%/}"/opt/${MY_PN} || die
 
