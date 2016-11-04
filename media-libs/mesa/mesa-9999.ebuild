@@ -187,7 +187,7 @@ pkg_setup() {
 }
 
 src_prepare() {
-	epatch "${FILESDIR}/OpenGL45.patch"
+	epatch "${FILESDIR}/OpenGL45-9999.patch"
 	[[ ${PV} == 9999 ]] && eautoreconf
 }
 
