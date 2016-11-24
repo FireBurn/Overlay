@@ -59,6 +59,7 @@ src_compile() {
 	
 	cd "${S}"
 	cmake	\
+		-DCMAKE_SKIP_RPATH=True \
 		-DBUILD_WSI_XCB_SUPPORT=ON	\
 		-DBUILD_WSI_XLIB_SUPPORT=ON	\
 		-DBUILD_WSI_WAYLAND_SUPPORT=ON	\
