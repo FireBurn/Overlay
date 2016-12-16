@@ -1,8 +1,8 @@
 diff --git a/src/amd/vulkan/radv_cmd_buffer.c b/src/amd/vulkan/radv_cmd_buffer.c
-index a2d55833..4432afc 100644
+index 8e99fc0be9..c2a31ec9f6 100644
 --- a/src/amd/vulkan/radv_cmd_buffer.c
 +++ b/src/amd/vulkan/radv_cmd_buffer.c
-@@ -2296,6 +2296,20 @@ static void radv_handle_dcc_image_transition(struct radv_cmd_buffer *cmd_buffer,
+@@ -2381,6 +2381,20 @@ static void radv_handle_dcc_image_transition(struct radv_cmd_buffer *cmd_buffer,
  	}
  }
  
@@ -15,7 +15,7 @@ index a2d55833..4432afc 100644
 +{
 +	cmd_buffer->state.flush_bits |= RADV_CMD_FLUSH_AND_INV_FRAMEBUFFER;
 +	si_emit_cache_flush(cmd_buffer);
-+	radv_blit_to_prime_linear(cmd_buffer, image);
++	radv_blit_to_prime_linear(cmd_buffer, image, 0);
 +	cmd_buffer->state.flush_bits |= RADV_CMD_FLUSH_AND_INV_FRAMEBUFFER;
 +	si_emit_cache_flush(cmd_buffer);
 +}
@@ -23,7 +23,7 @@ index a2d55833..4432afc 100644
  static void radv_handle_image_transition(struct radv_cmd_buffer *cmd_buffer,
  					 struct radv_image *image,
  					 VkImageLayout src_layout,
-@@ -2314,6 +2328,10 @@ static void radv_handle_image_transition(struct radv_cmd_buffer *cmd_buffer,
+@@ -2399,6 +2413,10 @@ static void radv_handle_image_transition(struct radv_cmd_buffer *cmd_buffer,
  	if (image->surface.dcc_size)
  		radv_handle_dcc_image_transition(cmd_buffer, image, src_layout,
  						 dst_layout, range, pending_clears);
@@ -35,7 +35,7 @@ index a2d55833..4432afc 100644
  
  void radv_CmdPipelineBarrier(
 diff --git a/src/amd/vulkan/radv_device.c b/src/amd/vulkan/radv_device.c
-index c639d53..b21447f 100644
+index 75b7af1fd0..bbc91766da 100644
 --- a/src/amd/vulkan/radv_device.c
 +++ b/src/amd/vulkan/radv_device.c
 @@ -105,6 +105,9 @@ radv_physical_device_init(struct radv_physical_device *device,
@@ -49,29 +49,32 @@ index c639d53..b21447f 100644
  	device->instance = instance;
  	assert(strlen(path) < ARRAY_SIZE(device->path));
 diff --git a/src/amd/vulkan/radv_meta.h b/src/amd/vulkan/radv_meta.h
-index 97d020c..e43a0e7 100644
+index 97d020cea1..6f12b3a6df 100644
 --- a/src/amd/vulkan/radv_meta.h
 +++ b/src/amd/vulkan/radv_meta.h
-@@ -186,6 +186,8 @@ void radv_meta_resolve_compute_image(struct radv_cmd_buffer *cmd_buffer,
+@@ -186,6 +186,10 @@ void radv_meta_resolve_compute_image(struct radv_cmd_buffer *cmd_buffer,
  				     uint32_t region_count,
  				     const VkImageResolve *regions);
  
 +void radv_blit_to_prime_linear(struct radv_cmd_buffer *cmd_buffer,
-+			       struct radv_image *image);
++			       struct radv_image *image,
++			       VkImageSubresourceLayers *layers);
++
  #ifdef __cplusplus
  }
  #endif
 diff --git a/src/amd/vulkan/radv_meta_copy.c b/src/amd/vulkan/radv_meta_copy.c
-index 4c01eb7..3fd8d0c 100644
+index d81fc48242..a175a290a2 100644
 --- a/src/amd/vulkan/radv_meta_copy.c
 +++ b/src/amd/vulkan/radv_meta_copy.c
-@@ -397,3 +397,34 @@ void radv_CmdCopyImage(
- 
- 	radv_meta_restore(&saved_state, cmd_buffer);
+@@ -403,3 +403,29 @@ void radv_CmdCopyImage(
+ 	meta_copy_image(cmd_buffer, src_image, dest_image,
+ 			regionCount, pRegions);
  }
 +
 +void radv_blit_to_prime_linear(struct radv_cmd_buffer *cmd_buffer,
-+			       struct radv_image *image)
++			       struct radv_image *image,
++			       VkImageSubresourceLayers *layers)
 +{
 +	struct radv_meta_saved_state saved_state;
 +	struct radv_meta_saved_pass_state saved_pass_state;
@@ -80,16 +83,10 @@ index 4c01eb7..3fd8d0c 100644
 +	radv_meta_save_graphics_reset_vport_scissor(&saved_state, cmd_buffer);
 +
 +	struct radv_meta_blit2d_surf b_src =
-+		blit_surf_for_image_level_layer(image,
-+						VK_IMAGE_ASPECT_COLOR_BIT,
-+						0,
-+						0);
++		blit_surf_for_image_level_layer(image, layers);
 +
 +	struct radv_meta_blit2d_surf b_dst =
-+		blit_surf_for_image_level_layer(image->prime_image,
-+						VK_IMAGE_ASPECT_COLOR_BIT,
-+						0,
-+						0);
++		blit_surf_for_image_level_layer(image->prime_image, layers);
 +	struct radv_meta_blit2d_rect rect = {
 +		.width = image->extent.width,
 +		.height = image->extent.height,
@@ -101,10 +98,10 @@ index 4c01eb7..3fd8d0c 100644
 +	radv_meta_restore_pass(&saved_pass_state, cmd_buffer);
 +}
 diff --git a/src/amd/vulkan/radv_private.h b/src/amd/vulkan/radv_private.h
-index e1c24cb..5027431 100644
+index 3d4b111d25..98ba09cdc5 100644
 --- a/src/amd/vulkan/radv_private.h
 +++ b/src/amd/vulkan/radv_private.h
-@@ -261,6 +261,7 @@ struct radv_physical_device {
+@@ -274,6 +274,7 @@ struct radv_physical_device {
  	uint8_t                                     uuid[VK_UUID_SIZE];
  
  	struct wsi_device                       wsi_device;
@@ -112,7 +109,7 @@ index e1c24cb..5027431 100644
  };
  
  struct radv_instance {
-@@ -987,6 +988,9 @@ struct radv_image {
+@@ -991,6 +992,9 @@ struct radv_image {
  
  	/* Depth buffer compression and fast clear. */
  	struct r600_htile_info htile;
@@ -123,7 +120,7 @@ index e1c24cb..5027431 100644
  
  bool radv_layout_has_htile(const struct radv_image *image,
 diff --git a/src/amd/vulkan/radv_wsi.c b/src/amd/vulkan/radv_wsi.c
-index 1f1ab1c..31aeb77 100644
+index 1f1ab1c800..31aeb77389 100644
 --- a/src/amd/vulkan/radv_wsi.c
 +++ b/src/amd/vulkan/radv_wsi.c
 @@ -135,23 +135,27 @@ VkResult radv_GetPhysicalDeviceSurfacePresentModesKHR(
