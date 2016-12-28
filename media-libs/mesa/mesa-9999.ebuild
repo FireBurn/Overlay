@@ -200,7 +200,7 @@ pkg_setup() {
 
 src_prepare() {
 	epatch "${FILESDIR}/0001-radv-drop-unused-fields-in-physical-device.patch"
-	epatch "${FILESDIR}/0002-rfc-radv-add-initial-prime-support.-v2.patch"
+	epatch "${FILESDIR}/0002-rfc-radv-add-initial-prime-support.-v3.patch"
 
 	[[ ${PV} == 9999 ]] && eautoreconf
 }
