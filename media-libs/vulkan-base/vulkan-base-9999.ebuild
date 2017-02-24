@@ -16,7 +16,8 @@ SLOT="0"
 KEYWORDS="~amd64"
 
 DEPEND="dev-util/cmake
-	>=dev-lang/python-3"
+	>=dev-lang/python-3
+	media-libs/assimp"
 
 src_unpack() {
 	git-r3_fetch ${EGIT_REPO_URI}
@@ -24,6 +25,7 @@ src_unpack() {
 	git-r3_fetch "https://github.com/KhronosGroup/SPIRV-Tools.git"
 	git-r3_fetch "https://github.com/KhronosGroup/SPIRV-Headers.git"
 	git-r3_fetch "https://github.com/google/googletest.git"
+	git-r3_fetch "https://github.com/SaschaWillems/Vulkan.git"
 
 	git-r3_checkout ${EGIT_REPO_URI}
 	git-r3_checkout https://github.com/KhronosGroup/glslang.git \
@@ -36,10 +38,13 @@ src_unpack() {
 		"${S}"/external/spirv-tools/external/spirv-headers
 	git-r3_checkout https://github.com/google/googletest.git \
 		"${S}"/external/spirv-tools/external/googletest
+	git-r3_checkout https://github.com/SaschaWillems/Vulkan.git \
+		"${S}"/swdemos
 }
 
 src_prepare() {
 	sed -i -e 's#./libVk#libVk#g' "${S}"/layers/linux/*.json
+	epatch "${FILESDIR}"/data.patch
 	eapply_user
 }
 
@@ -72,26 +77,24 @@ src_compile() {
 		-H. -Bbuild
 	cd "${S}"/build
 	emake || die "cannot build Vulkan Loader"
+
+    cd "${S}"/swdemos
+	cmake .
+	emake || die "cannot build Vulkan Loader"
 }
 
 src_install() {
 	mkdir -p "${D}"/etc/vulkan/{icd.d,implicit_layer.d,explicit_layer.d}
-	mkdir -p "${D}"/usr/share/vulkan/{icd.d,implicit_layer.d,explicit_layer.d,demos}
+	mkdir -p "${D}"/usr/share/vulkan/{icd.d,implicit_layer.d,explicit_layer.d,demos,data}
 	mkdir -p "${D}"/usr/$(get_libdir)/vulkan/layers
 	mkdir -p "${D}"/usr/bin
 	mkdir -p "${D}"/usr/include
 	mkdir -p "${D}"/etc/env.d
 
-	#rename the cube example
-	mv "${S}"/build/demos/cube "${S}"/build/demos/vulkancube
-	insinto /usr/share/vulkan/demos
-	doins "${S}"/build/demos/*.spv
-	doins "${S}"/build/demos/lunarg.ppm
-	exeinto /usr/share/vulkan/demos
-	doexe "${S}"/build/demos/vulkan{info,cube}
+	insinto /usr/share/vulkan/data
+	doins -r "${S}"/swdemos/data/*
 
-	insinto /usr/include
-	cp -R "${S}"/include/vulkan "${D}"/usr/include
+	doheader -r "${S}"/include/vulkan 
 
 	dolib.so "${S}"/build/loader/lib*.so*
 
@@ -107,8 +110,15 @@ src_install() {
 	# create an entry for the newly created vulkan libs
 	cat << EOF > "${D}"/etc/env.d/89vulkan
 LDPATH="/usr/$(get_libdir)/vulkan;/usr/$(get_libdir)/vulkan/layers"
-PATH="/usr/share/vulkan/demos"
 EOF
+
+    exeinto /usr/share/vulkan/demos
+    doexe "${S}"/build/demos/vulkaninfo
+    doexe "${S}"/swdemos/bin/vulkanscene
+    rm "${S}"/swdemos/bin/{vulkanscene,assimp-vc140-mt.dll}
+	cd "${S}"/swdemos/bin/
+    for filename in * ; do mv "$filename" "vulkan$filename"; done;
+    doexe "${S}"/swdemos/bin/*
 }
 
 pkg_postinst() {
