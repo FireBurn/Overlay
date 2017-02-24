@@ -1,0 +1,13 @@
+diff --git a/swdemos/base/vulkanexamplebase.cpp b/swdemos/base/vulkanexamplebase.cpp
+index 8573ca9..e365d7c 100644
+--- a/swdemos/base/vulkanexamplebase.cpp
++++ b/swdemos/base/vulkanexamplebase.cpp
+@@ -73,7 +73,7 @@ const std::string VulkanExampleBase::getAssetPath()
+ #if defined(__ANDROID__)
+ 	return "";
+ #else
+-	return "./../data/";
++	return "/usr/share/vulkan/data/";
+ #endif
+ }
+ 
