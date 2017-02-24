@@ -2,7 +2,7 @@
 
 EAPI=6
 
-inherit git-r3
+inherit git-r3 eutils cmake-multilib
 
 DESCRIPTION="Official Vulkan headerfiles, loader, validation layers and sample binaries"
 HOMEPAGE="https://vulkan.lunarg.com"
@@ -13,7 +13,7 @@ LICENSE="MIT"
 IUSE=""
 SLOT="0"
 
-KEYWORDS="~amd64"
+KEYWORDS=""
 
 DEPEND="dev-util/cmake
 	>=dev-lang/python-3"
@@ -41,23 +41,29 @@ src_unpack() {
 src_prepare() {
 	sed -i -e 's#./libVk#libVk#g' "${S}"/layers/linux/*.json
 	eapply_user
+
+	multilib_copy_sources
 }
 
-src_compile() {
+multilib_src_configure() {
+	einfo "Skipping configure"
+}
+
+multilib_src_compile() {
 	einfo "Building glslang"
-	cd "${S}"/external/glslang
+	cd "${BUILD_DIR}"/external/glslang
 	cmake -H. -Bbuild
-	cd "${S}"/external/glslang/build	
+	cd "${BUILD_DIR}"/external/glslang/build	
 	emake || die "cannot build glslang"
 	make install || die "cannot install glslang"
 
 	einfo "Building SPIRV-Tools"
-	cd "${S}"/external/spirv-tools
+	cd "${BUILD_DIR}"/external/spirv-tools
 	cmake -H. -Bbuild
-	cd "${S}"/external/spirv-tools/build
+	cd "${BUILD_DIR}"/external/spirv-tools/build
 	emake || die "cannot build SPIRV-Tools"
 	
-	cd "${S}"
+	cd "${BUILD_DIR}"
 	cmake	\
 		-DCMAKE_SKIP_RPATH=True \
 		-DBUILD_WSI_XCB_SUPPORT=ON	\
@@ -70,51 +76,51 @@ src_compile() {
 		-DBUILD_DEMOS=ON		\
 		-DBUILD_TESTS=ON		\
 		-H. -Bbuild
-	cd "${S}"/build
+	cd "${BUILD_DIR}"/build
 	emake || die "cannot build Vulkan Loader"
 }
 
 src_install() {
 	mkdir -p "${D}"/etc/vulkan/{icd.d,implicit_layer.d,explicit_layer.d}
 	mkdir -p "${D}"/usr/share/vulkan/{icd.d,implicit_layer.d,explicit_layer.d,demos}
-	mkdir -p "${D}"/usr/$(get_libdir)/vulkan/layers
-	mkdir -p "${D}"/usr/bin
 	mkdir -p "${D}"/usr/include
 	mkdir -p "${D}"/etc/env.d
-
-	#rename the cube example
-	mv "${S}"/build/demos/cube "${S}"/build/demos/vulkancube
-	insinto /usr/share/vulkan/demos
-	doins "${S}"/build/demos/*.spv
-	doins "${S}"/build/demos/lunarg.ppm
-	exeinto /usr/share/vulkan/demos
-	doexe "${S}"/build/demos/vulkan{info,cube}
 
 	insinto /usr/include
 	cp -R "${S}"/include/vulkan "${D}"/usr/include
 
-	dolib.so "${S}"/build/loader/lib*.so*
-
-	exeinto /usr/$(get_libdir)/vulkan/layers
-	doexe "$S"/build/layers/lib*.so*
-
 	insinto /usr/share/vulkan/explicit_layer.d
 	doins "${S}"/layers/linux/*.json
 
-	docinto /
 	dodoc "${S}"/LICENSE.txt
 
-	# create an entry for the newly created vulkan libs
+	local VULKAN_LDPATHS=()
+	multilib-minimal_src_install
+}
+
+multilib_src_install() {
+	mkdir -p "${D}"/usr/$(get_libdir)/vulkan/layers
+
+	exeinto /usr/$(get_libdir)/vulkan/layers
+	doexe "${BUILD_DIR}"/build/layers/lib*.so*
+
+	dolib.so "${BUILD_DIR}"/build/loader/lib*.so*
+
+	exeinto /usr/share/vulkan/demos
+    if multilib_is_native_abi; then
+		doexe "${BUILD_DIR}"/build/demos/vulkaninfo
+    else
+		newexe "${BUILD_DIR}"/build/demos/vulkaninfo vulkaninfo-${ABI}
+	fi
+
+	VULKAN_LDPATHS+=( "${EPREFIX}/usr/$(get_libdir)/vulkan" )
+	VULKAN_LDPATHS+=( "${EPREFIX}/usr/$(get_libdir)/vulkan/layers" )
+}
+
+multilib_src_install_all() {
+
 	cat << EOF > "${D}"/etc/env.d/89vulkan
-LDPATH="/usr/$(get_libdir)/vulkan;/usr/$(get_libdir)/vulkan/layers"
-PATH="/usr/share/vulkan/demos"
+LDPATH="$( IFS=:; echo "${VULKAN_LDPATHS[*]}" )"
+PATH="${EPREFIX}/usr/share/vulkan/demos"
 EOF
-}
-
-pkg_postinst() {
-	env-update
-}
-
-pkg_postrm() {
-	env-update
 }
