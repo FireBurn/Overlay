@@ -15,7 +15,7 @@ LICENSE="MIT"
 SLOT="0"
 KEYWORDS=""
 
-RDEPEND="|| ( media-libs/vulkan-loader media-libs/vulkan-base )
+RDEPEND="media-libs/vulkan-loader
 	dev-util/cmake
 	media-libs/assimp"
 
@@ -45,9 +45,4 @@ src_install() {
 
 	insinto /usr/share/vulkan/data
 	doins -r "${S}"/data/*
-
-	# create an entry for the newly created vulkan libs
-        cat << EOF > "${D}"/etc/env.d/89vulkan
-PATH="/usr/share/vulkan/demos"
-EOF
 }
