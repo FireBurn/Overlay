@@ -47,7 +47,7 @@ src_configure() {
 	./configure.py \
 		--with-llvm-config="${EPREFIX}/usr/lib/llvm/5/bin/llvm-config" \
 		--prefix="${EPREFIX}/usr" \
-		amdgcn-- || die
+		amdgcn-mesa-mesa3d || die
 }
 
 src_compile() {
