@@ -23,14 +23,14 @@ else
 fi
 
 VANILLA_GV="2.47"
-VANILLA_MV="4.6.4"
+VANILLA_MV="4.7.0"
 STAGING_GV="2.47"
-STAGING_MV="4.6.4"
+STAGING_MV="4.7.0"
 [[ ${MAJOR_V} == "1.8" ]] && SUFFIX="-unofficial"
 MY_PV="${PV/_/-}"
 STAGING_P="wine-staging-${MY_PV}"
 STAGING_DIR="${WORKDIR}/${STAGING_P}${SUFFIX}"
-D3D9_P="wine-d3d9-2.2"
+D3D9_P="wine-d3d9-2.3"
 D3D9_DIR="${WORKDIR}/wine-d3d9-patches-${D3D9_P}"
 WINE_GENTOO="wine-gentoo-2015.03.07"
 DESCRIPTION="Free implementation of Windows(tm) on Unix"
