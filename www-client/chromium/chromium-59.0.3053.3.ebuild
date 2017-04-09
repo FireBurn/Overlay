@@ -517,7 +517,7 @@ src_configure() {
 	out/Release/gn gen --args="${myconf_gn}" out/Release || die
 
     if tc-is-clang; then
-        sed -i "s:../../../../../../../../../usr/bin/clang:clang:g" out/Release/clang_x64/toolchain.ninja
+        sed -i "s:../../../../../../../../../usr/bin/::g" out/Release/clang_x64/toolchain.ninja
     fi
 }
 
