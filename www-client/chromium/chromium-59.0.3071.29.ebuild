@@ -17,7 +17,7 @@ SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}
 LICENSE="BSD"
 SLOT="0"
 KEYWORDS="~amd64 ~arm ~arm64 ~x86"
-IUSE="component-build cups gconf gnome-keyring gtk3 +hangouts kerberos neon pic +proprietary-codecs pulseaudio selinux +suid +system-ffmpeg +system-libvpx +tcmalloc widevine"
+IUSE="component-build cups gconf gnome-keyring +gtk3 +hangouts kerberos neon pic +proprietary-codecs pulseaudio selinux +suid +system-ffmpeg +system-libvpx +tcmalloc widevine"
 RESTRICT="!system-ffmpeg? ( proprietary-codecs? ( bindist ) )"
 
 # Native Client binaries are compiled with different set of flags, bug #452066.
@@ -30,12 +30,9 @@ QA_PRESTRIPPED=".*\.nexe"
 COMMON_DEPEND="
 	app-arch/bzip2:=
 	cups? ( >=net-print/cups-1.3.11:= )
-	>=dev-libs/elfutils-0.149
 	dev-libs/expat:=
 	dev-libs/glib:2
 	dev-libs/icu:=
-	>=dev-libs/jsoncpp-0.5.0-r1:=
-	dev-libs/libxml2:=[icu]
 	dev-libs/libxslt:=
 	dev-libs/nspr:=
 	>=dev-libs/nss-3.14.3:=
@@ -45,21 +42,17 @@ COMMON_DEPEND="
 	>=media-libs/alsa-lib-1.0.19:=
 	media-libs/fontconfig:=
 	media-libs/freetype:=
-	>=media-libs/harfbuzz-1.3.1:=[icu(+)]
-	media-libs/libexif:=
+	>=media-libs/harfbuzz-1.4.2:=
 	media-libs/libjpeg-turbo:=
 	media-libs/libpng:=
-	system-libvpx? ( media-libs/libvpx:=[svc] )
-	media-libs/speex:=
+	system-libvpx? ( media-libs/libvpx:=[postproc,svc] )
 	pulseaudio? ( media-sound/pulseaudio:= )
 	system-ffmpeg? ( >=media-video/ffmpeg-3:= )
 	sys-apps/dbus:=
 	sys-apps/pciutils:=
-	>=sys-libs/libcap-2.22:=
 	virtual/udev
 	x11-libs/cairo:=
 	x11-libs/gdk-pixbuf:2
-	x11-libs/libdrm
 	x11-libs/libX11:=
 	x11-libs/libXcomposite:=
 	x11-libs/libXcursor:=
@@ -67,7 +60,6 @@ COMMON_DEPEND="
 	x11-libs/libXext:=
 	x11-libs/libXfixes:=
 	>=x11-libs/libXi-1.6.0:=
-	x11-libs/libXinerama:=
 	x11-libs/libXrandr:=
 	x11-libs/libXrender:=
 	x11-libs/libXScrnSaver:=
@@ -93,23 +85,22 @@ RDEPEND="${COMMON_DEPEND}
 	widevine? ( www-plugins/chrome-binary-plugins[widevine(-)] )
 "
 # dev-vcs/git - https://bugs.gentoo.org/593476
+# sys-apps/sandbox - https://crbug.com/586444
 DEPEND="${COMMON_DEPEND}
 	>=app-arch/gzip-1.7
 	!arm? (
 		dev-lang/yasm
 	)
 	dev-lang/perl
-	dev-perl/JSON
 	>=dev-util/gperf-3.0.3
 	dev-util/ninja
 	net-libs/nodejs
 	sys-apps/hwids[usb(+)]
+	tcmalloc? ( !<sys-apps/sandbox-2.11 )
 	>=sys-devel/bison-2.4.3
 	sys-devel/flex
 	virtual/pkgconfig
 	dev-vcs/git
-	x11-libs/gtk+:2
-	x11-libs/gtk+:3
 	$(python_gen_any_dep '
 		dev-python/beautifulsoup:python-2[${PYTHON_USEDEP}]
 		>=dev-python/beautifulsoup-4.3.2:4[${PYTHON_USEDEP}]
@@ -145,14 +136,9 @@ are not displayed properly:
 - media-fonts/wqy-microhei
 - media-fonts/wqy-zenhei
 
-Depending on your desktop environment, you may need
-to install additional packages to get icons on the Downloads page.
-
-For KDE, the required package is kde-frameworks/oxygen-icons.
-
-For other desktop environments, try one of the following:
-- x11-themes/gnome-icon-theme
-- x11-themes/tango-icon-theme
+To fix broken icons on the Downloads page, you should install an icon
+theme that covers the appropriate MIME types, and configure this as your
+GTK+ icon theme.
 "
 
 pre_build_checks() {
@@ -199,15 +185,16 @@ src_prepare() {
 	local PATCHES=(
 		"${FILESDIR}/${PN}-widevine-r1.patch"
 		"${FILESDIR}/${PN}-FORTIFY_SOURCE.patch"
-		"${FILESDIR}/${PN}-gn-bootstrap-r2.patch"
+		"${FILESDIR}/skia-avx2.patch"
+		"${FILESDIR}/${PN}-dma-buf-r1.patch"
+		"${FILESDIR}/${PN}-system-ffmpeg-r6.patch"
+		"${FILESDIR}/${PN}-system-icu-r1.patch"
 	)
-
-	use system-ffmpeg && PATCHES+=( "${FILESDIR}/${PN}-system-ffmpeg-r4.patch" )
 
 	default
 
 	mkdir -p third_party/node/linux/node-linux-x64/bin || die
-	ln -s /usr/bin/node third_party/node/linux/node-linux-x64/bin/node || die
+	ln -s "${EPREFIX}"/usr/bin/node third_party/node/linux/node-linux-x64/bin/node || die
 
 	local keeplibs=(
 		base/third_party/dmg_fp
@@ -253,6 +240,7 @@ src_prepare() {
 		third_party/fips181
 		third_party/flatbuffers
 		third_party/flot
+		third_party/freetype
 		third_party/google_input_tools
 		third_party/google_input_tools/third_party/closure_library
 		third_party/google_input_tools/third_party/closure_library/third_party/closure
@@ -272,7 +260,7 @@ src_prepare() {
 		third_party/libudev
 		third_party/libusb
 		third_party/libwebm
-		third_party/libxml/chromium
+		third_party/libxml
 		third_party/libyuv
 		third_party/lss
 		third_party/lzma_sdk
@@ -289,14 +277,13 @@ src_prepare() {
 		third_party/pdfium
 		third_party/pdfium/third_party/agg23
 		third_party/pdfium/third_party/base
+		third_party/pdfium/third_party/build
 		third_party/pdfium/third_party/bigint
 		third_party/pdfium/third_party/freetype
 		third_party/pdfium/third_party/lcms2-2.6
-		third_party/pdfium/third_party/libjpeg
 		third_party/pdfium/third_party/libopenjpeg20
 		third_party/pdfium/third_party/libpng16
 		third_party/pdfium/third_party/libtiff
-		third_party/pdfium/third_party/zlib_v128
 		third_party/ply
 		third_party/polymer
 		third_party/protobuf
@@ -306,6 +293,9 @@ src_prepare() {
 		third_party/skia
 		third_party/smhasher
 		third_party/sqlite
+		third_party/swiftshader
+		third_party/swiftshader/third_party/llvm-subzero
+		third_party/swiftshader/third_party/pnacl-subzero
 		third_party/tcmalloc
 		third_party/usrsctp
 		third_party/web-animations-js
@@ -349,6 +339,8 @@ src_configure() {
 	# for development and debugging.
 	myconf_gn+=" is_component_build=$(usex component-build true false)"
 
+	myconf_gn+=" use_allocator=$(usex tcmalloc \"tcmalloc\" \"none\")"
+
 	# Disable nacl, we can't build without pnacl (http://crbug.com/269560).
 	myconf_gn+=" enable_nacl=false"
 
@@ -356,6 +348,7 @@ src_configure() {
 	# TODO: use_system_hunspell (upstream changes needed).
 	# TODO: use_system_libsrtp (bug #459932).
 	# TODO: use_system_libusb (http://crbug.com/266149).
+	# TODO: xml (bug #616818).
 	# TODO: use_system_opus (https://code.google.com/p/webrtc/issues/detail?id=3077).
 	# TODO: use_system_protobuf (bug #525560).
 	# TODO: use_system_ssl (http://crbug.com/58087).
@@ -366,10 +359,10 @@ src_configure() {
 		flac
 		harfbuzz-ng
 		icu
+		libdrm
 		libjpeg
 		libpng
 		libwebp
-		libxml
 		libxslt
 		re2
 		snappy
@@ -507,9 +500,7 @@ src_configure() {
 	touch chrome/test/data/webui/i18n_process_css_test.html || die
 
 	einfo "Configuring Chromium..."
-	# TODO: bootstrapped gn binary hangs when using tcmalloc with portage's sandbox.
-	tools/gn/bootstrap/bootstrap.py -v --gn-gen-args "${myconf_gn} use_allocator=\"none\"" || die
-	myconf_gn+=" use_allocator=$(usex tcmalloc \"tcmalloc\" \"none\")"
+	tools/gn/bootstrap/bootstrap.py -v --no-clean --gn-gen-args "${myconf_gn}" || die
 	out/Release/gn gen --args="${myconf_gn}" out/Release || die
 
     if tc-is-clang; then
