@@ -187,6 +187,7 @@ pkg_setup() {
 
 src_prepare() {
 	local PATCHES=(
+		"${FILESDIR}/vaapi_patch_r1.patch"
 		"${FILESDIR}/${PN}-widevine-r1.patch"
 		"${FILESDIR}/${PN}-FORTIFY_SOURCE.patch"
 		"${FILESDIR}/skia-avx2.patch"
