@@ -305,6 +305,8 @@ src_prepare() {
 		third_party/swiftshader/third_party/pnacl-subzero
 		third_party/tcmalloc
 		third_party/usrsctp
+		third_party/libva
+		third_party/libva/va
 		third_party/web-animations-js
 		third_party/webdriver
 		third_party/webrtc
