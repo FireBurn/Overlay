@@ -50,16 +50,20 @@ multilib_src_configure() {
 }
 
 multilib_src_compile() {
-	einfo "Building glslang"
+	einfo "Building glslang" ${EPREFIX}
 	cd "${BUILD_DIR}"/external/glslang
-	cmake -H. -Bbuild
+	cmake -H. -Bbuild \
+        -DCMAKE_INSTALL_LIBDIR="/var/tmp/portage/media-libs/vulkan-loader-9999/image/usr/$(get_libdir)" \
+        -DCMAKE_INSTALL_PREFIX="/var/tmp/portage/media-libs/vulkan-loader-9999/image/usr/"
 	cd "${BUILD_DIR}"/external/glslang/build	
 	emake || die "cannot build glslang"
 	make install || die "cannot install glslang"
 
 	einfo "Building SPIRV-Tools"
 	cd "${BUILD_DIR}"/external/spirv-tools
-	cmake -H. -Bbuild
+	cmake -H. -Bbuild \
+        -DCMAKE_INSTALL_LIBDIR="/var/tmp/portage/media-libs/vulkan-loader-9999/image/usr/$(get_libdir)" \
+        -DCMAKE_INSTALL_PREFIX="/var/tmp/portage/media-libs/vulkan-loader-9999/image/usr/"
 	cd "${BUILD_DIR}"/external/spirv-tools/build
 	emake || die "cannot build SPIRV-Tools"
 	
@@ -75,7 +79,10 @@ multilib_src_compile() {
 		-DBUILD_LAYERS=ON		\
 		-DBUILD_DEMOS=ON		\
 		-DBUILD_TESTS=ON		\
-		-H. -Bbuild
+		-H. -Bbuild             \
+        -DCMAKE_INSTALL_LIBDIR="/var/tmp/portage/media-libs/vulkan-loader-9999/image/usr/$(get_libdir)" \
+        -DCMAKE_INSTALL_PREFIX="/var/tmp/portage/media-libs/vulkan-loader-9999/image/usr/"
+
 	cd "${BUILD_DIR}"/build
 	emake || die "cannot build Vulkan Loader"
 }
