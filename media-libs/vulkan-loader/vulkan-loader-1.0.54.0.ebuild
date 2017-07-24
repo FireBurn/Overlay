@@ -33,6 +33,9 @@ src_prepare() {
 }
 
 multilib_src_configure() {
+	if [[ ${ABI} == x86 ]]; then
+		export ASFLAGS=-m32
+	fi
 	local mycmakeargs=(
 		-DCMAKE_SKIP_RPATH=True
 		-DBUILD_TESTS=False
@@ -46,6 +49,7 @@ multilib_src_configure() {
 		-DBUILD_WSI_XLIB_SUPPORT=$(usex X)
 	)
 	cmake-utils_src_configure
+	unset ASFLAGS
 }
 
 multilib_src_install() {
