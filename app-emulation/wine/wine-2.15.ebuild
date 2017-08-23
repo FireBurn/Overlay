@@ -21,9 +21,9 @@ else
 fi
 
 VANILLA_GV="2.47"
-VANILLA_MV="4.7.0"
+VANILLA_MV="4.7.1"
 STAGING_GV="2.47"
-STAGING_MV="4.7.0"
+STAGING_MV="4.7.1"
 [[ ${MAJOR_V} == "1.8" ]] && SUFFIX="-unofficial"
 STAGING_P="wine-staging-${PV}"
 STAGING_DIR="${WORKDIR}/${STAGING_P}${SUFFIX}"
