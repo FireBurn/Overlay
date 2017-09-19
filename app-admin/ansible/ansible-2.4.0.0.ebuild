@@ -9,12 +9,11 @@ inherit distutils-r1 eutils versionator
 
 DESCRIPTION="Model-driven deployment, config management, and command execution framework"
 HOMEPAGE="http://ansible.com/"
-SRC_URI="http://releases.ansible.com/${PN}/${P}.tar.gz
-	https://dev.gentoo.org/~prometheanfire/dist/ansible/ansible-2.3.2.0-pycryptodome.patch"
+SRC_URI="http://releases.ansible.com/${PN}/${P}.tar.gz"
 
 LICENSE="GPL-3"
 SLOT="0"
-KEYWORDS="amd64 x86 ~x64-macos"
+KEYWORDS="~amd64 ~x86 ~x64-macos"
 IUSE="test"
 
 RDEPEND="
@@ -22,10 +21,7 @@ RDEPEND="
 	dev-python/jinja[${PYTHON_USEDEP}]
 	dev-python/pyyaml[${PYTHON_USEDEP}]
 	dev-python/setuptools[${PYTHON_USEDEP}]
-	|| (
-		dev-python/pycryptodome[${PYTHON_USEDEP}]
-		>=dev-python/pycrypto-2.6[${PYTHON_USEDEP}]
-	)
+	dev-python/cryptography[${PYTHON_USEDEP}]
 	dev-python/httplib2[${PYTHON_USEDEP}]
 	dev-python/six[${PYTHON_USEDEP}]
 	dev-python/netaddr[${PYTHON_USEDEP}]
@@ -50,8 +46,6 @@ DEPEND="
 RESTRICT="test"
 
 PATCHES=(
-	"${DISTDIR}/${PN}-2.3.2.0-pycryptodome.patch"
-	"${FILESDIR}/${PN}-2.3.2.0-fix_key_error.patch"
 	)
 
 python_test() {
