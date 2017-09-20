@@ -148,7 +148,7 @@ PATCHES=(
 	"${FILESDIR}/${PN}-FORTIFY_SOURCE-r2.patch"
 	"${FILESDIR}/${PN}-gcc5-r2.patch"
 	"${FILESDIR}/${PN}-glibc2.26-r1.patch"
-	"${FILESDIR}/${PN}-gn-bootstrap-r18.patch"
+	"${FILESDIR}/${PN}-gn-bootstrap-r19.patch"
 	"${FILESDIR}/${PN}-vaapi.patch"
 )
 
