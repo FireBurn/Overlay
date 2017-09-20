@@ -149,6 +149,7 @@ PATCHES=(
 	"${FILESDIR}/${PN}-gcc5-r2.patch"
 	"${FILESDIR}/${PN}-glibc2.26-r1.patch"
 	"${FILESDIR}/${PN}-gn-bootstrap-r19.patch"
+	"${FILESDIR}/${PN}-sysroot-r1.patch"
 	"${FILESDIR}/${PN}-vaapi.patch"
 )
 
