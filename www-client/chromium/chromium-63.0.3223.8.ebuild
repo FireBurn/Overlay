@@ -98,7 +98,6 @@ DEPEND="${COMMON_DEPEND}
 	>=dev-util/ninja-1.7.2
 	>=net-libs/nodejs-4.6.1
 	sys-apps/hwids[usb(+)]
-	tcmalloc? ( !<sys-apps/sandbox-2.11 )
 	>=sys-devel/bison-2.4.3
 	sys-devel/flex
 	virtual/pkgconfig
@@ -147,9 +146,7 @@ PATCHES=(
 	"${FILESDIR}/${PN}-widevine-r1.patch"
 	"${FILESDIR}/${PN}-FORTIFY_SOURCE-r2.patch"
 	"${FILESDIR}/${PN}-gcc5-r2.patch"
-	"${FILESDIR}/${PN}-glibc2.26-r1.patch"
-	"${FILESDIR}/${PN}-gn-bootstrap-r19.patch"
-	"${FILESDIR}/${PN}-sysroot-r1.patch"
+	"${FILESDIR}/${PN}-gn-bootstrap-r20.patch"
 	"${FILESDIR}/${PN}-vaapi.patch"
 )
 
