@@ -24,11 +24,13 @@ DEPEND="${RDEPEND}
 
 src_prepare() {
 	cmake-utils_src_prepare
-
-	epatch "${FILESDIR}"/data.patch
 }
 
 src_configure() {
+    local mycmakeargs=(
+		-DRESOURCE_INSTALL_DIR=/usr/share/vulkan/data/
+		-CMAKE_INSTALL_BINDIR=/usr/share/vulkan/demos/
+    )
 	cmake-utils_src_configure
 }
 
@@ -36,13 +38,14 @@ src_install() {
 	mkdir -p "${D}"/usr/share/vulkan/{demos,data}
 
 	exeinto /usr/share/vulkan/demos
-	doexe "${S}"/bin/vulkanscene
-	rm "${S}"/bin/{vulkanscene,assimp-vc140-mt.dll}
+	doexe ${BUILD_DIR}/bin/vulkanscene
+	rm ${BUILD_DIR}/bin/vulkanscene
 
-	cd "${S}"/bin/
+	cd ${BUILD_DIR}/bin/
 	for filename in * ; do mv "$filename" "vulkan$filename"; done;
-	doexe "${S}"/bin/*
+	doexe ${BUILD_DIR}/bin/*
+ 
 
 	insinto /usr/share/vulkan/data
-	doins -r "${S}"/data/*
+	doins -r ${S}/data/*
 }

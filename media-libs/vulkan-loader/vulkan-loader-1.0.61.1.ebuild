@@ -29,7 +29,7 @@ DEPEND="${PYTHON_DEPS}
 
 src_prepare() {
 	default
-	eapply "${FILESDIR}"/${P}-remove-executable-stack.patch
+	#eapply "${FILESDIR}"/${P}-remove-executable-stack.patch
 }
 
 multilib_src_configure() {
