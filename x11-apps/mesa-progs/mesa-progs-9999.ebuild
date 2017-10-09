@@ -29,9 +29,7 @@ KEYWORDS="~alpha ~amd64 ~arm ~hppa ~ia64 ~mips ~ppc ~ppc64 ~sh ~sparc ~x86 ~x86-
 IUSE="egl gles1 gles2"
 
 RDEPEND="
-	egl? ( media-libs/glew[${MULTILIB_USEDEP}] )
-	gles1? ( media-libs/glew[${MULTILIB_USEDEP}] )
-	gles2? ( media-libs/glew[${MULTILIB_USEDEP}] )
+	media-libs/glew[${MULTILIB_USEDEP}]
 	media-libs/mesa[egl?,gles1?,gles2?,${MULTILIB_USEDEP}]
 	virtual/opengl[${MULTILIB_USEDEP}]
 	x11-libs/libX11[${MULTILIB_USEDEP}]"
