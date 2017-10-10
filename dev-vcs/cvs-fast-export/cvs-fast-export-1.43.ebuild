@@ -16,7 +16,8 @@ IUSE=""
 
 RDEPEND=""
 DEPEND="${RDEPEND}
-	app-text/asciidoc"
+	app-text/asciidoc
+	dev-libs/libxslt"
 
 RESTRICT=test # upstream does not ship them in tarball
 
