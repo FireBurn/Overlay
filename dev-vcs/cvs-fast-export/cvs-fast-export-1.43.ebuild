@@ -31,6 +31,7 @@ src_prepare() {
 		-e 's/^CFLAGS += -O/#&/' \
 		-e 's/CFLAGS=/CFLAGS+=/' \
 		-e 's/$(INSTALL).*cvssync/#&/g' \
+        -e 's/control *.asc cfe-logo.png/control cfe-logo.png/g' \
 		-i Makefile || die
 }
 
