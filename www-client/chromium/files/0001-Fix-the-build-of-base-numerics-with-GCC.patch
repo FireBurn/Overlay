@@ -1,0 +1,80 @@
+diff --git a/base/numerics/checked_math_impl.h b/base/numerics/checked_math_impl.h
+index 2926b37..e083389 100644
+--- a/base/numerics/checked_math_impl.h
++++ b/base/numerics/checked_math_impl.h
+@@ -67,7 +67,7 @@ struct CheckedAddOp<T,
+       return false;
+     }
+ 
+-    Promotion presult;
++    Promotion presult = {};
+     bool is_valid = true;
+     if (IsIntegerArithmeticSafe<Promotion, T, U>::value) {
+       presult = static_cast<Promotion>(x) + static_cast<Promotion>(y);
+@@ -127,7 +127,7 @@ struct CheckedSubOp<T,
+       return false;
+     }
+ 
+-    Promotion presult;
++    Promotion presult = {};
+     bool is_valid = true;
+     if (IsIntegerArithmeticSafe<Promotion, T, U>::value) {
+       presult = static_cast<Promotion>(x) - static_cast<Promotion>(y);
+@@ -183,7 +183,7 @@ struct CheckedMulOp<T,
+       return false;
+     }
+ 
+-    Promotion presult;
++    Promotion presult = {};
+     bool is_valid = true;
+     if (CheckedMulFastOp<Promotion, Promotion>::is_supported) {
+       // The fast op may be available with the promoted type.
+diff --git a/base/numerics/clamped_math_impl.h b/base/numerics/clamped_math_impl.h
+index e18f939..cbd171c 100644
+--- a/base/numerics/clamped_math_impl.h
++++ b/base/numerics/clamped_math_impl.h
+@@ -90,7 +90,7 @@ struct ClampedAddOp<T,
+         IsTypeInRangeForNumericType<V, T>::value ||
+             IsTypeInRangeForNumericType<V, U>::value,
+         V, typename BigEnoughPromotion<T, U>::type>;
+-    Promotion result;
++    Promotion result = {};
+     if (BASE_NUMERICS_LIKELY((CheckedAddOp<T, U>::Do(x, y, &result))))
+       return saturated_cast<V>(result);
+ 
+@@ -133,7 +133,7 @@ struct ClampedSubOp<T,
+         IsTypeInRangeForNumericType<V, T>::value ||
+             IsTypeInRangeForNumericType<V, U>::value,
+         V, typename BigEnoughPromotion<T, U>::type>;
+-    Promotion result;
++    Promotion result = {};
+     if (BASE_NUMERICS_LIKELY((CheckedSubOp<T, U>::Do(x, y, &result))))
+       return saturated_cast<V>(result);
+ 
+@@ -168,7 +168,7 @@ struct ClampedMulOp<T,
+     if (ClampedMulFastOp<T, U>::is_supported)
+       return ClampedMulFastOp<T, U>::template Do<V>(x, y);
+ 
+-    V result;
++    V result = {};
+     const V saturated =
+         CommonMaxOrMin<V>(IsValueNegative(x) ^ IsValueNegative(y));
+     return BASE_NUMERICS_LIKELY((CheckedMulOp<T, U>::Do(x, y, &result)))
+@@ -188,7 +188,7 @@ struct ClampedDivOp<T,
+   using result_type = typename MaxExponentPromotion<T, U>::type;
+   template <typename V = result_type>
+   static constexpr V Do(T x, U y) {
+-    V result;
++    V result = {};
+     if (BASE_NUMERICS_LIKELY((CheckedDivOp<T, U>::Do(x, y, &result))))
+       return result;
+     // Saturation goes to max, min, or NaN (if x is zero).
+@@ -208,7 +208,7 @@ struct ClampedModOp<T,
+   using result_type = typename MaxExponentPromotion<T, U>::type;
+   template <typename V = result_type>
+   static constexpr V Do(T x, U y) {
+-    V result;
++    V result = {};
+     return BASE_NUMERICS_LIKELY((CheckedModOp<T, U>::Do(x, y, &result)))
+                ? result
+                : x;
