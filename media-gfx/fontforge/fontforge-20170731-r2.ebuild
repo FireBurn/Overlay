@@ -5,7 +5,7 @@ EAPI=6
 
 PYTHON_COMPAT=( python{2_7,3_4,3_5,3_6} )
 
-inherit python-single-r1 xdg-utils
+inherit gnome2-utils python-single-r1 xdg-utils
 
 DESCRIPTION="postscript font editor and converter"
 HOMEPAGE="http://fontforge.github.io/"
@@ -13,7 +13,7 @@ SRC_URI="https://github.com/fontforge/fontforge/releases/download/${PV}/fontforg
 
 LICENSE="BSD GPL-3+"
 SLOT="0"
-KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux ~x86-linux ~ppc-macos ~x86-macos"
+KEYWORDS="alpha amd64 ~arm ~arm64 hppa ia64 ppc ppc64 ~s390 ~sh ~sparc x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux ~x86-linux ~ppc-macos ~x86-macos"
 IUSE="cairo truetype-debugger gif gtk jpeg png +python readline test tiff svg unicode X"
 
 RESTRICT="!test? ( test )"
@@ -21,7 +21,7 @@ RESTRICT="!test? ( test )"
 REQUIRED_USE="
 	cairo? ( png )
 	python? ( ${PYTHON_REQUIRED_USE} )
-	test? ( python )
+	test? ( png python )
 "
 
 RDEPEND="
@@ -61,6 +61,11 @@ DEPEND="${RDEPEND}
 #	)
 
 S="${WORKDIR}/fontforge-2.0.${PV}"
+
+PATCHES=(
+	"${FILESDIR}"/20170731-startnoui-FindOrMakeEncoding.patch
+	"${FILESDIR}"/20170731-tilepath.patch
+)
 
 pkg_setup() {
 	use python && python-single-r1_pkg_setup
@@ -102,11 +107,13 @@ src_install() {
 }
 
 pkg_postrm() {
+	gnome2_icon_cache_update
 	xdg_desktop_database_update
 	xdg_mimeinfo_database_update
 }
 
 pkg_postinst() {
+	gnome2_icon_cache_update
 	xdg_desktop_database_update
 	xdg_mimeinfo_database_update
 }
