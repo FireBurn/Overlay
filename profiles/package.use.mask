@@ -1,2 +1,0 @@
-# Mask xorg state tracker as it fails to build
-media-libs/mesa-32bit xorg
