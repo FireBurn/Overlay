@@ -13,7 +13,7 @@ SRC_URI="https://github.com/fontforge/fontforge/releases/download/${PV}/fontforg
 
 LICENSE="BSD GPL-3+"
 SLOT="0"
-KEYWORDS="alpha amd64 ~arm ~arm64 hppa ia64 ppc ppc64 ~s390 ~sh ~sparc x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux ~x86-linux ~ppc-macos ~x86-macos"
+KEYWORDS="alpha amd64 ~arm ~arm64 hppa ia64 ppc ppc64 ~s390 ~sh sparc x86 ~amd64-fbsd ~x86-fbsd ~amd64-linux ~x86-linux ~ppc-macos ~x86-macos"
 IUSE="cairo truetype-debugger gif gtk jpeg png +python readline test tiff svg unicode X"
 
 RESTRICT="!test? ( test )"
@@ -65,6 +65,7 @@ S="${WORKDIR}/fontforge-2.0.${PV}"
 PATCHES=(
 	"${FILESDIR}"/20170731-startnoui-FindOrMakeEncoding.patch
 	"${FILESDIR}"/20170731-tilepath.patch
+	"${FILESDIR}"/20170731-gethex-unaligned.patch
 )
 
 pkg_setup() {
