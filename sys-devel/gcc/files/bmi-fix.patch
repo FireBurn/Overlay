@@ -1,0 +1,45 @@
+--- gcc/config/i386/i386.md.jj	2018-01-16 09:28:19.721432394 +0100
++++ gcc/config/i386/i386.md	2018-01-25 20:58:18.382378827 +0100
+@@ -9250,14 +9250,14 @@ (define_split
+ })
+ 
+ (define_insn "*andndi3_doubleword"
+-  [(set (match_operand:DI 0 "register_operand" "=r,&r")
++  [(set (match_operand:DI 0 "register_operand" "=r,r,&r")
+ 	(and:DI
+-	  (not:DI (match_operand:DI 1 "register_operand" "r,0"))
+-	  (match_operand:DI 2 "nonimmediate_operand" "rm,rm")))
++	  (not:DI (match_operand:DI 1 "register_operand" "r,0,r"))
++	  (match_operand:DI 2 "nonimmediate_operand" "r,rm,m")))
+    (clobber (reg:CC FLAGS_REG))]
+   "!TARGET_64BIT && TARGET_STV && TARGET_SSE2"
+   "#"
+-  [(set_attr "isa" "bmi,*")])
++  [(set_attr "isa" "bmi,*,bmi")])
+ 
+ (define_split
+   [(set (match_operand:DI 0 "register_operand")
+@@ -9273,7 +9273,22 @@ (define_split
+    (parallel [(set (match_dup 3)
+ 		   (and:SI (not:SI (match_dup 4)) (match_dup 5)))
+ 	      (clobber (reg:CC FLAGS_REG))])]
+-  "split_double_mode (DImode, &operands[0], 3, &operands[0], &operands[3]);")
++{
++  split_double_mode (DImode, &operands[0], 3, &operands[0], &operands[3]);
++  /* For the =r <- (r, r) alternative of *andndi3_doubleword, there could
++     be overlap between the output and input registers.  If the output
++     is equal to one of the input operands, this is fine, if there is
++     partial overlap, we can resolve it by swapping the two instructions.  */
++  if (reg_overlap_mentioned_p (operands[0], operands[4])
++      || reg_overlap_mentioned_p (operands[0], operands[5]))
++    {
++      std::swap (operands[0], operands[3]);
++      std::swap (operands[1], operands[4]);
++      std::swap (operands[2], operands[5]);
++      gcc_assert (!reg_overlap_mentioned_p (operands[0], operands[4])
++		  && !reg_overlap_mentioned_p (operands[0], operands[5]));
++    }
++})
+ 
+ (define_split
+   [(set (match_operand:DI 0 "register_operand")

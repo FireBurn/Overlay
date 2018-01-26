@@ -21,5 +21,6 @@ if [[ ${CATEGORY} != cross-* ]] ; then
 fi
 
 src_prepare() {
+    epatch "${FILESDIR}"/bmi-fix.patch
 	toolchain_src_prepare
 }
