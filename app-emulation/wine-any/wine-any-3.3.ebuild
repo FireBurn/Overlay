@@ -26,6 +26,9 @@ S="${WORKDIR}/${MY_P}"
 
 STAGING_P="wine-staging-${PV}"
 STAGING_DIR="${WORKDIR}/${STAGING_P}"
+PBA_V="1bc7015ad8b1ef6807886248d3af2a5293df8b4e"
+PBA_P="wine-pba-${PBA_V}"
+PBA_DIR="${WORKDIR}/${PBA_P}"
 D3D9_P="wine-d3d9-${PV}"
 D3D9_DIR="${WORKDIR}/wine-d3d9-patches-${D3D9_P}"
 GWP_V="20180120"
@@ -40,21 +43,23 @@ SRC_URI="${SRC_URI}
 if [[ ${PV} == "9999" ]] ; then
 	STAGING_EGIT_REPO_URI="https://github.com/wine-staging/wine-staging.git"
 	D3D9_EGIT_REPO_URI="https://github.com/sarnex/wine-d3d9-patches.git"
+    PBA_EGIT_REPO_URI="https://github.com/acomminos/wine-pba.git"
 else
 	SRC_URI="${SRC_URI}
 	staging? ( https://github.com/wine-staging/wine-staging/archive/v${PV}.tar.gz -> ${STAGING_P}.tar.gz )
-	d3d9? ( https://github.com/sarnex/wine-d3d9-patches/archive/${D3D9_P}.tar.gz )"
+	d3d9? ( https://github.com/sarnex/wine-d3d9-patches/archive/${D3D9_P}.tar.gz )
+    pba? ( https://github.com/acomminos/wine-pba/archive/${PBA_V}.tar.gz -> ${PBA_P}.tar.gz )"
 fi
 
 LICENSE="LGPL-2.1"
 SLOT="${PV}"
-IUSE="+abi_x86_32 +abi_x86_64 +alsa capi cups custom-cflags d3d9 dos elibc_glibc +fontconfig +gecko gphoto2 gsm gssapi gstreamer +jpeg kerberos kernel_FreeBSD +lcms ldap +mono mp3 ncurses netapi nls odbc openal opencl +opengl osmesa oss +perl pcap pipelight +png prelink pulseaudio +realtime +run-exes s3tc samba scanner selinux +ssl staging test themes +threads +truetype udev +udisks v4l vaapi +X +xcomposite xinerama +xml"
+IUSE="+abi_x86_32 +abi_x86_64 +alsa capi cups custom-cflags d3d9 dos elibc_glibc +fontconfig +gecko gphoto2 gsm gssapi gstreamer +jpeg kerberos kernel_FreeBSD +lcms ldap +mono mp3 ncurses netapi nls odbc openal opencl +opengl osmesa oss pba +perl pcap pipelight +png prelink pulseaudio +realtime +run-exes samba scanner selinux +ssl staging test themes +threads +truetype udev +udisks v4l vaapi +X +xcomposite xinerama +xml"
 REQUIRED_USE="|| ( abi_x86_32 abi_x86_64 )
 	X? ( truetype )
 	elibc_glibc? ( threads )
 	osmesa? ( opengl )
+    pba? ( staging )
 	pipelight? ( staging )
-	s3tc? ( staging )
 	test? ( abi_x86_32 )
 	themes? ( staging )
 	vaapi? ( staging )" # osmesa-opengl #286560 # X-truetype #551124
@@ -354,6 +359,11 @@ src_unpack() {
 				einfo "If src_prepare fails, try emerging with the env var WINE_COMMIT."
 				einfo "Example: WINE_COMMIT=${COMPAT_WINE_COMMIT} emerge -1 wine"
 			fi
+
+			if use pba; then
+				git-r3_fetch "${PBA_EGIT_REPO_URI}" "${PBA_COMMIT}"
+				git-r3_checkout "${PBA_EGIT_REPO_URI}" "${PBA_DIR}"
+			fi
 		fi
 		if use d3d9; then
 			git-r3_fetch "${D3D9_EGIT_REPO_URI}" "${D3D9_COMMIT}"
@@ -393,6 +403,12 @@ src_prepare() {
 			source "${STAGING_DIR}/patches/patchinstall.sh"
 		)
 		eend $? || die "Failed to apply Wine-Staging patches"
+	fi
+	if use pba; then
+		PATCHES+=( "${PBA_DIR}/patches/0001-wined3d-Initial-implementation-of-a-persistent-mappe.patch"
+					"${PBA_DIR}/patches/0002-wined3d-Add-support-for-backing-dynamic-wined3d_buff.patch"
+					"${PBA_DIR}/patches/0003-wined3d-Use-ARB_multi_bind-to-speed-up-UBO-updates.patch"
+					"${PBA_DIR}/patches/0004-wined3d-Use-GL_CLIENT_STORAGE_BIT-for-persistent-map.patch" )
 	fi
 	if use d3d9; then
 		if use staging; then
