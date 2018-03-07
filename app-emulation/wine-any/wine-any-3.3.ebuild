@@ -26,7 +26,7 @@ S="${WORKDIR}/${MY_P}"
 
 STAGING_P="wine-staging-${PV}"
 STAGING_DIR="${WORKDIR}/${STAGING_P}"
-PBA_V="1bc7015ad8b1ef6807886248d3af2a5293df8b4e"
+PBA_V="b33e274f894de751f9abe2e09aec5bc9d1e6b992"
 PBA_P="wine-pba-${PBA_V}"
 PBA_DIR="${WORKDIR}/${PBA_P}"
 D3D9_P="wine-d3d9-${PV}"
@@ -408,7 +408,8 @@ src_prepare() {
 		PATCHES+=( "${PBA_DIR}/patches/0001-wined3d-Initial-implementation-of-a-persistent-mappe.patch"
 					"${PBA_DIR}/patches/0002-wined3d-Add-support-for-backing-dynamic-wined3d_buff.patch"
 					"${PBA_DIR}/patches/0003-wined3d-Use-ARB_multi_bind-to-speed-up-UBO-updates.patch"
-					"${PBA_DIR}/patches/0004-wined3d-Use-GL_CLIENT_STORAGE_BIT-for-persistent-map.patch" )
+					"${PBA_DIR}/patches/0004-wined3d-Use-GL_CLIENT_STORAGE_BIT-for-persistent-map.patch"
+					"${PBA_DIR}/patches/0005-wined3d-Experimental-support-for-persistent-buffer-t.patch" )
 	fi
 	if use d3d9; then
 		if use staging; then
