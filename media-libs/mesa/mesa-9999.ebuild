@@ -340,7 +340,7 @@ multilib_src_configure() {
 		myconf+=(
 			-Dgallium-nine=$(meson_use d3d9)
 			-Dllvm=$(meson_use llvm)
-			-Dgallium-omx=$(meson_use openmax)
+			-Dgallium-omx=$(usex openmax bellagio disabled)
 			-Dgallium-va=$(meson_use vaapi)
 			-Dgallium-vdpau=$(meson_use vdpau)
 			-Dgallium-xa=$(meson_use xa)
