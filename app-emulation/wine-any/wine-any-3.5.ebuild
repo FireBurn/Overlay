@@ -26,7 +26,7 @@ S="${WORKDIR}/${MY_P}"
 
 STAGING_P="wine-staging-${PV}"
 STAGING_DIR="${WORKDIR}/${STAGING_P}"
-PBA_V="87307b1b9093c769d21d0803bb122b9866bb887c"
+PBA_V="e94417f22238cd64563011206503ee12f72b205b"
 PBA_P="wine-pba-${PBA_V}"
 PBA_DIR="${WORKDIR}/${PBA_P}"
 D3D9_P="wine-d3d9-${PV}"
@@ -41,12 +41,12 @@ SRC_URI="${SRC_URI}
 "
 
 if [[ ${PV} == "9999" ]] ; then
-	STAGING_EGIT_REPO_URI="https://github.com/wine-staging/wine-staging.git"
+	STAGING_EGIT_REPO_URI="https://github.com/FireBurn/wine-staging.git"
 	D3D9_EGIT_REPO_URI="https://github.com/sarnex/wine-d3d9-patches.git"
     PBA_EGIT_REPO_URI="https://github.com/acomminos/wine-pba.git"
 else
 	SRC_URI="${SRC_URI}
-	staging? ( https://github.com/wine-staging/wine-staging/archive/v${PV}.tar.gz -> ${STAGING_P}.tar.gz )
+	staging? ( https://github.com/FireBurn/wine-staging/archive/v${PV}.tar.gz -> ${STAGING_P}.tar.gz )
 	d3d9? ( https://github.com/sarnex/wine-d3d9-patches/archive/${D3D9_P}.tar.gz )
     pba? ( https://github.com/acomminos/wine-pba/archive/${PBA_V}.tar.gz -> ${PBA_P}.tar.gz )"
 fi
