@@ -43,12 +43,12 @@ SRC_URI="${SRC_URI}
 if [[ ${PV} == "9999" ]] ; then
 	STAGING_EGIT_REPO_URI="https://github.com/wine-staging/wine-staging.git"
 	D3D9_EGIT_REPO_URI="https://github.com/sarnex/wine-d3d9-patches.git"
-    PBA_EGIT_REPO_URI="https://github.com/FireBurn/wine-pba.git"
+    PBA_EGIT_REPO_URI="https://github.com/acomminos/wine-pba.git"
 else
 	SRC_URI="${SRC_URI}
 	staging? ( https://github.com/wine-staging/wine-staging/archive/v${PV}.tar.gz -> ${STAGING_P}.tar.gz )
 	d3d9? ( https://github.com/sarnex/wine-d3d9-patches/archive/${D3D9_P}.tar.gz )
-    pba? ( https://github.com/FireBurn/wine-pba/archive/${PBA_V}.tar.gz -> ${PBA_P}.tar.gz )"
+    pba? ( https://github.com/acomminos/wine-pba/archive/${PBA_V}.tar.gz -> ${PBA_P}.tar.gz )"
 fi
 
 LICENSE="LGPL-2.1"
