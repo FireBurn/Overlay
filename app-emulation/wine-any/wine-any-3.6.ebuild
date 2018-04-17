@@ -48,7 +48,7 @@ else
 	SRC_URI="${SRC_URI}
 	staging? ( https://github.com/wine-staging/wine-staging/archive/v${PV}.tar.gz -> ${STAGING_P}.tar.gz )
 	d3d9? ( https://github.com/sarnex/wine-d3d9-patches/archive/${D3D9_P}.tar.gz )
-    pba? ( https://github.com/acomminos/wine-pba/archive/${PBA_V}.tar.gz -> ${PBA_P}.tar.gz )"
+	pba? ( https://github.com/acomminos/wine-pba/archive/${PBA_V}.tar.gz -> ${PBA_P}.tar.gz )"
 fi
 
 LICENSE="LGPL-2.1"
@@ -58,7 +58,7 @@ REQUIRED_USE="|| ( abi_x86_32 abi_x86_64 )
 	X? ( truetype )
 	elibc_glibc? ( threads )
 	osmesa? ( opengl )
-    pba? ( staging )
+	pba? ( staging )
 	pipelight? ( staging )
 	test? ( abi_x86_32 )
 	themes? ( staging )
@@ -95,7 +95,7 @@ COMMON_DEPEND="
 		media-plugins/gst-plugins-meta:1.0[${MULTILIB_USEDEP}]
 	)
 	jpeg? ( virtual/jpeg:0=[${MULTILIB_USEDEP}] )
-	kerberos? ( virtual/krb5[${MULTILIB_USEDEP}] )
+	kerberos? ( virtual/krb5:0=[${MULTILIB_USEDEP}] )
 	lcms? ( media-libs/lcms:2=[${MULTILIB_USEDEP}] )
 	ldap? ( net-nds/openldap:=[${MULTILIB_USEDEP}] )
 	mp3? ( >=media-sound/mpg123-1.5.0[${MULTILIB_USEDEP}] )
@@ -198,7 +198,6 @@ PATCHES=(
 	"${PATCHDIR}/patches/${MY_PN}-1.9.5-multilib-portage.patch" #395615
 	"${PATCHDIR}/patches/${MY_PN}-1.6-memset-O3.patch" #480508
 	"${PATCHDIR}/patches/${MY_PN}-2.0-multislot-apploader.patch" #310611
-	#"${PATCHDIR}/patches/${MY_PN}-2.0-rearrange-manpages.patch" #469418 #617864
 )
 PATCHES_BIN=()
 
@@ -414,7 +413,7 @@ src_prepare() {
 					"${PBA_DIR}/patches/0007-wined3d-Avoid-freeing-persistent-buffer-heap-element.patch"
 					"${PBA_DIR}/patches/0008-wined3d-Add-DISABLE_PBA-envvar-some-PBA-cleanup.patch"
 					"${PBA_DIR}/patches/0009-wined3d-Add-quirk-to-use-GL_CLIENT_STORAGE_BIT-for-m.patch"
-)
+		)
 	fi
 	if use d3d9; then
 		if use staging; then
@@ -448,7 +447,6 @@ src_prepare() {
 	l10n_get_locales > po/LINGUAS || die # otherwise wine doesn't respect LINGUAS
 
 	# Fix manpage generation for locales #469418 and abi_x86_64 #617864
-	# Requires wine-2.0-rearrange-manpages.patch
 
 	# Duplicate manpages input files for wine64
 	local f

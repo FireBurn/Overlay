@@ -79,7 +79,7 @@ COMMON_DEPEND="
 		media-plugins/gst-plugins-meta:1.0[${MULTILIB_USEDEP}]
 	)
 	jpeg? ( virtual/jpeg:0=[${MULTILIB_USEDEP}] )
-	kerberos? ( virtual/krb5[${MULTILIB_USEDEP}] )
+	kerberos? ( virtual/krb5:0=[${MULTILIB_USEDEP}] )
 	lcms? ( media-libs/lcms:2=[${MULTILIB_USEDEP}] )
 	ldap? ( net-nds/openldap:=[${MULTILIB_USEDEP}] )
 	mp3? ( >=media-sound/mpg123-1.5.0[${MULTILIB_USEDEP}] )
@@ -182,7 +182,6 @@ PATCHES=(
 	"${PATCHDIR}/patches/${MY_PN}-1.9.5-multilib-portage.patch" #395615
 	"${PATCHDIR}/patches/${MY_PN}-1.6-memset-O3.patch" #480508
 	"${PATCHDIR}/patches/${MY_PN}-2.0-multislot-apploader.patch" #310611
-	#"${PATCHDIR}/patches/${MY_PN}-2.0-rearrange-manpages.patch" #469418 #617864
 )
 PATCHES_BIN=()
 
@@ -403,7 +402,6 @@ src_prepare() {
 	l10n_get_locales > po/LINGUAS || die # otherwise wine doesn't respect LINGUAS
 
 	# Fix manpage generation for locales #469418 and abi_x86_64 #617864
-	# Requires wine-2.0-rearrange-manpages.patch
 
 	# Duplicate manpages input files for wine64
 	local f
