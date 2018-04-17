@@ -29,7 +29,7 @@ STAGING_DIR="${WORKDIR}/${STAGING_P}"
 PBA_V="96e68f742c5abdd346ef56de353d1e46cda73659"
 PBA_P="wine-pba-${PBA_V}"
 PBA_DIR="${WORKDIR}/${PBA_P}"
-D3D9_P="wine-d3d9-3.5"
+D3D9_P="wine-d3d9-${PV}"
 D3D9_DIR="${WORKDIR}/wine-d3d9-patches-${D3D9_P}"
 GWP_V="20180120"
 PATCHDIR="${WORKDIR}/gentoo-wine-patches"
@@ -53,7 +53,7 @@ fi
 
 LICENSE="LGPL-2.1"
 SLOT="${PV}"
-IUSE="+abi_x86_32 +abi_x86_64 +alsa capi cups custom-cflags d3d9 dos elibc_glibc +fontconfig +gecko gphoto2 gsm gssapi gstreamer +jpeg kerberos kernel_FreeBSD +lcms ldap +mono mp3 ncurses netapi nls odbc openal opencl +opengl osmesa oss pba +perl pcap pipelight +png prelink pulseaudio +realtime +run-exes samba scanner selinux +ssl staging test themes +threads +truetype udev +udisks v4l vaapi +X +xcomposite xinerama +xml"
+IUSE="+abi_x86_32 +abi_x86_64 +alsa capi cups custom-cflags d3d9 dos elibc_glibc +fontconfig +gecko gphoto2 gsm gssapi gstreamer +jpeg kerberos kernel_FreeBSD +lcms ldap +mono mp3 ncurses netapi nls odbc openal opencl +opengl osmesa oss pba +perl pcap pipelight +png prelink pulseaudio +realtime +run-exes samba scanner selinux +ssl staging test themes +threads +truetype udev +udisks v4l vaapi vulkan +X +xcomposite xinerama +xml"
 REQUIRED_USE="|| ( abi_x86_32 abi_x86_64 )
 	X? ( truetype )
 	elibc_glibc? ( threads )
@@ -126,6 +126,7 @@ COMMON_DEPEND="
 	udisks? ( sys-apps/dbus[${MULTILIB_USEDEP}] )
 	v4l? ( media-libs/libv4l[${MULTILIB_USEDEP}] )
 	vaapi? ( x11-libs/libva[X,${MULTILIB_USEDEP}] )
+	vulkan? ( media-libs/vulkan-loader[${MULTILIB_USEDEP}] )
 	xcomposite? ( x11-libs/libXcomposite[${MULTILIB_USEDEP}] )
 	xinerama? ( x11-libs/libXinerama[${MULTILIB_USEDEP}] )
 	xml? (
@@ -529,6 +530,7 @@ multilib_src_configure() {
 		$(use_with truetype freetype)
 		$(use_with udev)
 		$(use_with v4l)
+		$(use_with vulkan)
 		$(use_with X x)
 		$(use_with X xfixes)
 		$(use_with xcomposite)
