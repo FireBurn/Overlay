@@ -75,16 +75,8 @@ RDEPEND="
 		!libressl? ( dev-libs/openssl:0= )
 		libressl? ( dev-libs/libressl:= )
 	)
-	|| (
-		(
-			>=media-libs/speex-1.2.0
-			media-libs/speexdsp
-		)
-		(
-			<media-libs/speex-1.2.0
-			>=media-libs/speex-1.2_rc1
-		)
-	)
+	>=media-libs/speex-1.2.0
+	media-libs/speexdsp
 	gdbm? ( sys-libs/gdbm:= )
 	webrtc-aec? ( >=media-libs/webrtc-audio-processing-0.2 )
 	systemd? ( sys-apps/systemd:0=[${MULTILIB_USEDEP}] )
@@ -98,7 +90,7 @@ DEPEND="${RDEPEND}
 	doc? ( app-doc/doxygen )
 	test? ( >=dev-libs/check-0.9.10 )
 	X? (
-		x11-proto/xproto[${MULTILIB_USEDEP}]
+		x11-base/xorg-proto
 		>=x11-libs/libXtst-1.0.99.2[${MULTILIB_USEDEP}]
 	)
 	dev-libs/libatomic_ops
@@ -156,7 +148,7 @@ src_prepare() {
 	# Skip test that cannot work with sandbox, bug #501846
 	sed -i -e '/lock-autospawn-test/d' src/Makefile.am || die
 
-    epatch "${FILESDIR}"/glibc-fix.patch 
+	epatch "${FILESDIR}"/glibc-fix.patch 
 
 	eautoreconf
 }
