@@ -347,6 +347,11 @@ multilib_src_configure() {
 		vulkan_enable video_cards_radeonsi amd
 	fi
 
+	# x86 hardened pax_kernel needs glx-rts, bug 240956
+	if [[ ${ABI} == x86 ]]; then
+		emesonargs+=( $(meson_use pax_kernel glx-read-only-text))
+	fi
+
 	if use gallium; then
 		emesonargs+=( -Dosmesa=$(usex osmesa gallium none))
 	else
