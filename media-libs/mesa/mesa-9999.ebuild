@@ -312,6 +312,7 @@ multilib_src_configure() {
 			$(meson_use xa gallium-xa)
 			$(meson_use xvmc gallium-xvmc)
 			-Dgallium-opencl=$(usex opencl standalone disabled)
+			$(meson_use !pic asm)
 		)
 
 		use vaapi && emesonargs+=( -Dva-libs-path=$(get_libdir)/va/drivers/)
@@ -344,11 +345,6 @@ multilib_src_configure() {
 	if use vulkan; then
 		vulkan_enable video_cards_i965 intel
 		vulkan_enable video_cards_radeonsi amd
-	fi
-
-	# on abi_x86_32 hardened we need to have asm disable
-	if [[ ${ABI} == x86* ]] && use pic; then
-		emesonargs+=( -Dasm=$(usex pic false true))
 	fi
 
 	if use gallium; then
