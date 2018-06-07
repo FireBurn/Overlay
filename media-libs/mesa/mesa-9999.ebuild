@@ -3,7 +3,7 @@
 
 EAPI=6
 
-EGIT_REPO_URI="https://anongit.freedesktop.org/git/mesa/mesa.git"
+EGIT_REPO_URI="https://gitlab.freedesktop.org/mesa/mesa.git"
 
 if [[ ${PV} = 9999 ]]; then
 	GIT_ECLASS="git-r3"
@@ -304,7 +304,7 @@ multilib_src_configure() {
     ln -s  $(type -P "${CHOST}-llvm-config") llvm-config
     PATH=`pwd`:$PATH
 
-	local myconf
+	local emesonargs
 
 	if use classic; then
 		# Configurable DRI drivers
@@ -333,11 +333,11 @@ multilib_src_configure() {
 	fi
 
 	if use egl; then
-		myconf+=( -Dplatforms=x11,surfaceless$(use wayland && echo ",wayland")$(use gbm && echo ",drm"))
+		emesonargs+=( -Dplatforms=x11,surfaceless$(use wayland && echo ",wayland")$(use gbm && echo ",drm"))
 	fi
 
 	if use gallium; then
-		myconf+=(
+		emesonargs+=(
 			-Dgallium-nine=$(meson_use d3d9)
 			-Dllvm=$(meson_use llvm)
 			-Dgallium-omx=$(usex openmax bellagio disabled)
@@ -348,7 +348,7 @@ multilib_src_configure() {
 			-Dgallium-opencl=$(usex opencl standalone disabled)
 		)
 
-		use vaapi && myconf+=( -Dva-libs-path=$(get_libdir)/va/drivers/)
+		use vaapi && emesonargs+=( -Dva-libs-path=$(get_libdir)/va/drivers/)
 
 		gallium_enable swrast
 		gallium_enable video_cards_vc4 vc4
@@ -382,24 +382,24 @@ multilib_src_configure() {
 
 #	# x86 hardened pax_kernel needs glx-rts, bug 240956
 #	if [[ ${ABI} == x86 ]]; then
-#		myconf+=" $(meson_use pax_kernel glx-read-only-text)"
+#		emesonargs+=" $(meson_use pax_kernel glx-read-only-text)"
 #	fi
 
 	# on abi_x86_32 hardened we need to have asm disable
 	if [[ ${ABI} == x86* ]] && use pic; then
-		myconf+=( -Dasm=$(usex pic false true))
+		emesonargs+=( -Dasm=$(usex pic false true))
 	fi
 
 	if use gallium; then
-		myconf+=( -Dosmesa=$(usex osmesa gallium none))
+		emesonargs+=( -Dosmesa=$(usex osmesa gallium none))
 	else
-		myconf+=( -Dosmesa=$(usex osmesa classic none))
+		emesonargs+=( -Dosmesa=$(usex osmesa classic none))
 	fi
 
 	# build fails with BSD indent, bug #428112
 	use userland_GNU || export INDENT=cat
 
-	myconf+=(
+	emesonargs+=(
 		-Dshared-glapi=true
 		-Dtexture-float=$(meson_use !bindist)
 		-Ddri3=$(meson_use dri3)
@@ -414,7 +414,7 @@ multilib_src_configure() {
 		-Dvulkan-drivers=${VULKAN_DRIVERS}
 	)
 
-	meson_src_configure "${myconf[@]}"
+	meson_src_configure 
 }
 
 multilib_src_compile() {
@@ -422,7 +422,7 @@ multilib_src_compile() {
 }
 
 multilib_src_install() {
-	DESTDIR="${D}" eninja install
+	meson_src_install
 
 	if use classic || use gallium; then
 			ebegin "Moving DRI/Gallium drivers for dynamic switching"
@@ -481,10 +481,6 @@ multilib_src_install_all() {
 	if use !bindist; then
 		dodoc docs/patents.txt
 	fi
-
-	# Install config file for eselect mesa
-	insinto /usr/share/mesa
-	newins "${FILESDIR}/eselect-mesa.conf.9.2" eselect-mesa.conf
 }
 
 multilib_src_test() {
@@ -502,11 +498,6 @@ pkg_postinst() {
 	# Switch to the xorg implementation.
 	echo
 	eselect opengl set --use-old ${OPENGL_DIR}
-
-	# Select classic/gallium drivers
-	if use classic || use gallium; then
-		eselect mesa set --auto
-	fi
 
 	# Switch to mesa opencl
 	if use opencl; then
