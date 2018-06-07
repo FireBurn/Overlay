@@ -12,7 +12,7 @@ fi
 
 PYTHON_COMPAT=( python2_7 )
 
-inherit meson ninja-utils llvm multilib-minimal python-any-r1 pax-utils ${GIT_ECLASS}
+inherit meson llvm multilib-minimal python-any-r1 pax-utils ${GIT_ECLASS}
 
 OPENGL_DIR="xorg-x11"
 
@@ -398,10 +398,6 @@ multilib_src_configure() {
 	meson_src_configure 
 }
 
-multilib_src_compile() {
-	eninja
-}
-
 multilib_src_install() {
 	meson_src_install
 
@@ -444,7 +440,7 @@ multilib_src_test() {
 		pax-mark m ${llvm_tests}
 		popd >/dev/null || die
 	fi
-	eninja test
+	meson_src_test
 }
 
 pkg_postinst() {
