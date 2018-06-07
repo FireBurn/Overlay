@@ -269,26 +269,6 @@ pkg_setup() {
 	python-any-r1_pkg_setup
 }
 
-meson_use() {
-	usex "$1" true false
-}
-
-meson_multilib() {
-	if multilib_is_native_abi; then
-		echo true
-	else
-		echo false
-	fi
-}
-
-meson_multilib_native_use() {
-	if multilib_is_native_abi && use "$1"; then
-		echo true
-	else
-		echo false
-	fi
-}
-
 multilib_src_configure() {
 	local emesonargs
 
@@ -324,13 +304,13 @@ multilib_src_configure() {
 
 	if use gallium; then
 		emesonargs+=(
-			-Dgallium-nine=$(meson_use d3d9)
-			-Dllvm=$(meson_use llvm)
+			$(meson_use d3d9 gallium-nine)
+			$(meson_use llvm)
 			-Dgallium-omx=$(usex openmax bellagio disabled)
-			-Dgallium-va=$(meson_use vaapi)
-			-Dgallium-vdpau=$(meson_use vdpau)
-			-Dgallium-xa=$(meson_use xa)
-			-Dgallium-xvmc=$(meson_use xvmc)
+			$(meson_use vaapi gallium-va)
+			$(meson_use vdpau gallium-vdpau)
+			$(meson_use xa gallium-xa)
+			$(meson_use xvmc gallium-xvmc)
 			-Dgallium-opencl=$(usex opencl standalone disabled)
 		)
 
@@ -382,14 +362,14 @@ multilib_src_configure() {
 
 	emesonargs+=(
 		-Dshared-glapi=true
-		-Dtexture-float=$(meson_use !bindist)
-		-Ddri3=$(meson_use dri3)
-		-Degl=$(meson_use egl)
-		-Dgbm=$(meson_use gbm)
-		-Dgles1=$(meson_use gles1)
-		-Dgles2=$(meson_use gles2)
-		-Dlibunwind=$(meson_use unwind)
-		-Dvalgrind=$(meson_use valgrind)
+		$(meson_use !bindist texture-float)
+		$(meson_use dri3)
+		$(meson_use egl)
+		$(meson_use gbm)
+		$(meson_use gles1)
+		$(meson_use gles2)
+		$(meson_use unwind libunwind)
+		$(meson_use valgrind)
 		-Ddri-drivers=${DRI_DRIVERS}
 		-Dgallium-drivers=${GALLIUM_DRIVERS}
 		-Dvulkan-drivers=${VULKAN_DRIVERS}
