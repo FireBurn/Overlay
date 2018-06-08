@@ -266,7 +266,7 @@ pkg_setup() {
 }
 
 multilib_src_configure() {
-	local emesonargs DRI_DRIVERS GALLIUM_DRIVERS VULKAN_DRIVERS
+	local emesonargs=()
 
 	if use classic; then
 		# Intel code
