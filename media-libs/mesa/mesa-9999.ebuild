@@ -270,7 +270,7 @@ pkg_setup() {
 }
 
 multilib_src_configure() {
-	local emesonargs
+	local emesonargs DRI_DRIVERS GALLIUM_DRIVERS VULKAN_DRIVERS
 
 	if use classic; then
 		# Configurable DRI drivers
@@ -306,16 +306,16 @@ multilib_src_configure() {
 		emesonargs+=(
 			$(meson_use d3d9 gallium-nine)
 			$(meson_use llvm)
-			-Dgallium-omx=$(usex openmax bellagio disabled)
+			$(meson_usex openmax gallium-omx bellagio disabled)
 			$(meson_use vaapi gallium-va)
 			$(meson_use vdpau gallium-vdpau)
 			$(meson_use xa gallium-xa)
 			$(meson_use xvmc gallium-xvmc)
-			-Dgallium-opencl=$(usex opencl standalone disabled)
+			$(meson_usex opencl gallium-opencl standalone disabled)
 			$(meson_use !pic asm)
 		)
 
-		use vaapi && emesonargs+=( -Dva-libs-path=$(get_libdir)/va/drivers/)
+		use vaapi && emesonargs+=( -Dva-libs-path=/usr/$(get_libdir)/va/drivers/)
 
 		gallium_enable swrast
 		gallium_enable video_cards_vc4 vc4
@@ -353,9 +353,9 @@ multilib_src_configure() {
 	fi
 
 	if use gallium; then
-		emesonargs+=( -Dosmesa=$(usex osmesa gallium none))
+		emesonargs+=( $(meson_usex osmesa gallium none))
 	else
-		emesonargs+=( -Dosmesa=$(usex osmesa classic none))
+		emesonargs+=( $(meson_usex osmesa classic none))
 	fi
 
 	# build fails with BSD indent, bug #428112
