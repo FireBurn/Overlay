@@ -35,7 +35,7 @@ RDEPEND="
 	x11-libs/libX11[${MULTILIB_USEDEP}]"
 DEPEND="${RDEPEND}
 	virtual/glu[${MULTILIB_USEDEP}]
-	x11-proto/xproto[${MULTILIB_USEDEP}]"
+	x11-base/xorg-proto"
 
 S=${WORKDIR}/${MY_P}
 EGIT_CHECKOUT_DIR=${S}
