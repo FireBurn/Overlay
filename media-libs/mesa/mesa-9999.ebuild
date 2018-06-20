@@ -26,7 +26,6 @@ fi
 LICENSE="MIT"
 SLOT="0"
 RESTRICT="
-	!bindist? ( bindist )
 	!test? ( test )
 "
 
@@ -37,14 +36,14 @@ for card in ${VIDEO_CARDS}; do
 done
 
 IUSE="${IUSE_VIDEO_CARDS}
-	bindist +classic d3d9 debug +dri3 +egl +gallium +gbm gles1 gles2 +llvm
-	lm_sensors +nptl opencl osmesa pax_kernel openmax pic selinux test unwind
-	vaapi valgrind vdpau vulkan wayland xvmc xa"
+	+classic d3d9 debug +dri3 +egl +gallium +gbm gles1 gles2 +llvm lm_sensors
+	opencl osmesa openmax pax_kernel pic selinux test unwind vaapi valgrind
+	vdpau vulkan wayland xa xvmc"
 
 REQUIRED_USE="
 	d3d9?   ( dri3 gallium )
 	llvm?   ( gallium )
-	opencl? ( gallium llvm )
+	opencl? ( gallium llvm || ( video_cards_r600 video_cards_radeonsi ) )
 	openmax? ( gallium )
 	gles1?  ( egl )
 	gles2?  ( egl )
@@ -303,7 +302,6 @@ multilib_src_configure() {
 			$(meson_use xa gallium-xa)
 			$(meson_use xvmc gallium-xvmc)
 			$(meson_usex opencl gallium-opencl standalone disabled)
-			$(meson_use !pic asm)
 		)
 		use vaapi && emesonargs+=( -Dva-libs-path=/usr/$(get_libdir)/va/drivers )
 
@@ -341,35 +339,41 @@ multilib_src_configure() {
 		emesonargs+=( $(meson_use pax_kernel glx-read-only-text) )
 	fi
 
+	# on abi_x86_32 hardened we need to have asm disable
+	if [[ ${ABI} == x86* ]] && use pic; then
+		emesonargs+=( -Dasm=false )
+	fi
+
 	if use gallium; then
-		GALLIUM_DRIVERS+="swrast "
+		gallium_enable -- swrast
 		emesonargs+=( $(meson_usex osmesa gallium none) )
 	else
-		DRI_DRIVERS+="swrast "
+		dri_driver_enable -- swrast
 		emesonargs+=( $(meson_usex osmesa classic none) )
 	fi
 
 	driver_list() {
-		arr=($(printf "%s\n" "$@" | sort -u | tr '\n' ','))
-		echo "${arr: : -1}"
+		local drivers="$(sort -u <<< "${1// /$'\n'}")"
+		echo "${drivers//$'\n'/,}"
 	}
 
 	emesonargs+=(
 		$(meson_use test build-tests)
 		-Dglx=dri
 		-Dshared-glapi=true
-		$(meson_use !bindist texture-float)
 		$(meson_use dri3)
 		$(meson_use egl)
 		$(meson_use gbm)
 		$(meson_use gles1)
 		$(meson_use gles2)
+		$(meson_use selinux)
 		$(meson_use unwind libunwind)
 		$(meson_use lm_sensors lmsensors)
 		$(meson_usex valgrind auto false)
-		-Ddri-drivers=$(driver_list ${DRI_DRIVERS})
-		-Dgallium-drivers=$(driver_list ${GALLIUM_DRIVERS})
-		-Dvulkan-drivers=$(driver_list ${VULKAN_DRIVERS})
+		-Ddri-drivers=$(driver_list "${DRI_DRIVERS[*]}")
+		-Dgallium-drivers=$(driver_list "${GALLIUM_DRIVERS[*]}")
+		-Dvulkan-drivers=$(driver_list "${VULKAN_DRIVERS[*]}")
+		$(meson_usex debug buildtype debug plain)
 	)
 	meson_src_configure
 }
@@ -405,10 +409,6 @@ multilib_src_install() {
 
 multilib_src_install_all() {
 	einstalldocs
-
-	if use !bindist; then
-		dodoc docs/patents.txt
-	fi
 }
 
 multilib_src_test() {
@@ -433,13 +433,6 @@ pkg_postinst() {
 			omxregister-bellagio
 		eend $?
 	fi
-
-	# warn about patent encumbered texture-float
-	if use !bindist; then
-		elog "USE=\"bindist\" was not set. Potentially patent encumbered code was"
-		elog "enabled. Please see /usr/share/doc/${P}/patents.txt.bz2 for an"
-		elog "explanation."
-	fi
 }
 
 pkg_prerm() {
@@ -448,25 +441,25 @@ pkg_prerm() {
 	fi
 }
 
-# $1 - VIDEO_CARDS flag
+# $1 - VIDEO_CARDS flag (check skipped for "--")
 # other args - names of DRI drivers to enable
 dri_driver_enable() {
-	if use $1; then
+	if [[ $1 == -- ]] || use $1; then
 		shift
-		DRI_DRIVERS+="$@ "
+		DRI_DRIVERS+=("$@")
 	fi
 }
 
 gallium_enable() {
-	if use $1; then
+	if [[ $1 == -- ]] || use $1; then
 		shift
-		GALLIUM_DRIVERS+="$@ "
+		GALLIUM_DRIVERS+=("$@")
 	fi
 }
 
 vulkan_enable() {
-	if use $1; then
+	if [[ $1 == -- ]] || use $1; then
 		shift
-		VULKAN_DRIVERS+="$@ "
+		VULKAN_DRIVERS+=("$@")
 	fi
 }
