@@ -92,6 +92,17 @@ diff -aurp old/configure new/configure
  			                ;;
  			esac
  			{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ssl_library_ver" >&5
+diff -aurp old/configure.ac new/configure.ac
+--- old/configure.ac	2017-10-04 15:47:48.440672023 +0200
++++ new/configure.ac	2017-10-04 15:47:23.327531495 +0200
+@@ -2730,6 +2730,7 @@
+ 					AC_MSG_ERROR([OpenSSL >= 1.0.1 required (have "$ssl_library_ver")])
+ 			                ;;
+ 				100*)   ;; # 1.0.x
++				101*)   ;; # 1.1.x is supported by this patch too
+ 				200*)   ;; # LibreSSL
+ 			        *)
+ 					AC_MSG_ERROR([OpenSSL >= 1.1.0 is not yet supported (have "$ssl_library_ver")])
 diff -aurp old/dh.c new/dh.c
 --- old/dh.c	2018-03-22 16:21:14.000000000 -1000
 +++ new/dh.c	2018-03-23 10:05:03.888621444 -1000
