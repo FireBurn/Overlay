@@ -24,11 +24,8 @@ else
 fi
 S="${WORKDIR}/${MY_P}"
 
-STAGING_P="wine-staging-${PV}"
+STAGING_P="wine-staging-3.13.1"
 STAGING_DIR="${WORKDIR}/${STAGING_P}"
-PBA_V="477fcf4fca99733e6a94667433145616e60780d7"
-PBA_P="wine-pba-${PBA_V}"
-PBA_DIR="${WORKDIR}/${PBA_P}"
 D3D9_P="wine-d3d9-${PV}"
 D3D9_DIR="${WORKDIR}/wine-d3d9-patches-${D3D9_P}"
 GWP_V="20180120"
@@ -43,22 +40,20 @@ SRC_URI="${SRC_URI}
 if [[ ${PV} == "9999" ]] ; then
 	STAGING_EGIT_REPO_URI="https://github.com/wine-staging/wine-staging.git"
 	D3D9_EGIT_REPO_URI="https://github.com/sarnex/wine-d3d9-patches.git"
-	PBA_EGIT_REPO_URI="https://github.com/acomminos/wine-pba.git"PBA_EGIT_REPO_URI="https://github.com/acomminos/wine-pba.git"	    PBA_EGIT_REPO_URI="https://github.com/acomminos/wine-pba.git"PBA_EGIT_REPO_URI="https://github.com/acomminos/wine-pba.git"
 else
 	SRC_URI="${SRC_URI}
-	staging? ( https://github.com/wine-staging/wine-staging/archive/v${PV}.tar.gz -> ${STAGING_P}.tar.gz )
-	d3d9? ( https://github.com/sarnex/wine-d3d9-patches/archive/${D3D9_P}.tar.gz )
-	pba? ( https://github.com/acomminos/wine-pba/archive/${PBA_V}.tar.gz -> ${PBA_P}.tar.gz )"
+	staging? ( https://github.com/wine-staging/wine-staging/archive/v3.13.1.tar.gz -> ${STAGING_P}.tar.gz )
+	d3d9? ( https://github.com/sarnex/wine-d3d9-patches/archive/${D3D9_P}.tar.gz )"
 fi
 
 LICENSE="LGPL-2.1"
 SLOT="${PV}"
-IUSE="+abi_x86_32 +abi_x86_64 +alsa capi cups custom-cflags d3d9 dos elibc_glibc +fontconfig +gecko gphoto2 gsm gssapi gstreamer +jpeg kerberos kernel_FreeBSD +lcms ldap +mono mp3 ncurses netapi nls odbc openal opencl +opengl osmesa oss +pba +perl pcap pipelight +png prelink pulseaudio +realtime +run-exes samba scanner sdl selinux +ssl staging test themes +threads +truetype udev +udisks v4l vaapi vulkan +X +xcomposite xinerama +xml"
+IUSE="+abi_x86_32 +abi_x86_64 +alsa capi cups custom-cflags d3d9 dos elibc_glibc ffmpeg +fontconfig +gecko gphoto2 gsm gssapi gstreamer +jpeg kerberos kernel_FreeBSD +lcms ldap +mono mp3 ncurses netapi nls odbc openal opencl +opengl osmesa oss +perl pcap pipelight +png prelink pulseaudio +realtime +run-exes samba scanner sdl selinux +ssl staging test themes +threads +truetype udev +udisks v4l vaapi vkd3d vulkan +X +xcomposite xinerama +xml"
 REQUIRED_USE="|| ( abi_x86_32 abi_x86_64 )
 	X? ( truetype )
 	elibc_glibc? ( threads )
+	ffmpeg? ( staging )
 	osmesa? ( opengl )
-	pba? ( staging )
 	pipelight? ( staging )
 	test? ( abi_x86_32 )
 	themes? ( staging )
@@ -86,6 +81,7 @@ COMMON_DEPEND="
 		x11-libs/libXext[${MULTILIB_USEDEP}]
 		x11-libs/libxcb[${MULTILIB_USEDEP}]
 	)
+	ffmpeg? ( >=media-video/ffmpeg-4:=[${MULTILIB_USEDEP}] )
 	fontconfig? ( media-libs/fontconfig:=[${MULTILIB_USEDEP}] )
 	gphoto2? ( media-libs/libgphoto2:=[${MULTILIB_USEDEP}] )
 	gsm? ( media-sound/gsm:=[${MULTILIB_USEDEP}] )
@@ -127,6 +123,7 @@ COMMON_DEPEND="
 	udisks? ( sys-apps/dbus[${MULTILIB_USEDEP}] )
 	v4l? ( media-libs/libv4l[${MULTILIB_USEDEP}] )
 	vaapi? ( x11-libs/libva[X,${MULTILIB_USEDEP}] )
+	vkd3d? ( app-emulation/vkd3d[${MULTILIB_USEDEP}] )
 	vulkan? ( media-libs/vulkan-loader[${MULTILIB_USEDEP}] )
 	xcomposite? ( x11-libs/libXcomposite[${MULTILIB_USEDEP}] )
 	xinerama? ( x11-libs/libXinerama[${MULTILIB_USEDEP}] )
@@ -141,7 +138,7 @@ RDEPEND="${COMMON_DEPEND}
 	!app-emulation/wine:0
 	dos? ( >=games-emulation/dosbox-0.74_p20160629 )
 	gecko? ( app-emulation/wine-gecko:2.47[abi_x86_32?,abi_x86_64?] )
-	mono? ( app-emulation/wine-mono:4.7.1 )
+	mono? ( app-emulation/wine-mono:4.7.3 )
 	perl? (
 		dev-lang/perl
 		dev-perl/XML-Simple
@@ -340,11 +337,6 @@ src_unpack() {
 				einfo "If src_prepare fails, try emerging with the env var WINE_COMMIT."
 				einfo "Example: WINE_COMMIT=${COMPAT_WINE_COMMIT} emerge -1 wine"
 			fi
-
-			if use pba; then
-				git-r3_fetch "${PBA_EGIT_REPO_URI}" "${PBA_COMMIT}"
-				git-r3_checkout "${PBA_EGIT_REPO_URI}" "${PBA_DIR}"
-			fi
 		fi
 		if use d3d9; then
 			git-r3_fetch "${D3D9_EGIT_REPO_URI}" "${D3D9_COMMIT}"
@@ -383,18 +375,6 @@ src_prepare() {
 			source "${STAGING_DIR}/patches/patchinstall.sh"
 		)
 		eend $? || die "Failed to apply Wine-Staging patches"
-	fi
-	if use pba; then
-		PATCHES+=( "${PBA_DIR}/patches/0001-wined3d-Initial-implementation-of-a-persistent-mappe.patch"
-					"${PBA_DIR}/patches/0002-wined3d-Add-support-for-backing-dynamic-wined3d_buff.patch"
-					"${PBA_DIR}/patches/0003-wined3d-Use-ARB_multi_bind-to-speed-up-UBO-updates.patch"
-					"${PBA_DIR}/patches/0004-wined3d-Use-GL_CLIENT_STORAGE_BIT-for-persistent-map.patch"
-					"${PBA_DIR}/patches/0005-wined3d-Disable-persistently-mapped-shader-resource-.patch"
-					"${PBA_DIR}/patches/0006-wined3d-Perform-initial-allocation-of-persistent-buf.patch"
-					"${PBA_DIR}/patches/0007-wined3d-Avoid-freeing-persistent-buffer-heap-element.patch"
-					"${PBA_DIR}/patches/0008-wined3d-Add-DISABLE_PBA-envvar-some-PBA-cleanup.patch"
-					"${PBA_DIR}/patches/0009-wined3d-Add-quirk-to-use-GL_CLIENT_STORAGE_BIT-for-m.patch"
-		)
 	fi
 	if use d3d9; then
 		if use staging; then
@@ -480,6 +460,7 @@ multilib_src_configure() {
 		$(use_with cups)
 		$(use_with ncurses curses)
 		$(use_with udisks dbus)
+		$(use_with ffmpeg)
 		$(use_with fontconfig)
 		$(use_with ssl gnutls)
 		$(use_enable gecko mshtml)
@@ -510,6 +491,7 @@ multilib_src_configure() {
 		$(use_with truetype freetype)
 		$(use_with udev)
 		$(use_with v4l)
+		$(use_with vkd3d)
 		$(use_with vulkan)
 		$(use_with X x)
 		$(use_with X xfixes)
