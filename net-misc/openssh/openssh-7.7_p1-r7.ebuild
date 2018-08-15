@@ -49,7 +49,8 @@ LIB_DEPEND="
 	skey? ( >=sys-auth/skey-1.1.5-r1[static-libs(+)] )
 	ssl? (
 		!libressl? (
-			dev-libs/openssl:1.1=[bindist=]
+			>=dev-libs/openssl-1.1:0=[bindist=]
+			dev-libs/openssl:0=[static-libs(+)]
 		)
 		libressl? ( dev-libs/libressl:0=[static-libs(+)] )
 	)
