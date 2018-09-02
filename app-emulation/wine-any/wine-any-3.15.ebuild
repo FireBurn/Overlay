@@ -26,7 +26,7 @@ S="${WORKDIR}/${MY_P}"
 
 STAGING_P="wine-staging-${PV}"
 STAGING_DIR="${WORKDIR}/${STAGING_P}"
-D3D9_P="wine-d3d9-3.13"
+D3D9_P="wine-d3d9-3.14"
 D3D9_DIR="${WORKDIR}/wine-d3d9-patches-${D3D9_P}"
 GWP_V="20180120"
 PATCHDIR="${WORKDIR}/gentoo-wine-patches"
