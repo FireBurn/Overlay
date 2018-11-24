@@ -1,14 +1,19 @@
-# Copyright 1999-2018 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
 
-inherit multilib-minimal
+inherit eapi7-ver multilib-minimal
 
 MY_PN="gst-libav"
+MY_PV="$(ver_cut 1-3)"
+MY_P="${MY_PN}-${MY_PV}"
+FFMPEG_PV="$(ver_cut 4-)"
+
 DESCRIPTION="FFmpeg based gstreamer plugin"
 HOMEPAGE="https://gstreamer.freedesktop.org/modules/gst-libav.html"
-SRC_URI="https://gstreamer.freedesktop.org/src/${MY_PN}/${MY_PN}-${PV}.tar.xz"
+SRC_URI="https://gstreamer.freedesktop.org/src/${MY_PN}/${MY_P}.tar.xz
+	libav? ( https://ffmpeg.org/releases/ffmpeg-${FFMPEG_PV}.tar.bz2 )"
 
 LICENSE="LGPL-2+"
 SLOT="1.0"
@@ -17,8 +22,8 @@ IUSE="libav +orc"
 
 RDEPEND="
 	>=dev-libs/glib-2.40.0:2[${MULTILIB_USEDEP}]
-	>=media-libs/gstreamer-${PV}:1.0[${MULTILIB_USEDEP}]
-	>=media-libs/gst-plugins-base-${PV}:1.0[${MULTILIB_USEDEP}]
+	>=media-libs/gstreamer-${MY_PV}:1.0[${MULTILIB_USEDEP}]
+	>=media-libs/gst-plugins-base-${MY_PV}:1.0[${MULTILIB_USEDEP}]
 	!libav? ( >=media-video/ffmpeg-3.2.6:0=[${MULTILIB_USEDEP}] )
 	libav? (
 		app-arch/bzip2[${MULTILIB_USEDEP}]
@@ -31,11 +36,21 @@ DEPEND="${RDEPEND}
 	>=virtual/pkgconfig-0-r1[${MULTILIB_USEDEP}]
 "
 
-S="${WORKDIR}/${MY_PN}-${PV}"
+S="${WORKDIR}/${MY_P}"
 
 RESTRICT="test" # FIXME: tests seem to get stuck at one point; investigate properly
 
 PATCHES="${FILESDIR}/gst-plugins-libav-1.14.0-ffmpeg4.patch"
+
+src_unpack() {
+	default
+
+	if use libav; then
+		# Use newer version of bundled FFmpeg.
+		rm -r "${S}/gst-libs/ext/libav" || die
+		ln -s ../../../ffmpeg-${FFMPEG_PV} "${S}/gst-libs/ext/libav" || die
+	fi
+}
 
 multilib_src_configure() {
 	GST_PLUGINS_BUILD=""
@@ -48,7 +63,7 @@ multilib_src_configure() {
 	local myconf
 
 	if use libav; then
-		ewarn "Using internal ffmpeg copy as upstream dropped"
+		ewarn "Using bundled ffmpeg copy as upstream dropped"
 		ewarn "the support for compiling against system libav"
 		ewarn "https://bugzilla.gnome.org/show_bug.cgi?id=758183"
 	else
