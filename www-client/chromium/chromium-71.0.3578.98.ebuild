@@ -1,14 +1,14 @@
-# Copyright 1999-2018 Gentoo Foundation
+# Copyright 1999-2018 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI="6"
+EAPI=7
 PYTHON_COMPAT=( python2_7 )
 
 CHROMIUM_LANGS="am ar bg bn ca cs da de el en-GB es es-419 et fa fi fil fr gu he
 	hi hr hu id it ja kn ko lt lv ml mr ms nb nl pl pt-BR pt-PT ro ru sk sl sr
 	sv sw ta te th tr uk vi zh-CN zh-TW"
 
-inherit check-reqs chromium-2 eutils gnome2-utils flag-o-matic multilib ninja-utils pax-utils portability python-any-r1 readme.gentoo-r1 toolchain-funcs xdg-utils
+inherit check-reqs chromium-2 desktop flag-o-matic multilib ninja-utils pax-utils portability python-any-r1 readme.gentoo-r1 toolchain-funcs xdg-utils
 
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="http://chromium.org/"
@@ -17,14 +17,14 @@ SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}
 LICENSE="BSD"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="component-build cups gnome-keyring +hangouts jumbo-build kerberos neon pic +proprietary-codecs pulseaudio selinux +suid +system-ffmpeg +system-icu +system-libvpx +tcmalloc vaapi widevine"
+IUSE="component-build cups gnome-keyring +hangouts jumbo-build kerberos neon pic +proprietary-codecs pulseaudio selinux +suid +system-ffmpeg +system-icu +system-libvpx +tcmalloc widevine"
 RESTRICT="!system-ffmpeg? ( proprietary-codecs? ( bindist ) )"
 
 COMMON_DEPEND="
-	app-accessibility/at-spi2-atk:2
+	>=app-accessibility/at-spi2-atk-2.26:2
 	app-arch/bzip2:=
 	cups? ( >=net-print/cups-1.3.11:= )
-	dev-libs/atk
+	>=dev-libs/atk-2.26
 	dev-libs/expat:=
 	dev-libs/glib:2
 	system-icu? ( >=dev-libs/icu-59:= )
@@ -32,12 +32,12 @@ COMMON_DEPEND="
 	dev-libs/libxslt:=
 	dev-libs/nspr:=
 	>=dev-libs/nss-3.26:=
-	>=dev-libs/re2-0.2016.05.01:=
+	>=dev-libs/re2-0.2016.11.01:=
 	gnome-keyring? ( >=gnome-base/libgnome-keyring-3.12:= )
 	>=media-libs/alsa-lib-1.0.19:=
 	media-libs/fontconfig:=
 	media-libs/freetype:=
-	>=media-libs/harfbuzz-1.6.0:=[icu(-)]
+	>=media-libs/harfbuzz-2.0.0:0=[icu(-)]
 	media-libs/libjpeg-turbo:=
 	media-libs/libpng:=
 	system-libvpx? ( media-libs/libvpx:=[postproc,svc] )
@@ -75,12 +75,10 @@ COMMON_DEPEND="
 	>=media-libs/libwebp-0.4.0:=
 	sys-libs/zlib:=[minizip]
 	kerberos? ( virtual/krb5 )
-	vaapi? ( x11-libs/libva[X] )
 "
 # For nvidia-drivers blocker, see bug #413637 .
 RDEPEND="${COMMON_DEPEND}
 	!<www-plugins/chrome-binary-plugins-57
-	dev-util/gn
 	x11-misc/xdg-utils
 	virtual/opengl
 	virtual/ttf-fonts
@@ -91,21 +89,29 @@ RDEPEND="${COMMON_DEPEND}
 # dev-vcs/git - https://bugs.gentoo.org/593476
 # sys-apps/sandbox - https://crbug.com/586444
 DEPEND="${COMMON_DEPEND}
+"
+BDEPEND="
 	>=app-arch/gzip-1.7
 	!arm? (
 		dev-lang/yasm
 	)
 	dev-lang/perl
+	dev-util/gn
 	>=dev-util/gperf-3.0.3
 	>=dev-util/ninja-1.7.2
-	>=net-libs/nodejs-6.9.4
+	>=net-libs/nodejs-7.6.0[inspector]
 	sys-apps/hwids[usb(+)]
 	>=sys-devel/bison-2.4.3
 	sys-devel/flex
-	>=sys-devel/clang-5
 	virtual/pkgconfig
 	dev-vcs/git
 "
+
+: ${CHROMIUM_FORCE_CLANG=no}
+
+if [[ ${CHROMIUM_FORCE_CLANG} == yes ]]; then
+	BDEPEND+=" >=sys-devel/clang-5"
+fi
 
 if ! has chromium_pkg_die ${EBUILD_DEATH_HOOKS}; then
 	EBUILD_DEATH_HOOKS+=" chromium_pkg_die";
@@ -131,14 +137,15 @@ GTK+ icon theme.
 "
 
 PATCHES=(
-	"${FILESDIR}/chromium-compiler-r4.patch"
-	"${FILESDIR}/chromium-widevine-r2.patch"
+	"${FILESDIR}/chromium-compiler-r6.patch"
+	"${FILESDIR}/chromium-widevine-r3.patch"
 	"${FILESDIR}/chromium-webrtc-r0.patch"
 	"${FILESDIR}/chromium-memcpy-r0.patch"
 	"${FILESDIR}/chromium-math.h-r0.patch"
 	"${FILESDIR}/chromium-stdint.patch"
-	"${FILESDIR}/chromium-ffmpeg-ebp-r1.patch"
-    "${FILESDIR}/enable_vaapi_on_linux_2.diff"
+	"${FILESDIR}/chromium-harfbuzz-r0.patch"
+	"${FILESDIR}/chromium-71-gcc-0.patch"
+	"${FILESDIR}/chromium-vaapi-r21.patch"
 )
 
 pre_build_checks() {
@@ -157,14 +164,12 @@ pre_build_checks() {
 	# Check build requirements, bug #541816 and bug #471810 .
 	CHECKREQS_MEMORY="3G"
 	CHECKREQS_DISK_BUILD="5G"
-	eshopts_push -s extglob
-	if is-flagq '-g?(gdb)?([1-9])'; then
+	if ( shopt -s extglob; is-flagq '-g?(gdb)?([1-9])' ); then
 		CHECKREQS_DISK_BUILD="25G"
 		if ! use component-build; then
 			CHECKREQS_MEMORY="16G"
 		fi
 	fi
-	eshopts_pop
 	check-reqs_pkg_setup
 }
 
@@ -206,6 +211,7 @@ src_prepare() {
 		net/third_party/nss
 		net/third_party/quic
 		net/third_party/spdy
+		net/third_party/uri_template
 		third_party/WebKit
 		third_party/abseil-cpp
 		third_party/analytics
@@ -264,6 +270,7 @@ src_prepare() {
 		third_party/iccjpeg
 		third_party/inspector_protocol
 		third_party/jinja2
+		third_party/jsoncpp
 		third_party/jstemplate
 		third_party/khronos
 		third_party/leveldatabase
@@ -319,6 +326,7 @@ src_prepare() {
 		third_party/skia/third_party/vulkan
 		third_party/smhasher
 		third_party/spirv-headers
+		third_party/SPIRV-Tools
 		third_party/spirv-tools-angle
 		third_party/sqlite
 		third_party/swiftshader
@@ -331,14 +339,21 @@ src_prepare() {
 		third_party/web-animations-js
 		third_party/webdriver
 		third_party/webrtc
+		third_party/webrtc/common_audio/third_party/fft4g
+		third_party/webrtc/common_audio/third_party/spl_sqrt_floor
+		third_party/webrtc/modules/third_party/fft
+		third_party/webrtc/modules/third_party/g711
+		third_party/webrtc/modules/third_party/g722
+		third_party/webrtc/rtc_base/third_party/base64
+		third_party/webrtc/rtc_base/third_party/sigslot
 		third_party/widevine
 		third_party/woff2
 		third_party/zlib/google
 		url/third_party/mozilla
 		v8/src/third_party/valgrind
 		v8/src/third_party/utf8-decoder
-		v8/third_party/antlr4
 		v8/third_party/inspector_protocol
+		v8/third_party/v8
 
 		# gyp -> gn leftovers
 		base/third_party/libevent
@@ -375,7 +390,7 @@ src_configure() {
 	# Make sure the build system will use the right tools, bug #340795.
 	tc-export AR CC CXX NM
 
-	if ! tc-is-clang; then
+	if [[ ${CHROMIUM_FORCE_CLANG} == yes ]] && ! tc-is-clang; then
 		# Force clang since gcc is pretty broken at the moment.
 		CC=${CHOST}-clang
 		CXX=${CHOST}-clang++
@@ -462,7 +477,6 @@ src_configure() {
 	myconf_gn+=" use_gnome_keyring=$(usex gnome-keyring true false)"
 	myconf_gn+=" use_kerberos=$(usex kerberos true false)"
 	myconf_gn+=" use_pulseaudio=$(usex pulseaudio true false)"
-	myconf_gn+=" use_vaapi=$(usex vaapi true false)"
 
 	# TODO: link_pulseaudio=true for GN.
 
@@ -475,6 +489,9 @@ src_configure() {
 
 	# Disable forced lld, bug 641556
 	myconf_gn+=" use_lld=false"
+
+	# Enable vaapi
+	myconf_gn+=" use_vaapi=true"
 
 	ffmpeg_branding="$(usex proprietary-codecs Chrome Chromium)"
 	myconf_gn+=" proprietary_codecs=$(usex proprietary-codecs true false)"
@@ -498,6 +515,10 @@ src_configure() {
 	elif [[ $myarch = x86 ]] ; then
 		myconf_gn+=" target_cpu=\"x86\""
 		ffmpeg_target_arch=ia32
+
+		# This is normally defined by compiler_cpu_abi in
+		# build/config/compiler/BUILD.gn, but we patch that part out.
+		append-flags -msse2 -mfpmath=sse -mmmx
 	elif [[ $myarch = arm64 ]] ; then
 		myconf_gn+=" target_cpu=\"arm64\""
 		ffmpeg_target_arch=arm64
@@ -566,10 +587,28 @@ src_configure() {
 }
 
 src_compile() {
+	# Final link uses lots of file descriptors.
+	ulimit -n 2048
+
 	# Calling this here supports resumption via FEATURES=keepwork
 	python_setup
 
 	#"${EPYTHON}" tools/clang/scripts/update.py --force-local-build --gcc-toolchain /usr --skip-checkout --use-system-cmake --without-android || die
+
+	# Work around broken deps
+	eninja -C out/Release gen/ui/accessibility/ax_enums.mojom{,-shared}.h
+
+	# Build mksnapshot and pax-mark it.
+	local x
+	for x in mksnapshot v8_context_snapshot_generator; do
+		if tc-is-cross-compiler; then
+			eninja -C out/Release "host/${x}"
+			pax-mark m "out/Release/host/${x}"
+		else
+			eninja -C out/Release "${x}"
+			pax-mark m "out/Release/${x}"
+		fi
+	done
 
 	# Even though ninja autodetects number of CPUs, we respect
 	# user's options, for debugging with -j 1 or any other reason.
@@ -658,17 +697,21 @@ src_install() {
 	readme.gentoo_create_doc
 }
 
-pkg_preinst() {
-	gnome2_icon_savelist
-}
-
 pkg_postrm() {
-	gnome2_icon_cache_update
+	if type gtk-update-icon-cache &>/dev/null; then
+		ebegin "Updating GTK icon cache"
+		gtk-update-icon-cache "${EROOT}/usr/share/icons/hicolor"
+		eend $?
+	fi
 	xdg_desktop_database_update
 }
 
 pkg_postinst() {
-	gnome2_icon_cache_update
+	if type gtk-update-icon-cache &>/dev/null; then
+		ebegin "Updating GTK icon cache"
+		gtk-update-icon-cache "${EROOT}/usr/share/icons/hicolor"
+		eend $?
+	fi
 	xdg_desktop_database_update
 	readme.gentoo_print_elog
 }
