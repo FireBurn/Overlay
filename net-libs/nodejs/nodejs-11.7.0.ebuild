@@ -1,4 +1,4 @@
-# Copyright 1999-2018 Gentoo Authors
+# Copyright 1999-2019 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -25,7 +25,7 @@ REQUIRED_USE="
 RDEPEND="
 	>=dev-libs/libuv-1.24.1:=
 	>=net-dns/c-ares-1.15.0
-	>=net-libs/http-parser-2.8.0:=
+	>=net-libs/http-parser-2.9.0:=
 	>=net-libs/nghttp2-1.34.0
 	sys-libs/zlib
 	icu? ( >=dev-libs/icu-63.1:= )
@@ -37,12 +37,12 @@ DEPEND="
 	systemtap? ( dev-util/systemtap )
 	test? ( net-misc/curl )
 "
-S="${WORKDIR}/node-v${PV}"
 PATCHES=(
 	"${FILESDIR}"/${PN}-10.3.0-global-npm-config.patch
 	"${FILESDIR}"/${PN}-11.4.0-stdarg_h.patch
 	"${FILESDIR}"/${PN}-99999999-llhttp.patch
 )
+S="${WORKDIR}/node-v${PV}"
 
 pkg_pretend() {
 	(use x86 && ! use cpu_flags_x86_sse2) && \
@@ -95,7 +95,10 @@ src_prepare() {
 }
 
 src_configure() {
-	local myconf=( --shared-cares --shared-http-parser --shared-libuv --shared-nghttp2 --shared-zlib )
+	local myconf=(
+		--shared-cares --shared-http-parser --shared-libuv --shared-nghttp2
+		--shared-zlib
+	)
 	use debug && myconf+=( --debug )
 	use icu && myconf+=( --with-intl=system-icu ) || myconf+=( --with-intl=none )
 	use inspector || myconf+=( --without-inspector )
@@ -189,7 +192,7 @@ src_install() {
 			\) \) -exec rm -rf "{}" \;
 	fi
 
-	mv "${D}"/usr/share/doc/node "${D}"/usr/share/doc/${PF} || die
+	mv "${ED}"/usr/share/doc/node "${ED}"/usr/share/doc/${PF} || die
 }
 
 src_test() {
@@ -198,10 +201,10 @@ src_test() {
 }
 
 pkg_postinst() {
-	einfo "The global npm config lives in /etc/npm. This deviates slightly"
-	einfo "from upstream which otherwise would have it live in /usr/etc/."
-	einfo ""
-	einfo "Protip: When using node-gyp to install native modules, you can"
-	einfo "avoid having to download extras by doing the following:"
-	einfo "$ node-gyp --nodedir /usr/include/node <command>"
+	elog "The global npm config lives in /etc/npm. This deviates slightly"
+	elog "from upstream which otherwise would have it live in /usr/etc/."
+	elog ""
+	elog "Protip: When using node-gyp to install native modules, you can"
+	elog "avoid having to download extras by doing the following:"
+	elog "$ node-gyp --nodedir /usr/include/node <command>"
 }
