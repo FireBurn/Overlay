@@ -10,6 +10,7 @@ DESCRIPTION="Examples and demos for the Vulkan API"
 HOMEPAGE="https://github.com/SaschaWillems/Vulkan"
 
 EGIT_REPO_URI="https://github.com/SaschaWillems/Vulkan.git"
+SRC_URI="http://vulkan.gpuinfo.org/downloads/vulkan_asset_pack.zip"
 
 LICENSE="MIT"
 SLOT="0"
@@ -29,7 +30,7 @@ src_prepare() {
 src_configure() {
     local mycmakeargs=(
 		-DRESOURCE_INSTALL_DIR=/usr/share/vulkan/data/
-		-CMAKE_INSTALL_BINDIR=/usr/share/vulkan/demos/
+		-DCMAKE_INSTALL_BINDIR=/usr/share/vulkan/demos/
     )
 	cmake-utils_src_configure
 }
