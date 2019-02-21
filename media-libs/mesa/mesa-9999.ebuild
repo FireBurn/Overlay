@@ -1,4 +1,4 @@
-# Copyright 1999-2018 Gentoo Authors
+# Copyright 1999-2019 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=6
@@ -30,7 +30,7 @@ RESTRICT="
 "
 
 RADEON_CARDS="r100 r200 r300 r600 radeon radeonsi"
-VIDEO_CARDS="${RADEON_CARDS} freedreno i915 i965 imx intel nouveau vc4 virgl vivante vmware"
+VIDEO_CARDS="${RADEON_CARDS} freedreno i915 i965 imx intel iris nouveau vc4 virgl vivante vmware"
 for card in ${VIDEO_CARDS}; do
 	IUSE_VIDEO_CARDS+=" video_cards_${card}"
 done
@@ -52,6 +52,7 @@ REQUIRED_USE="
 	video_cards_intel?  ( classic )
 	video_cards_i915?   ( || ( classic gallium ) )
 	video_cards_i965?   ( classic )
+	video_cards_iris	( gallium )
 	video_cards_imx?    ( gallium video_cards_vivante )
 	video_cards_nouveau? ( || ( classic gallium ) )
 	video_cards_radeon? ( || ( classic gallium )
@@ -67,7 +68,7 @@ REQUIRED_USE="
 	video_cards_vmware? ( gallium )
 "
 
-LIBDRM_DEPSTRING=">=x11-libs/libdrm-2.4.96"
+LIBDRM_DEPSTRING=">=x11-libs/libdrm-2.4.97"
 RDEPEND="
 	!app-eselect/eselect-mesa
 	>=app-eselect/eselect-opengl-1.3.0
@@ -139,10 +140,6 @@ LLVM_DEPSTR="
 		sys-devel/llvm:9[${MULTILIB_USEDEP}]
 		sys-devel/llvm:8[${MULTILIB_USEDEP}]
 		sys-devel/llvm:7[${MULTILIB_USEDEP}]
-		sys-devel/llvm:6[${MULTILIB_USEDEP}]
-		sys-devel/llvm:5[${MULTILIB_USEDEP}]
-		sys-devel/llvm:4[${MULTILIB_USEDEP}]
-		>=sys-devel/llvm-3.9.0:0[${MULTILIB_USEDEP}]
 	)
 	sys-devel/llvm:=[${MULTILIB_USEDEP}]
 "
@@ -365,7 +362,7 @@ multilib_src_configure() {
 		   use video_cards_radeonsi ||
 		   use video_cards_nouveau; then
 			emesonargs+=($(meson_use vaapi gallium-va))
-			use vaapi && emesonargs+=( -Dva-libs-path=${EPREFIX}/usr/$(get_libdir)/va/drivers )
+			use vaapi && emesonargs+=( -Dva-libs-path="${EPREFIX}"/usr/$(get_libdir)/va/drivers )
 		else
 			emesonargs+=(-Dgallium-va=false)
 		fi
@@ -408,6 +405,8 @@ multilib_src_configure() {
 				gallium_enable video_cards_intel i915
 			fi
 		fi
+
+		gallium_enable video_cards_iris iris
 
 		gallium_enable video_cards_r300 r300
 		gallium_enable video_cards_r600 r600
