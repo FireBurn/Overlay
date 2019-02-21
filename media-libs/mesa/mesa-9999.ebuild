@@ -427,6 +427,7 @@ multilib_src_configure() {
 
 	if use vulkan; then
 		vulkan_enable video_cards_i965 intel
+        vulkan_enable video_cards_iris intel
 		vulkan_enable video_cards_radeonsi amd
 	fi
 
@@ -467,6 +468,7 @@ multilib_src_configure() {
 		-Ddri-drivers=$(driver_list "${DRI_DRIVERS[*]}")
 		-Dgallium-drivers=$(driver_list "${GALLIUM_DRIVERS[*]}")
 		-Dvulkan-drivers=$(driver_list "${VULKAN_DRIVERS[*]}")
+		$(meson_use vulkan vulkan-overlay-layer)
 		--buildtype $(usex debug debug plain)
 		-Db_ndebug=$(usex debug false true)
 	)
