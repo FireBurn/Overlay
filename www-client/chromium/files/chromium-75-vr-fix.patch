@@ -1,0 +1,13 @@
+diff --git a/tools/perf/contrib/vr_benchmarks/BUILD.gn b/tools/perf/contrib/vr_benchmarks/BUILD.gn
+index 758057a..51644e0 100644
+--- a/tools/perf/contrib/vr_benchmarks/BUILD.gn
++++ b/tools/perf/contrib/vr_benchmarks/BUILD.gn
+@@ -72,7 +72,7 @@ action("generate_vr_assets_profile") {
+     "//chrome/browser/resources/vr/assets/vr_assets_component_files.json",
+   ]
+   outputs = [
+-    "$target_gen_dir/vr_assets_profile/",
++    "$target_gen_dir/vr_assets_profile",
+   ]
+   args = [
+     "--output",
