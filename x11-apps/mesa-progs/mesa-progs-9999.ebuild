@@ -6,7 +6,7 @@ EAPI=5
 
 MY_PN=${PN/progs/demos}
 MY_P=${MY_PN}-${PV}
-EGIT_REPO_URI="https://anongit.freedesktop.org/git/${MY_PN/-//}.git"
+EGIT_REPO_URI="https://gitlab.freedesktop.org/${MY_PN/-//}.git"
 
 if [[ ${PV} = 9999* ]]; then
 	GIT_ECLASS="git-r3"
