@@ -145,6 +145,7 @@ PATCHES=(
 	"${FILESDIR}/chromium-75-vaapi.patch"
 	"${FILESDIR}/chromium-deconst.patch"
 	"${FILESDIR}/chromium-75-vr-fix.patch"
+	"${FILESDIR}/chromium-75-libstdc.patch"
 )
 
 pre_build_checks() {
