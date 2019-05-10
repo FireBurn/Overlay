@@ -221,6 +221,7 @@ src_prepare() {
 		third_party/angle/third_party/vulkan-tools
 		third_party/angle/third_party/vulkan-validation-layers
 		third_party/apple_apsl
+		third_party/axe-core
 		third_party/blink
 		third_party/boringssl
 		third_party/boringssl/src/third_party/fiat
