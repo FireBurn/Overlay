@@ -378,6 +378,10 @@ src_prepare() {
 
 	# Remove most bundled libraries. Some are still needed.
 	build/linux/unbundle/remove_bundled_libraries.py "${keeplibs[@]}" --do-remove || die
+
+	# Turn back lss.h. see https://chromium-review.googlesource.com/c/crashpad/crashpad/+/1559309
+	cp ${FILESDIR}/BUILD.gn third_party/lss/BUILD.gn
+	cp ${FILESDIR}/lss.h third_party/lss/lss.h
 }
 
 src_configure() {
