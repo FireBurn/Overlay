@@ -146,6 +146,9 @@ PATCHES=(
 	"${FILESDIR}/chromium-deconst.patch"
 	"${FILESDIR}/chromium-75-vr-fix.patch"
 	"${FILESDIR}/chromium-75-libstdc.patch"
+	"${FILESDIR}/chromium-73.0.3683.86-system_icu_array_size_calculation_minimalistic_fix.patch"
+	"${FILESDIR}/chromium-75-noexcept-false.patch"
+	"${FILESDIR}/chromium-75-define-compiler_gcc.patch"
 )
 
 pre_build_checks() {
@@ -380,8 +383,8 @@ src_prepare() {
 	build/linux/unbundle/remove_bundled_libraries.py "${keeplibs[@]}" --do-remove || die
 
 	# Turn back lss.h. see https://chromium-review.googlesource.com/c/crashpad/crashpad/+/1559309
-	cp ${FILESDIR}/BUILD.gn third_party/lss/BUILD.gn
-	cp ${FILESDIR}/lss.h third_party/lss/lss.h
+	cp "${FILESDIR}"/BUILD.gn third_party/lss/BUILD.gn
+	cp "${FILESDIR}"/lss.h third_party/lss/lss.h
 }
 
 src_configure() {

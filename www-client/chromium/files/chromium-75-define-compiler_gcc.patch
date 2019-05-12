@@ -1,0 +1,18 @@
+COMPILER_GCC isn't defined in 'third_party/angle/src/common/debug.h' causing it to use
+MSVC/LLVM intrinsics that don't exist in GCC, leading to:
+
+../../third_party/angle/src/common/debug.h:254:62: error: ‘__assume’ was not declared in this scope
+
+Including 'build/build_config.h' correctly defines COMPILER_GCC
+
+--- a/third_party/angle/src/common/debug.h
++++ b/third_party/angle/src/common/debug.h
+@@ -18,6 +18,8 @@
+ #include <sstream>
+ #include <string>
+ 
++#include "../../../../build/build_config.h"
++
+ #include "common/angleutils.h"
+ #include "common/platform.h"
+ 

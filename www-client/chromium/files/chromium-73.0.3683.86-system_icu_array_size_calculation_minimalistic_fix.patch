@@ -1,0 +1,138 @@
+Chromium contains at least 2 ways of array size calculation:
+
+base/stl_util.h contains:
+[[[
+namespace base {
+...
+template <typename T, size_t N>
+constexpr size_t size(const T (&array)[N]) noexcept {
+  return N;
+}
+...
+}
+]]]
+
+third_party/blink/renderer/platform/text/character_property_data_generator.cc contains:
+[[[
+#define ARRAY_LENGTH(a) (sizeof(a) / sizeof((a)[0]))
+]]]
+
+
+In C++, zero-length arrays can be defined, but some operations on them are not permitted
+(by either Clang or GCC, even in GNU mode (-std=gnu++...)):
+[[[
+$ cat test.h
+#include <cstddef>
+
+namespace base {
+
+template <typename T, size_t N>
+constexpr size_t size(const T (&array)[N]) noexcept {
+  return N;
+}
+
+}
+
+#define ARRAY_LENGTH(a) (sizeof(a) / sizeof((a)[0]))
+
+int non_empty_array[] = {1, 3, 5, 7, 9};
+int empty_array[] = {};
+$ cat test_base::size_1.cpp
+#include "test.h"
+
+int main() {
+  size_t x = base::size(non_empty_array);
+}
+$ cat test_base::size_2.cpp
+#include "test.h"
+
+int main() {
+  size_t x = base::size(empty_array);
+}
+$ cat test_ARRAY_LENGTH_1.cpp
+#include "test.h"
+
+int main() {
+  size_t x = ARRAY_LENGTH(non_empty_array);
+}
+$ cat test_ARRAY_LENGTH_2.cpp
+#include "test.h"
+
+int main() {
+  size_t x = ARRAY_LENGTH(empty_array);
+}
+$ g++-8.3.0 -std=gnu++17 test_base::size_1.cpp
+$ clang++-8 -std=gnu++17 test_base::size_1.cpp
+$ g++-8.3.0 -std=gnu++17 test_base::size_2.cpp
+test_base::size_2.cpp: In function ‘int main()’:
+test_base::size_2.cpp:4:36: error: no matching function for call to ‘size(int [0])’
+   size_t x = base::size(empty_array);
+                                    ^
+In file included from test_base::size_2.cpp:1:
+test.h:6:18: note: candidate: ‘template<class T, long unsigned int N> constexpr size_t base::size(const T (&)[N])’
+ constexpr size_t size(const T (&array)[N]) noexcept {
+                  ^~~~
+test.h:6:18: note:   template argument deduction/substitution failed:
+$ clang++-8 -std=gnu++17 test_base::size_2.cpp
+test_base::size_2.cpp:4:14: error: no matching function for call to 'size'
+  size_t x = base::size(empty_array);
+             ^~~~~~~~~~
+./test.h:6:18: note: candidate template ignored: substitution failure [with T = int, N = 0]: zero-length arrays are not permitted in C++
+constexpr size_t size(const T (&array)[N]) noexcept {
+                 ^                     ~
+1 error generated.
+$ g++-8.3.0 -std=gnu++17 test_ARRAY_LENGTH_1.cpp
+$ clang++-8 -std=gnu++17 test_ARRAY_LENGTH_1.cpp
+$ g++-8.3.0 -std=gnu++17 test_ARRAY_LENGTH_2.cpp
+$ clang++-8 -std=gnu++17 test_ARRAY_LENGTH_2.cpp
+]]]
+
+As seen above, base::size() works with non-zero-length arrays and fails with zero-length arrays,
+while ARRAY_LENGTH() works with both non-zero-length arrays and zero-length arrays.
+
+
+third_party/blink/renderer/platform/text/character_property_data.h defines several arrays.
+kIsHangulArray is a zero-length array.
+
+When Chromium is being built with bundled ICU, then array size calculation occurs
+in third_party/blink/renderer/platform/text/character_property_data_generator.cc
+in GenerateCharacterPropertyData() function,
+which (through SET macro) uses ARRAY_LENGTH(), which works with zero-length arrays.
+
+When Chromium is being built with system ICU, then array size calculation occurs
+in third_party/blink/renderer/platform/text/character.cc in several functions,
+which (through RETURN_HAS_PROPERTY and CREATE_UNICODE_SET macros) use base::size(), which fails with zero-length arrays.
+
+The minimalistic fix is to make third_party/blink/renderer/platform/text/character.cc also use ARRAY_LENGTH() instead of base::size().
+
+--- /third_party/blink/renderer/platform/text/character.cc
++++ /third_party/blink/renderer/platform/text/character.cc
+@@ -63,9 +63,13 @@
+   return unicodeSet;
+ }
+ 
+-#define CREATE_UNICODE_SET(name)                                       \
+-  createUnicodeSet(name##Array, base::size(name##Array), name##Ranges, \
+-                   base::size(name##Ranges))
++// base::size (from base/stl_util.h) causes compilation errors
++// with zero-length arrays.
++#define ARRAY_LENGTH(a) (sizeof(a) / sizeof((a)[0]))
++
++#define CREATE_UNICODE_SET(name)                             \
++  createUnicodeSet(name##Array, ARRAY_LENGTH(name##Array),   \
++                   name##Ranges, ARRAY_LENGTH(name##Ranges))
+ 
+ #define RETURN_HAS_PROPERTY(c, name)            \
+   static icu::UnicodeSet* unicodeSet = nullptr; \
+--- /third_party/blink/renderer/platform/text/character_property_data_generator.cc
++++ /third_party/blink/renderer/platform/text/character_property_data_generator.cc
+@@ -22,6 +22,9 @@
+ #else
+ 
+ const UChar32 kMaxCodepoint = 0x10FFFF;
++
++// base::size (from base/stl_util.h) causes compilation errors
++// with zero-length arrays.
+ #define ARRAY_LENGTH(a) (sizeof(a) / sizeof((a)[0]))
+ 
+ static void SetRanges(CharacterProperty* values,
