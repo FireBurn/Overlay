@@ -142,10 +142,10 @@ GTK+ icon theme.
 PATCHES=(
 	"${FILESDIR}/chromium-widevine-r4.patch"
 	"${FILESDIR}/chromium-fix-char_traits.patch"
-	"${FILESDIR}/chromium-75-vaapi.patch"
 	"${FILESDIR}/chromium-deconst.patch"
 	"${FILESDIR}/chromium-75-vr-fix.patch"
 	"${FILESDIR}/chromium-75-libstdc.patch"
+	"${FILESDIR}/0001-VAAPI-Patch-PRIME.patch"
 )
 
 pre_build_checks() {
@@ -636,6 +636,11 @@ src_install() {
 	local sedargs=( -e "s:/usr/lib/:/usr/$(get_libdir)/:g" )
 	sed "${sedargs[@]}" "${FILESDIR}/chromium-launcher-r3.sh" > chromium-launcher.sh || die
 	doexe chromium-launcher.sh
+
+	if use vaapi; then
+		insinto /usr/share/drirc.d
+    	newins "${FILESDIR}"/01-chromium.conf 01-chromium.conf
+	fi
 
 	# It is important that we name the target "chromium-browser",
 	# xdg-utils expect it; bug #355517.
