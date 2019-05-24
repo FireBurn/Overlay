@@ -141,9 +141,10 @@ GTK+ icon theme.
 
 PATCHES=(
 	"${FILESDIR}/chromium-widevine-r4.patch"
-	"${FILESDIR}/chromium-fix-char_traits.patch"
-	"${FILESDIR}/chromium-vaapi.patch"
-	"${FILESDIR}/chromium-deconst.patch"
+	"${FILESDIR}/enable-vaapi.patch"
+	"${FILESDIR}/std_pair.patch"
+	"${FILESDIR}/MakeCheckOpValueString.patch"
+	"${FILESDIR}/vr-fix.patch"
 )
 
 pre_build_checks() {
@@ -219,6 +220,7 @@ src_prepare() {
 		third_party/angle/third_party/vulkan-tools
 		third_party/angle/third_party/vulkan-validation-layers
 		third_party/apple_apsl
+		third_party/axe-core
 		third_party/blink
 		third_party/boringssl
 		third_party/boringssl/src/third_party/fiat
@@ -247,10 +249,10 @@ src_prepare() {
 		third_party/crc32c
 		third_party/cros_system_api
 		third_party/dav1d
+		third_party/dawn
 		third_party/devscripts
 		third_party/dom_distiller_js
 		third_party/emoji-segmenter
-		third_party/fips181
 		third_party/flatbuffers
 		third_party/flot
 		third_party/freetype
@@ -291,7 +293,6 @@ src_prepare() {
 		third_party/nasm
 		third_party/node
 		third_party/node/node_modules/polymer-bundler/lib/third_party/UglifyJS2
-		third_party/openmax_dl
 		third_party/ots
 		third_party/pdfium
 		third_party/pdfium/third_party/agg23
@@ -304,6 +305,7 @@ src_prepare() {
 		third_party/pdfium/third_party/libtiff
 		third_party/pdfium/third_party/skia_shared
 		third_party/perfetto
+		third_party/pffft
 		third_party/ply
 		third_party/polymer
 		third_party/protobuf
@@ -316,6 +318,7 @@ src_prepare() {
 		third_party/simplejson
 		third_party/skia
 		third_party/skia/include/third_party/vulkan
+		third_party/skia/include/third_party/skcms
 		third_party/skia/third_party/gif
 		third_party/skia/third_party/skcms
 		third_party/skia/third_party/vulkan
@@ -374,6 +377,10 @@ src_prepare() {
 
 	# Remove most bundled libraries. Some are still needed.
 	build/linux/unbundle/remove_bundled_libraries.py "${keeplibs[@]}" --do-remove || die
+
+	# Turn back lss.h. see https://chromium-review.googlesource.com/c/crashpad/crashpad/+/1559309
+	cp ${FILESDIR}/BUILD.gn third_party/lss/BUILD.gn
+	cp ${FILESDIR}/lss.h third_party/lss/lss.h
 }
 
 src_configure() {
@@ -628,6 +635,11 @@ src_install() {
 	local sedargs=( -e "s:/usr/lib/:/usr/$(get_libdir)/:g" )
 	sed "${sedargs[@]}" "${FILESDIR}/chromium-launcher-r3.sh" > chromium-launcher.sh || die
 	doexe chromium-launcher.sh
+
+	if use vaapi; then
+		insinto /usr/share/drirc.d
+    	newins "${FILESDIR}"/01-chromium.conf 01-chromium.conf
+	fi
 
 	# It is important that we name the target "chromium-browser",
 	# xdg-utils expect it; bug #355517.
