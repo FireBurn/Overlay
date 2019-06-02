@@ -99,6 +99,7 @@ BDEPEND="
 	)
 	dev-lang/perl
 	dev-util/gn
+	!=dev-util/gn-0.1583
 	dev-vcs/git
 	>=dev-util/gperf-3.0.3
 	>=dev-util/ninja-1.7.2
@@ -142,9 +143,7 @@ GTK+ icon theme.
 PATCHES=(
 	"${FILESDIR}/chromium-widevine-r4.patch"
 	"${FILESDIR}/enable-vaapi.patch"
-	"${FILESDIR}/std_pair.patch"
-	"${FILESDIR}/MakeCheckOpValueString.patch"
-	"${FILESDIR}/vr-fix.patch"
+	"${FILESDIR}/chromium-uniqueptr.patch"
 )
 
 pre_build_checks() {
@@ -187,6 +186,7 @@ src_prepare() {
 	ln -s "${EPREFIX}"/usr/bin/node third_party/node/linux/node-linux-x64/bin/node || die
 
 	local keeplibs=(
+		base/third_party/cityhash
 		base/third_party/dmg_fp
 		base/third_party/dynamic_annotations
 		base/third_party/icu
@@ -223,7 +223,9 @@ src_prepare() {
 		third_party/axe-core
 		third_party/blink
 		third_party/boringssl
+		third_party/boringssl/linux-x86_64/crypto/third_party/sike/asm
 		third_party/boringssl/src/third_party/fiat
+		third_party/boringssl/src/third_party/sike
 		third_party/breakpad
 		third_party/breakpad/breakpad/src/third_party/curl
 		third_party/brotli
@@ -293,6 +295,7 @@ src_prepare() {
 		third_party/nasm
 		third_party/node
 		third_party/node/node_modules/polymer-bundler/lib/third_party/UglifyJS2
+		third_party/openscreen
 		third_party/ots
 		third_party/pdfium
 		third_party/pdfium/third_party/agg23
@@ -497,6 +500,11 @@ src_configure() {
 	ffmpeg_branding="$(usex proprietary-codecs Chrome Chromium)"
 	myconf_gn+=" proprietary_codecs=$(usex proprietary-codecs true false)"
 	myconf_gn+=" ffmpeg_branding=\"${ffmpeg_branding}\""
+	myconf_gn+=" enable_hevc_demuxing=true"
+	myconf_gn+=" enable_ac3_eac3_audio_demuxing=true"
+	myconf_gn+=" enable_mpeg_h_audio_demuxing=true"
+	myconf_gn+=" enable_dolby_vision_demuxing=true"
+	myconf_gn+=" enable_mse_mpeg2ts_stream_parser=true"
 
 	# Set up Google API keys, see http://www.chromium.org/developers/how-tos/api-keys .
 	# Note: these are for Gentoo use ONLY. For your own distribution,

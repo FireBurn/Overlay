@@ -1,0 +1,13 @@
+diff --git a/third_party/blink/renderer/modules/push_messaging/push_subscription_callbacks.h b/third_party/blink/renderer/modules/push_messaging/push_subscription_callbacks.h
+index 4a0981c86a..835d1c83d7 100644
+--- a/third_party/blink/renderer/modules/push_messaging/push_subscription_callbacks.h
++++ b/third_party/blink/renderer/modules/push_messaging/push_subscription_callbacks.h
+@@ -5,6 +5,8 @@
+ #ifndef THIRD_PARTY_BLINK_RENDERER_MODULES_PUSH_MESSAGING_PUSH_SUBSCRIPTION_CALLBACKS_H_
+ #define THIRD_PARTY_BLINK_RENDERER_MODULES_PUSH_MESSAGING_PUSH_SUBSCRIPTION_CALLBACKS_H_
+ 
++#include <memory>
++
+ #include "base/macros.h"
+ #include "third_party/blink/public/platform/modules/push_messaging/web_push_subscription.h"
+ #include "third_party/blink/renderer/platform/heap/persistent.h"
