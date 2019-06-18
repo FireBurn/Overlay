@@ -28,7 +28,7 @@ COMMON_DEPEND="
 	>=dev-libs/atk-2.26
 	dev-libs/expat:=
 	dev-libs/glib:2
-	system-icu? ( >=dev-libs/icu-59:= )
+	system-icu? ( >=dev-libs/icu-64:= )
 	>=dev-libs/libxml2-2.9.4-r3:=[icu]
 	dev-libs/libxslt:=
 	dev-libs/nspr:=
@@ -113,7 +113,7 @@ BDEPEND="
 : ${CHROMIUM_FORCE_CLANG=no}
 
 if [[ ${CHROMIUM_FORCE_CLANG} == yes ]]; then
-	BDEPEND+=" >=sys-devel/clang-5"
+	BDEPEND+=" >=sys-devel/clang-7"
 fi
 
 if ! has chromium_pkg_die ${EBUILD_DEATH_HOOKS}; then
@@ -137,12 +137,28 @@ are not displayed properly:
 To fix broken icons on the Downloads page, you should install an icon
 theme that covers the appropriate MIME types, and configure this as your
 GTK+ icon theme.
+
+For native file dialogs in KDE, install kde-apps/kdialog.
 "
 
 PATCHES=(
+	"${FILESDIR}/chromium-compiler-r10.patch"
 	"${FILESDIR}/chromium-widevine-r4.patch"
+	"${FILESDIR}/chromium-fix-char_traits.patch"
+	"${FILESDIR}/chromium-76-quiche.patch"
+	"${FILESDIR}/chromium-76-lss.patch"
+	"${FILESDIR}/chromium-76-gcc-vulkan.patch"
+	"${FILESDIR}/chromium-76-gcc-private.patch"
+	"${FILESDIR}/chromium-76-gcc-noexcept.patch"
+	"${FILESDIR}/chromium-76-gcc-gl-init.patch"
+	"${FILESDIR}/chromium-76-gcc-blink-namespace1.patch"
+	"${FILESDIR}/chromium-76-gcc-blink-namespace2.patch"
+	"${FILESDIR}/chromium-76-gcc-blink-constexpr.patch"
+	"${FILESDIR}/chromium-76-gcc-uint32.patch"
+	"${FILESDIR}/chromium-76-gcc-ambiguous-nodestructor.patch"
+	"${FILESDIR}/chromium-76-gcc-include.patch"
+	"${FILESDIR}/chromium-76-gcc-pure-virtual.patch"
 	"${FILESDIR}/enable-vaapi.patch"
-	"${FILESDIR}/chromium-uniqueptr.patch"
 )
 
 pre_build_checks() {
@@ -155,7 +171,7 @@ pre_build_checks() {
 
 	# Check build requirements, bug #541816 and bug #471810 .
 	CHECKREQS_MEMORY="3G"
-	CHECKREQS_DISK_BUILD="5G"
+	CHECKREQS_DISK_BUILD="7G"
 	if ( shopt -s extglob; is-flagq '-g?(gdb)?([1-9])' ); then
 		CHECKREQS_DISK_BUILD="25G"
 		if ! use component-build; then
@@ -222,9 +238,10 @@ src_prepare() {
 		third_party/axe-core
 		third_party/blink
 		third_party/boringssl
-		third_party/boringssl/linux-x86_64/crypto/third_party/sike/asm
 		third_party/boringssl/src/third_party/fiat
 		third_party/boringssl/src/third_party/sike
+		third_party/boringssl/linux-aarch64/crypto/third_party/sike
+		third_party/boringssl/linux-x86_64/crypto/third_party/sike
 		third_party/breakpad
 		third_party/breakpad/breakpad/src/third_party/curl
 		third_party/brotli
@@ -319,8 +336,8 @@ src_prepare() {
 		third_party/sfntly
 		third_party/simplejson
 		third_party/skia
-		third_party/skia/include/third_party/vulkan
 		third_party/skia/include/third_party/skcms
+		third_party/skia/include/third_party/vulkan
 		third_party/skia/third_party/gif
 		third_party/skia/third_party/skcms
 		third_party/skia/third_party/vulkan
@@ -379,10 +396,6 @@ src_prepare() {
 
 	# Remove most bundled libraries. Some are still needed.
 	build/linux/unbundle/remove_bundled_libraries.py "${keeplibs[@]}" --do-remove || die
-
-	# Turn back lss.h. see https://chromium-review.googlesource.com/c/crashpad/crashpad/+/1559309
-	cp ${FILESDIR}/BUILD.gn third_party/lss/BUILD.gn
-	cp ${FILESDIR}/lss.h third_party/lss/lss.h
 }
 
 src_configure() {
@@ -562,9 +575,6 @@ src_configure() {
 	# Disable fatal linker warnings, bug 506268.
 	myconf_gn+=" fatal_linker_warnings=false"
 
-	# https://bugs.gentoo.org/588596
-	#append-cxxflags $(test-flags-CXX -fno-delete-null-pointer-checks)
-
 	# Bug 491582.
 	export TMPDIR="${WORKDIR}/temp"
 	mkdir -p -m 755 "${TMPDIR}" || die
@@ -603,9 +613,6 @@ src_compile() {
 	python_setup
 
 	#"${EPYTHON}" tools/clang/scripts/update.py --force-local-build --gcc-toolchain /usr --skip-checkout --use-system-cmake --without-android || die
-
-	# Work around broken deps
-	eninja -C out/Release gen/ui/accessibility/ax_enums.mojom{,-shared}.h
 
 	# Build mksnapshot and pax-mark it.
 	local x
@@ -712,20 +719,12 @@ src_install() {
 }
 
 pkg_postrm() {
-	if type gtk-update-icon-cache &>/dev/null; then
-		ebegin "Updating GTK icon cache"
-		gtk-update-icon-cache "${EROOT}/usr/share/icons/hicolor"
-		eend $?
-	fi
+	xdg_icon_cache_update
 	xdg_desktop_database_update
 }
 
 pkg_postinst() {
-	if type gtk-update-icon-cache &>/dev/null; then
-		ebegin "Updating GTK icon cache"
-		gtk-update-icon-cache "${EROOT}/usr/share/icons/hicolor"
-		eend $?
-	fi
+	xdg_icon_cache_update
 	xdg_desktop_database_update
 	readme.gentoo_print_elog
 }
