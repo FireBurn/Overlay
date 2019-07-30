@@ -17,7 +17,7 @@ SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}
 LICENSE="BSD"
 SLOT="0"
 KEYWORDS="~amd64 ~x86"
-IUSE="+closure-compile component-build cups gnome-keyring +hangouts jumbo-build kerberos neon pic +proprietary-codecs pulseaudio selinux +suid +system-ffmpeg +system-icu +system-libvpx +tcmalloc vaapi widevine"
+IUSE="+closure-compile component-build cups cpu_flags_arm_neon gnome-keyring +hangouts jumbo-build kerberos neon pic +proprietary-codecs pulseaudio selinux +suid +system-ffmpeg +system-icu +system-libvpx +tcmalloc vaapi widevine"
 RESTRICT="!system-ffmpeg? ( proprietary-codecs? ( bindist ) )"
 REQUIRED_USE="component-build? ( !suid )"
 
@@ -88,11 +88,11 @@ RDEPEND="${COMMON_DEPEND}
 	tcmalloc? ( !<x11-drivers/nvidia-drivers-331.20 )
 	widevine? ( www-plugins/chrome-binary-plugins[widevine(-)] )
 "
-# dev-vcs/git - https://bugs.gentoo.org/593476
-# sys-apps/sandbox - https://crbug.com/586444
 DEPEND="${COMMON_DEPEND}
 "
+# dev-vcs/git - https://bugs.gentoo.org/593476
 BDEPEND="
+	${PYTHON_DEPS}
 	>=app-arch/gzip-1.7
 	!arm? (
 		dev-lang/yasm
@@ -146,6 +146,7 @@ PATCHES=(
 	"${FILESDIR}/chromium-widevine-r4.patch"
 	"${FILESDIR}/chromium-fix-char_traits.patch"
 	"${FILESDIR}/chromium-angle-inline.patch"
+	"${FILESDIR}/chromium-76-arm64-skia.patch"
 	"${FILESDIR}/chromium-76-quiche.patch"
 	"${FILESDIR}/chromium-76-gcc-vulkan.patch"
 	"${FILESDIR}/chromium-76-gcc-private.patch"
@@ -563,7 +564,7 @@ src_configure() {
 		ffmpeg_target_arch=arm64
 	elif [[ $myarch = arm ]] ; then
 		myconf_gn+=" target_cpu=\"arm\""
-		ffmpeg_target_arch=$(usex neon arm-neon arm)
+		ffmpeg_target_arch=$(usex cpu_flags_arm_neon arm-neon arm)
 	else
 		die "Failed to determine target arch, got '$myarch'."
 	fi
