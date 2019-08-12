@@ -16,8 +16,8 @@ SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}
 
 LICENSE="BSD"
 SLOT="0"
-KEYWORDS="~amd64 ~x86"
-IUSE="+closure-compile component-build cups cpu_flags_arm_neon gnome-keyring +hangouts jumbo-build kerberos neon pic +proprietary-codecs pulseaudio selinux +suid +system-ffmpeg +system-icu +system-libvpx +tcmalloc vaapi widevine"
+KEYWORDS="~amd64 ~arm64 ~x86"
+IUSE="+closure-compile component-build cups cpu_flags_arm_neon gnome-keyring +hangouts jumbo-build kerberos pic +proprietary-codecs pulseaudio selinux +suid +system-ffmpeg +system-icu +system-libvpx +tcmalloc vaapi widevine"
 RESTRICT="!system-ffmpeg? ( proprietary-codecs? ( bindist ) )"
 REQUIRED_USE="component-build? ( !suid )"
 
@@ -38,7 +38,7 @@ COMMON_DEPEND="
 	>=media-libs/alsa-lib-1.0.19:=
 	media-libs/fontconfig:=
 	media-libs/freetype:=
-	>=media-libs/harfbuzz-2.2.0:0=[icu(-)]
+	>=media-libs/harfbuzz-2.4.0:0=[icu(-)]
 	media-libs/libjpeg-turbo:=
 	media-libs/libpng:=
 	system-libvpx? ( media-libs/libvpx:=[postproc,svc] )
@@ -98,7 +98,7 @@ BDEPEND="
 		dev-lang/yasm
 	)
 	dev-lang/perl
-	<dev-util/gn-0.1583
+	dev-util/gn
 	dev-vcs/git
 	>=dev-util/gperf-3.0.3
 	>=dev-util/ninja-1.7.2
@@ -145,20 +145,14 @@ PATCHES=(
 	"${FILESDIR}/chromium-compiler-r10.patch"
 	"${FILESDIR}/chromium-widevine-r4.patch"
 	"${FILESDIR}/chromium-fix-char_traits.patch"
-	"${FILESDIR}/chromium-angle-inline.patch"
-	"${FILESDIR}/chromium-76-arm64-skia.patch"
-	"${FILESDIR}/chromium-76-quiche.patch"
-	"${FILESDIR}/chromium-76-gcc-vulkan.patch"
-	"${FILESDIR}/chromium-76-gcc-private.patch"
-	"${FILESDIR}/chromium-76-gcc-noexcept.patch"
-	"${FILESDIR}/chromium-76-gcc-gl-init.patch"
-	"${FILESDIR}/chromium-76-gcc-blink-namespace1.patch"
-	"${FILESDIR}/chromium-76-gcc-blink-namespace2.patch"
-	"${FILESDIR}/chromium-76-gcc-blink-constexpr.patch"
-	"${FILESDIR}/chromium-76-gcc-uint32.patch"
-	"${FILESDIR}/chromium-76-gcc-ambiguous-nodestructor.patch"
-	"${FILESDIR}/chromium-76-gcc-include.patch"
-	"${FILESDIR}/chromium-76-gcc-pure-virtual.patch"
+	"${FILESDIR}/chromium-unbundle-zlib.patch"
+	"${FILESDIR}/chromium-77-fix-gn-gen.patch"
+	"${FILESDIR}/chromium-77-system-icu.patch"
+	"${FILESDIR}/chromium-77-system-hb.patch"
+	"${FILESDIR}/chromium-77-clang.patch"
+	"${FILESDIR}/chromium-77-std-string.patch"
+	"${FILESDIR}/chromium-77-gcc-abstract.patch"
+	"${FILESDIR}/chromium-77-gcc-include.patch"
 	"${FILESDIR}/enable-vaapi.patch"
 )
 
@@ -313,7 +307,9 @@ src_prepare() {
 		third_party/nasm
 		third_party/node
 		third_party/node/node_modules/polymer-bundler/lib/third_party/UglifyJS2
+		third_party/one_euro_filter
 		third_party/openscreen
+		third_party/openscreen/src/third_party/tinycbor/src/src
 		third_party/ots
 		third_party/pdfium
 		third_party/pdfium/third_party/agg23
@@ -351,6 +347,7 @@ src_prepare() {
 		third_party/swiftshader/third_party/llvm-7.0
 		third_party/swiftshader/third_party/llvm-subzero
 		third_party/swiftshader/third_party/subzero
+		third_party/swiftshader/third_party/SPIRV-Headers/include/spirv/unified1
 		third_party/unrar
 		third_party/usrsctp
 		third_party/vulkan
@@ -654,7 +651,7 @@ src_install() {
 
 	if use vaapi; then
 		insinto /usr/share/drirc.d
-    	newins "${FILESDIR}"/01-chromium.conf 01-chromium.conf
+		newins "${FILESDIR}"/01-chromium.conf 01-chromium.conf
 	fi
 
 	# It is important that we name the target "chromium-browser",
@@ -692,7 +689,7 @@ src_install() {
 
 	# Install icons and desktop entry.
 	local branding size
-	for size in 16 22 24 32 48 64 128 256 ; do
+	for size in 16 24 32 48 64 128 256 ; do
 		case ${size} in
 			16|32) branding="chrome/app/theme/default_100_percent/chromium" ;;
 				*) branding="chrome/app/theme/chromium" ;;
