@@ -153,6 +153,8 @@ PATCHES=(
 	"${FILESDIR}/chromium-77-std-string.patch"
 	"${FILESDIR}/chromium-77-gcc-abstract.patch"
 	"${FILESDIR}/chromium-77-gcc-include.patch"
+	"${FILESDIR}/chromium-77-limits.patch"
+	"${FILESDIR}/chromium-77-tab_strip.patch"
 	"${FILESDIR}/enable-vaapi.patch"
 )
 
