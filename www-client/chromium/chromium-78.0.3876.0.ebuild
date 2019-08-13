@@ -148,13 +148,9 @@ PATCHES=(
 	"${FILESDIR}/chromium-unbundle-zlib.patch"
 	"${FILESDIR}/chromium-77-fix-gn-gen.patch"
 	"${FILESDIR}/chromium-77-system-icu.patch"
-	"${FILESDIR}/chromium-77-system-hb.patch"
 	"${FILESDIR}/chromium-77-clang.patch"
 	"${FILESDIR}/chromium-77-std-string.patch"
-	"${FILESDIR}/chromium-77-gcc-abstract.patch"
-	"${FILESDIR}/chromium-77-gcc-include.patch"
-	"${FILESDIR}/chromium-77-limits.patch"
-	"${FILESDIR}/chromium-77-tab_strip.patch"
+	"${FILESDIR}/chromium-77-blink-include.patch"
 	"${FILESDIR}/enable-vaapi.patch"
 )
 
@@ -252,6 +248,7 @@ src_prepare() {
 		third_party/catapult/third_party/six
 		third_party/catapult/tracing/third_party/d3
 		third_party/catapult/tracing/third_party/gl-matrix
+		third_party/catapult/tracing/third_party/jpeg-js
 		third_party/catapult/tracing/third_party/jszip
 		third_party/catapult/tracing/third_party/mannwhitneyu
 		third_party/catapult/tracing/third_party/oboe
