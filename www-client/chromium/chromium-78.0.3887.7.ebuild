@@ -149,8 +149,6 @@ PATCHES=(
 	"${FILESDIR}/chromium-77-fix-gn-gen.patch"
 	"${FILESDIR}/chromium-77-system-icu.patch"
 	"${FILESDIR}/chromium-77-clang.patch"
-	"${FILESDIR}/chromium-77-blink-include.patch"
-	"${FILESDIR}/chromium-78-const-std-string.patch"
 	"${FILESDIR}/chromium-78-include.patch"
 	"${FILESDIR}/enable-vaapi.patch"
 )
