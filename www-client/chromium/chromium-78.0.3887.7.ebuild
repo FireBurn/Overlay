@@ -363,6 +363,7 @@ src_prepare() {
 		third_party/widevine
 		third_party/woff2
 		third_party/zlib/google
+		tools/grit/third_party/six
 		url/third_party/mozilla
 		v8/src/third_party/siphash
 		v8/src/third_party/valgrind
