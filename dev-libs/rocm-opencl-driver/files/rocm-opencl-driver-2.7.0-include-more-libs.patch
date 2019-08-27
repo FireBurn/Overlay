@@ -1,0 +1,24 @@
+--- a/src/driver/CMakeLists.txt	2019-08-27 11:17:35.620601385 +0100
++++ b/src/driver/CMakeLists.txt	2019-08-27 11:19:48.796733821 +0100
+@@ -60,9 +60,13 @@
+   AllTargetsDescs
+   AllTargetsDisassemblers
+   AllTargetsInfos
++  BitWriter
+   CodeGen
++  IRReader
++  Linker
+   MC
+   MCDisassembler
++  MCParser
+   Object
+   Symbolize
+   Core
+@@ -83,6 +87,7 @@
+   clangLex
+   clangBasic
+   clangCodeGen
++  clangSerialization
+   lldELF
+   lldCore
+   LLVMDebugInfoDWARF
