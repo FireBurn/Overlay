@@ -23,6 +23,7 @@ IUSE="ap bindist dbus eap-sim eapol_test fasteap +fils +hs2-0 libressl macsec p2
 CDEPEND="dbus? ( sys-apps/dbus )
 	kernel_linux? (
 		dev-libs/libnl:3
+		net-wireless/wireless-regdb
 		eap-sim? ( sys-apps/pcsc-lite )
 	)
 	!kernel_linux? ( net-libs/libpcap )

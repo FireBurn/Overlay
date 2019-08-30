@@ -31,6 +31,7 @@ REQUIRED_USE="
 CDEPEND="dbus? ( sys-apps/dbus )
 	kernel_linux? (
 		dev-libs/libnl:3
+		net-wireless/wireless-regdb
 		eap-sim? ( sys-apps/pcsc-lite )
 	)
 	!kernel_linux? ( net-libs/libpcap )
