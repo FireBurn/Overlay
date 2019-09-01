@@ -146,7 +146,6 @@ PATCHES=(
 	"${FILESDIR}/chromium-widevine-r4.patch"
 	"${FILESDIR}/chromium-fix-char_traits.patch"
 	"${FILESDIR}/chromium-unbundle-zlib.patch"
-	"${FILESDIR}/chromium-77-fix-gn-gen.patch"
 	"${FILESDIR}/chromium-77-system-icu.patch"
 	"${FILESDIR}/chromium-77-clang.patch"
 	"${FILESDIR}/chromium-78-include.patch"
