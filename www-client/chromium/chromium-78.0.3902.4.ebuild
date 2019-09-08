@@ -150,7 +150,6 @@ PATCHES=(
 	"${FILESDIR}/chromium-77-clang.patch"
 	"${FILESDIR}/chromium-78-include.patch"
 	"${FILESDIR}/chromium-78-web-rtc-rtp.patch"
-	"${FILESDIR}/enable-vaapi.patch"
 )
 
 pre_build_checks() {
@@ -194,7 +193,7 @@ src_prepare() {
 
 	local keeplibs=(
 		base/third_party/cityhash
-		base/third_party/dmg_fp
+		base/third_party/double_conversion
 		base/third_party/dynamic_annotations
 		base/third_party/icu
 		base/third_party/nspr
@@ -262,6 +261,7 @@ src_prepare() {
 		third_party/cros_system_api
 		third_party/dav1d
 		third_party/dawn
+		third_party/depot_tools
 		third_party/devscripts
 		third_party/dom_distiller_js
 		third_party/emoji-segmenter
