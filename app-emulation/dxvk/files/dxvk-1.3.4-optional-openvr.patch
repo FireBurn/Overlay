@@ -1,60 +1,54 @@
-diff --git a/src/dxvk/meson.build b/src/dxvk/meson.build
-index 819107cb..6a23d7e4 100644
---- a/src/dxvk/meson.build
-+++ b/src/dxvk/meson.build
-@@ -68,7 +68,6 @@ dxvk_src = files([
-   'dxvk_meta_mipgen.cpp',
-   'dxvk_meta_pack.cpp',
-   'dxvk_meta_resolve.cpp',
--  'dxvk_openvr.cpp',
-   'dxvk_options.cpp',
-   'dxvk_pipecache.cpp',
-   'dxvk_pipelayout.cpp',
-@@ -95,6 +95,10 @@ dxvk_src = files([
-   'hud/dxvk_hud_stats.cpp',
- ])
+diff --git a/meson.build b/meson.build
+index 93233bd..85ec0bc 100644
+--- a/meson.build
++++ b/meson.build
+@@ -4,6 +4,10 @@ cpu_family = target_machine.cpu_family()
+ 
+ add_project_arguments('-DNOMINMAX', language : 'cpp')
  
 +if get_option('enable_openvr')
-+  dxvk_src += files(['dxvk_openvr.cpp'])
++  add_project_arguments('-DDXVK_OPENVR', language : 'cpp')
 +endif
 +
- thread_dep = dependency('threads')
- 
- dxvk_opts = common_static_opts + { 'link_with': [ util_lib, spirv_lib ], 'dependencies': [ thread_dep, vkcommon_dep ] + dxvk_extradep }
+ dxvk_compiler = meson.get_compiler('cpp')
+ if dxvk_compiler.get_id() == 'msvc'
+   dxvk_cpp_std='c++latest'
 diff --git a/meson_options.txt b/meson_options.txt
-index 6e0f05b..17d06be 100644
+index b3c235f..ceacadc 100644
 --- a/meson_options.txt
 +++ b/meson_options.txt
-@@ -1 +1,2 @@
- option('enable_tests', type : 'boolean', value : false)
+@@ -1,3 +1,4 @@
 +option('enable_openvr', type : 'boolean', value : true)
+ option('enable_tests', type : 'boolean', value : false)
+ option('enable_dxgi',  type : 'boolean', value : true, description: 'Build DXGI')
+ option('enable_d3d10', type : 'boolean', value : true, description: 'Build D3D10')
 diff --git a/src/dxvk/dxvk_instance.cpp b/src/dxvk/dxvk_instance.cpp
-index 923f6c61..d669bb4c 100644
+index ccf64ff..1a9bfd0 100644
 --- a/src/dxvk/dxvk_instance.cpp
 +++ b/src/dxvk/dxvk_instance.cpp
-@@ -1,8 +1,9 @@
+@@ -1,7 +1,9 @@
  #include <version.h>
  
  #include "dxvk_instance.h"
 +#ifdef DXVK_OPENVR
  #include "dxvk_openvr.h"
--
 +#endif
+ 
  #include <algorithm>
  
- namespace dxvk {
-@@ -15,19 +16,21 @@ namespace dxvk {
-     m_config.merge(Config::getAppConfig(env::getExeName()));
+@@ -15,18 +17,23 @@ namespace dxvk {
+     m_config.merge(Config::getAppConfig(env::getExePath()));
      m_config.logOptions();
  
 +#ifdef DXVK_OPENVR
      g_vrInstance.initInstanceExtensions();
--
 +#endif
+ 
      m_vkl = new vk::LibraryFn();
      m_vki = new vk::InstanceFn(true, this->createInstance());
  
      m_adapters = this->queryAdapters();
++
 +#ifdef DXVK_OPENVR
      g_vrInstance.initDeviceExtensions(this);
  
@@ -62,12 +56,11 @@ index 923f6c61..d669bb4c 100644
        m_adapters[i]->enableExtensions(
          g_vrInstance.getDeviceExtensions(i));
      }
--
 +#endif
+ 
      m_options = DxvkOptions(m_config);
    }
-   
-@@ -88,7 +91,9 @@ namespace dxvk {
+@@ -88,7 +95,9 @@ namespace dxvk {
        throw DxvkError("DxvkInstance: Failed to create instance");
      
      // Enable additional extensions if necessary
@@ -78,7 +71,7 @@ index 923f6c61..d669bb4c 100644
      
      Logger::info("Enabled instance extensions:");
 diff --git a/src/dxvk/dxvk_instance.h b/src/dxvk/dxvk_instance.h
-index 154f37df..d942869b 100644
+index 5328823..9fea099 100644
 --- a/src/dxvk/dxvk_instance.h
 +++ b/src/dxvk/dxvk_instance.h
 @@ -5,7 +5,9 @@
@@ -91,17 +84,33 @@ index 154f37df..d942869b 100644
  
  namespace dxvk {
    
-diff --git a/meson.build b/meson.build
-index f6e25150..08ab815a 100644
---- a/meson.build
-+++ b/meson.build
-@@ -3,6 +3,9 @@
- cpu_family = target_machine.cpu_family()
+@@ -114,4 +116,4 @@ namespace dxvk {
+     
+   };
+   
+-}
+\ No newline at end of file
++}
+diff --git a/src/dxvk/meson.build b/src/dxvk/meson.build
+index 867f300..73e282d 100644
+--- a/src/dxvk/meson.build
++++ b/src/dxvk/meson.build
+@@ -79,7 +79,6 @@ dxvk_src = files([
+   'dxvk_meta_mipgen.cpp',
+   'dxvk_meta_pack.cpp',
+   'dxvk_meta_resolve.cpp',
+-  'dxvk_openvr.cpp',
+   'dxvk_options.cpp',
+   'dxvk_pipecache.cpp',
+   'dxvk_pipelayout.cpp',
+@@ -107,6 +106,10 @@ dxvk_src = files([
+   'hud/dxvk_hud_stats.cpp',
+ ])
  
- add_project_arguments('-DNOMINMAX', language : 'cpp')
 +if get_option('enable_openvr')
-+  add_project_arguments('-DDXVK_OPENVR', language : 'cpp')
++  dxvk_src += files(['dxvk_openvr.cpp'])
 +endif
++
+ thread_dep = dependency('threads')
  
- dxvk_compiler = meson.get_compiler('cpp')
- if dxvk_compiler.get_id() == 'msvc'
+ dxvk_lib = static_library('dxvk', dxvk_src, glsl_generator.process(dxvk_shaders), dxvk_version,

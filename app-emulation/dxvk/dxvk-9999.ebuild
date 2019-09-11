@@ -21,7 +21,7 @@ else
 fi
 
 LICENSE="ZLIB"
-SLOT="${PV}"
+SLOT=0
 IUSE="openvr"
 
 RESTRICT="test"
@@ -37,7 +37,7 @@ DEPEND="${RDEPEND}
 	dev-util/glslang"
 
 PATCHES=(
-	"${FILESDIR}/dxvk-1.1.1-optional-openvr.patch"
+	"${FILESDIR}/dxvk-1.3.4-optional-openvr.patch"
 	"${FILESDIR}/flags.patch"
 )
 
@@ -65,12 +65,12 @@ src_prepare() {
 	replace-flags "-O3" "-O3 -fno-stack-protector"
 
 	# Create versioned setup script
-	cp "setup_dxvk.sh" "dxvk-setup-${PV}"
-	sed -e "s#basedir=.*#basedir=\"${EPREFIX}/usr\"#" -i "dxvk-setup-${PV}" || die
+	cp "setup_dxvk.sh" "dxvk-setup"
+	sed -e "s#basedir=.*#basedir=\"${EPREFIX}/usr\"#" -i "dxvk-setup" || die
 
 	bootstrap_dxvk() {
 		# Set DXVK location for each ABI
-		sed -e "s#x$(bits)#$(get_libdir)/dxvk-${PV}#" -i "${S}/dxvk-setup-${PV}" || die
+		sed -e "s#x$(bits)#$(get_libdir)/dxvk#" -i "${S}/dxvk-setup" || die
 
 		# Add *FLAGS to cross-file
 		sed -i \
@@ -84,14 +84,14 @@ src_prepare() {
 
 	# Clean missed ABI in setup script
 	sed -e "s#.*x32.*##" -e "s#.*x64.*##" \
-		-i "dxvk-setup-${PV}" || die
+		-i "dxvk-setup" || die
 }
 
 multilib_src_configure() {
 	local emesonargs=(
 		--cross-file="${S}/build-wine$(bits).txt"
-		--libdir="$(get_libdir)/dxvk-${PV}"
-		--bindir="$(get_libdir)/dxvk-${PV}/bin"
+		--libdir="$(get_libdir)/dxvk"
+		--bindir="$(get_libdir)/dxvk/bin"
 		-Denable_tests=false
 		$(meson_use openvr enable_openvr)
 	)
@@ -105,7 +105,7 @@ multilib_src_install() {
 multilib_src_install_all() {
 	# create combined setup helper
 	exeinto /usr/bin
-	doexe "${S}/dxvk-setup-${PV}"
+	doexe "${S}/dxvk-setup"
 
 	dodoc "${S}/dxvk.conf"
 
