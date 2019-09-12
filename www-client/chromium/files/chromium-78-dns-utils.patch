@@ -1,7 +1,7 @@
-diff --git a/dns_util.cc b/dns_util.cc
+diff --git a/net/dns/dns_util.cc b/net/dns/dns_util.cc
 index d83ff7c..0c5b06a 100644
---- a/dns_util.cc
-+++ b/dns_util.cc
+--- a/net/dns/dns_util.cc
++++ b/net/dns/dns_util.cc
 @@ -139,11 +139,11 @@ struct DohUpgradeEntry {
    const DnsConfig::DnsOverHttpsServerConfig dns_over_https_config;
  };
