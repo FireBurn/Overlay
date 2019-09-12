@@ -150,6 +150,7 @@ PATCHES=(
 	"${FILESDIR}/chromium-77-clang.patch"
 	"${FILESDIR}/chromium-78-include.patch"
 	"${FILESDIR}/chromium-78-web-rtc-rtp.patch"
+	"${FILESDIR}/chromium-78-dns-utils.patch"
 	"${FILESDIR}/enable-vaapi.patch"
 )
 
