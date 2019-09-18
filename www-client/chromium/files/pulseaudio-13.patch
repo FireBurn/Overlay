@@ -1,0 +1,48 @@
+diff --git a/media/audio/pulse/pulse.sigs b/media/audio/pulse/pulse.sigs
+index 8b5888786a..679efbd513 100644
+--- a/media/audio/pulse/pulse.sigs
++++ b/media/audio/pulse/pulse.sigs
+@@ -24,7 +24,7 @@ pa_operation* pa_context_get_source_info_by_index(pa_context* c, uint32_t idx, p
+ pa_operation* pa_context_get_source_info_by_name(pa_context* c, const char* name, pa_source_info_cb_t cb, void *userdata);
+ pa_operation* pa_context_get_source_info_list(pa_context* c, pa_source_info_cb_t cb, void* userdata);
+ pa_operation* pa_context_get_sink_info_list(pa_context* c, pa_sink_info_cb_t cb, void* userdata);
+-pa_context_state_t pa_context_get_state(pa_context* c);
++pa_context_state_t pa_context_get_state(const pa_context* c);
+ pa_context* pa_context_new(pa_mainloop_api* mainloop, const char* name);
+ pa_operation* pa_context_set_source_volume_by_index(pa_context* c, uint32_t idx, const pa_cvolume* volume, pa_context_success_cb_t cb, void* userdata);
+ void pa_context_set_state_callback(pa_context* c, pa_context_notify_cb_t cb, void* userdata);
+diff --git a/media/audio/pulse/pulse_output.cc b/media/audio/pulse/pulse_output.cc
+index 6ee4d63d6f..03e1d44b77 100644
+--- a/media/audio/pulse/pulse_output.cc
++++ b/media/audio/pulse/pulse_output.cc
+@@ -203,7 +203,7 @@ void PulseAudioOutputStream::Start(AudioSourceCallback* callback) {
+   AutoPulseLock auto_lock(pa_mainloop_);
+ 
+   // Ensure the context and stream are ready.
+-  if (pa_context_get_state(pa_context_) != PA_CONTEXT_READY &&
++  if (pa_context_get_state(const pa_context_) != PA_CONTEXT_READY &&
+       pa_stream_get_state(pa_stream_) != PA_STREAM_READY) {
+     callback->OnError();
+     return;
+diff --git a/media/audio/pulse/pulse_util.cc b/media/audio/pulse/pulse_util.cc
+index 66d7149bfe..f38eccda7a 100644
+--- a/media/audio/pulse/pulse_util.cc
++++ b/media/audio/pulse/pulse_util.cc
+@@ -226,7 +226,7 @@ bool InitPulse(pa_threaded_mainloop** mainloop, pa_context** context) {
+   // called after pa_context_get_state() in case the context is already ready,
+   // otherwise pa_threaded_mainloop_wait() will hang indefinitely.
+   while (true) {
+-    pa_context_state_t context_state = pa_context_get_state(pa_context);
++    pa_context_state_t context_state = pa_context_get_state(const pa_context);
+     if (!PA_CONTEXT_IS_GOOD(context_state)) {
+       DestroyContext(pa_context);
+       mainloop_lock.reset();
+@@ -439,7 +439,7 @@ bool CreateOutputStream(pa_threaded_mainloop** mainloop,
+   // called after pa_context_get_state() in case the context is already ready,
+   // otherwise pa_threaded_mainloop_wait() will hang indefinitely.
+   while (true) {
+-    pa_context_state_t context_state = pa_context_get_state(*context);
++    pa_context_state_t context_state = pa_context_get_state(const *context);
+     RETURN_ON_FAILURE(PA_CONTEXT_IS_GOOD(context_state),
+                       "Invalid PulseAudio context state.");
+     if (context_state == PA_CONTEXT_READY)
