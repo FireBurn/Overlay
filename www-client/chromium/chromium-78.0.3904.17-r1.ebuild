@@ -43,7 +43,7 @@ COMMON_DEPEND="
 	media-libs/libpng:=
 	system-libvpx? ( media-libs/libvpx:=[postproc,svc] )
 	>=media-libs/openh264-1.6.0:=
-	pulseaudio? ( media-sound/pulseaudio:= )
+	pulseaudio? ( >=media-sound/pulseaudio-13:= )
 	system-ffmpeg? (
 		>=media-video/ffmpeg-4:=
 		|| (
@@ -86,7 +86,7 @@ RDEPEND="${COMMON_DEPEND}
 	virtual/ttf-fonts
 	selinux? ( sec-policy/selinux-chromium )
 	tcmalloc? ( !<x11-drivers/nvidia-drivers-331.20 )
-	widevine? ( www-plugins/chrome-binary-plugins[widevine(-)] )
+	widevine? ( www-plugins/chrome-binary-plugins )
 "
 DEPEND="${COMMON_DEPEND}
 "
@@ -151,6 +151,7 @@ PATCHES=(
 	"${FILESDIR}/chromium-78-include.patch"
 	"${FILESDIR}/chromium-78-web-rtc-rtp.patch"
 	"${FILESDIR}/chromium-78-dns-utils.patch"
+	"${FILESDIR}/pulseaudio-13.patch"
 	"${FILESDIR}/enable-vaapi.patch"
 )
 
