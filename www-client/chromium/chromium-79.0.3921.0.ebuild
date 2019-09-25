@@ -1,4 +1,4 @@
-# Copyright 1999-2019 Gentoo Authors
+# Copyright 2009-2019 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -43,7 +43,7 @@ COMMON_DEPEND="
 	media-libs/libpng:=
 	system-libvpx? ( media-libs/libvpx:=[postproc,svc] )
 	>=media-libs/openh264-1.6.0:=
-	pulseaudio? ( >=media-sound/pulseaudio-13:= )
+	pulseaudio? ( media-sound/pulseaudio:= )
 	system-ffmpeg? (
 		>=media-video/ffmpeg-4:=
 		|| (
@@ -148,10 +148,11 @@ PATCHES=(
 	"${FILESDIR}/chromium-unbundle-zlib.patch"
 	"${FILESDIR}/chromium-77-system-icu.patch"
 	"${FILESDIR}/chromium-77-clang.patch"
+	"${FILESDIR}/chromium-77-pulseaudio-13.patch"
 	"${FILESDIR}/chromium-78-include.patch"
 	"${FILESDIR}/chromium-78-web-rtc-rtp.patch"
-	"${FILESDIR}/chromium-78-dns-utils.patch"
-	"${FILESDIR}/pulseaudio-13.patch"
+	"${FILESDIR}/chromium-79-layer-tree-impl.patch"
+	"${FILESDIR}/chromium-79-string-view.patch"
 	"${FILESDIR}/enable-vaapi.patch"
 )
 
@@ -348,6 +349,7 @@ src_prepare() {
 		third_party/swiftshader
 		third_party/swiftshader/third_party/llvm-7.0
 		third_party/swiftshader/third_party/llvm-subzero
+		third_party/swiftshader/third_party/marl
 		third_party/swiftshader/third_party/subzero
 		third_party/swiftshader/third_party/SPIRV-Headers/include/spirv/unified1
 		third_party/unrar
@@ -514,7 +516,8 @@ src_configure() {
 	ffmpeg_branding="$(usex proprietary-codecs Chrome Chromium)"
 	myconf_gn+=" proprietary_codecs=$(usex proprietary-codecs true false)"
 	myconf_gn+=" ffmpeg_branding=\"${ffmpeg_branding}\""
-	myconf_gn+=" enable_hevc_demuxing=true"
+	myconf_gn+=" enable_platform_hevc=true"
+	myconf_gn+=" enable_hls_sample_aes=true"
 	myconf_gn+=" enable_ac3_eac3_audio_demuxing=true"
 	myconf_gn+=" enable_mpeg_h_audio_demuxing=true"
 	myconf_gn+=" enable_dolby_vision_demuxing=true"
