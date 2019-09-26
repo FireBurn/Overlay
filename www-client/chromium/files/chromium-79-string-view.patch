@@ -49,7 +49,7 @@ index 712594a3d3..29d556d575 100644
    // BackForwardCache:
    void DisableForRenderFrameHost(GlobalFrameRoutingId id,
 -                                 std::string_view reason) override;
-+                                 std::StringPiece reason) override;
++                                 base::StringPiece reason) override;
  
   private:
    // Destroys all evicted frames in the BackForwardCache.
