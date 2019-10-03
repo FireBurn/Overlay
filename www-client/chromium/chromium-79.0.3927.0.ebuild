@@ -143,7 +143,7 @@ For native file dialogs in KDE, install kde-apps/kdialog.
 
 PATCHES=(
 	"${FILESDIR}/chromium-compiler-r10.patch"
-	"${FILESDIR}/chromium-widevine-r4.patch"
+	"${FILESDIR}/chromium-widevine-r5.patch"
 	"${FILESDIR}/chromium-fix-char_traits.patch"
 	"${FILESDIR}/chromium-unbundle-zlib.patch"
 	"${FILESDIR}/chromium-77-system-icu.patch"
@@ -151,8 +151,7 @@ PATCHES=(
 	"${FILESDIR}/chromium-77-pulseaudio-13.patch"
 	"${FILESDIR}/chromium-78-include.patch"
 	"${FILESDIR}/chromium-78-web-rtc-rtp.patch"
-	"${FILESDIR}/chromium-79-layer-tree-impl.patch"
-	"${FILESDIR}/chromium-79-string-view.patch"
+	"${FILESDIR}/chromium-79-font.patch"
 	"${FILESDIR}/enable-vaapi.patch"
 )
 
@@ -518,9 +517,9 @@ src_configure() {
 	myconf_gn+=" ffmpeg_branding=\"${ffmpeg_branding}\""
 	myconf_gn+=" enable_platform_hevc=true"
 	myconf_gn+=" enable_hls_sample_aes=true"
-	myconf_gn+=" enable_ac3_eac3_audio_demuxing=true"
-	myconf_gn+=" enable_mpeg_h_audio_demuxing=true"
-	myconf_gn+=" enable_dolby_vision_demuxing=true"
+	myconf_gn+=" enable_platform_ac3_eac3_audio=true"
+	myconf_gn+=" enable_platform_mpeg_h_audio=true"
+	myconf_gn+=" enable_platform_dolby_vision=true"
 	myconf_gn+=" enable_mse_mpeg2ts_stream_parser=true"
 
 	# Set up Google API keys, see http://www.chromium.org/developers/how-tos/api-keys .
