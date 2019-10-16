@@ -4,17 +4,6 @@ Stolen from Arch basically.
 
 gmt
 
---- a/chrome/common/chrome_content_client.cc
-+++ b/chrome/common/chrome_content_client.cc
-@@ -92,7 +92,7 @@
- #include "media/cdm/cdm_paths.h"  // nogncheck
- #endif
- 
--#if BUILDFLAG(BUNDLE_WIDEVINE_CDM)
-+#if BUILDFLAG(ENABLE_WIDEVINE)
- #include "base/native_library.h"
- #include "chrome/common/media/cdm_manifest.h"
- #include "third_party/widevine/cdm/widevine_cdm_common.h"  // nogncheck
 --- a/third_party/widevine/cdm/widevine_cdm_version.h
 +++ b/third_party/widevine/cdm/widevine_cdm_version.h
 @@ -11,5 +11,6 @@

@@ -143,15 +143,19 @@ For native file dialogs in KDE, install kde-apps/kdialog.
 
 PATCHES=(
 	"${FILESDIR}/chromium-compiler-r10.patch"
-	"${FILESDIR}/chromium-widevine-r5.patch"
+	"${FILESDIR}/chromium-widevine-r6.patch"
 	"${FILESDIR}/chromium-fix-char_traits.patch"
 	"${FILESDIR}/chromium-unbundle-zlib.patch"
 	"${FILESDIR}/chromium-77-system-icu.patch"
 	"${FILESDIR}/chromium-77-clang.patch"
-	"${FILESDIR}/chromium-77-pulseaudio-13.patch"
 	"${FILESDIR}/chromium-78-include.patch"
 	"${FILESDIR}/chromium-78-web-rtc-rtp.patch"
 	"${FILESDIR}/chromium-79-font.patch"
+	"${FILESDIR}/chromium-79-harfbuzz.patch"
+	"${FILESDIR}/chromium-79-launch-manager.patch"
+	"${FILESDIR}/chromium-79-edid-parser.patch"
+	"${FILESDIR}/chromium-79-dom-document.patch"
+	"${FILESDIR}/chromium-icu-fix.patch"
 	"${FILESDIR}/enable-vaapi.patch"
 )
 
