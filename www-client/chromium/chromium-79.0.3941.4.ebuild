@@ -155,6 +155,7 @@ PATCHES=(
 	"${FILESDIR}/chromium-79-launch-manager.patch"
 	"${FILESDIR}/chromium-79-edid-parser.patch"
 	"${FILESDIR}/chromium-79-dom-document.patch"
+	"${FILESDIR}/chromium-79-swiftshader.patch"
 	"${FILESDIR}/chromium-icu-fix.patch"
 	"${FILESDIR}/enable-vaapi.patch"
 )
