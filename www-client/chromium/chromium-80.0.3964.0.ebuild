@@ -372,6 +372,7 @@ src_prepare() {
 		third_party/webrtc/rtc_base/third_party/sigslot
 		third_party/widevine
 		third_party/woff2
+		third_party/wuffs
 		third_party/zlib/google
 		tools/grit/third_party/six
 		url/third_party/mozilla
