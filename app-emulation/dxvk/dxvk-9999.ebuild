@@ -22,7 +22,6 @@ fi
 
 LICENSE="ZLIB"
 SLOT=0
-IUSE="openvr"
 
 RESTRICT="test"
 
@@ -37,7 +36,6 @@ DEPEND="${RDEPEND}
 	dev-util/glslang"
 
 PATCHES=(
-	"${FILESDIR}/dxvk-1.3.4-optional-openvr.patch"
 	"${FILESDIR}/flags.patch"
 )
 
@@ -93,7 +91,6 @@ multilib_src_configure() {
 		--libdir="$(get_libdir)/dxvk"
 		--bindir="$(get_libdir)/dxvk/bin"
 		-Denable_tests=false
-		$(meson_use openvr enable_openvr)
 	)
 	meson_src_configure
 }
