@@ -150,8 +150,7 @@ PATCHES=(
 	"${FILESDIR}/chromium-79-gcc-alignas.patch"
 	"${FILESDIR}/chromium-80-unbundle-libxml.patch"
 	"${FILESDIR}/chromium-80-gcc-noexcept.patch"
-	"${FILESDIR}/chromium-80-bluetooth-uuid.patch"
-	"${FILESDIR}/chromium-80-app-service-impl.patch"
+	"${FILESDIR}/chromium-80-include-memory.patch"
 	"${FILESDIR}/enable-vaapi.patch"
 )
 
