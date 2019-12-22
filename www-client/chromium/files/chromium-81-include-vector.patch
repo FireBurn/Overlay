@@ -1,8 +1,8 @@
 --- a/chrome/browser/ui/autofill/payments/virtual_card_selection_dialog_controller.h
 +++ b/chrome/browser/ui/autofill/payments/virtual_card_selection_dialog_controller.h
- 
+@@ -5,6 +5,8 @@
 +#include <vector>
 +
  #include "base/macros.h"
  #include "base/strings/string16.h"
- 
+
