@@ -150,7 +150,7 @@ PATCHES=(
 	"${FILESDIR}/chromium-79-gcc-alignas.patch"
 	"${FILESDIR}/chromium-80-unbundle-libxml.patch"
 	"${FILESDIR}/chromium-80-gcc-noexcept.patch"
-	"${FILESDIR}/chromium-80-include-memory.patch"
+	"${FILESDIR}/chromium-81-include-vector.patch"
 	"${FILESDIR}/enable-vaapi.patch"
 )
 
@@ -229,6 +229,7 @@ src_prepare() {
 		third_party/angle/src/third_party/compiler
 		third_party/angle/src/third_party/libXNVCtrl
 		third_party/angle/src/third_party/trace_event
+		third_party/angle/src/third_party/volk
 		third_party/angle/third_party/glslang
 		third_party/angle/third_party/spirv-headers
 		third_party/angle/third_party/spirv-tools
@@ -273,10 +274,10 @@ src_prepare() {
 		third_party/devscripts
 		third_party/devtools-frontend
 		third_party/devtools-frontend/src/third_party
+		third_party/devtools-frontend/src/front_end/third_party
 		third_party/dom_distiller_js
 		third_party/emoji-segmenter
 		third_party/flatbuffers
-		third_party/flot
 		third_party/freetype
 		third_party/glslang
 		third_party/google_input_tools
@@ -296,6 +297,7 @@ src_prepare() {
 		third_party/libaom
 		third_party/libaom/source/libaom/third_party/vector
 		third_party/libaom/source/libaom/third_party/x86inc
+		third_party/libgifcodec
 		third_party/libjingle
 		third_party/libphonenumber
 		third_party/libsecret
@@ -345,7 +347,6 @@ src_prepare() {
 		third_party/skia
 		third_party/skia/include/third_party/skcms
 		third_party/skia/include/third_party/vulkan
-		third_party/skia/third_party/gif
 		third_party/skia/third_party/skcms
 		third_party/skia/third_party/vulkan
 		third_party/smhasher
