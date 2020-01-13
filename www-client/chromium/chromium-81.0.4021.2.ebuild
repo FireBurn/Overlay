@@ -150,6 +150,7 @@ PATCHES=(
 	"${FILESDIR}/chromium-79-gcc-alignas.patch"
 	"${FILESDIR}/chromium-80-unbundle-libxml.patch"
 	"${FILESDIR}/chromium-80-gcc-noexcept.patch"
+	"${FILESDIR}/chromium-81-include-memory.patch"
 	"${FILESDIR}/chromium-81-include-vector.patch"
 	"${FILESDIR}/enable-vaapi.patch"
 )

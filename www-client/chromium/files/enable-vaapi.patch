@@ -1,8 +1,29 @@
+From 9d0aeb9df521c2d9ac3f7a0a169487e64e5d344d Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Sun, 12 Jan 2020 17:10:24 +0000
+Subject: [PATCH] VAAPI Patch
+
+Rebased to 81.0.4021.2
+---
+ chrome/browser/about_flags.cc                 |  6 ++--
+ chrome/browser/flag_descriptions.cc           |  4 +--
+ chrome/browser/flag_descriptions.h            | 10 ++++--
+ content/gpu/BUILD.gn                          |  5 +++
+ media/base/media_switches.cc                  |  2 +-
+ media/filters/BUILD.gn                        |  1 +
+ media/gpu/BUILD.gn                            |  1 +
+ .../gpu_video_decode_accelerator_factory.cc   |  3 ++
+ .../service/gpu_video_decode_accelerator.cc   |  2 ++
+ media/gpu/test/BUILD.gn                       |  2 +-
+ .../vaapi/vaapi_video_decode_accelerator.cc   | 15 ++++++++
+ media/gpu/vaapi/vaapi_wrapper.cc              | 34 +++++++++++++------
+ 12 files changed, 63 insertions(+), 22 deletions(-)
+
 diff --git a/chrome/browser/about_flags.cc b/chrome/browser/about_flags.cc
-index 54c97b37de..04eeaee091 100644
+index d756610cf6..450ed60796 100644
 --- a/chrome/browser/about_flags.cc
 +++ b/chrome/browser/about_flags.cc
-@@ -1846,7 +1846,7 @@ const FeatureEntry kFeatureEntries[] = {
+@@ -1844,7 +1844,7 @@ const FeatureEntry kFeatureEntries[] = {
          "disable-accelerated-video-decode",
          flag_descriptions::kAcceleratedVideoDecodeName,
          flag_descriptions::kAcceleratedVideoDecodeDescription,
@@ -11,7 +32,7 @@ index 54c97b37de..04eeaee091 100644
          SINGLE_DISABLE_VALUE_TYPE(switches::kDisableAcceleratedVideoDecode),
      },
      {
-@@ -2307,10 +2307,10 @@ const FeatureEntry kFeatureEntries[] = {
+@@ -2299,10 +2299,10 @@ const FeatureEntry kFeatureEntries[] = {
       FEATURE_VALUE_TYPE(service_manager::features::kXRSandbox)},
  #endif  // !defined(OS_ANDROID)
  #endif  // ENABLE_VR
@@ -25,10 +46,10 @@ index 54c97b37de..04eeaee091 100644
  #endif  // OS_CHROMEOS
      {"system-keyboard-lock", flag_descriptions::kSystemKeyboardLockName,
 diff --git a/chrome/browser/flag_descriptions.cc b/chrome/browser/flag_descriptions.cc
-index 5c2b3f3fa2..c7682cf0aa 100644
+index 613db21db7..aba59b9489 100644
 --- a/chrome/browser/flag_descriptions.cc
 +++ b/chrome/browser/flag_descriptions.cc
-@@ -3170,9 +3170,7 @@ const char kMetalDescription[] =
+@@ -3164,9 +3164,7 @@ const char kMetalDescription[] =
  
  #endif
  
@@ -40,10 +61,10 @@ index 5c2b3f3fa2..c7682cf0aa 100644
  const char kAcceleratedMjpegDecodeName[] =
      "Hardware-accelerated mjpeg decode for captured frame";
 diff --git a/chrome/browser/flag_descriptions.h b/chrome/browser/flag_descriptions.h
-index 384a7bed33..5f1d4a215d 100644
+index 164fa82b36..d42c186f92 100644
 --- a/chrome/browser/flag_descriptions.h
 +++ b/chrome/browser/flag_descriptions.h
-@@ -1870,13 +1870,17 @@ extern const char kPermissionPromptPersistenceToggleDescription[];
+@@ -1865,13 +1865,17 @@ extern const char kPermissionPromptPersistenceToggleDescription[];
  
  #endif  // defined(OS_MACOSX)
  
@@ -85,33 +106,11 @@ index d777b767ba..96cecdb2db 100644
 +    public_configs = [ "//build/config/linux/libva" ]
 +  }
  }
-diff --git a/gpu/config/software_rendering_list.json b/gpu/config/software_rendering_list.json
-index 837bb8dd2b..36c79fe839 100644
---- a/gpu/config/software_rendering_list.json
-+++ b/gpu/config/software_rendering_list.json
-@@ -332,17 +332,6 @@
-         "all"
-       ]
-     },
--    {
--      "id": 48,
--      "description": "Accelerated video decode is unavailable on Linux",
--      "cr_bugs": [137247],
--      "os": {
--        "type": "linux"
--      },
--      "features": [
--        "accelerated_video_decode"
--      ]
--    },
-     {
-       "id": 50,
-       "description": "Disable VMware software renderer on older Mesa",
 diff --git a/media/base/media_switches.cc b/media/base/media_switches.cc
-index d089b39752..0e92d28335 100644
+index b3ec59abb3..e66b1a3c68 100644
 --- a/media/base/media_switches.cc
 +++ b/media/base/media_switches.cc
-@@ -653,7 +653,7 @@ bool IsVideoCaptureAcceleratedJpegDecodingEnabled() {
+@@ -657,7 +657,7 @@ bool IsVideoCaptureAcceleratedJpegDecodingEnabled() {
            switches::kUseFakeMjpegDecodeAccelerator)) {
      return true;
    }
@@ -133,10 +132,10 @@ index 32cd60069b..5e52d508b3 100644
  jumbo_source_set("filters") {
    # Do not expand the visibility here without double-checking with OWNERS, this
 diff --git a/media/gpu/BUILD.gn b/media/gpu/BUILD.gn
-index 76514826b6..9c253d3e91 100644
+index ccc86ab166..4b4c056003 100644
 --- a/media/gpu/BUILD.gn
 +++ b/media/gpu/BUILD.gn
-@@ -455,6 +455,7 @@ if (use_v4l2_codec || use_vaapi || is_mac || is_win) {
+@@ -457,6 +457,7 @@ if (use_v4l2_codec || use_vaapi || is_mac || is_win) {
      if (use_ozone) {
        deps += [ "//ui/ozone" ]
      }
@@ -199,7 +198,7 @@ index 21ff527598..4d735bfd68 100644
      testonly = true
      sources = [
 diff --git a/media/gpu/vaapi/vaapi_video_decode_accelerator.cc b/media/gpu/vaapi/vaapi_video_decode_accelerator.cc
-index 68f163a85d..e936eae87c 100644
+index ce0edc3303..84ec5e17f1 100644
 --- a/media/gpu/vaapi/vaapi_video_decode_accelerator.cc
 +++ b/media/gpu/vaapi/vaapi_video_decode_accelerator.cc
 @@ -63,6 +63,7 @@ void ReportToUMA(VAVDADecoderFailure failure) {
@@ -270,10 +269,10 @@ index 68f163a85d..e936eae87c 100644
  
  bool VaapiVideoDecodeAccelerator::IsBufferAllocationModeReducedOrSuperReduced()
 diff --git a/media/gpu/vaapi/vaapi_wrapper.cc b/media/gpu/vaapi/vaapi_wrapper.cc
-index ad717607d0..a15db466ef 100644
+index 3ade942a64..65607b9f2f 100644
 --- a/media/gpu/vaapi/vaapi_wrapper.cc
 +++ b/media/gpu/vaapi/vaapi_wrapper.cc
-@@ -340,6 +340,11 @@ void VADisplayState::PreSandboxInitialization() {
+@@ -342,6 +342,11 @@ void VADisplayState::PreSandboxInitialization() {
        base::File::FLAG_OPEN | base::File::FLAG_READ | base::File::FLAG_WRITE);
    if (drm_file.IsValid())
      VADisplayState::Get()->SetDrmFd(drm_file.GetPlatformFile());
@@ -285,7 +284,7 @@ index ad717607d0..a15db466ef 100644
  }
  
  VADisplayState::VADisplayState()
-@@ -367,10 +372,6 @@ bool VADisplayState::Initialize() {
+@@ -369,10 +374,6 @@ bool VADisplayState::Initialize() {
  }
  
  bool VADisplayState::InitializeOnce() {
@@ -296,7 +295,7 @@ index ad717607d0..a15db466ef 100644
    switch (gl::GetGLImplementation()) {
      case gl::kGLImplementationEGLGLES2:
        va_display_ = vaGetDisplayDRM(drm_fd_.get());
-@@ -378,10 +379,10 @@ bool VADisplayState::InitializeOnce() {
+@@ -380,10 +381,10 @@ bool VADisplayState::InitializeOnce() {
      case gl::kGLImplementationDesktopGL:
  #if defined(USE_X11)
        va_display_ = vaGetDisplay(gfx::GetXDisplay());
@@ -310,7 +309,7 @@ index ad717607d0..a15db466ef 100644
        break;
      // Cannot infer platform from GL, try all available displays
      case gl::kGLImplementationNone:
-@@ -414,8 +415,19 @@ bool VADisplayState::InitializeOnce() {
+@@ -416,8 +417,19 @@ bool VADisplayState::InitializeOnce() {
    int major_version, minor_version;
    VAStatus va_res = vaInitialize(va_display_, &major_version, &minor_version);
    if (va_res != VA_STATUS_SUCCESS) {
@@ -332,7 +331,7 @@ index ad717607d0..a15db466ef 100644
    }
  
    va_initialized_ = true;
-@@ -423,7 +435,7 @@ bool VADisplayState::InitializeOnce() {
+@@ -425,7 +437,7 @@ bool VADisplayState::InitializeOnce() {
    va_vendor_string_ = vaQueryVendorString(va_display_);
    DLOG_IF(WARNING, va_vendor_string_.empty())
        << "Vendor string empty or error reading.";
@@ -341,7 +340,7 @@ index ad717607d0..a15db466ef 100644
             << va_vendor_string_;
  
    // The VAAPI version is determined from what is loaded on the system by
-@@ -763,7 +775,7 @@ bool VASupportedProfiles::AreAttribsSupported_Locked(
+@@ -766,7 +778,7 @@ bool VASupportedProfiles::AreAttribsSupported_Locked(
      if (attribs[i].type != required_attribs[i].type ||
          (attribs[i].value & required_attribs[i].value) !=
              required_attribs[i].value) {
@@ -350,3 +349,6 @@ index ad717607d0..a15db466ef 100644
                 << " for attribute type " << required_attribs[i].type;
        return false;
      }
+-- 
+2.24.1
+
