@@ -1,17 +1,17 @@
-From a1207cc75454e653030716948d27ec27412f6fe8 Mon Sep 17 00:00:00 2001
-From: Mike Gilbert <floppym@gentoo.org>
-Date: Sat, 16 Jun 2019 15:43:27 +0100
-Subject: [PATCH] Disable various compiler configs
+From bef68c52bcb450234f67179e6df27dde6bfd70b7 Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Sat, 18 Jan 2020 10:36:43 +0000
+Subject: [PATCH] [PATCH] Disable various compiler configs
 
 ---
- build/config/compiler/BUILD.gn | 64 +++++++++++++---------------------
- 1 file changed, 25 insertions(+), 39 deletions(-)
+ build/config/compiler/BUILD.gn | 62 ++++++++++++++--------------------
+ 1 file changed, 25 insertions(+), 37 deletions(-)
 
 diff --git a/build/config/compiler/BUILD.gn b/build/config/compiler/BUILD.gn
-index a3f21b7..0a7bec6 100644
+index 2ac6e8e74..6fc99b08f 100644
 --- a/build/config/compiler/BUILD.gn
 +++ b/build/config/compiler/BUILD.gn
-@@ -230,8 +230,6 @@ config("compiler") {
+@@ -269,8 +269,6 @@ config("compiler") {
  
    configs += [
      # See the definitions below.
@@ -20,11 +20,10 @@ index a3f21b7..0a7bec6 100644
      ":compiler_codegen",
      ":compiler_deterministic",
    ]
-@@ -471,20 +469,6 @@ config("compiler") {
-     }
+@@ -496,18 +494,6 @@ config("compiler") {
    }
  
--  if (is_clang && !is_nacl && !use_xcode_clang) {
+   if (is_clang && !is_nacl && !use_xcode_clang) {
 -    cflags += [ "-fcrash-diagnostics-dir=" +
 -                rebase_path("//tools/clang/crashreports", root_build_dir) ]
 -
@@ -36,14 +35,13 @@ index a3f21b7..0a7bec6 100644
 -      "-Xclang",
 -      "-instcombine-lower-dbg-declare=0",
 -    ]
--  }
 -
-   # C11/C++11 compiler flags setup.
-   # ---------------------------
-   if (is_linux || is_android || (is_nacl && is_clang) || current_os == "aix") {
-@@ -1431,6 +1415,12 @@ config("default_warnings") {
-         "-Wno-narrowing",
-       ]
+     if (llvm_force_head_revision) {
+       # Before Clang 10, lax vector conversions were allowed by default.
+       # Chromium currently relies on this behavior.
+@@ -1462,6 +1448,12 @@ config("default_warnings") {
+         cflags_cc += [ "-Wno-class-memaccess" ]
+       }
  
 +      # -Wno-class-memaccess warns about hash table and vector in blink.
 +      # But the violation is intentional.
@@ -54,7 +52,7 @@ index a3f21b7..0a7bec6 100644
        # -Wunused-local-typedefs is broken in gcc,
        # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=63872
        cflags += [ "-Wno-unused-local-typedefs" ]
-@@ -1525,7 +1515,7 @@ config("chromium_code") {
+@@ -1587,7 +1579,7 @@ config("chromium_code") {
        defines = [ "_HAS_NODISCARD" ]
      }
    } else {
@@ -63,7 +61,7 @@ index a3f21b7..0a7bec6 100644
      if (treat_warnings_as_errors) {
        cflags += [ "-Werror" ]
  
-@@ -1534,10 +1524,6 @@ config("chromium_code") {
+@@ -1596,10 +1588,6 @@ config("chromium_code") {
        # well.
        ldflags = [ "-Werror" ]
      }
@@ -74,7 +72,7 @@ index a3f21b7..0a7bec6 100644
  
      # In Chromium code, we define __STDC_foo_MACROS in order to get the
      # C99 macros on Mac and Linux.
-@@ -1546,15 +1532,6 @@ config("chromium_code") {
+@@ -1608,15 +1596,6 @@ config("chromium_code") {
        "__STDC_FORMAT_MACROS",
      ]
  
@@ -90,7 +88,7 @@ index a3f21b7..0a7bec6 100644
      if (is_mac) {
        cflags_objc = [ "-Wobjc-missing-property-synthesis" ]
        cflags_objcc = [ "-Wobjc-missing-property-synthesis" ]
-@@ -1943,7 +1920,8 @@ config("default_stack_frames") {
+@@ -2020,7 +1999,8 @@ config("default_stack_frames") {
  }
  
  # Default "optimization on" config.
@@ -100,7 +98,7 @@ index a3f21b7..0a7bec6 100644
    if (is_win) {
      # TODO(thakis): Remove is_clang here, https://crbug.com/598772
      if (is_official_build && full_wpo_on_official && !is_clang) {
-@@ -1977,7 +1955,8 @@ config("optimize") {
+@@ -2046,7 +2026,8 @@ config("optimize") {
  }
  
  # Same config as 'optimize' but without the WPO flag.
@@ -110,7 +108,7 @@ index a3f21b7..0a7bec6 100644
    if (is_win) {
      # Favor size over speed, /O1 must be before the common flags. The GYP
      # build also specifies /Os and /GF but these are implied by /O1.
-@@ -2000,7 +1979,8 @@ config("optimize_no_wpo") {
+@@ -2069,7 +2050,8 @@ config("optimize_no_wpo") {
  }
  
  # Turn off optimizations.
@@ -120,7 +118,7 @@ index a3f21b7..0a7bec6 100644
    if (is_win) {
      cflags = [
        "/Od",  # Disable optimization.
-@@ -2028,7 +2008,8 @@ config("no_optimize") {
+@@ -2103,7 +2085,8 @@ config("no_optimize") {
  # Turns up the optimization level. On Windows, this implies whole program
  # optimization and link-time code generation which is very expensive and should
  # be used sparingly.
@@ -130,7 +128,7 @@ index a3f21b7..0a7bec6 100644
    if (is_nacl && is_nacl_irt) {
      # The NaCl IRT is a special case and always wants its own config.
      # Various components do:
-@@ -2075,7 +2056,8 @@ config("optimize_max") {
+@@ -2142,7 +2125,8 @@ config("optimize_max") {
  #
  # TODO(crbug.com/621335) - rework how all of these configs are related
  # so that we don't need this disclaimer.
@@ -140,7 +138,7 @@ index a3f21b7..0a7bec6 100644
    if (is_nacl && is_nacl_irt) {
      # The NaCl IRT is a special case and always wants its own config.
      # Various components do:
-@@ -2113,7 +2095,8 @@ config("optimize_speed") {
+@@ -2172,7 +2156,8 @@ config("optimize_speed") {
    }
  }
  
@@ -150,7 +148,7 @@ index a3f21b7..0a7bec6 100644
    cflags = [ "-O1" ] + common_optimize_on_cflags
    ldflags = common_optimize_on_ldflags
    visibility = [ ":default_optimization" ]
-@@ -2215,7 +2198,8 @@ config("win_pdbaltpath") {
+@@ -2288,7 +2273,8 @@ config("win_pdbaltpath") {
  }
  
  # Full symbols.
@@ -160,7 +158,7 @@ index a3f21b7..0a7bec6 100644
    if (is_win) {
      if (use_goma || is_clang) {
        # Note that with VC++ this requires is_win_fastlink, enforced elsewhere.
-@@ -2325,7 +2309,8 @@ config("symbols") {
+@@ -2398,7 +2384,8 @@ config("symbols") {
  # Minimal symbols.
  # This config guarantees to hold symbol for stack trace which are shown to user
  # when crash happens in unittests running on buildbot.
@@ -168,9 +166,9 @@ index a3f21b7..0a7bec6 100644
 +config("minimal_symbols") { }
 +config("xminimal_symbols") {
    if (is_win) {
-     # Linker symbols for backtraces only.
+     # Functions, files, and line tables only.
      cflags = []
-@@ -2382,7 +2367,8 @@ config("minimal_symbols") {
+@@ -2453,7 +2440,8 @@ config("minimal_symbols") {
  }
  
  # No symbols.
@@ -181,5 +179,5 @@ index a3f21b7..0a7bec6 100644
      cflags = [ "-g0" ]
      asmflags = cflags
 -- 
-2.21.0
+2.25.0
 
