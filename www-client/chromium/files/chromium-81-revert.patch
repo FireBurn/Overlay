@@ -1,37 +1,8 @@
-From cba0a78daf803fc38a30551f1da15b2c5893a289 Mon Sep 17 00:00:00 2001
-From: Mike Lothian <mike@fireburn.co.uk>
-Date: Sun, 19 Jan 2020 02:44:27 +0000
-Subject: [PATCH] Revert "Add extension request notification."
-
-This reverts commit af653e322088d69dbe4e9022098f2f64c2115d06.
----
- chrome/app/generated_resources.grd            |  29 -----
- ..._EXTENSION_REQUEST_APPROVED_TITLE.png.sha1 |   1 -
- ...XTENSION_REQUEST_CLICK_TO_INSTALL.png.sha1 |   1 -
- ...E_EXTENSION_REQUEST_CLICK_TO_VIEW.png.sha1 |   1 -
- ...ION_REQUEST_FORCE_INSTALLED_TITLE.png.sha1 |   1 -
- ..._EXTENSION_REQUEST_REJECTED_TITLE.png.sha1 |   1 -
- chrome/browser/BUILD.gn                       |   2 -
- .../extension_request_notification.cc         | 109 -----------------
- .../extension_request_notification.h          |  49 --------
- ...extension_request_notification_unittest.cc | 115 ------------------
- .../enterprise_reporting/report_scheduler.h   |   6 -
- chrome/test/BUILD.gn                          |   1 -
- 12 files changed, 316 deletions(-)
- delete mode 100644 chrome/app/generated_resources_grd/IDS_ENTERPRISE_EXTENSION_REQUEST_APPROVED_TITLE.png.sha1
- delete mode 100644 chrome/app/generated_resources_grd/IDS_ENTERPRISE_EXTENSION_REQUEST_CLICK_TO_INSTALL.png.sha1
- delete mode 100644 chrome/app/generated_resources_grd/IDS_ENTERPRISE_EXTENSION_REQUEST_CLICK_TO_VIEW.png.sha1
- delete mode 100644 chrome/app/generated_resources_grd/IDS_ENTERPRISE_EXTENSION_REQUEST_FORCE_INSTALLED_TITLE.png.sha1
- delete mode 100644 chrome/app/generated_resources_grd/IDS_ENTERPRISE_EXTENSION_REQUEST_REJECTED_TITLE.png.sha1
- delete mode 100644 chrome/browser/enterprise_reporting/notification/extension_request_notification.cc
- delete mode 100644 chrome/browser/enterprise_reporting/notification/extension_request_notification.h
- delete mode 100644 chrome/browser/enterprise_reporting/notification/extension_request_notification_unittest.cc
-
 diff --git a/chrome/app/generated_resources.grd b/chrome/app/generated_resources.grd
-index 15e5a8543b2f..9ac9fd78beee 100644
+index dcd06a61f546..38194ce1784b 100644
 --- a/chrome/app/generated_resources.grd
 +++ b/chrome/app/generated_resources.grd
-@@ -10518,35 +10518,6 @@ Please help our engineers fix this problem. Tell us what happened right before y
+@@ -10545,35 +10545,6 @@ Please help our engineers fix this problem. Tell us what happened right before y
        The limit on "<ph name="APP_NAME">$1<ex>Google Photos</ex></ph>" that your parent set ran out. You can use it for <ph name="TIME_LIMIT">$2<ex>2 hours and 30 minutes</ex></ph> tomorrow.
      </message>
  
@@ -108,10 +79,10 @@ index cc5b7602ddda..000000000000
 -11d8350374f809e9fdcd389bd6d93b565b83ef98
 \ No newline at end of file
 diff --git a/chrome/browser/BUILD.gn b/chrome/browser/BUILD.gn
-index 1dd0d3bcdcc4..13dacba3d2f7 100644
+index b2004e40d927..4c380f73027e 100644
 --- a/chrome/browser/BUILD.gn
 +++ b/chrome/browser/BUILD.gn
-@@ -3118,8 +3118,6 @@ jumbo_static_library("browser") {
+@@ -3119,8 +3119,6 @@ jumbo_static_library("browser") {
        "enterprise_reporting/browser_report_generator.h",
        "enterprise_reporting/extension_info.cc",
        "enterprise_reporting/extension_info.h",
@@ -122,10 +93,10 @@ index 1dd0d3bcdcc4..13dacba3d2f7 100644
        "enterprise_reporting/prefs.cc",
 diff --git a/chrome/browser/enterprise_reporting/notification/extension_request_notification.cc b/chrome/browser/enterprise_reporting/notification/extension_request_notification.cc
 deleted file mode 100644
-index 659efac24d61..000000000000
+index 89f7c995821b..000000000000
 --- a/chrome/browser/enterprise_reporting/notification/extension_request_notification.cc
 +++ /dev/null
-@@ -1,109 +0,0 @@
+@@ -1,120 +0,0 @@
 -// Copyright 2020 The Chromium Authors. All rights reserved.
 -// Use of this source code is governed by a BSD-style license that can be
 -// found in the LICENSE file.
@@ -186,11 +157,13 @@ index 659efac24d61..000000000000
 -
 -ExtensionRequestNotification::~ExtensionRequestNotification() = default;
 -
--void ExtensionRequestNotification::Show() {
+-void ExtensionRequestNotification::Show(NotificationCloseCallback callback) {
 -  if (extension_ids_.empty()) {
 -    NOTREACHED();
 -    return;
 -  }
+-
+-  callback_ = std::move(callback);
 -
 -  const base::string16 title = l10n_util::GetPluralStringFUTF16(
 -      kNotificationTitles[notify_type_], extension_ids_.size());
@@ -208,22 +181,23 @@ index 659efac24d61..000000000000
 -      message_center::NotifierId(message_center::NotifierType::APPLICATION,
 -                                 kExtensionRequestNotifierId),
 -      message_center::RichNotificationData(),
--      new message_center::HandleNotificationClickDelegate(base::BindRepeating(
--          &ExtensionRequestNotification::OnClick, weak_factory_.GetWeakPtr())));
+-      base::MakeRefCounted<message_center::ThunkNotificationDelegate>(
+-          weak_factory_.GetWeakPtr()));
 -  notification_->set_never_timeout(true);
 -
 -  NotificationDisplayService::GetForProfile(profile_)->Display(
 -      NotificationHandler::Type::TRANSIENT, *notification_, nullptr);
 -}
 -
--void ExtensionRequestNotification::Close() {
+-void ExtensionRequestNotification::CloseNotification() {
 -  NotificationDisplayService::GetForProfile(profile_)->Close(
 -      NotificationHandler::Type::TRANSIENT, kNotificationIds[notify_type_]);
 -  notification_.reset();
 -}
 -
--void ExtensionRequestNotification::OnClick(
--    const base::Optional<int> button_index) {
+-void ExtensionRequestNotification::Click(
+-    const base::Optional<int>& button_index,
+-    const base::Optional<base::string16>& reply) {
 -  for (const std::string& extension_id : extension_ids_) {
 -    NavigateParams params(profile_, GURL(kChromeWebstoreUrl + extension_id),
 -                          ui::PAGE_TRANSITION_LINK);
@@ -231,16 +205,24 @@ index 659efac24d61..000000000000
 -    params.window_action = NavigateParams::SHOW_WINDOW;
 -    Navigate(&params);
 -  }
--  Close();
+-  if (callback_)
+-    std::move(callback_).Run(true);
+-  CloseNotification();
+-}
+-
+-void ExtensionRequestNotification::Close(bool by_user) {
+-  if (callback_) {
+-    std::move(callback_).Run(by_user);
+-  }
 -}
 -
 -}  // namespace enterprise_reporting
 diff --git a/chrome/browser/enterprise_reporting/notification/extension_request_notification.h b/chrome/browser/enterprise_reporting/notification/extension_request_notification.h
 deleted file mode 100644
-index 70fab9867c53..000000000000
+index 2b6ce0b76f14..000000000000
 --- a/chrome/browser/enterprise_reporting/notification/extension_request_notification.h
 +++ /dev/null
-@@ -1,49 +0,0 @@
+@@ -1,56 +0,0 @@
 -// Copyright 2020 The Chromium Authors. All rights reserved.
 -// Use of this source code is governed by a BSD-style license that can be
 -// found in the LICENSE file.
@@ -258,9 +240,12 @@ index 70fab9867c53..000000000000
 -
 -namespace enterprise_reporting {
 -
--class ExtensionRequestNotification {
+-class ExtensionRequestNotification
+-    : public message_center::NotificationObserver {
 - public:
 -  using ExtensionIds = std::vector<std::string>;
+-  // Callback when the notification is closed.
+-  using NotificationCloseCallback = base::OnceCallback<void(bool by_user)>;
 -  enum NotifyType { kApproved = 0, kRejected = 1, kForceInstalled = 2 };
 -
 -  ExtensionRequestNotification();
@@ -272,17 +257,21 @@ index 70fab9867c53..000000000000
 -      delete;
 -  virtual ~ExtensionRequestNotification();
 -
--  void Show();
--  void Close();
+-  void Show(NotificationCloseCallback callback);
+-  void CloseNotification();
 -
 - private:
--  void OnClick(const base::Optional<int> button_index);
+-  // message_center::NotificationObserver
+-  void Click(const base::Optional<int>& button_index,
+-             const base::Optional<base::string16>& reply) override;
+-  void Close(bool by_user) override;
 -
 -  std::unique_ptr<message_center::Notification> notification_;
 -
 -  Profile* profile_;
 -  const NotifyType notify_type_ = kApproved;
 -  const ExtensionIds extension_ids_;
+-  NotificationCloseCallback callback_;
 -
 -  base::WeakPtrFactory<ExtensionRequestNotification> weak_factory_{this};
 -};
@@ -292,10 +281,10 @@ index 70fab9867c53..000000000000
 -#endif  // CHROME_BROWSER_ENTERPRISE_REPORTING_NOTIFICATION_EXTENSION_REQUEST_NOTIFICATION_H_
 diff --git a/chrome/browser/enterprise_reporting/notification/extension_request_notification_unittest.cc b/chrome/browser/enterprise_reporting/notification/extension_request_notification_unittest.cc
 deleted file mode 100644
-index f6ecddc989e3..000000000000
+index 3c3398c2f9f3..000000000000
 --- a/chrome/browser/enterprise_reporting/notification/extension_request_notification_unittest.cc
 +++ /dev/null
-@@ -1,115 +0,0 @@
+@@ -1,143 +0,0 @@
 -// Copyright 2020 The Chromium Authors. All rights reserved.
 -// Use of this source code is governed by a BSD-style license that can be
 -// found in the LICENSE file.
@@ -331,6 +320,10 @@ index f6ecddc989e3..000000000000
 -                                                  "installed"};
 -const char* const kNotificationBodyKeywords[] = {"to install", "to view",
 -                                                 "to view"};
+-
+-void OnNotificationClosed(bool expected_by_user, bool by_user) {
+-  EXPECT_EQ(expected_by_user, by_user);
+-}
 -
 -class ExtensionRequestNotificationTest
 -    : public BrowserWithTestWindowTest,
@@ -369,22 +362,24 @@ index f6ecddc989e3..000000000000
 -  ExtensionRequestNotification request_notification(
 -      profile(), GetNotifyType(), ExtensionRequestNotification::ExtensionIds());
 -#if DCHECK_IS_ON()
--  EXPECT_DEATH_IF_SUPPORTED(request_notification.Show(), "");
+-  EXPECT_DEATH_IF_SUPPORTED(
+-      request_notification.Show(base::BindOnce(&OnNotificationClosed, false)),
+-      "");
 -#else
--  request_notification.Show();
+-  request_notification.Show(base::BindOnce(&OnNotificationClosed, false));
 -#endif
 -  task_environment()->RunUntilIdle();
 -  EXPECT_FALSE(GetNotification().has_value());
 -}
 -
--TEST_P(ExtensionRequestNotificationTest, HasExtension) {
+-TEST_P(ExtensionRequestNotificationTest, HasExtensionAndClickedByUser) {
 -  ExtensionRequestNotification request_notification(
 -      profile(), GetNotifyType(),
 -      ExtensionRequestNotification::ExtensionIds({kFakeExtensionId}));
 -  base::RunLoop show_run_loop;
 -  display_service_tester_->SetNotificationAddedClosure(
 -      show_run_loop.QuitClosure());
--  request_notification.Show();
+-  request_notification.Show(base::BindOnce(&OnNotificationClosed, true));
 -  show_run_loop.Run();
 -
 -  base::Optional<message_center::Notification> notification = GetNotification();
@@ -408,6 +403,28 @@ index f6ecddc989e3..000000000000
 -      std::string(kChromeWebstoreUrl) + std::string(kFakeExtensionId);
 -  EXPECT_EQ(GURL(expected_url),
 -            browser()->tab_strip_model()->GetWebContentsAt(0)->GetURL());
+-}
+-
+-TEST_P(ExtensionRequestNotificationTest, HasExtensionAndClosedByBrowser) {
+-  ExtensionRequestNotification request_notification(
+-      profile(), GetNotifyType(),
+-      ExtensionRequestNotification::ExtensionIds({kFakeExtensionId}));
+-  base::RunLoop show_run_loop;
+-  display_service_tester_->SetNotificationAddedClosure(
+-      show_run_loop.QuitClosure());
+-  request_notification.Show(base::BindOnce(&OnNotificationClosed, false));
+-  show_run_loop.Run();
+-
+-  base::Optional<message_center::Notification> notification = GetNotification();
+-  ASSERT_TRUE(notification.has_value());
+-
+-  base::RunLoop close_run_loop;
+-  display_service_tester_->SetNotificationClosedClosure(
+-      close_run_loop.QuitClosure());
+-  request_notification.CloseNotification();
+-  close_run_loop.Run();
+-
+-  EXPECT_FALSE(GetNotification().has_value());
 -}
 -
 -}  // namespace enterprise_reporting
@@ -436,10 +453,10 @@ index dc0725030338..d169e7b17b35 100644
  };
  
 diff --git a/chrome/test/BUILD.gn b/chrome/test/BUILD.gn
-index 22490bf97fdf..be2e2b707f93 100644
+index ca16e346f8d5..ba2128ae7fa0 100644
 --- a/chrome/test/BUILD.gn
 +++ b/chrome/test/BUILD.gn
-@@ -3812,7 +3812,6 @@ test("unit_tests") {
+@@ -3824,7 +3824,6 @@ test("unit_tests") {
        "../browser/download/download_shelf_unittest.cc",
        "../browser/enterprise_reporting/browser_report_generator_unittest.cc",
        "../browser/enterprise_reporting/extension_info_unittest.cc",
@@ -447,6 +464,3 @@ index 22490bf97fdf..be2e2b707f93 100644
        "../browser/enterprise_reporting/policy_info_unittest.cc",
        "../browser/enterprise_reporting/profile_report_generator_unittest.cc",
        "../browser/enterprise_reporting/report_generator_unittest.cc",
--- 
-2.25.0
-
