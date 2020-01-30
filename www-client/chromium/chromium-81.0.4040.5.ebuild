@@ -152,6 +152,7 @@ PATCHES=(
 	"${FILESDIR}/chromium-81-gcc-template.patch"
 	"${FILESDIR}/chromium-81-gcc-noexcept.patch"
 	"${FILESDIR}/chromium-81-clang.patch"
+	"${FILESDIR}/chromium-81-defined-fix.patch"
 	"${FILESDIR}/enable-vaapi.patch"
 )
 
@@ -526,7 +527,9 @@ src_configure() {
 	myconf_gn+=" enable_platform_hevc=true"
 	myconf_gn+=" enable_hls_sample_aes=true"
 	myconf_gn+=" enable_platform_ac3_eac3_audio=true"
-	myconf_gn+=" enable_platform_mpeg_h_audio=true"
+	if use !system-ffmpeg; then
+		myconf_gn+=" enable_platform_mpeg_h_audio=true"
+	fi
 	myconf_gn+=" enable_platform_dolby_vision=true"
 	myconf_gn+=" enable_mse_mpeg2ts_stream_parser=true"
 
