@@ -20,38 +20,6 @@ index 1455a9f..cf19679 100644
      ":compiler_codegen",
      ":compiler_deterministic",
    ]
-@@ -496,31 +494,6 @@ config("compiler") {
-     }
-   }
- 
--  if (is_clang && !is_nacl && !use_xcode_clang) {
--    cflags += [ "-fcrash-diagnostics-dir=" +
--                rebase_path("//tools/clang/crashreports", root_build_dir) ]
--
--    cflags += [
--      # TODO(hans): Remove this once Clang generates better optimized debug info
--      # by default. https://crbug.com/765793
--      "-Xclang",
--      "-mllvm",
--      "-Xclang",
--      "-instcombine-lower-dbg-declare=0",
--    ]
--
--    if (llvm_force_head_revision) {
--      # Before Clang 10, lax vector conversions were allowed by default.
--      # Chromium currently relies on this behavior.
--      # TODO(crbug.com/1042470): Fix the code and remove this flag.
--      if (is_win) {
--        cflags += [ "/clang:-flax-vector-conversions=all" ]
--      } else if (cros_sdk_version == "") {
--        cflags += [ "-flax-vector-conversions=all" ]
--      }
--    }
--  }
--
-   # C11/C++11 compiler flags setup.
-   # ---------------------------
-   if (is_linux || is_android || (is_nacl && is_clang) || current_os == "aix") {
 @@ -1467,6 +1440,12 @@ config("default_warnings") {
          cflags_cc += [ "-Wno-class-memaccess" ]
        }
