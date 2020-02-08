@@ -60,7 +60,8 @@ pkg_setup() {
 src_prepare() {
 	default
 
-	replace-flags "-O3" "-O3 -fno-stack-protector"
+	# Filter -march flags as this has been causing issues
+	filter-flags "-march=*"
 
 	# Create versioned setup script
 	cp "setup_dxvk.sh" "dxvk-setup"
