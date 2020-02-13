@@ -142,15 +142,15 @@ For native file dialogs in KDE, install kde-apps/kdialog.
 "
 
 PATCHES=(
-	"${FILESDIR}/chromium-compiler-r12.patch"
+	"${FILESDIR}/chromium-compiler-r11.patch"
 	"${FILESDIR}/chromium-fix-char_traits.patch"
 	"${FILESDIR}/chromium-78-protobuf-export.patch"
 	"${FILESDIR}/chromium-79-gcc-alignas.patch"
 	"${FILESDIR}/chromium-80-gcc-quiche.patch"
 	"${FILESDIR}/chromium-80-gcc-blink.patch"
 	"${FILESDIR}/chromium-81-gcc-noexcept.patch"
+	"${FILESDIR}/chromium-81-gcc-constexpr.patch"
 	"${FILESDIR}/chromium-81-defined-fix.patch"
-	"${FILESDIR}/chromium-81-missing-files.patch"
 	"${FILESDIR}/enable-vaapi.patch"
 	"${FILESDIR}/vaapi-fix.patch"
 )
