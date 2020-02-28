@@ -1,0 +1,1354 @@
+From 0178bd23f1d72e1da8ec9b70381e887b96e2574f Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Thu, 27 Feb 2020 22:39:57 +0000
+Subject: [PATCH] [PATCH] Fix media error mojom serialization
+
+There were no checks in the StructTraits static getter methods, which
+was causing DCHECK's when used.
+
+Bug: 1043289
+Change-Id: Ic139687493bb1e03b369dda2f30301ee78aa8330
+Reviewed-on:
+https://chromium-review.googlesource.com/c/chromium/src/+/2067949
+Reviewed-by: Daniel Cheng <dcheng@chromium.org>
+Commit-Queue: Ted Meyer <tmathmeyer@chromium.org>
+Cr-Commit-Position: refs/heads/master@{#745141}
+---
+ media/base/BUILD.gn                           |   8 +-
+ media/base/ipc/media_param_traits_macros.h    |   4 +-
+ media/base/media_error.cc                     |  73 -----------
+ media/base/media_serializers.h                |  16 +--
+ media/base/status.cc                          |  72 +++++++++++
+ media/base/{media_error.h => status.h}        | 108 ++++++++--------
+ .../{media_error_codes.h => status_codes.h}   |  11 +-
+ ...a_error_unittest.cc => status_unittest.cc} | 116 +++++++++---------
+ media/gpu/windows/d3d11_h264_accelerator.cc   |  39 +++---
+ media/gpu/windows/d3d11_texture_wrapper.cc    |  10 +-
+ media/gpu/windows/d3d11_texture_wrapper.h     |   4 +-
+ media/mojo/mojom/media_error_mojom_traits.h   |  49 --------
+ media/mojo/mojom/media_types.mojom            |  12 +-
+ media/mojo/mojom/media_types.typemap          |   6 +-
+ .../{media_error.typemap => status.typemap}   |  10 +-
+ ...mojom_traits.cc => status_mojom_traits.cc} |  18 +--
+ media/mojo/mojom/status_mojom_traits.h        |  57 +++++++++
+ media/mojo/mojom/typemaps.gni                 |   2 +-
+ 18 files changed, 310 insertions(+), 305 deletions(-)
+ delete mode 100644 media/base/media_error.cc
+ create mode 100644 media/base/status.cc
+ rename media/base/{media_error.h => status.h} (65%)
+ rename media/base/{media_error_codes.h => status_codes.h} (82%)
+ rename media/base/{media_error_unittest.cc => status_unittest.cc} (66%)
+ delete mode 100644 media/mojo/mojom/media_error_mojom_traits.h
+ rename media/mojo/mojom/{media_error.typemap => status.typemap} (57%)
+ rename media/mojo/mojom/{media_error_mojom_traits.cc => status_mojom_traits.cc} (62%)
+ create mode 100644 media/mojo/mojom/status_mojom_traits.h
+
+diff --git a/media/base/BUILD.gn b/media/base/BUILD.gn
+index d87336e8f8..d9347bf680 100644
+--- a/media/base/BUILD.gn
++++ b/media/base/BUILD.gn
+@@ -176,9 +176,6 @@ jumbo_source_set("base") {
+     "media_content_type.cc",
+     "media_content_type.h",
+     "media_controller.h",
+-    "media_error.cc",
+-    "media_error.h",
+-    "media_error_codes.h",
+     "media_export.h",
+     "media_log.cc",
+     "media_log.h",
+@@ -268,6 +265,9 @@ jumbo_source_set("base") {
+     "simple_watch_timer.h",
+     "sinc_resampler.cc",
+     "sinc_resampler.h",
++    "status.cc",
++    "status.h",
++    "status_codes.h",
+     "stream_parser.cc",
+     "stream_parser.h",
+     "stream_parser_buffer.cc",
+@@ -540,7 +540,6 @@ source_set("unit_tests") {
+     "feedback_signal_accumulator_unittest.cc",
+     "frame_rate_estimator_unittest.cc",
+     "key_systems_unittest.cc",
+-    "media_error_unittest.cc",
+     "media_log_unittest.cc",
+     "media_serializers_unittest.cc",
+     "media_url_demuxer_unittest.cc",
+@@ -556,6 +555,7 @@ source_set("unit_tests") {
+     "serial_runner_unittest.cc",
+     "silent_sink_suspender_unittest.cc",
+     "sinc_resampler_unittest.cc",
++    "status_unittest.cc",
+     "stream_parser_unittest.cc",
+     "subsample_entry_unittest.cc",
+     "supported_types_unittest.cc",
+diff --git a/media/base/ipc/media_param_traits_macros.h b/media/base/ipc/media_param_traits_macros.h
+index dfd257ba69..3e09669bce 100644
+--- a/media/base/ipc/media_param_traits_macros.h
++++ b/media/base/ipc/media_param_traits_macros.h
+@@ -23,13 +23,13 @@
+ #include "media/base/eme_constants.h"
+ #include "media/base/encryption_scheme.h"
+ #include "media/base/hdr_metadata.h"
+-#include "media/base/media_error_codes.h"
+ #include "media/base/media_log_record.h"
+ #include "media/base/media_status.h"
+ #include "media/base/output_device_info.h"
+ #include "media/base/overlay_info.h"
+ #include "media/base/pipeline_status.h"
+ #include "media/base/sample_format.h"
++#include "media/base/status_codes.h"
+ #include "media/base/subsample_entry.h"
+ #include "media/base/video_codecs.h"
+ #include "media/base/video_color_space.h"
+@@ -148,7 +148,7 @@ IPC_ENUM_TRAITS_MAX_VALUE(media::VideoRotation, media::VIDEO_ROTATION_MAX)
+ IPC_ENUM_TRAITS_MAX_VALUE(media::container_names::MediaContainerName,
+                           media::container_names::CONTAINER_MAX)
+ 
+-IPC_ENUM_TRAITS_MAX_VALUE(media::ErrorCode, media::ErrorCode::kMaxValue)
++IPC_ENUM_TRAITS_MAX_VALUE(media::StatusCode, media::StatusCode::kMaxValue)
+ 
+ #if BUILDFLAG(ENABLE_MEDIA_DRM_STORAGE)
+ IPC_ENUM_TRAITS_MIN_MAX_VALUE(media::MediaDrmKeyType,
+diff --git a/media/base/media_error.cc b/media/base/media_error.cc
+deleted file mode 100644
+index c28c58ee96..0000000000
+--- a/media/base/media_error.cc
++++ /dev/null
+@@ -1,73 +0,0 @@
+-// Copyright 2020 The Chromium Authors. All rights reserved.
+-// Use of this source code is governed by a BSD-style license that can be
+-// found in the LICENSE file.
+-
+-#include "media/base/media_error.h"
+-#include <memory>
+-#include "media/base/media_serializers.h"
+-
+-namespace media {
+-
+-MediaError::MediaError() = default;
+-
+-MediaError::MediaError(ErrorCode code,
+-                       base::StringPiece message,
+-                       const base::Location& location) {
+-  DCHECK(code != ErrorCode::kOk);
+-  data_ = std::make_unique<MediaErrorInternal>(code, message.as_string());
+-  AddFrame(location);
+-}
+-
+-// Copy Constructor
+-MediaError::MediaError(const MediaError& copy) {
+-  *this = copy;
+-}
+-
+-MediaError& MediaError::operator=(const MediaError& copy) {
+-  if (copy.IsOk()) {
+-    data_.reset();
+-    return *this;
+-  }
+-
+-  data_ = std::make_unique<MediaErrorInternal>(copy.GetErrorCode(),
+-                                               copy.GetErrorMessage());
+-  for (const base::Value& frame : copy.data_->frames)
+-    data_->frames.push_back(frame.Clone());
+-  for (const MediaError& err : copy.data_->causes)
+-    data_->causes.push_back(err);
+-  data_->data = copy.data_->data.Clone();
+-  return *this;
+-}
+-
+-// Allow move.
+-MediaError::MediaError(MediaError&&) = default;
+-MediaError& MediaError::operator=(MediaError&&) = default;
+-
+-MediaError::~MediaError() = default;
+-
+-MediaError::MediaErrorInternal::MediaErrorInternal(ErrorCode code,
+-                                                   std::string message)
+-    : code(code),
+-      message(std::move(message)),
+-      data(base::Value(base::Value::Type::DICTIONARY)) {}
+-
+-MediaError::MediaErrorInternal::~MediaErrorInternal() = default;
+-
+-MediaError&& MediaError::AddHere(const base::Location& location) && {
+-  DCHECK(data_);
+-  AddFrame(location);
+-  return std::move(*this);
+-}
+-
+-MediaError&& MediaError::AddCause(MediaError&& cause) && {
+-  DCHECK(data_ && cause.data_);
+-  data_->causes.push_back(std::move(cause));
+-  return std::move(*this);
+-}
+-
+-void MediaError::AddFrame(const base::Location& location) {
+-  DCHECK(data_);
+-  data_->frames.push_back(MediaSerialize(location));
+-}
+-
+-}  // namespace media
+diff --git a/media/base/media_serializers.h b/media/base/media_serializers.h
+index 46c44f95ec..d82517db1d 100644
+--- a/media/base/media_serializers.h
++++ b/media/base/media_serializers.h
+@@ -11,9 +11,9 @@
+ #include "base/strings/stringprintf.h"
+ #include "media/base/audio_decoder_config.h"
+ #include "media/base/buffering_state.h"
+-#include "media/base/media_error.h"
+-#include "media/base/media_error_codes.h"
+ #include "media/base/media_serializers_base.h"
++#include "media/base/status.h"
++#include "media/base/status_codes.h"
+ #include "media/base/video_decoder_config.h"
+ #include "ui/gfx/geometry/size.h"
+ 
+@@ -349,22 +349,22 @@ struct MediaSerializer<media::SerializableBufferingState<T>> {
+ 
+ // enum (simple)
+ template <>
+-struct MediaSerializer<media::ErrorCode> {
+-  static inline base::Value Serialize(media::ErrorCode code) {
++struct MediaSerializer<media::StatusCode> {
++  static inline base::Value Serialize(media::StatusCode code) {
+     return base::Value(static_cast<int>(code));
+   }
+ };
+ 
+ // Class (complex)
+ template <>
+-struct MediaSerializer<media::MediaError> {
+-  static base::Value Serialize(const media::MediaError& err) {
++struct MediaSerializer<media::Status> {
++  static base::Value Serialize(const media::Status& err) {
+     if (err.IsOk())
+       return base::Value("Ok");
+ 
+     base::Value result(base::Value::Type::DICTIONARY);
+-    FIELD_SERIALIZE("error_code", err.GetErrorCode());
+-    FIELD_SERIALIZE("error_message", err.GetErrorMessage());
++    FIELD_SERIALIZE("status_code", err.code());
++    FIELD_SERIALIZE("status_message", err.message());
+     FIELD_SERIALIZE("stack", err.data_->frames);
+     FIELD_SERIALIZE("data", err.data_->data);
+     FIELD_SERIALIZE("causes", err.data_->causes);
+diff --git a/media/base/status.cc b/media/base/status.cc
+new file mode 100644
+index 0000000000..ddcee2be85
+--- /dev/null
++++ b/media/base/status.cc
+@@ -0,0 +1,72 @@
++// Copyright 2020 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "media/base/status.h"
++
++#include <memory>
++#include "media/base/media_serializers.h"
++
++namespace media {
++
++Status::Status() = default;
++
++Status::Status(StatusCode code,
++               base::StringPiece message,
++               const base::Location& location) {
++  DCHECK(code != StatusCode::kOk);
++  data_ = std::make_unique<StatusInternal>(code, message.as_string());
++  AddFrame(location);
++}
++
++// Copy Constructor
++Status::Status(const Status& copy) {
++  *this = copy;
++}
++
++Status& Status::operator=(const Status& copy) {
++  if (copy.IsOk()) {
++    data_.reset();
++    return *this;
++  }
++
++  data_ = std::make_unique<StatusInternal>(copy.code(), copy.message());
++  for (const base::Value& frame : copy.data_->frames)
++    data_->frames.push_back(frame.Clone());
++  for (const Status& err : copy.data_->causes)
++    data_->causes.push_back(err);
++  data_->data = copy.data_->data.Clone();
++  return *this;
++}
++
++// Allow move.
++Status::Status(Status&&) = default;
++Status& Status::operator=(Status&&) = default;
++
++Status::~Status() = default;
++
++Status::StatusInternal::StatusInternal(StatusCode code, std::string message)
++    : code(code),
++      message(std::move(message)),
++      data(base::Value(base::Value::Type::DICTIONARY)) {}
++
++Status::StatusInternal::~StatusInternal() = default;
++
++Status&& Status::AddHere(const base::Location& location) && {
++  DCHECK(data_);
++  AddFrame(location);
++  return std::move(*this);
++}
++
++Status&& Status::AddCause(Status&& cause) && {
++  DCHECK(data_ && cause.data_);
++  data_->causes.push_back(std::move(cause));
++  return std::move(*this);
++}
++
++void Status::AddFrame(const base::Location& location) {
++  DCHECK(data_);
++  data_->frames.push_back(MediaSerialize(location));
++}
++
++}  // namespace media
+diff --git a/media/base/media_error.h b/media/base/status.h
+similarity index 65%
+rename from media/base/media_error.h
+rename to media/base/status.h
+index d3ba96c5a6..1ee87013a2 100644
+--- a/media/base/media_error.h
++++ b/media/base/status.h
+@@ -2,8 +2,8 @@
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+-#ifndef MEDIA_BASE_MEDIA_ERROR_H_
+-#define MEDIA_BASE_MEDIA_ERROR_H_
++#ifndef MEDIA_BASE_STATUS_H_
++#define MEDIA_BASE_STATUS_H_
+ 
+ #include <memory>
+ #include <string>
+@@ -13,9 +13,9 @@
+ #include "base/location.h"
+ #include "base/strings/string_piece.h"
+ #include "base/values.h"
+-#include "media/base/media_error_codes.h"
+ #include "media/base/media_export.h"
+ #include "media/base/media_serializers_base.h"
++#include "media/base/status_codes.h"
+ 
+ // Mojo namespaces for serialization friend declarations.
+ namespace mojo {
+@@ -26,78 +26,80 @@ struct StructTraits;
+ namespace media {
+ 
+ namespace mojom {
+-class MediaErrorDataView;
++class StatusDataView;
+ }
+ 
+-// MediaError is meant to be a relatively small (sizeof(void*) bytes) object
+-// that can be returned as an error value from functions or passed to callbacks
+-// that want a report of status. MediaError allows attaching of arbitrary named
+-// data, other MediaErrors as causes, and stack frames, which can all be logged
+-// and reported throughout the media stack. The error code and message are
++// Status is meant to be a relatively small (sizeof(void*) bytes) object
++// that can be returned as a status value from functions or passed to callbacks
++// that want a report of status. Status allows attaching of arbitrary named
++// data, other Status' as causes, and stack frames, which can all be logged
++// and reported throughout the media stack. The status code and message are
+ // immutable and can be used to give a stable numeric ID for any error
+ // generated by media code.
+ // There is also an OK state which can't hold any data and is only for
+ // successful returns.
+-class MEDIA_EXPORT MediaError {
++class MEDIA_EXPORT Status {
+  public:
+   // Convenience function to return |kOk|.
+   // OK won't have a message, trace, or data associated with them, and DCHECK
+   // if they are added.
+-  static MediaError Ok() { return MediaError(); }
++  static Status Ok() { return Status(); }
+ 
+-  // Constructor to create a new MediaError from a numeric code & message.
++  // Default constructor can be used for Status::Ok();
++  Status();
++
++  // Constructor to create a new Status from a numeric code & message.
+   // These are immutable; if you'd like to change them, then you likely should
+-  // create a new MediaError.
++  // create a new Status. {} or Status::Ok() should be used to create a
++  // success status.
+   // NOTE: This should never be given a location parameter when called - It is
+   // defaulted in order to grab the caller location.
+-  MediaError(ErrorCode code,
+-             base::StringPiece message = "",
+-             const base::Location& location = base::Location::Current());
++  Status(StatusCode code,
++         base::StringPiece message = "",
++         const base::Location& location = base::Location::Current());
+ 
+   // Copy Constructor & assignment. (Mojo uses both of these)
+-  MediaError(const MediaError&);
+-  MediaError& operator=(const MediaError&);
++  Status(const Status&);
++  Status& operator=(const Status&);
+ 
+   // Allows move.
+-  MediaError(MediaError&&);
+-  MediaError& operator=(MediaError&&);
++  Status(Status&&);
++  Status& operator=(Status&&);
+ 
+   // Needs an out of line destructor...
+-  ~MediaError();
++  ~Status();
+ 
+   bool IsOk() const { return !data_; }
+ 
+   // Getters for internal fields
+-  const std::string& GetErrorMessage() const {
++  const std::string& message() const {
+     DCHECK(data_);
+     return data_->message;
+   }
+ 
+-  ErrorCode GetErrorCode() const {
+-    return data_ ? data_->code : ErrorCode::kOk;
+-  }
++  StatusCode code() const { return data_ ? data_->code : StatusCode::kOk; }
+ 
+-  // Adds the current location to MediaError as it’s passed upwards.
++  // Adds the current location to Status as it’s passed upwards.
+   // This does not need to be called at every location that touches it, but
+   // should be called for those locations where the path is ambiguous or
+   // critical. This can be especially helpful across IPC boundaries. This will
+   // fail on an OK status.
+   // NOTE: This should never be given a parameter when called - It is defaulted
+   // in order to grab the caller location.
+-  MediaError&& AddHere(
++  Status&& AddHere(
+       const base::Location& location = base::Location::Current()) &&;
+ 
+   // Add |cause| as the error that triggered this one.  For example,
+   // DecoderStream might return kDecoderSelectionFailed with one or more causes
+   // that are the specific errors from the decoders that it tried.
+-  MediaError&& AddCause(MediaError&& cause) &&;
+-  void AddCause(MediaError&& cause) &;
++  Status&& AddCause(Status&& cause) &&;
++  void AddCause(Status&& cause) &;
+ 
+   // Allows us to append any datatype which can be converted to
+   // an int/bool/string/base::Value. Any existing data associated with |key|
+   // will be overwritten by |value|. This will fail on an OK status.
+   template <typename T>
+-  MediaError&& WithData(const char* key, const T& value) && {
++  Status&& WithData(const char* key, const T& value) && {
+     DCHECK(data_);
+     data_->data.SetKey(key, MediaSerialize(value));
+     return std::move(*this);
+@@ -110,60 +112,56 @@ class MEDIA_EXPORT MediaError {
+   }
+ 
+  private:
+-  // Default constructor can be used for MediaError::Ok();
+-  MediaError();
+-
+   // Private helper to add the current stack frame to the error trace.
+   void AddFrame(const base::Location& location);
+ 
+   // Keep the internal data in a unique ptr to minimize size of OK errors.
+-  struct MEDIA_EXPORT MediaErrorInternal {
+-    MediaErrorInternal(ErrorCode code, std::string message);
+-    ~MediaErrorInternal();
++  struct MEDIA_EXPORT StatusInternal {
++    StatusInternal(StatusCode code, std::string message);
++    ~StatusInternal();
+ 
+     // The current error code
+-    ErrorCode code = ErrorCode::kOk;
++    StatusCode code = StatusCode::kOk;
+ 
+     // The current error message (Can be used for
+-    // https://developer.mozilla.org/en-US/docs/Web/API/MediaError)
++    // https://developer.mozilla.org/en-US/docs/Web/API/Status)
+     std::string message;
+ 
+     // Stack frames
+     std::vector<base::Value> frames;
+ 
+     // Causes
+-    std::vector<MediaError> causes;
++    std::vector<Status> causes;
+ 
+     // Data attached to the error
+     base::Value data;
+   };
+ 
+   // Allow self-serialization
+-  friend struct internal::MediaSerializer<MediaError>;
++  friend struct internal::MediaSerializer<Status>;
+ 
+   // Allow mojo-serialization
+-  friend struct std::allocator<MediaError>;
+-  friend struct mojo::StructTraits<media::mojom::MediaErrorDataView,
+-                                   MediaError>;
++  friend struct std::allocator<Status>;
++  friend struct mojo::StructTraits<media::mojom::StatusDataView, Status>;
+ 
+   // A null internals is an implicit OK.
+-  std::unique_ptr<MediaErrorInternal> data_;
++  std::unique_ptr<StatusInternal> data_;
+ };
+ 
+ // We need this two step macro to allow calling with no extra args - in a single
+ // step macro we would have no way of removing the trailing comma after the
+ // code.
+-#define MEDIA_ERROR(CODE_TRUNC, ...) \
+-  MEDIA_ERROR_INTERNAL(::media::ErrorCode::CODE_TRUNC, ##__VA_ARGS__)
++#define STATUS(CODE_TRUNC, ...) \
++  STATUS_INTERNAL(::media::StatusCode::CODE_TRUNC, ##__VA_ARGS__)
+ 
+-#define MEDIA_ERROR_INTERNAL(...) ::media::MediaError(__VA_ARGS__)
++#define STATUS_INTERNAL(...) ::media::Status(__VA_ARGS__)
+ 
+-// Helper class to allow returning a |T| or a MediaError.  Typical usage:
++// Helper class to allow returning a |T| or a Status.  Typical usage:
+ //
+ // ErrorOr<std::unique_ptr<MyObject>> FactoryFn() {
+ //   if (success)
+ //     return std::make_unique<MyObject>();
+-//   return MediaError(ErrorCodes::kSomethingBadHappened);
++//   return Status(StatusCodes::kSomethingBadHappened);
+ // }
+ //
+ // auto result = FactoryFn();
+@@ -186,10 +184,10 @@ class MEDIA_EXPORT MediaError {
+ template <typename T>
+ class ErrorOr {
+  public:
+-  // All of these may be implicit, so that one may just return MediaError or
++  // All of these may be implicit, so that one may just return Status or
+   // the value in question.
+-  ErrorOr(MediaError&& error) : error_(std::move(error)) {}
+-  ErrorOr(const MediaError& error) : error_(error) {}
++  ErrorOr(Status&& error) : error_(std::move(error)) {}
++  ErrorOr(const Status& error) : error_(error) {}
+   ErrorOr(T&& value) : value_(std::move(value)) {}
+   ErrorOr(const T& value) : value_(value) {}
+ 
+@@ -209,17 +207,17 @@ class ErrorOr {
+ 
+   // Return the error, if we have one.  Up to the caller to make sure that we
+   // have one via |!has_value()|.
+-  MediaError& error() { return *error_; }
++  Status& error() { return *error_; }
+ 
+   // Return a ref to the value.  It's up to the caller to verify that we have a
+   // value before calling this.
+   T& value() { return *value_; }
+ 
+  private:
+-  base::Optional<MediaError> error_;
++  base::Optional<Status> error_;
+   base::Optional<T> value_;
+ };
+ 
+ }  // namespace media
+ 
+-#endif  // MEDIA_BASE_MEDIA_ERROR_H_
++#endif  // MEDIA_BASE_STATUS_H_
+diff --git a/media/base/media_error_codes.h b/media/base/status_codes.h
+similarity index 82%
+rename from media/base/media_error_codes.h
+rename to media/base/status_codes.h
+index 776a24eab6..7a274fc5a8 100644
+--- a/media/base/media_error_codes.h
++++ b/media/base/status_codes.h
+@@ -2,8 +2,8 @@
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+-#ifndef MEDIA_BASE_MEDIA_ERROR_CODES_H_
+-#define MEDIA_BASE_MEDIA_ERROR_CODES_H_
++#ifndef MEDIA_BASE_STATUS_CODES_H_
++#define MEDIA_BASE_STATUS_CODES_H_
+ 
+ namespace media {
+ 
+@@ -16,7 +16,7 @@ namespace media {
+ //     │ └─ group code
+ //     └─ reserved for now
+ // 256 groups is more than anyone will ever need on a computer.
+-enum class ErrorCode : uint32_t {
++enum class StatusCode : int32_t {
+   kOk = 0,
+ 
+   // Decoder Errors: 0x01
+@@ -34,10 +34,11 @@ enum class ErrorCode : uint32_t {
+   kCouldNotPostTexture = 0x00000302,
+   kCouldNotPostAcquireStream = 0x00000303,
+ 
+-  kCodeOnlyForTesting = std::numeric_limits<uint32_t>::max(),
++  // Reserved errors
++  kCodeOnlyForTesting = std::numeric_limits<int32_t>::max(),
+   kMaxValue = kCodeOnlyForTesting,
+ };
+ 
+ }  // namespace media
+ 
+-#endif  // MEDIA_BASE_MEDIA_ERROR_CODES_H_
++#endif  // MEDIA_BASE_STATUS_CODES_H_
+diff --git a/media/base/media_error_unittest.cc b/media/base/status_unittest.cc
+similarity index 66%
+rename from media/base/media_error_unittest.cc
+rename to media/base/status_unittest.cc
+index 5f942f38f1..57c7722c40 100644
+--- a/media/base/media_error_unittest.cc
++++ b/media/base/status_unittest.cc
+@@ -7,8 +7,8 @@
+ 
+ #include "base/json/json_writer.h"
+ #include "base/macros.h"
+-#include "media/base/media_error.h"
+ #include "media/base/media_serializers.h"
++#include "media/base/status.h"
+ #include "media/base/test_helpers.h"
+ #include "testing/gtest/include/gtest/gtest.h"
+ 
+@@ -34,15 +34,13 @@ struct MediaSerializer<UselessThingToBeSerialized> {
+ }  // namespace internal
+ 
+ // Friend class of MediaLog for access to internal constants.
+-class MediaErrorTest : public testing::Test {
++class StatusTest : public testing::Test {
+  public:
+-  MediaError DontFail() { return MediaError::Ok(); }
++  Status DontFail() { return Status::Ok(); }
+ 
+-  MediaError FailEasily() {
+-    return MEDIA_ERROR(kCodeOnlyForTesting, "Message");
+-  }
++  Status FailEasily() { return STATUS(kCodeOnlyForTesting, "Message"); }
+ 
+-  MediaError FailRecursively(unsigned int count) {
++  Status FailRecursively(unsigned int count) {
+     if (!count) {
+       return FailEasily();
+     }
+@@ -50,17 +48,17 @@ class MediaErrorTest : public testing::Test {
+   }
+ 
+   template <typename T>
+-  MediaError FailWithData(const char* key, const T& t) {
+-    return MediaError(ErrorCode::kCodeOnlyForTesting, "Message", FROM_HERE)
++  Status FailWithData(const char* key, const T& t) {
++    return Status(StatusCode::kCodeOnlyForTesting, "Message", FROM_HERE)
+         .WithData(key, t);
+   }
+ 
+-  MediaError FailWithCause() {
+-    MediaError err = FailEasily();
++  Status FailWithCause() {
++    Status err = FailEasily();
+     return FailEasily().AddCause(std::move(err));
+   }
+ 
+-  MediaError DoSomethingGiveItBack(MediaError me) {
++  Status DoSomethingGiveItBack(Status me) {
+     me.WithData("data", "Hey you! psst! Help me outta here! I'm trapped!");
+     return me;
+   }
+@@ -69,23 +67,23 @@ class MediaErrorTest : public testing::Test {
+   ErrorOr<std::unique_ptr<int>> TypicalErrorOrUsage(bool succeed) {
+     if (succeed)
+       return std::make_unique<int>(123);
+-    return MediaError(ErrorCode::kCodeOnlyForTesting);
++    return Status(StatusCode::kCodeOnlyForTesting);
+   }
+ };
+ 
+-TEST_F(MediaErrorTest, StaticOKMethodGivesCorrectSerialization) {
+-  MediaError ok = DontFail();
++TEST_F(StatusTest, StaticOKMethodGivesCorrectSerialization) {
++  Status ok = DontFail();
+   base::Value actual = MediaSerialize(ok);
+   ASSERT_EQ(actual.GetString(), "Ok");
+ }
+ 
+-TEST_F(MediaErrorTest, SingleLayerError) {
+-  MediaError failed = FailEasily();
++TEST_F(StatusTest, SingleLayerError) {
++  Status failed = FailEasily();
+   base::Value actual = MediaSerialize(failed);
+   ASSERT_EQ(actual.DictSize(), 5ul);
+-  ASSERT_EQ(actual.FindIntPath("error_code"),
+-            static_cast<int>(ErrorCode::kCodeOnlyForTesting));
+-  ASSERT_EQ(*actual.FindStringPath("error_message"), "Message");
++  ASSERT_EQ(actual.FindIntPath("status_code"),
++            static_cast<int32_t>(StatusCode::kCodeOnlyForTesting));
++  ASSERT_EQ(*actual.FindStringPath("status_message"), "Message");
+   ASSERT_EQ(actual.FindListPath("stack")->GetList().size(), 1ul);
+   ASSERT_EQ(actual.FindListPath("causes")->GetList().size(), 0ul);
+   ASSERT_EQ(actual.FindDictPath("data")->DictSize(), 0ul);
+@@ -94,18 +92,18 @@ TEST_F(MediaErrorTest, SingleLayerError) {
+   ASSERT_EQ(stack[0].DictSize(), 2ul);  // line and file
+ 
+   // This is a bit fragile, since it's dependent on the file layout.
+-  ASSERT_EQ(stack[0].FindIntPath("line").value_or(-1), 42);
++  ASSERT_EQ(stack[0].FindIntPath("line").value_or(-1), 41);
+   ASSERT_THAT(*stack[0].FindStringPath("file"),
+-              HasSubstr("media_error_unittest.cc"));
++              HasSubstr("status_unittest.cc"));
+ }
+ 
+-TEST_F(MediaErrorTest, MultipleErrorLayer) {
+-  MediaError failed = FailRecursively(3);
++TEST_F(StatusTest, MultipleErrorLayer) {
++  Status failed = FailRecursively(3);
+   base::Value actual = MediaSerialize(failed);
+   ASSERT_EQ(actual.DictSize(), 5ul);
+-  ASSERT_EQ(actual.FindIntPath("error_code"),
+-            static_cast<int>(ErrorCode::kCodeOnlyForTesting));
+-  ASSERT_EQ(*actual.FindStringPath("error_message"), "Message");
++  ASSERT_EQ(actual.FindIntPath("status_code").value_or(-1),
++            static_cast<int32_t>(StatusCode::kCodeOnlyForTesting));
++  ASSERT_EQ(*actual.FindStringPath("status_message"), "Message");
+   ASSERT_EQ(actual.FindListPath("stack")->GetList().size(), 4ul);
+   ASSERT_EQ(actual.FindListPath("causes")->GetList().size(), 0ul);
+   ASSERT_EQ(actual.FindDictPath("data")->DictSize(), 0ul);
+@@ -114,13 +112,13 @@ TEST_F(MediaErrorTest, MultipleErrorLayer) {
+   ASSERT_EQ(stack[0].DictSize(), 2ul);  // line and file
+ }
+ 
+-TEST_F(MediaErrorTest, CanHaveData) {
+-  MediaError failed = FailWithData("example", "data");
++TEST_F(StatusTest, CanHaveData) {
++  Status failed = FailWithData("example", "data");
+   base::Value actual = MediaSerialize(failed);
+   ASSERT_EQ(actual.DictSize(), 5ul);
+-  ASSERT_EQ(actual.FindIntPath("error_code"),
+-            static_cast<int>(ErrorCode::kCodeOnlyForTesting));
+-  ASSERT_EQ(*actual.FindStringPath("error_message"), "Message");
++  ASSERT_EQ(actual.FindIntPath("status_code").value_or(-1),
++            static_cast<int32_t>(StatusCode::kCodeOnlyForTesting));
++  ASSERT_EQ(*actual.FindStringPath("status_message"), "Message");
+   ASSERT_EQ(actual.FindListPath("stack")->GetList().size(), 1ul);
+   ASSERT_EQ(actual.FindListPath("causes")->GetList().size(), 0ul);
+   ASSERT_EQ(actual.FindDictPath("data")->DictSize(), 1ul);
+@@ -131,13 +129,13 @@ TEST_F(MediaErrorTest, CanHaveData) {
+   ASSERT_EQ(*actual.FindDictPath("data")->FindStringPath("example"), "data");
+ }
+ 
+-TEST_F(MediaErrorTest, CanUseCustomSerializer) {
+-  MediaError failed = FailWithData("example", UselessThingToBeSerialized("F"));
++TEST_F(StatusTest, CanUseCustomSerializer) {
++  Status failed = FailWithData("example", UselessThingToBeSerialized("F"));
+   base::Value actual = MediaSerialize(failed);
+   ASSERT_EQ(actual.DictSize(), 5ul);
+-  ASSERT_EQ(actual.FindIntPath("error_code"),
+-            static_cast<int>(ErrorCode::kCodeOnlyForTesting));
+-  ASSERT_EQ(*actual.FindStringPath("error_message"), "Message");
++  ASSERT_EQ(actual.FindIntPath("status_code"),
++            static_cast<int32_t>(StatusCode::kCodeOnlyForTesting));
++  ASSERT_EQ(*actual.FindStringPath("status_message"), "Message");
+   ASSERT_EQ(actual.FindListPath("stack")->GetList().size(), 1ul);
+   ASSERT_EQ(actual.FindListPath("causes")->GetList().size(), 0ul);
+   ASSERT_EQ(actual.FindDictPath("data")->DictSize(), 1ul);
+@@ -148,51 +146,51 @@ TEST_F(MediaErrorTest, CanUseCustomSerializer) {
+   ASSERT_EQ(*actual.FindDictPath("data")->FindStringPath("example"), "F");
+ }
+ 
+-TEST_F(MediaErrorTest, CausedByHasVector) {
+-  MediaError causal = FailWithCause();
++TEST_F(StatusTest, CausedByHasVector) {
++  Status causal = FailWithCause();
+   base::Value actual = MediaSerialize(causal);
+   ASSERT_EQ(actual.DictSize(), 5ul);
+-  ASSERT_EQ(actual.FindIntPath("error_code"),
+-            static_cast<int>(ErrorCode::kCodeOnlyForTesting));
+-  ASSERT_EQ(*actual.FindStringPath("error_message"), "Message");
++  ASSERT_EQ(actual.FindIntPath("status_code").value_or(-1),
++            static_cast<int32_t>(StatusCode::kCodeOnlyForTesting));
++  ASSERT_EQ(*actual.FindStringPath("status_message"), "Message");
+   ASSERT_EQ(actual.FindListPath("stack")->GetList().size(), 1ul);
+   ASSERT_EQ(actual.FindListPath("causes")->GetList().size(), 1ul);
+   ASSERT_EQ(actual.FindDictPath("data")->DictSize(), 0ul);
+ 
+   base::Value& nested = actual.FindListPath("causes")->GetList()[0];
+   ASSERT_EQ(nested.DictSize(), 5ul);
+-  ASSERT_EQ(nested.FindIntPath("error_code"),
+-            static_cast<int>(ErrorCode::kCodeOnlyForTesting));
+-  ASSERT_EQ(*nested.FindStringPath("error_message"), "Message");
++  ASSERT_EQ(nested.FindIntPath("status_code").value_or(-1),
++            static_cast<int32_t>(StatusCode::kCodeOnlyForTesting));
++  ASSERT_EQ(*nested.FindStringPath("status_message"), "Message");
+   ASSERT_EQ(nested.FindListPath("stack")->GetList().size(), 1ul);
+   ASSERT_EQ(nested.FindListPath("causes")->GetList().size(), 0ul);
+   ASSERT_EQ(nested.FindDictPath("data")->DictSize(), 0ul);
+ }
+ 
+-TEST_F(MediaErrorTest, CanCopyEasily) {
+-  MediaError failed = FailEasily();
+-  MediaError withData = DoSomethingGiveItBack(failed);
++TEST_F(StatusTest, CanCopyEasily) {
++  Status failed = FailEasily();
++  Status withData = DoSomethingGiveItBack(failed);
+ 
+   base::Value actual = MediaSerialize(failed);
+   ASSERT_EQ(actual.DictSize(), 5ul);
+-  ASSERT_EQ(actual.FindIntPath("error_code"),
+-            static_cast<int>(ErrorCode::kCodeOnlyForTesting));
+-  ASSERT_EQ(*actual.FindStringPath("error_message"), "Message");
++  ASSERT_EQ(actual.FindIntPath("status_code"),
++            static_cast<int32_t>(StatusCode::kCodeOnlyForTesting));
++  ASSERT_EQ(*actual.FindStringPath("status_message"), "Message");
+   ASSERT_EQ(actual.FindListPath("stack")->GetList().size(), 1ul);
+   ASSERT_EQ(actual.FindListPath("causes")->GetList().size(), 0ul);
+   ASSERT_EQ(actual.FindDictPath("data")->DictSize(), 0ul);
+ 
+   actual = MediaSerialize(withData);
+   ASSERT_EQ(actual.DictSize(), 5ul);
+-  ASSERT_EQ(actual.FindIntPath("error_code"),
+-            static_cast<int>(ErrorCode::kCodeOnlyForTesting));
+-  ASSERT_EQ(*actual.FindStringPath("error_message"), "Message");
++  ASSERT_EQ(actual.FindIntPath("status_code"),
++            static_cast<int32_t>(StatusCode::kCodeOnlyForTesting));
++  ASSERT_EQ(*actual.FindStringPath("status_message"), "Message");
+   ASSERT_EQ(actual.FindListPath("stack")->GetList().size(), 1ul);
+   ASSERT_EQ(actual.FindListPath("causes")->GetList().size(), 0ul);
+   ASSERT_EQ(actual.FindDictPath("data")->DictSize(), 1ul);
+ }
+ 
+-TEST_F(MediaErrorTest, ErrorOrTypicalUsage) {
++TEST_F(StatusTest, ErrorOrTypicalUsage) {
+   // Mostly so we have some code coverage on the default usage.
+   EXPECT_TRUE(TypicalErrorOrUsage(true).has_value());
+   EXPECT_FALSE(TypicalErrorOrUsage(true).has_error());
+@@ -200,7 +198,7 @@ TEST_F(MediaErrorTest, ErrorOrTypicalUsage) {
+   EXPECT_TRUE(TypicalErrorOrUsage(false).has_error());
+ }
+ 
+-TEST_F(MediaErrorTest, ErrorOrWithMoveOnlyType) {
++TEST_F(StatusTest, ErrorOrWithMoveOnlyType) {
+   ErrorOr<std::unique_ptr<int>> error_or(std::make_unique<int>(123));
+   EXPECT_TRUE(error_or.has_value());
+   EXPECT_FALSE(error_or.has_error());
+@@ -210,7 +208,7 @@ TEST_F(MediaErrorTest, ErrorOrWithMoveOnlyType) {
+   EXPECT_EQ(*result, 123);
+ }
+ 
+-TEST_F(MediaErrorTest, ErrorOrWithCopyableType) {
++TEST_F(StatusTest, ErrorOrWithCopyableType) {
+   ErrorOr<int> error_or(123);
+   EXPECT_TRUE(error_or.has_value());
+   EXPECT_FALSE(error_or.has_error());
+@@ -220,7 +218,7 @@ TEST_F(MediaErrorTest, ErrorOrWithCopyableType) {
+   EXPECT_EQ(error_or.value(), 123);
+ }
+ 
+-TEST_F(MediaErrorTest, ErrorOrMoveConstructionAndAssignment) {
++TEST_F(StatusTest, ErrorOrMoveConstructionAndAssignment) {
+   // Make sure that we can move-construct and move-assign a move-only value.
+   ErrorOr<std::unique_ptr<int>> error_or_0(std::make_unique<int>(123));
+ 
+@@ -235,7 +233,7 @@ TEST_F(MediaErrorTest, ErrorOrMoveConstructionAndAssignment) {
+   EXPECT_EQ(*value, 123);
+ }
+ 
+-TEST_F(MediaErrorTest, ErrorOrCopyWorks) {
++TEST_F(StatusTest, ErrorOrCopyWorks) {
+   // Make sure that we can move-construct and move-assign a move-only value.
+   ErrorOr<int> error_or_0(123);
+   ErrorOr<int> error_or_1(std::move(error_or_0));
+diff --git a/media/gpu/windows/d3d11_h264_accelerator.cc b/media/gpu/windows/d3d11_h264_accelerator.cc
+index 159ea223e2..b1e6e5edd7 100644
+--- a/media/gpu/windows/d3d11_h264_accelerator.cc
++++ b/media/gpu/windows/d3d11_h264_accelerator.cc
+@@ -25,7 +25,7 @@
+ 
+ namespace media {
+ 
+-using Status = H264Decoder::H264Accelerator::Status;
++using DecoderStatus = H264Decoder::H264Accelerator::Status;
+ 
+ namespace {
+ 
+@@ -90,7 +90,7 @@ scoped_refptr<H264Picture> D3D11H264Accelerator::CreateH264Picture() {
+   return base::MakeRefCounted<D3D11H264Picture>(picture);
+ }
+ 
+-Status D3D11H264Accelerator::SubmitFrameMetadata(
++DecoderStatus D3D11H264Accelerator::SubmitFrameMetadata(
+     const H264SPS* sps,
+     const H264PPS* pps,
+     const H264DPB& dpb,
+@@ -110,7 +110,7 @@ Status D3D11H264Accelerator::SubmitFrameMetadata(
+         CdmProxy::KeyType::kDecryptAndDecode, pic->decrypt_config()->key_id());
+     if (!decrypt_context) {
+       RecordFailure("Cannot find decrypt context for the frame.");
+-      return Status::kTryAgain;
++      return DecoderStatus::kTryAgain;
+     }
+ 
+     content_key =
+@@ -136,7 +136,7 @@ Status D3D11H264Accelerator::SubmitFrameMetadata(
+       ;
+     } else if (!SUCCEEDED(hr)) {
+       RecordFailure("DecoderBeginFrame failed", hr);
+-      return Status::kFail;
++      return DecoderStatus::kFail;
+     } else {
+       break;
+     }
+@@ -171,7 +171,7 @@ Status D3D11H264Accelerator::SubmitFrameMetadata(
+     non_existing_frame_flags_ |= (our_ref_pic->nonexisting) << i;
+   }
+   slice_info_.clear();
+-  return RetrieveBitstreamBuffer() ? Status::kOk : Status::kFail;
++  return RetrieveBitstreamBuffer() ? DecoderStatus::kOk : DecoderStatus::kFail;
+ }
+ 
+ bool D3D11H264Accelerator::RetrieveBitstreamBuffer() {
+@@ -321,7 +321,7 @@ void D3D11H264Accelerator::PicParamsFromPic(DXVA_PicParams_H264* pic_param,
+   }
+ }
+ 
+-Status D3D11H264Accelerator::SubmitSlice(
++DecoderStatus D3D11H264Accelerator::SubmitSlice(
+     const H264PPS* pps,
+     const H264SliceHeader* slice_hdr,
+     const H264Picture::Vector& ref_pic_list0,
+@@ -336,7 +336,7 @@ Status D3D11H264Accelerator::SubmitSlice(
+ 
+   PicParamsFromSPS(&pic_param, &sps_, slice_hdr->field_pic_flag);
+   if (!PicParamsFromPPS(&pic_param, pps))
+-    return Status::kFail;
++    return DecoderStatus::kFail;
+   PicParamsFromSliceHeader(&pic_param, slice_hdr);
+   PicParamsFromPic(&pic_param, std::move(pic));
+ 
+@@ -358,7 +358,7 @@ Status D3D11H264Accelerator::SubmitSlice(
+       &buffer_size, &buffer);
+   if (!SUCCEEDED(hr)) {
+     RecordFailure("ReleaseDecoderBuffer (PictureParams) failed", hr);
+-    return Status::kFail;
++    return DecoderStatus::kFail;
+   }
+ 
+   memcpy(buffer, &pic_param, sizeof(pic_param));
+@@ -366,7 +366,7 @@ Status D3D11H264Accelerator::SubmitSlice(
+       video_decoder_.Get(), D3D11_VIDEO_DECODER_BUFFER_PICTURE_PARAMETERS);
+   if (!SUCCEEDED(hr)) {
+     RecordFailure("ReleaseDecoderBuffer (PictureParams) failed", hr);
+-    return Status::kFail;
++    return DecoderStatus::kFail;
+   }
+ 
+   DXVA_Qmatrix_H264 iq_matrix_buf = {};
+@@ -398,7 +398,7 @@ Status D3D11H264Accelerator::SubmitSlice(
+       &buffer);
+   if (!SUCCEEDED(hr)) {
+     RecordFailure("GetDecoderBuffer (QuantMatrix) failed", hr);
+-    return Status::kFail;
++    return DecoderStatus::kFail;
+   }
+   memcpy(buffer, &iq_matrix_buf, sizeof(iq_matrix_buf));
+   hr = video_context_->ReleaseDecoderBuffer(
+@@ -406,7 +406,7 @@ Status D3D11H264Accelerator::SubmitSlice(
+       D3D11_VIDEO_DECODER_BUFFER_INVERSE_QUANTIZATION_MATRIX);
+   if (!SUCCEEDED(hr)) {
+     RecordFailure("ReleaseDecoderBuffer (QuantMatrix) failed", hr);
+-    return Status::kFail;
++    return DecoderStatus::kFail;
+   }
+ 
+   // Ideally all slices in a frame are put in the same bitstream buffer.
+@@ -425,7 +425,7 @@ Status D3D11H264Accelerator::SubmitSlice(
+       RecordFailure("Input slice NALU (" + std::to_string(remaining_bitstream) +
+                     ") too big to fit in the bistream buffer (" +
+                     std::to_string(bitstream_buffer_size_) + ").");
+-      return Status::kFail;
++      return DecoderStatus::kFail;
+     }
+ 
+     AppendSubsamples(subsamples, &subsamples_);
+@@ -446,12 +446,12 @@ Status D3D11H264Accelerator::SubmitSlice(
+         slice_info_.size() > 0) {
+       if (!SubmitSliceData()) {
+         RecordFailure("SubmitSliceData failed");
+-        return Status::kFail;
++        return DecoderStatus::kFail;
+       }
+ 
+       if (!RetrieveBitstreamBuffer()) {
+         RecordFailure("RetrieveBitstreamBuffer failed");
+-        return Status::kFail;
++        return DecoderStatus::kFail;
+       }
+     }
+ 
+@@ -492,7 +492,7 @@ Status D3D11H264Accelerator::SubmitSlice(
+     bitstream_buffer_bytes_ += bytes_to_copy;
+   }
+ 
+-  return Status::kOk;
++  return DecoderStatus::kOk;
+ }
+ 
+ bool D3D11H264Accelerator::SubmitSliceData() {
+@@ -567,19 +567,20 @@ bool D3D11H264Accelerator::SubmitSliceData() {
+   return true;
+ }
+ 
+-Status D3D11H264Accelerator::SubmitDecode(scoped_refptr<H264Picture> pic) {
++DecoderStatus D3D11H264Accelerator::SubmitDecode(
++    scoped_refptr<H264Picture> pic) {
+   if (!SubmitSliceData()) {
+     RecordFailure("SubmitSliceData failed");
+-    return Status::kFail;
++    return DecoderStatus::kFail;
+   }
+ 
+   HRESULT hr = video_context_->DecoderEndFrame(video_decoder_.Get());
+   if (!SUCCEEDED(hr)) {
+     RecordFailure("DecoderEndFrame failed", hr);
+-    return Status::kFail;
++    return DecoderStatus::kFail;
+   }
+ 
+-  return Status::kOk;
++  return DecoderStatus::kOk;
+ }
+ 
+ void D3D11H264Accelerator::Reset() {
+diff --git a/media/gpu/windows/d3d11_texture_wrapper.cc b/media/gpu/windows/d3d11_texture_wrapper.cc
+index 3801f07df3..50a1229652 100644
+--- a/media/gpu/windows/d3d11_texture_wrapper.cc
++++ b/media/gpu/windows/d3d11_texture_wrapper.cc
+@@ -158,11 +158,11 @@ bool DefaultTexture2DWrapper::GpuResources::Init(
+   return true;
+ }
+ 
+-MediaError DefaultTexture2DWrapper::GpuResources::PushNewTexture(
++Status DefaultTexture2DWrapper::GpuResources::PushNewTexture(
+     ComD3D11Texture2D texture,
+     size_t array_slice) {
+   if (!helper_ || !helper_->MakeContextCurrent())
+-    return MediaError(ErrorCode::kCannotMakeContextCurrent);
++    return Status(StatusCode::kCannotMakeContextCurrent);
+ 
+   // Notify |gl_image_| that it has a new texture.
+   gl_image_->SetTexture(texture, array_slice);
+@@ -178,13 +178,13 @@ MediaError DefaultTexture2DWrapper::GpuResources::PushNewTexture(
+   if (!eglStreamPostD3DTextureANGLE(egl_display, stream_,
+                                     static_cast<void*>(texture.Get()),
+                                     frame_attributes)) {
+-    return MediaError(ErrorCode::kCouldNotPostTexture);
++    return Status(StatusCode::kCouldNotPostTexture);
+   }
+ 
+   if (!eglStreamConsumerAcquireKHR(egl_display, stream_))
+-    return MediaError(ErrorCode::kCouldNotPostAcquireStream);
++    return Status(StatusCode::kCouldNotPostAcquireStream);
+ 
+-  return MediaError::Ok();
++  return Status::Ok();
+ }
+ 
+ }  // namespace media
+diff --git a/media/gpu/windows/d3d11_texture_wrapper.h b/media/gpu/windows/d3d11_texture_wrapper.h
+index 995ee46901..7299f315d5 100644
+--- a/media/gpu/windows/d3d11_texture_wrapper.h
++++ b/media/gpu/windows/d3d11_texture_wrapper.h
+@@ -12,7 +12,7 @@
+ 
+ #include "gpu/command_buffer/service/mailbox_manager.h"
+ #include "gpu/command_buffer/service/texture_manager.h"
+-#include "media/base/media_error.h"
++#include "media/base/status.h"
+ #include "media/base/video_frame.h"
+ #include "media/gpu/command_buffer_helper.h"
+ #include "media/gpu/media_gpu_export.h"
+@@ -81,7 +81,7 @@ class MEDIA_GPU_EXPORT DefaultTexture2DWrapper : public Texture2DWrapper {
+               int textures_per_picture);
+ 
+     // Push a new |texture|, |array_slice| to |gl_image_|.
+-    MediaError PushNewTexture(ComD3D11Texture2D texture, size_t array_slice);
++    Status PushNewTexture(ComD3D11Texture2D texture, size_t array_slice);
+ 
+     std::vector<uint32_t> service_ids_;
+ 
+diff --git a/media/mojo/mojom/media_error_mojom_traits.h b/media/mojo/mojom/media_error_mojom_traits.h
+deleted file mode 100644
+index 2257f96951..0000000000
+--- a/media/mojo/mojom/media_error_mojom_traits.h
++++ /dev/null
+@@ -1,49 +0,0 @@
+-// Copyright 2020 The Chromium Authors. All rights reserved.
+-// Use of this source code is governed by a BSD-style license that can be
+-// found in the LICENSE file.
+-
+-#ifndef MEDIA_MOJO_MOJOM_MEDIA_ERROR_MOJOM_TRAITS_H_
+-#define MEDIA_MOJO_MOJOM_MEDIA_ERROR_MOJOM_TRAITS_H_
+-
+-#include "base/containers/span.h"
+-#include "base/values.h"
+-#include "base/optional.h"
+-#include "media/base/ipc/media_param_traits.h"
+-#include "media/base/media_error.h"
+-#include "media/mojo/mojom/media_types.mojom.h"
+-
+-namespace mojo {
+-
+-template <>
+-struct StructTraits<media::mojom::MediaErrorDataView, media::MediaError> {
+-  static media::ErrorCode code(const media::MediaError& input) {
+-    return input.GetErrorCode();
+-  }
+-
+-  static const std::string& message(const media::MediaError& input) {
+-    return input.GetErrorMessage();
+-  }
+-
+-  static base::span<base::Value> frames(const media::MediaError& input) {
+-    return input.data_->frames;
+-  }
+-
+-  static base::span<media::MediaError> causes(const media::MediaError& input) {
+-    return input.data_->causes;
+-  }
+-
+-  static base::Optional<base::Value> data(const media::MediaError& input) {
+-    if (!input.IsOk()) {
+-      DCHECK(input.data_);
+-      return input.data_->data.Clone();
+-    }
+-    return base::nullopt;
+-  }
+-
+-  static bool Read(media::mojom::MediaErrorDataView data,
+-                   media::MediaError* output);
+-};
+-
+-}  // namespace mojo
+-
+-#endif  // MEDIA_MOJO_MOJOM_MEDIA_ERROR_MOJOM_TRAITS_H_
+diff --git a/media/mojo/mojom/media_types.mojom b/media/mojo/mojom/media_types.mojom
+index 0cd35763a8..632262b809 100644
+--- a/media/mojo/mojom/media_types.mojom
++++ b/media/mojo/mojom/media_types.mojom
+@@ -36,9 +36,9 @@ enum ColorSpace;
+ [Native]
+ enum DecodeStatus;
+ 
+-// See media/base/media_error_codes.h for descriptions.
++// See media/base/status_codes.h for descriptions.
+ [Native]
+-enum ErrorCode;
++enum StatusCode;
+ 
+ // See media/base/media_log_record.h for description.
+ [Native]
+@@ -356,11 +356,11 @@ struct PipelineDecoderInfo {
+   bool has_decrypting_demuxer_stream = false;
+ };
+ 
+-// See media/base/media_error.h for descriptions.
+-struct MediaError {
+-  ErrorCode code;
++// See media/base/status.h for descriptions.
++struct Status {
++  StatusCode code;
+   string? message;
+   array<mojo_base.mojom.Value> frames;
+-  array<media.mojom.MediaError> causes;
++  array<media.mojom.Status> causes;
+   mojo_base.mojom.Value? data;
+ };
+\ No newline at end of file
+diff --git a/media/mojo/mojom/media_types.typemap b/media/mojo/mojom/media_types.typemap
+index eba69b352d..d88af13cfe 100644
+--- a/media/mojo/mojom/media_types.typemap
++++ b/media/mojo/mojom/media_types.typemap
+@@ -25,8 +25,8 @@ public_headers = [
+   "//media/base/video_types.h",
+   "//media/base/waiting.h",
+   "//media/base/watch_time_keys.h",
+-  "//media/base/media_error.h",
+-  "//media/base/media_error_codes.h",
++  "//media/base/status.h",
++  "//media/base/status_codes.h",
+ ]
+ 
+ traits_headers = [
+@@ -67,5 +67,5 @@ type_mappings = [
+   "media.mojom.WaitingReason=::media::WaitingReason",
+   "media.mojom.WatchTimeKey=::media::WatchTimeKey",
+   "media.mojom.MediaStatusState=::media::MediaStatus::State",
+-  "media.mojom.ErrorCode=::media::ErrorCode",
++  "media.mojom.StatusCode=::media::StatusCode",
+ ]
+diff --git a/media/mojo/mojom/media_error.typemap b/media/mojo/mojom/status.typemap
+similarity index 57%
+rename from media/mojo/mojom/media_error.typemap
+rename to media/mojo/mojom/status.typemap
+index 5bbe753c91..431610801b 100644
+--- a/media/mojo/mojom/media_error.typemap
++++ b/media/mojo/mojom/status.typemap
+@@ -5,13 +5,13 @@
+ mojom = "//media/mojo/mojom/media_types.mojom"
+ 
+ public_headers = [
+-  "//media/base/media_error.h",
+-  "//media/base/media_error_codes.h",
++  "//media/base/status.h",
++  "//media/base/status_codes.h",
+ ]
+ 
+-traits_headers = [ "//media/mojo/mojom/media_error_mojom_traits.h" ]
++traits_headers = [ "//media/mojo/mojom/status_mojom_traits.h" ]
+ 
+-sources = [ "//media/mojo/mojom/media_error_mojom_traits.cc" ]
++sources = [ "//media/mojo/mojom/status_mojom_traits.cc" ]
+ 
+ public_deps = [
+   "//base",
+@@ -21,4 +21,4 @@ public_deps = [
+ deps = [ "//media/base/ipc" ]
+ 
+ # See media_types.typemap for enum mappings.
+-type_mappings = [ "media.mojom.MediaError=::media::MediaError" ]
++type_mappings = [ "media.mojom.Status=::media::Status" ]
+diff --git a/media/mojo/mojom/media_error_mojom_traits.cc b/media/mojo/mojom/status_mojom_traits.cc
+similarity index 62%
+rename from media/mojo/mojom/media_error_mojom_traits.cc
+rename to media/mojo/mojom/status_mojom_traits.cc
+index f470fd486f..bb2ee9abab 100644
+--- a/media/mojo/mojom/media_error_mojom_traits.cc
++++ b/media/mojo/mojom/status_mojom_traits.cc
+@@ -2,33 +2,33 @@
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
+-#include "media/mojo/mojom/media_error_mojom_traits.h"
++#include "media/mojo/mojom/status_mojom_traits.h"
+ 
+-#include "media/base/media_error_codes.h"
++#include "media/base/status_codes.h"
+ #include "media/mojo/mojom/media_types.mojom.h"
+ #include "mojo/public/cpp/base/values_mojom_traits.h"
+ 
+ namespace mojo {
+ 
+ // static
+-bool StructTraits<media::mojom::MediaErrorDataView, media::MediaError>::Read(
+-    media::mojom::MediaErrorDataView data,
+-    media::MediaError* output) {
++bool StructTraits<media::mojom::StatusDataView, media::Status>::Read(
++    media::mojom::StatusDataView data,
++    media::Status* output) {
+   DCHECK(!output->data_);
+ 
+-  media::ErrorCode code;
++  media::StatusCode code;
+   std::string message;
+   if (!data.ReadCode(&code))
+     return false;
+ 
+-  if (code == media::ErrorCode::kOk)
++  if (media::StatusCode::kOk == code)
+     return true;
+ 
+   if (!data.ReadMessage(&message))
+     return false;
+ 
+-  output->data_ = std::make_unique<media::MediaError::MediaErrorInternal>(
+-      code, std::move(message));
++  output->data_ =
++      std::make_unique<media::Status::StatusInternal>(code, std::move(message));
+ 
+   if (!data.ReadFrames(&output->data_->frames))
+     return false;
+diff --git a/media/mojo/mojom/status_mojom_traits.h b/media/mojo/mojom/status_mojom_traits.h
+new file mode 100644
+index 0000000000..25889fe342
+--- /dev/null
++++ b/media/mojo/mojom/status_mojom_traits.h
+@@ -0,0 +1,57 @@
++// Copyright 2020 The Chromium Authors. All rights reserved.
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef MEDIA_MOJO_MOJOM_STATUS_MOJOM_TRAITS_H_
++#define MEDIA_MOJO_MOJOM_STATUS_MOJOM_TRAITS_H_
++
++#include "base/containers/span.h"
++#include "base/optional.h"
++#include "base/values.h"
++#include "media/base/ipc/media_param_traits.h"
++#include "media/base/status.h"
++#include "media/mojo/mojom/media_types.mojom.h"
++
++namespace mojo {
++
++template <>
++struct StructTraits<media::mojom::StatusDataView, media::Status> {
++  static media::StatusCode code(const media::Status& input) {
++    return input.code();
++  }
++
++  static base::Optional<std::string> message(const media::Status& input) {
++    if (input.IsOk())
++      return base::nullopt;
++    DCHECK(input.data_);
++    return input.message();
++  }
++
++  static base::span<base::Value> frames(const media::Status& input) {
++    if (input.IsOk())
++      return {};
++    DCHECK(input.data_);
++    return input.data_->frames;
++  }
++
++  static base::span<media::Status> causes(const media::Status& input) {
++    if (input.IsOk())
++      return {};
++    DCHECK(input.data_);
++    return input.data_->causes;
++  }
++
++  static base::Optional<base::Value> data(const media::Status& input) {
++    if (!input.IsOk()) {
++      DCHECK(input.data_);
++      return input.data_->data.Clone();
++    }
++    return base::nullopt;
++  }
++
++  static bool Read(media::mojom::StatusDataView data, media::Status* output);
++};
++
++}  // namespace mojo
++
++#endif  // MEDIA_MOJO_MOJOM_STATUS_MOJOM_TRAITS_H_
+diff --git a/media/mojo/mojom/typemaps.gni b/media/mojo/mojom/typemaps.gni
+index 8369fe4ed0..8e5ef00405 100644
+--- a/media/mojo/mojom/typemaps.gni
++++ b/media/mojo/mojom/typemaps.gni
+@@ -21,7 +21,7 @@ typemaps = [
+   "//media/mojo/mojom/video_encode_accelerator.typemap",
+   "//media/mojo/mojom/video_encoder_info.typemap",
+   "//media/mojo/mojom/video_frame.typemap",
+-  "//media/mojo/mojom/media_error.typemap",
++  "//media/mojo/mojom/status.typemap",
+ ]
+ 
+ if (enable_media_drm_storage) {
+-- 
+2.25.1
+
