@@ -1,6 +1,6 @@
-From 88a2582dd95a9471da660459562b74970ca0dbd6 Mon Sep 17 00:00:00 2001
+From a906e132b0508b6b296075160297b36875b0b3d7 Mon Sep 17 00:00:00 2001
 From: Mike Lothian <mike@fireburn.co.uk>
-Date: Thu, 27 Feb 2020 00:33:43 +0000
+Date: Fri, 28 Feb 2020 18:57:23 +0000
 Subject: [PATCH] [PATCH] Enable VAVDA, VAVEA and VAJDA on linux with VAAPI
  only
 
@@ -35,21 +35,6 @@ R=kcwu@chromium.org
 Cq-Include-Trybots: master.tryserver.chromium.android:android_optional_gpu_tests_rel;master.tryserver.chromium.linux:linux_optional_gpu_tests_rel;master.tryserver.chromium.mac:mac_optional_gpu_tests_rel;master.tryserver.chromium.win:win_optional_gpu_tests_rel
 Change-Id: Ifbbf5c9e5221a8b5733fc6d4d0cf984a1f103171
 Signed-off-by: Daniel Charles <daniel.charles@intel.com>
----
- chrome/browser/about_flags.cc                 |  6 ++--
- chrome/browser/flag_descriptions.cc           |  4 +--
- chrome/browser/flag_descriptions.h            | 10 ++++--
- content/gpu/BUILD.gn                          |  5 +++
- media/base/media_switches.cc                  |  2 +-
- media/filters/BUILD.gn                        |  1 +
- media/gpu/BUILD.gn                            |  1 +
- .../gpu_video_decode_accelerator_factory.cc   |  3 ++
- .../service/gpu_video_decode_accelerator.cc   |  2 ++
- media/gpu/test/BUILD.gn                       |  2 +-
- .../vaapi/vaapi_video_decode_accelerator.cc   | 15 ++++++++
- media/gpu/vaapi/vaapi_wrapper.cc              | 34 +++++++++++++------
- media/mojo/services/gpu_mojo_media_client.cc  |  2 +-
- 13 files changed, 64 insertions(+), 23 deletions(-)
 
 diff --git a/chrome/browser/about_flags.cc b/chrome/browser/about_flags.cc
 index 063cd33333..22a863661a 100644
@@ -138,6 +123,33 @@ index 088c791f05..531b445407 100644
 +    public_configs = [ "//build/config/linux/libva" ]
 +  }
  }
+diff --git a/gpu/config/software_rendering_list.json b/gpu/config/software_rendering_list.json
+index 22712bdbf3..a06dd19a50 100644
+--- a/gpu/config/software_rendering_list.json
++++ b/gpu/config/software_rendering_list.json
+@@ -335,22 +335,6 @@
+         "all"
+       ]
+     },
+-    {
+-      "id": 48,
+-      "description": "Accelerated video decode is unavailable on Linux",
+-      "cr_bugs": [137247, 1032907],
+-      "os": {
+-        "type": "linux"
+-      },
+-      "exceptions": [
+-        {
+-          "machine_model_name": ["Chromecast"]
+-        }
+-      ],
+-      "features": [
+-        "accelerated_video_decode"
+-      ]
+-    },
+     {
+       "id": 50,
+       "description": "Disable VMware software renderer on older Mesa",
 diff --git a/media/base/media_switches.cc b/media/base/media_switches.cc
 index 34785ffc90..87643331c2 100644
 --- a/media/base/media_switches.cc
