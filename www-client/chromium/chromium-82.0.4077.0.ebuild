@@ -146,10 +146,9 @@ PATCHES=(
 	"${FILESDIR}/chromium-78-protobuf-export.patch"
 	"${FILESDIR}/chromium-79-gcc-alignas.patch"
 	"${FILESDIR}/chromium-80-gcc-quiche.patch"
-	"${FILESDIR}/chromium-80-gcc-blink.patch"
 	"${FILESDIR}/chromium-82-gcc-constexpr.patch"
-	"${FILESDIR}/chromium-82-include.patch"
-	"${FILESDIR}/chromium-82-media-error.patch"
+	"${FILESDIR}/chromium-82-nullptr.patch"
+	"${FILESDIR}/chromium-82-revert-axnode.patch"
 	"${FILESDIR}/enable-vaapi.patch"
 )
 
@@ -273,6 +272,7 @@ src_prepare() {
 		third_party/devscripts
 		third_party/devtools-frontend
 		third_party/devtools-frontend/src/front_end/third_party/fabricjs
+		third_party/devtools-frontend/src/front_end/third_party/lighthouse
 		third_party/devtools-frontend/src/front_end/third_party/wasmparser
 		third_party/devtools-frontend/src/third_party
 		third_party/dom_distiller_js
@@ -355,6 +355,7 @@ src_prepare() {
 		third_party/SPIRV-Tools
 		third_party/sqlite
 		third_party/swiftshader
+		third_party/swiftshader/third_party/astc-encoder
 		third_party/swiftshader/third_party/llvm-7.0
 		third_party/swiftshader/third_party/llvm-subzero
 		third_party/swiftshader/third_party/marl
