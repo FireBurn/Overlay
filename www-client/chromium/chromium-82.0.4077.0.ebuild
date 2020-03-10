@@ -111,7 +111,7 @@ BDEPEND="
 : ${CHROMIUM_FORCE_CLANG=no}
 
 if [[ ${CHROMIUM_FORCE_CLANG} == yes ]]; then
-	BDEPEND+=" >=sys-devel/clang-7"
+	BDEPEND+=" >=sys-devel/clang-9"
 fi
 
 if ! has chromium_pkg_die ${EBUILD_DEATH_HOOKS}; then
@@ -147,8 +147,10 @@ PATCHES=(
 	"${FILESDIR}/chromium-79-gcc-alignas.patch"
 	"${FILESDIR}/chromium-80-gcc-quiche.patch"
 	"${FILESDIR}/chromium-82-gcc-constexpr.patch"
-	"${FILESDIR}/chromium-82-nullptr.patch"
-	"${FILESDIR}/chromium-82-revert-axnode.patch"
+	"${FILESDIR}/chromium-82-gcc-noexcept.patch"
+	"${FILESDIR}/chromium-82-gcc-incomplete-type.patch"
+	"${FILESDIR}/chromium-82-gcc-template.patch"
+	"${FILESDIR}/chromium-82-clang-std.patch"
 	"${FILESDIR}/enable-vaapi.patch"
 )
 
