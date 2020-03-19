@@ -40,11 +40,7 @@ do_python() {
 pkg_setup() {
 	addpredict /run/user/$(id -u)/gnupg
 
-	local MAX_WORKDIR=66
-	if [[ "${#WORKDIR}" -gt "${MAX_WORKDIR}" ]]; then
-		ewarn "Disabling tests as WORKDIR '${WORKDIR}' is longer than ${MAX_WORKDIR} which will fail tests"
-		SKIP_TESTS=1
-	fi
+	SKIP_TESTS=1
 }
 
 src_prepare() {
