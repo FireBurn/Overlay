@@ -1,6 +1,6 @@
-From 9fc54271f75937a8aa7c90b3293badbb5b0f7106 Mon Sep 17 00:00:00 2001
+From debecc8571d181837cc4d97b34e1ec3cf8aabb19 Mon Sep 17 00:00:00 2001
 From: Mike Lothian <mike@fireburn.co.uk>
-Date: Sat, 14 Mar 2020 00:28:34 +0000
+Date: Fri, 20 Mar 2020 10:28:22 +0000
 Subject: [PATCH] Enable VAVDA, VAVEA and VAJDA on linux with VAAPI only
 
 This patch contains all the changes necessary to use VA-API along with
@@ -34,12 +34,29 @@ R=kcwu@chromium.org
 Cq-Include-Trybots: master.tryserver.chromium.android:android_optional_gpu_tests_rel;master.tryserver.chromium.linux:linux_optional_gpu_tests_rel;master.tryserver.chromium.mac:mac_optional_gpu_tests_rel;master.tryserver.chromium.win:win_optional_gpu_tests_rel
 Change-Id: Ifbbf5c9e5221a8b5733fc6d4d0cf984a1f103171
 Signed-off-by: Daniel Charles <daniel.charles@intel.com>
+---
+ chrome/browser/about_flags.cc                 |  6 ++--
+ chrome/browser/flag_descriptions.cc           |  4 +--
+ chrome/browser/flag_descriptions.h            | 10 ++++--
+ content/gpu/BUILD.gn                          |  5 +++
+ gpu/config/software_rendering_list.json       | 16 ---------
+ media/base/media_switches.cc                  |  2 +-
+ media/filters/BUILD.gn                        |  1 +
+ media/gpu/BUILD.gn                            |  1 +
+ .../gpu_video_decode_accelerator_factory.cc   |  3 ++
+ .../service/gpu_video_decode_accelerator.cc   |  2 ++
+ media/gpu/test/BUILD.gn                       |  2 +-
+ media/gpu/vaapi/vaapi_picture_tfp.cc          |  2 +-
+ .../vaapi/vaapi_video_decode_accelerator.cc   | 15 ++++++++
+ media/gpu/vaapi/vaapi_wrapper.cc              | 34 +++++++++++++------
+ media/mojo/services/gpu_mojo_media_client.cc  | 10 +++---
+ 15 files changed, 68 insertions(+), 45 deletions(-)
 
 diff --git a/chrome/browser/about_flags.cc b/chrome/browser/about_flags.cc
-index bce67ed3fc6c..904dd16a3570 100644
+index b3f2caef82..ecb4d6dacf 100644
 --- a/chrome/browser/about_flags.cc
 +++ b/chrome/browser/about_flags.cc
-@@ -1941,7 +1941,7 @@ const FeatureEntry kFeatureEntries[] = {
+@@ -1916,7 +1916,7 @@ const FeatureEntry kFeatureEntries[] = {
          "disable-accelerated-video-decode",
          flag_descriptions::kAcceleratedVideoDecodeName,
          flag_descriptions::kAcceleratedVideoDecodeDescription,
@@ -48,9 +65,9 @@ index bce67ed3fc6c..904dd16a3570 100644
          SINGLE_DISABLE_VALUE_TYPE(switches::kDisableAcceleratedVideoDecode),
      },
      {
-@@ -2368,10 +2368,10 @@ const FeatureEntry kFeatureEntries[] = {
-      flag_descriptions::kWebXrForceRuntimeDescription, kOsDesktop,
-      MULTI_VALUE_TYPE(kWebXrForceRuntimeChoices)},
+@@ -2348,10 +2348,10 @@ const FeatureEntry kFeatureEntries[] = {
+      FEATURE_VALUE_TYPE(service_manager::features::kXRSandbox)},
+ #endif  // !defined(OS_ANDROID)
  #endif  // ENABLE_VR
 -#if defined(OS_CHROMEOS)
 +#if defined(OS_LINUX) && !defined(OS_ANDROID)
@@ -62,10 +79,10 @@ index bce67ed3fc6c..904dd16a3570 100644
  #endif  // OS_CHROMEOS
      {"system-keyboard-lock", flag_descriptions::kSystemKeyboardLockName,
 diff --git a/chrome/browser/flag_descriptions.cc b/chrome/browser/flag_descriptions.cc
-index 28f4ae128d8c..e2f823095fd7 100644
+index a10dfbc251..dff6295e43 100644
 --- a/chrome/browser/flag_descriptions.cc
 +++ b/chrome/browser/flag_descriptions.cc
-@@ -2914,9 +2914,7 @@ const char kMetalDescription[] =
+@@ -2993,9 +2993,7 @@ const char kMetalDescription[] =
  
  #endif
  
@@ -77,10 +94,10 @@ index 28f4ae128d8c..e2f823095fd7 100644
  const char kAcceleratedMjpegDecodeName[] =
      "Hardware-accelerated mjpeg decode for captured frame";
 diff --git a/chrome/browser/flag_descriptions.h b/chrome/browser/flag_descriptions.h
-index c40034ad7601..de91969466a2 100644
+index ddd4dabd09..3d22a2676c 100644
 --- a/chrome/browser/flag_descriptions.h
 +++ b/chrome/browser/flag_descriptions.h
-@@ -1672,13 +1672,17 @@ extern const char kMetalDescription[];
+@@ -1727,13 +1727,17 @@ extern const char kMetalDescription[];
  
  #endif  // defined(OS_MACOSX)
  
@@ -102,7 +119,7 @@ index c40034ad7601..de91969466a2 100644
  extern const char kAggregatedMlAppRankingDescription[];
  
 diff --git a/content/gpu/BUILD.gn b/content/gpu/BUILD.gn
-index 64ebb18c5f6b..b399b4db013d 100644
+index 088c791f05..531b445407 100644
 --- a/content/gpu/BUILD.gn
 +++ b/content/gpu/BUILD.gn
 @@ -6,6 +6,7 @@ import("//build/config/jumbo.gni")
@@ -113,7 +130,7 @@ index 64ebb18c5f6b..b399b4db013d 100644
  import("//ui/ozone/ozone.gni")
  
  # See //content/BUILD.gn for how this works.
-@@ -133,4 +134,8 @@ target(link_target_type, "gpu_sources") {
+@@ -131,4 +132,8 @@ target(link_target_type, "gpu_sources") {
        (!is_chromecast || is_cast_desktop_build)) {
      configs += [ "//build/config/linux/dri" ]
    }
@@ -123,7 +140,7 @@ index 64ebb18c5f6b..b399b4db013d 100644
 +  }
  }
 diff --git a/gpu/config/software_rendering_list.json b/gpu/config/software_rendering_list.json
-index 22712bdbf38f..a06dd19a50e4 100644
+index 22712bdbf3..a06dd19a50 100644
 --- a/gpu/config/software_rendering_list.json
 +++ b/gpu/config/software_rendering_list.json
 @@ -335,22 +335,6 @@
@@ -150,10 +167,10 @@ index 22712bdbf38f..a06dd19a50e4 100644
        "id": 50,
        "description": "Disable VMware software renderer on older Mesa",
 diff --git a/media/base/media_switches.cc b/media/base/media_switches.cc
-index a87744728ead..cdc2100fe79c 100644
+index ff762892dc..71959740ed 100644
 --- a/media/base/media_switches.cc
 +++ b/media/base/media_switches.cc
-@@ -710,7 +710,7 @@ bool IsVideoCaptureAcceleratedJpegDecodingEnabled() {
+@@ -680,7 +680,7 @@ bool IsVideoCaptureAcceleratedJpegDecodingEnabled() {
            switches::kUseFakeMjpegDecodeAccelerator)) {
      return true;
    }
@@ -163,7 +180,7 @@ index a87744728ead..cdc2100fe79c 100644
  #endif
    return false;
 diff --git a/media/filters/BUILD.gn b/media/filters/BUILD.gn
-index 788755f80db4..feeb583e0c30 100644
+index 32cd60069b..5e52d508b3 100644
 --- a/media/filters/BUILD.gn
 +++ b/media/filters/BUILD.gn
 @@ -6,6 +6,7 @@ import("//build/config/jumbo.gni")
@@ -175,10 +192,10 @@ index 788755f80db4..feeb583e0c30 100644
  jumbo_source_set("filters") {
    # Do not expand the visibility here without double-checking with OWNERS, this
 diff --git a/media/gpu/BUILD.gn b/media/gpu/BUILD.gn
-index 184f4a5b8ff4..17edbdc78f5b 100644
+index 237cf96dd8..9d70bd32e3 100644
 --- a/media/gpu/BUILD.gn
 +++ b/media/gpu/BUILD.gn
-@@ -455,6 +455,7 @@ if (use_v4l2_codec || use_vaapi || is_mac || is_win) {
+@@ -449,6 +449,7 @@ if (use_v4l2_codec || use_vaapi || is_mac || is_win) {
      if (use_ozone) {
        deps += [ "//ui/ozone" ]
      }
@@ -187,10 +204,10 @@ index 184f4a5b8ff4..17edbdc78f5b 100644
  }
  
 diff --git a/media/gpu/gpu_video_decode_accelerator_factory.cc b/media/gpu/gpu_video_decode_accelerator_factory.cc
-index 3d519b99dec0..198bd7aaedfa 100644
+index a5d4a3dfcc..9ed1f98c31 100644
 --- a/media/gpu/gpu_video_decode_accelerator_factory.cc
 +++ b/media/gpu/gpu_video_decode_accelerator_factory.cc
-@@ -186,6 +186,8 @@ GpuVideoDecodeAcceleratorFactory::CreateVDA(
+@@ -185,6 +185,8 @@ GpuVideoDecodeAcceleratorFactory::CreateVDA(
      vda = (this->*create_vda_function)(workarounds, gpu_preferences, media_log);
      if (vda && vda->Initialize(config, client))
        return vda;
@@ -199,7 +216,7 @@ index 3d519b99dec0..198bd7aaedfa 100644
    }
  
    return nullptr;
-@@ -244,6 +246,7 @@ GpuVideoDecodeAcceleratorFactory::CreateVaapiVDA(
+@@ -243,6 +245,7 @@ GpuVideoDecodeAcceleratorFactory::CreateVaapiVDA(
      const gpu::GpuDriverBugWorkarounds& workarounds,
      const gpu::GpuPreferences& gpu_preferences,
      MediaLog* media_log) const {
@@ -208,7 +225,7 @@ index 3d519b99dec0..198bd7aaedfa 100644
    decoder.reset(new VaapiVideoDecodeAccelerator(make_context_current_cb_,
                                                  bind_image_cb_));
 diff --git a/media/gpu/ipc/service/gpu_video_decode_accelerator.cc b/media/gpu/ipc/service/gpu_video_decode_accelerator.cc
-index aab498b5983c..e80a10288de0 100644
+index aab498b598..e80a10288d 100644
 --- a/media/gpu/ipc/service/gpu_video_decode_accelerator.cc
 +++ b/media/gpu/ipc/service/gpu_video_decode_accelerator.cc
 @@ -380,6 +380,7 @@ bool GpuVideoDecodeAccelerator::Initialize(
@@ -228,10 +245,10 @@ index aab498b5983c..e80a10288de0 100644
    // Attempt to set up performing decoding tasks on IO thread, if supported by
    // the VDA.
 diff --git a/media/gpu/test/BUILD.gn b/media/gpu/test/BUILD.gn
-index 2ec207392968..7fa85490fa36 100644
+index b276f93537..11391e5ca2 100644
 --- a/media/gpu/test/BUILD.gn
 +++ b/media/gpu/test/BUILD.gn
-@@ -180,7 +180,7 @@ if (use_vaapi || use_v4l2_codec) {
+@@ -150,7 +150,7 @@ if (use_vaapi || use_v4l2_codec) {
    }
  }
  
@@ -240,11 +257,24 @@ index 2ec207392968..7fa85490fa36 100644
    static_library("local_gpu_memory_buffer_manager") {
      testonly = true
      sources = [
+diff --git a/media/gpu/vaapi/vaapi_picture_tfp.cc b/media/gpu/vaapi/vaapi_picture_tfp.cc
+index 227c31b18b..b42620d745 100644
+--- a/media/gpu/vaapi/vaapi_picture_tfp.cc
++++ b/media/gpu/vaapi/vaapi_picture_tfp.cc
+@@ -57,7 +57,7 @@ bool VaapiTFPPicture::Initialize() {
+   if (make_context_current_cb_ && !make_context_current_cb_.Run())
+     return false;
+ 
+-  glx_image_ = new gl::GLImageGLX(size_, GL_RGB);
++  glx_image_ = new gl::GLImageGLX(size_, gfx::BufferFormat::BGRX_8888);
+   if (!glx_image_->Initialize(x_pixmap_)) {
+     // x_pixmap_ will be freed in the destructor.
+     DLOG(ERROR) << "Failed creating a GLX Pixmap for TFP";
 diff --git a/media/gpu/vaapi/vaapi_video_decode_accelerator.cc b/media/gpu/vaapi/vaapi_video_decode_accelerator.cc
-index 3d7dfca5a15b..50b935d86ec8 100644
+index f8e0c5bf9c..f5d68ed279 100644
 --- a/media/gpu/vaapi/vaapi_video_decode_accelerator.cc
 +++ b/media/gpu/vaapi/vaapi_video_decode_accelerator.cc
-@@ -65,6 +65,7 @@ void ReportToUMA(VAVDADecoderFailure failure) {
+@@ -63,6 +63,7 @@ void ReportToUMA(VAVDADecoderFailure failure) {
                              VAVDA_DECODER_FAILURES_MAX + 1);
  }
  
@@ -252,7 +282,7 @@ index 3d7dfca5a15b..50b935d86ec8 100644
  // Returns true if the CPU is an Intel Gemini Lake or later (including Kaby
  // Lake) Cpu platform id's are referenced from the following file in kernel
  // source arch/x86/include/asm/intel-family.h
-@@ -77,6 +78,7 @@ bool IsGeminiLakeOrLater() {
+@@ -75,6 +76,7 @@ bool IsGeminiLakeOrLater() {
        cpuid.model() >= kGeminiLakeModelId;
    return is_geminilake_or_later;
  }
@@ -260,7 +290,7 @@ index 3d7dfca5a15b..50b935d86ec8 100644
  
  // Returns the size of a rectangle whose upper left corner is at the origin (0,
  // 0) and whose bottom right corner is the same as that of |rect|. This is
-@@ -692,6 +694,10 @@ void VaapiVideoDecodeAccelerator::AssignPictureBuffers(
+@@ -708,6 +710,10 @@ void VaapiVideoDecodeAccelerator::AssignPictureBuffers(
    va_surface_format_ = GetVaFormatForVideoCodecProfile(profile_);
    std::vector<VASurfaceID> va_surface_ids;
  
@@ -271,7 +301,7 @@ index 3d7dfca5a15b..50b935d86ec8 100644
    // If we aren't in BufferAllocationMode::kNone, we have to allocate a
    // |vpp_vaapi_wrapper_| for VaapiPicture to DownloadFromSurface() the VA's
    // internal decoded frame.
-@@ -709,6 +715,7 @@ void VaapiVideoDecodeAccelerator::AssignPictureBuffers(
+@@ -725,6 +731,7 @@ void VaapiVideoDecodeAccelerator::AssignPictureBuffers(
                                   "Failed to create Context",
                                   PLATFORM_FAILURE, );
    }
@@ -279,7 +309,7 @@ index 3d7dfca5a15b..50b935d86ec8 100644
  
    for (size_t i = 0; i < buffers.size(); ++i) {
      // If we aren't in BufferAllocationMode::kNone, this |picture| is
-@@ -727,9 +734,13 @@ void VaapiVideoDecodeAccelerator::AssignPictureBuffers(
+@@ -743,9 +750,13 @@ void VaapiVideoDecodeAccelerator::AssignPictureBuffers(
              : gfx::Size();
  
      std::unique_ptr<VaapiPicture> picture = vaapi_picture_factory_->Create(
@@ -293,7 +323,7 @@ index 3d7dfca5a15b..50b935d86ec8 100644
          make_context_current_cb_, bind_image_cb_, buffer, size_to_bind);
      RETURN_AND_NOTIFY_ON_FAILURE(picture, "Failed creating a VaapiPicture",
                                   PLATFORM_FAILURE, );
-@@ -1183,6 +1194,9 @@ VaapiVideoDecodeAccelerator::GetSupportedProfiles() {
+@@ -1199,6 +1210,9 @@ VaapiVideoDecodeAccelerator::GetSupportedProfiles() {
  
  VaapiVideoDecodeAccelerator::BufferAllocationMode
  VaapiVideoDecodeAccelerator::DecideBufferAllocationMode() {
@@ -303,7 +333,7 @@ index 3d7dfca5a15b..50b935d86ec8 100644
    // TODO(crbug.com/912295): Enable a better BufferAllocationMode for IMPORT
    // |output_mode_| as well.
    if (output_mode_ == VideoDecodeAccelerator::Config::OutputMode::IMPORT)
-@@ -1218,6 +1232,7 @@ VaapiVideoDecodeAccelerator::DecideBufferAllocationMode() {
+@@ -1234,6 +1248,7 @@ VaapiVideoDecodeAccelerator::DecideBufferAllocationMode() {
      return BufferAllocationMode::kReduced;
  
    return BufferAllocationMode::kSuperReduced;
@@ -312,7 +342,7 @@ index 3d7dfca5a15b..50b935d86ec8 100644
  
  bool VaapiVideoDecodeAccelerator::IsBufferAllocationModeReducedOrSuperReduced()
 diff --git a/media/gpu/vaapi/vaapi_wrapper.cc b/media/gpu/vaapi/vaapi_wrapper.cc
-index feef129bbd01..97562acf2555 100644
+index dce9d93d32..80e6c685f7 100644
 --- a/media/gpu/vaapi/vaapi_wrapper.cc
 +++ b/media/gpu/vaapi/vaapi_wrapper.cc
 @@ -405,6 +405,11 @@ void VADisplayState::PreSandboxInitialization() {
@@ -383,7 +413,7 @@ index feef129bbd01..97562acf2555 100644
             << va_vendor_string_;
  
    // The VAAPI version is determined from what is loaded on the system by
-@@ -870,7 +882,7 @@ bool VASupportedProfiles::AreAttribsSupported_Locked(
+@@ -829,7 +841,7 @@ bool VASupportedProfiles::AreAttribsSupported_Locked(
      if (attribs[i].type != required_attribs[i].type ||
          (attribs[i].value & required_attribs[i].value) !=
              required_attribs[i].value) {
@@ -392,6 +422,50 @@ index feef129bbd01..97562acf2555 100644
                 << " for attribute type " << required_attribs[i].type;
        return false;
      }
+diff --git a/media/mojo/services/gpu_mojo_media_client.cc b/media/mojo/services/gpu_mojo_media_client.cc
+index 6654fa8a5a..5a0023efa4 100644
+--- a/media/mojo/services/gpu_mojo_media_client.cc
++++ b/media/mojo/services/gpu_mojo_media_client.cc
+@@ -118,9 +118,9 @@ GpuMojoMediaClient::GpuMojoMediaClient(
+       gpu_task_runner_(std::move(gpu_task_runner)),
+       media_gpu_channel_manager_(std::move(media_gpu_channel_manager)),
+       android_overlay_factory_cb_(std::move(android_overlay_factory_cb)),
+-#if defined(OS_CHROMEOS) && BUILDFLAG(USE_CHROMEOS_MEDIA_ACCELERATION)
++#if defined(USE_CHROMEOS_MEDIA_ACCELERATION)
+       gpu_memory_buffer_factory_(gpu_memory_buffer_factory),
+-#endif  // defined(OS_CHROMEOS) && BUILDFLAG(USE_CHROMEOS_MEDIA_ACCELERATION)
++#endif  // defined(USE_CHROMEOS_MEDIA_ACCELERATION)
+       cdm_proxy_factory_cb_(std::move(cdm_proxy_factory_cb)) {
+ }
+ 
+@@ -157,7 +157,7 @@ GpuMojoMediaClient::GetSupportedVideoDecoderConfigs() {
+   supported_config_map[VideoDecoderImplementation::kAlternate] =
+       *d3d11_supported_configs_;
+ 
+-#elif BUILDFLAG(USE_CHROMEOS_MEDIA_ACCELERATION)
++#elif defined(USE_CHROMEOS_MEDIA_ACCELERATION)
+   if (base::FeatureList::IsEnabled(kChromeosVideoDecoder)) {
+     if (!cros_supported_configs_) {
+       cros_supported_configs_ =
+@@ -236,9 +236,8 @@ std::unique_ptr<VideoDecoder> GpuMojoMediaClient::CreateVideoDecoder(
+               MaybeRenderEarlyManager::Create(gpu_task_runner_),
+               std::move(ycbcr_helper)));
+ 
+-#elif defined(OS_CHROMEOS)
++#elif defined(USE_CHROMEOS_MEDIA_ACCELERATION)
+       if (base::FeatureList::IsEnabled(kChromeosVideoDecoder)) {
+-#if BUILDFLAG(USE_CHROMEOS_MEDIA_ACCELERATION)
+         auto frame_pool = std::make_unique<PlatformVideoFramePool>(
+             gpu_memory_buffer_factory_);
+         auto frame_converter = MailboxVideoFrameConverter::Create(
+@@ -252,7 +251,6 @@ std::unique_ptr<VideoDecoder> GpuMojoMediaClient::CreateVideoDecoder(
+         video_decoder = ChromeosVideoDecoderFactory::Create(
+             task_runner, std::move(frame_pool), std::move(frame_converter),
+             gpu_memory_buffer_factory_);
+-#endif  // BUILDFLAG(USE_CHROMEOS_MEDIA_ACCELERATION)
+       } else {
+         video_decoder = VdaVideoDecoder::Create(
+             task_runner, gpu_task_runner_, media_log->Clone(),
 -- 
-2.25.1
+2.25.2
 
