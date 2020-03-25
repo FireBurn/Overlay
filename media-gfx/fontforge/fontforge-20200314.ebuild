@@ -5,16 +5,16 @@ EAPI=7
 
 PYTHON_COMPAT=( python3_{6,7,8} )
 
-inherit python-single-r1 xdg
+inherit python-single-r1 xdg ninja-utils cmake-utils
 
 DESCRIPTION="postscript font editor and converter"
 HOMEPAGE="http://fontforge.github.io/"
-SRC_URI="https://github.com/fontforge/fontforge/releases/download/${PV}/fontforge-${PV}.tar.gz"
+SRC_URI="https://github.com/fontforge/fontforge/releases/download/${PV}/fontforge-${PV}.tar.xz"
 
 LICENSE="BSD GPL-3+"
 SLOT="0"
 KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sh ~sparc ~x86 ~amd64-linux ~x86-linux ~ppc-macos ~x86-macos"
-IUSE="cairo truetype-debugger gif gtk jpeg png +python readline test tiff svg unicode X"
+IUSE="cairo doc truetype-debugger gif gtk jpeg png +python readline test tiff svg unicode X"
 
 RESTRICT="!test? ( test )"
 
@@ -34,6 +34,7 @@ RDEPEND="
 		>=x11-libs/cairo-1.6:0=
 		x11-libs/pango:0=
 	)
+	doc? ( dev-python/sphinx )
 	gif? ( media-libs/giflib:0= )
 	jpeg? ( virtual/jpeg:0 )
 	png? ( media-libs/libpng:0= )
@@ -66,7 +67,7 @@ BDEPEND="
 
 PATCHES=(
 	"${FILESDIR}"/20170731-gethex-unaligned.patch
-	"${FILESDIR}"/CVE-2020-5395.patch
+	"${FILESDIR}"/20200314-tilepath.patch
 )
 
 pkg_setup() {
@@ -74,32 +75,40 @@ pkg_setup() {
 }
 
 src_configure() {
-	local myeconfargs=(
-		--disable-static
-		$(use_enable truetype-debugger freetype-debugger "${EPREFIX}/usr/include/freetype2/internal4fontforge")
-		$(use_enable python python-extension)
-		$(use_enable python python-scripting)
-		--enable-tile-path
-		$(use_with cairo)
-		$(use_with gif giflib)
-		$(use_with jpeg libjpeg)
-		$(use_with png libpng)
-		$(use_with readline libreadline)
-		--without-libspiro
-		$(use_with tiff libtiff)
-		$(use_with unicode libuninameslist)
-		$(use_with X x)
+	mycmakeargs=(
+		-DENABLE_LIBSPIRO=0
+		-DENABLE_DOCS=$(usex doc)
+		-DENABLE_CODE_COVERAGE=0
+		-DENABLE_DEBUG_RAW_POINTS=0
+		-DENABLE_FONTFORGE_EXTRAS=0
+		-DENABLE_GUI=$(usex gtk)
+		-DENABLE_LIBGIF=$(usex gif)
+		-DENABLE_LIBJPEG=$(usex jpeg)
+		-DENABLE_LIBPNG=$(usex png)
+		-DENABLE_LIBREADLINE=$(usex readline)
+		-DENABLE_LIBTIFF=$(usex tiff)
+		-DENABLE_LIBUNINAMESLIST=$(usex unicode)
+		-DENABLE_MAINTAINER_TOOLS=0
+		-DENABLE_NATIVE_SCRIPTING=0
+		-DENABLE_PYTHON_EXTENSION=$(usex python)
+		-DENABLE_PYTHON_SCRIPTING=$(usex python)
+		-DENABLE_SANITIZER=none
+		-DENABLE_TILE_PATH=1
+		-DENABLE_WOFF2=0
+		-DENABLE_WRITE_PFM=0
+		-DENABLE_X11=$(usex X)
 	)
-	if use gtk; then
-		# broken AC_ARG_ENABLE usage
-		# https://bugs.gentoo.org/681550
-		myeconfargs+=( --enable-gdk=gdk3 )
+
+	if use truetype-debugger ; then
+		mycmakeargs+=( -DENABLE_FREETYPE_DEBUGGER="${EPREFIX}/usr/include/freetype2/internal4fontforge" )
 	fi
-	econf "${myeconfargs[@]}"
+
+	cmake-utils_src_configure
 }
 
 src_install() {
-	emake DESTDIR="${D}" install
+	cmake-utils_src_install
+	#eninja DESTDIR="${D}" install
 	docompress -x /usr/share/doc/${PF}/html
 	einstalldocs
 	find "${ED}" -name '*.la' -type f -delete || die
