@@ -11,7 +11,7 @@ CHROMIUM_LANGS="am ar bg bn ca cs da de el en-GB es es-419 et fa fi fil fr gu he
 inherit check-reqs chromium-2 desktop flag-o-matic multilib ninja-utils pax-utils portability python-any-r1 readme.gentoo-r1 toolchain-funcs xdg-utils
 
 DESCRIPTION="Open-source version of Google Chrome web browser"
-HOMEPAGE="http://chromium.org/"
+HOMEPAGE="https://chromium.org/"
 SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}.tar.xz"
 
 LICENSE="BSD"
@@ -95,7 +95,7 @@ BDEPEND="
 		dev-lang/yasm
 	)
 	dev-lang/perl
-	dev-util/gn
+	>=dev-util/gn-0.1726
 	dev-vcs/git
 	>=dev-util/gperf-3.0.3
 	>=dev-util/ninja-1.7.2
@@ -110,7 +110,7 @@ BDEPEND="
 : ${CHROMIUM_FORCE_CLANG=no}
 
 if [[ ${CHROMIUM_FORCE_CLANG} == yes ]]; then
-	BDEPEND+=" >=sys-devel/clang-7"
+	BDEPEND+=" >=sys-devel/clang-9"
 fi
 
 if ! has chromium_pkg_die ${EBUILD_DEATH_HOOKS}; then
@@ -136,18 +136,34 @@ theme that covers the appropriate MIME types, and configure this as your
 GTK+ icon theme.
 
 For native file dialogs in KDE, install kde-apps/kdialog.
+
+To make password storage work with your desktop environment you may
+have install one of the supported credentials management applications:
+- app-crypt/libsecret (GNOME)
+- kde-frameworks/kwallet (KDE)
+If you have one of above packages installed, but don't want to use
+them in Chromium, then add --password-store=basic to CHROMIUM_FLAGS
+in /etc/chromium/default.
 "
 
 PATCHES=(
-	"${FILESDIR}/chromium-compiler-r11.patch"
+	"${FILESDIR}/chromium-compiler-r12.patch"
 	"${FILESDIR}/chromium-fix-char_traits.patch"
+	"${FILESDIR}/chromium-blink-style_format.patch"
 	"${FILESDIR}/chromium-78-protobuf-export.patch"
 	"${FILESDIR}/chromium-79-gcc-alignas.patch"
 	"${FILESDIR}/chromium-80-gcc-quiche.patch"
-	"${FILESDIR}/chromium-80-gcc-blink.patch"
-	"${FILESDIR}/chromium-81-gcc-noexcept.patch"
-	"${FILESDIR}/chromium-81-gcc-constexpr.patch"
-	"${FILESDIR}/chromium-81-vaapi.patch"
+	"${FILESDIR}/chromium-82-gcc-constexpr.patch"
+	"${FILESDIR}/chromium-82-gcc-noexcept.patch"
+	"${FILESDIR}/chromium-82-gcc-incomplete-type.patch"
+	"${FILESDIR}/chromium-82-gcc-template.patch"
+	"${FILESDIR}/chromium-82-gcc-iterator.patch"
+	"${FILESDIR}/chromium-83-gcc-template.patch"
+	"${FILESDIR}/chromium-83-gcc-include.patch"
+	"${FILESDIR}/chromium-83-gcc-permissive.patch"
+	"${FILESDIR}/chromium-83-gcc-iterator.patch"
+	"${FILESDIR}/chromium-83-gcc-10.patch"
+	"${FILESDIR}/chromium-83-vaapi.patch"
 )
 
 pre_build_checks() {
@@ -270,6 +286,7 @@ src_prepare() {
 		third_party/devscripts
 		third_party/devtools-frontend
 		third_party/devtools-frontend/src/front_end/third_party/fabricjs
+		third_party/devtools-frontend/src/front_end/third_party/lighthouse
 		third_party/devtools-frontend/src/front_end/third_party/wasmparser
 		third_party/devtools-frontend/src/third_party
 		third_party/dom_distiller_js
@@ -282,6 +299,7 @@ src_prepare() {
 		third_party/google_input_tools/third_party/closure_library
 		third_party/google_input_tools/third_party/closure_library/third_party/closure
 		third_party/googletest
+		third_party/harfbuzz-ng/utils
 		third_party/hunspell
 		third_party/iccjpeg
 		third_party/inspector_protocol
@@ -307,6 +325,7 @@ src_prepare() {
 		third_party/llvm
 		third_party/lss
 		third_party/lzma_sdk
+		third_party/mako
 		third_party/markupsafe
 		third_party/mesa
 		third_party/metrics_proto
@@ -339,6 +358,7 @@ src_prepare() {
 		third_party/qcms
 		third_party/rnnoise
 		third_party/s2cellid
+		third_party/schema_org
 		third_party/simplejson
 		third_party/skia
 		third_party/skia/include/third_party/skcms
@@ -350,6 +370,7 @@ src_prepare() {
 		third_party/SPIRV-Tools
 		third_party/sqlite
 		third_party/swiftshader
+		third_party/swiftshader/third_party/astc-encoder
 		third_party/swiftshader/third_party/llvm-7.0
 		third_party/swiftshader/third_party/llvm-subzero
 		third_party/swiftshader/third_party/marl
