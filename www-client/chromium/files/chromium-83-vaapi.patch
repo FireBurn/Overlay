@@ -1,4 +1,4 @@
-From 9c351d9594c25487f6db75a44f36ce55544ae6f2 Mon Sep 17 00:00:00 2001
+From 7cda9be20eedac2f972f4b99d71a7732d87f1b9b Mon Sep 17 00:00:00 2001
 From: Mike Lothian <mike@fireburn.co.uk>
 Date: Thu, 23 Apr 2020 09:51:10 +0100
 Subject: [PATCH] Enable VAVDA, VAVEA and VAJDA on linux with VAAPI only
@@ -40,8 +40,7 @@ Signed-off-by: Daniel Charles <daniel.charles@intel.com>
  chrome/browser/flag_descriptions.h                | 10 ++++++++--
  gpu/config/software_rendering_list.json           |  3 ++-
  media/gpu/vaapi/vaapi_video_decode_accelerator.cc |  5 +++++
- media/mojo/services/gpu_mojo_media_client.cc      |  4 ++--
- 6 files changed, 27 insertions(+), 12 deletions(-)
+ 5 files changed, 25 insertions(+), 10 deletions(-)
 
 diff --git a/chrome/browser/about_flags.cc b/chrome/browser/about_flags.cc
 index 65f76461ec12..5820726d7ad5 100644
@@ -180,27 +179,6 @@ index 5020b2b8bf96..a6f1d681b851 100644
  
    // If we're here, we have to use the Vpp unit and allocate buffers for
    // |decoder_|; usually we'd have to allocate the |decoder_|s
-diff --git a/media/mojo/services/gpu_mojo_media_client.cc b/media/mojo/services/gpu_mojo_media_client.cc
-index 5074b4350a07..181feb96fef8 100644
---- a/media/mojo/services/gpu_mojo_media_client.cc
-+++ b/media/mojo/services/gpu_mojo_media_client.cc
-@@ -99,14 +99,14 @@ D3D11VideoDecoder::GetD3D11DeviceCB GetD3D11DeviceCallback() {
- }
- #endif
- 
--#if BUILDFLAG(USE_CHROMEOS_MEDIA_ACCELERATION)
-+#if defined(OS_CHROMEOS) && BUILDFLAG(USE_CHROMEOS_MEDIA_ACCELERATION)
- // Return true if we switch to use new HW-accelerated video decoder.
- bool IsNewAcceleratedVideoDecoderUsed(
-     const gpu::GpuPreferences& gpu_preferences) {
-   return !gpu_preferences.force_disable_new_accelerated_video_decoder &&
-          base::FeatureList::IsEnabled(kChromeosVideoDecoder);
- }
--#endif  // BUILDFLAG(USE_CHROMEOS_MEDIA_ACCELERATION)
-+#endif  // defined(OS_CHROMEOS) && BUILDFLAG(USE_CHROMEOS_MEDIA_ACCELERATION)
- 
- }  // namespace
- 
 -- 
 2.26.2
 
