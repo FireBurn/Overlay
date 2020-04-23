@@ -1,6 +1,6 @@
-From 2c2c94fec582878a695403c0d8282e15fb92133f Mon Sep 17 00:00:00 2001
+From 9c351d9594c25487f6db75a44f36ce55544ae6f2 Mon Sep 17 00:00:00 2001
 From: Mike Lothian <mike@fireburn.co.uk>
-Date: Tue, 14 Apr 2020 01:02:35 +0100
+Date: Thu, 23 Apr 2020 09:51:10 +0100
 Subject: [PATCH] Enable VAVDA, VAVEA and VAJDA on linux with VAAPI only
 
 This patch contains all the changes necessary to use VA-API along with
@@ -35,228 +35,116 @@ Cq-Include-Trybots: master.tryserver.chromium.android:android_optional_gpu_tests
 Change-Id: Ifbbf5c9e5221a8b5733fc6d4d0cf984a1f103171
 Signed-off-by: Daniel Charles <daniel.charles@intel.com>
 ---
- chrome/browser/about_flags.cc                 |  6 ++--
- chrome/browser/flag_descriptions.cc           |  4 +--
- chrome/browser/flag_descriptions.h            | 10 ++++--
- content/gpu/BUILD.gn                          |  5 +++
- gpu/config/software_rendering_list.json       | 16 ---------
- media/base/media_switches.cc                  |  2 +-
- media/filters/BUILD.gn                        |  1 +
- media/gpu/BUILD.gn                            |  1 +
- .../gpu_video_decode_accelerator_factory.cc   |  3 ++
- .../service/gpu_video_decode_accelerator.cc   |  2 ++
- media/gpu/test/BUILD.gn                       |  2 +-
- .../vaapi/vaapi_video_decode_accelerator.cc   | 15 ++++++++
- media/gpu/vaapi/vaapi_wrapper.cc              | 34 +++++++++++++------
- 13 files changed, 63 insertions(+), 38 deletions(-)
+ chrome/browser/about_flags.cc                     |  8 ++++----
+ chrome/browser/flag_descriptions.cc               |  9 ++++++---
+ chrome/browser/flag_descriptions.h                | 10 ++++++++--
+ gpu/config/software_rendering_list.json           |  3 ++-
+ media/gpu/vaapi/vaapi_video_decode_accelerator.cc |  5 +++++
+ media/mojo/services/gpu_mojo_media_client.cc      |  4 ++--
+ 6 files changed, 27 insertions(+), 12 deletions(-)
 
 diff --git a/chrome/browser/about_flags.cc b/chrome/browser/about_flags.cc
-index 18289552dc..5a1c062040 100644
+index 65f76461ec12..5820726d7ad5 100644
 --- a/chrome/browser/about_flags.cc
 +++ b/chrome/browser/about_flags.cc
-@@ -2146,7 +2146,7 @@ const FeatureEntry kFeatureEntries[] = {
+@@ -2153,7 +2153,7 @@ const FeatureEntry kFeatureEntries[] = {
          "disable-accelerated-video-decode",
          flag_descriptions::kAcceleratedVideoDecodeName,
          flag_descriptions::kAcceleratedVideoDecodeDescription,
 -        kOsMac | kOsWin | kOsCrOS | kOsAndroid,
-+        kOsAll,
++        kOsMac | kOsWin | kOsCrOS | kOsAndroid |  kOsLinux,
          SINGLE_DISABLE_VALUE_TYPE(switches::kDisableAcceleratedVideoDecode),
      },
      {
-@@ -2578,10 +2578,10 @@ const FeatureEntry kFeatureEntries[] = {
+@@ -2585,12 +2585,12 @@ const FeatureEntry kFeatureEntries[] = {
       flag_descriptions::kWebXrForceRuntimeDescription, kOsDesktop,
       MULTI_VALUE_TYPE(kWebXrForceRuntimeChoices)},
  #endif  // ENABLE_VR
 -#if defined(OS_CHROMEOS)
-+#if defined(OS_LINUX) && !defined(OS_ANDROID)
++#if defined(OS_CHROMEOS) || defined(OS_LINUX)
      {"disable-accelerated-mjpeg-decode",
       flag_descriptions::kAcceleratedMjpegDecodeName,
 -     flag_descriptions::kAcceleratedMjpegDecodeDescription, kOsCrOS,
 +     flag_descriptions::kAcceleratedMjpegDecodeDescription, kOsCrOS | kOsLinux,
       SINGLE_DISABLE_VALUE_TYPE(switches::kDisableAcceleratedMjpegDecode)},
- #endif  // OS_CHROMEOS
+-#endif  // OS_CHROMEOS
++#endif  // OS_CHROMEOS | OS_LINUX
      {"system-keyboard-lock", flag_descriptions::kSystemKeyboardLockName,
+      flag_descriptions::kSystemKeyboardLockDescription, kOsDesktop,
+      FEATURE_VALUE_TYPE(features::kSystemKeyboardLock)},
 diff --git a/chrome/browser/flag_descriptions.cc b/chrome/browser/flag_descriptions.cc
-index cdd496cdec..020275dc8b 100644
+index e80fab827621..98b36fa0bcca 100644
 --- a/chrome/browser/flag_descriptions.cc
 +++ b/chrome/browser/flag_descriptions.cc
-@@ -2974,9 +2974,7 @@ const char kMetalDescription[] =
+@@ -2980,16 +2980,19 @@ const char kMetalDescription[] =
  
  #endif
  
 -// Chrome OS -------------------------------------------------------------------
 -
 -#if defined(OS_CHROMEOS)
-+#if defined(OS_LINUX) && !defined(OS_ANDROID)
++// Chrome OS and Linux -------------------------------------------------------------------
  
++#if defined(OS_CHROMEOS) || (defined(OS_LINUX) && !defined(OS_ANDROID))
  const char kAcceleratedMjpegDecodeName[] =
      "Hardware-accelerated mjpeg decode for captured frame";
+ const char kAcceleratedMjpegDecodeDescription[] =
+     "Enable hardware-accelerated mjpeg decode for captured frame where "
+     "available.";
++#endif
+ 
++// Chrome OS -----------------------------------------------------------------------------
++
++#if defined(OS_CHROMEOS)
+ const char kAggregatedMlAppRankingName[] = "Rank suggested apps with ML.";
+ const char kAggregatedMlAppRankingDescription[] =
+     "Use the aggregated ML model to rank the suggested apps.";
 diff --git a/chrome/browser/flag_descriptions.h b/chrome/browser/flag_descriptions.h
-index 1b22543acb..34010bd3c5 100644
+index 7672b58e6a25..a3baa084c5a0 100644
 --- a/chrome/browser/flag_descriptions.h
 +++ b/chrome/browser/flag_descriptions.h
-@@ -1708,13 +1708,17 @@ extern const char kMetalDescription[];
+@@ -1711,13 +1711,19 @@ extern const char kMetalDescription[];
  
  #endif  // defined(OS_MACOSX)
  
 -// Chrome OS ------------------------------------------------------------------
--
++// Chrome OS and Linux ---------------------------------------------------------
+ 
 -#if defined(OS_CHROMEOS)
-+#if defined(OS_LINUX) && !defined(OS_ANDROID)
++#if defined(OS_CHROMEOS) || (defined(OS_LINUX) && !defined(OS_ANDROID))
  
  extern const char kAcceleratedMjpegDecodeName[];
  extern const char kAcceleratedMjpegDecodeDescription[];
  
 +#endif
 +
-+// Chrome OS ------------------------------------------------------------------
++// Chrome OS -------------------------------------------------------------------
 +
 +#if defined(OS_CHROMEOS)
 +
  extern const char kAggregatedMlAppRankingName[];
  extern const char kAggregatedMlAppRankingDescription[];
  
-diff --git a/content/gpu/BUILD.gn b/content/gpu/BUILD.gn
-index 64ebb18c5f..b399b4db01 100644
---- a/content/gpu/BUILD.gn
-+++ b/content/gpu/BUILD.gn
-@@ -6,6 +6,7 @@ import("//build/config/jumbo.gni")
- import("//build/config/ui.gni")
- import("//gpu/vulkan/features.gni")
- import("//media/media_options.gni")
-+import("//media/gpu/args.gni")
- import("//ui/ozone/ozone.gni")
- 
- # See //content/BUILD.gn for how this works.
-@@ -133,4 +134,8 @@ target(link_target_type, "gpu_sources") {
-       (!is_chromecast || is_cast_desktop_build)) {
-     configs += [ "//build/config/linux/dri" ]
-   }
-+
-+  if (is_desktop_linux && use_vaapi) {
-+    public_configs = [ "//build/config/linux/libva" ]
-+  }
- }
 diff --git a/gpu/config/software_rendering_list.json b/gpu/config/software_rendering_list.json
-index 68bed9e49d..3e058a5371 100644
+index 68bed9e49ddf..5e7fe9cf433b 100644
 --- a/gpu/config/software_rendering_list.json
 +++ b/gpu/config/software_rendering_list.json
-@@ -335,22 +335,6 @@
-         "all"
-       ]
+@@ -337,11 +337,12 @@
      },
--    {
--      "id": 48,
--      "description": "Accelerated video decode is unavailable on Linux",
--      "cr_bugs": [137247, 1032907],
--      "os": {
--        "type": "linux"
--      },
--      "exceptions": [
--        {
--          "machine_model_name": ["Chromecast"]
--        }
--      ],
--      "features": [
--        "accelerated_video_decode"
--      ]
--    },
      {
-       "id": 50,
-       "description": "Disable VMware software renderer on older Mesa",
-diff --git a/media/base/media_switches.cc b/media/base/media_switches.cc
-index 636dec1c06..a365f18a0a 100644
---- a/media/base/media_switches.cc
-+++ b/media/base/media_switches.cc
-@@ -718,7 +718,7 @@ bool IsVideoCaptureAcceleratedJpegDecodingEnabled() {
-           switches::kUseFakeMjpegDecodeAccelerator)) {
-     return true;
-   }
--#if defined(OS_CHROMEOS)
-+#if defined(OS_LINUX) && !defined(OS_ANDROID)
-   return true;
- #endif
-   return false;
-diff --git a/media/filters/BUILD.gn b/media/filters/BUILD.gn
-index 9b97365808..070d03b356 100644
---- a/media/filters/BUILD.gn
-+++ b/media/filters/BUILD.gn
-@@ -6,6 +6,7 @@ import("//build/config/jumbo.gni")
- import("//media/gpu/args.gni")
- import("//media/media_options.gni")
- import("//third_party/libaom/options.gni")
-+import("//media/gpu/args.gni")
- 
- jumbo_source_set("filters") {
-   # Do not expand the visibility here without double-checking with OWNERS, this
-diff --git a/media/gpu/BUILD.gn b/media/gpu/BUILD.gn
-index dbe714444d..4d202dbd66 100644
---- a/media/gpu/BUILD.gn
-+++ b/media/gpu/BUILD.gn
-@@ -460,6 +460,7 @@ if (use_v4l2_codec || use_vaapi || is_mac || is_win) {
-     if (use_ozone) {
-       deps += [ "//ui/ozone" ]
-     }
-+    public_configs = [ "//build/config/linux/libva" ]
-   }
- }
- 
-diff --git a/media/gpu/gpu_video_decode_accelerator_factory.cc b/media/gpu/gpu_video_decode_accelerator_factory.cc
-index 3d519b99de..198bd7aaed 100644
---- a/media/gpu/gpu_video_decode_accelerator_factory.cc
-+++ b/media/gpu/gpu_video_decode_accelerator_factory.cc
-@@ -186,6 +186,8 @@ GpuVideoDecodeAcceleratorFactory::CreateVDA(
-     vda = (this->*create_vda_function)(workarounds, gpu_preferences, media_log);
-     if (vda && vda->Initialize(config, client))
-       return vda;
-+    else
-+      LOG(ERROR) << "Initialization of one or more VDAs failed.";
-   }
- 
-   return nullptr;
-@@ -244,6 +246,7 @@ GpuVideoDecodeAcceleratorFactory::CreateVaapiVDA(
-     const gpu::GpuDriverBugWorkarounds& workarounds,
-     const gpu::GpuPreferences& gpu_preferences,
-     MediaLog* media_log) const {
-+  LOG(WARNING) << "Initializing VAAPI VDA.";
-   std::unique_ptr<VideoDecodeAccelerator> decoder;
-   decoder.reset(new VaapiVideoDecodeAccelerator(make_context_current_cb_,
-                                                 bind_image_cb_));
-diff --git a/media/gpu/ipc/service/gpu_video_decode_accelerator.cc b/media/gpu/ipc/service/gpu_video_decode_accelerator.cc
-index 0fd65d330b..fa50362409 100644
---- a/media/gpu/ipc/service/gpu_video_decode_accelerator.cc
-+++ b/media/gpu/ipc/service/gpu_video_decode_accelerator.cc
-@@ -381,6 +381,7 @@ bool GpuVideoDecodeAccelerator::Initialize(
-     LOG(ERROR) << "Failed creating the VDA factory";
-     return false;
-   }
-+  LOG(WARNING) << "Created the VDA factory";
- 
-   const gpu::GpuDriverBugWorkarounds& gpu_workarounds =
-       stub_->channel()->gpu_channel_manager()->gpu_driver_bug_workarounds();
-@@ -394,6 +395,7 @@ bool GpuVideoDecodeAccelerator::Initialize(
-                << (config.is_encrypted() ? " with encryption" : "");
-     return false;
-   }
-+  LOG(WARNING) << "Created VDA";
- 
-   // Attempt to set up performing decoding tasks on IO thread, if supported by
-   // the VDA.
-diff --git a/media/gpu/test/BUILD.gn b/media/gpu/test/BUILD.gn
-index d1465599fa..3d8eb9591c 100644
---- a/media/gpu/test/BUILD.gn
-+++ b/media/gpu/test/BUILD.gn
-@@ -179,7 +179,7 @@ if (use_vaapi || use_v4l2_codec) {
-   }
- }
- 
--if (is_chromeos) {
-+if (use_vaapi || is_chromeos) {
-   static_library("local_gpu_memory_buffer_manager") {
-     testonly = true
-     sources = [
+       "id": 48,
+-      "description": "Accelerated video decode is unavailable on Linux",
++      "description": "Accelerated VA-API video decode is not supported on NVIDIA platforms",
+       "cr_bugs": [137247, 1032907],
+       "os": {
+         "type": "linux"
+       },
++      "vendor_id": "0x10de",
+       "exceptions": [
+         {
+           "machine_model_name": ["Chromecast"]
 diff --git a/media/gpu/vaapi/vaapi_video_decode_accelerator.cc b/media/gpu/vaapi/vaapi_video_decode_accelerator.cc
-index 5020b2b8bf..895e0be68a 100644
+index 5020b2b8bf96..a6f1d681b851 100644
 --- a/media/gpu/vaapi/vaapi_video_decode_accelerator.cc
 +++ b/media/gpu/vaapi/vaapi_video_decode_accelerator.cc
 @@ -66,6 +66,7 @@ void ReportToUMA(VAVDADecoderFailure failure) {
@@ -275,138 +163,44 @@ index 5020b2b8bf..895e0be68a 100644
  
  }  // namespace
  
-@@ -659,6 +661,10 @@ void VaapiVideoDecodeAccelerator::AssignPictureBuffers(
-   va_surface_format_ = GetVaFormatForVideoCodecProfile(profile_);
-   std::vector<VASurfaceID> va_surface_ids;
- 
-+  // Nvidia doesn't support VAProfileNone, so don't try to create a temporary
-+  // copy buffer there. It's not needed anyways for hardware video decoding
-+  // to work.
-+#if defined(OS_ANDROID) || defined(OS_CHROMEOS)
-   // If we aren't in BufferAllocationMode::kNone, we have to allocate a
-   // |vpp_vaapi_wrapper_| for VaapiPicture to DownloadFromSurface() the VA's
-   // internal decoded frame.
-@@ -676,6 +682,7 @@ void VaapiVideoDecodeAccelerator::AssignPictureBuffers(
-                                  "Failed to create Context",
-                                  PLATFORM_FAILURE, );
-   }
-+#endif
- 
-   for (size_t i = 0; i < buffers.size(); ++i) {
-     // If we aren't in BufferAllocationMode::kNone, this |picture| is
-@@ -694,9 +701,13 @@ void VaapiVideoDecodeAccelerator::AssignPictureBuffers(
-             : gfx::Size();
- 
-     std::unique_ptr<VaapiPicture> picture = vaapi_picture_factory_->Create(
-+#if defined(OS_LINUX) && !defined(OS_ANDROID) && !defined(OS_CHROMEOS)
-+            vaapi_wrapper_,
-+#else
-         (buffer_allocation_mode_ == BufferAllocationMode::kNone)
-             ? vaapi_wrapper_
-             : vpp_vaapi_wrapper_,
-+#endif
-         make_context_current_cb_, bind_image_cb_, buffer, size_to_bind);
-     RETURN_AND_NOTIFY_ON_FAILURE(picture, "Failed creating a VaapiPicture",
-                                  PLATFORM_FAILURE, );
-@@ -1150,6 +1161,9 @@ VaapiVideoDecodeAccelerator::GetSupportedProfiles() {
- 
- VaapiVideoDecodeAccelerator::BufferAllocationMode
- VaapiVideoDecodeAccelerator::DecideBufferAllocationMode() {
-+#if defined(OS_LINUX) && !defined(OS_ANDROID) && !defined(OS_CHROMEOS)
-+  return BufferAllocationMode::kNormal;
-+#else
-   // TODO(crbug.com/912295): Enable a better BufferAllocationMode for IMPORT
-   // |output_mode_| as well.
+@@ -1155,6 +1157,8 @@ VaapiVideoDecodeAccelerator::DecideBufferAllocationMode() {
    if (output_mode_ == VideoDecodeAccelerator::Config::OutputMode::IMPORT)
-@@ -1185,6 +1199,7 @@ VaapiVideoDecodeAccelerator::DecideBufferAllocationMode() {
-     return BufferAllocationMode::kReduced;
+     return BufferAllocationMode::kNormal;
  
-   return BufferAllocationMode::kSuperReduced;
-+#endif
- }
- 
- bool VaapiVideoDecodeAccelerator::IsBufferAllocationModeReducedOrSuperReduced()
-diff --git a/media/gpu/vaapi/vaapi_wrapper.cc b/media/gpu/vaapi/vaapi_wrapper.cc
-index 0a391158d9..3d24fa69ce 100644
---- a/media/gpu/vaapi/vaapi_wrapper.cc
-+++ b/media/gpu/vaapi/vaapi_wrapper.cc
-@@ -403,6 +403,11 @@ void VADisplayState::PreSandboxInitialization() {
-       base::File::FLAG_OPEN | base::File::FLAG_READ | base::File::FLAG_WRITE);
-   if (drm_file.IsValid())
-     VADisplayState::Get()->SetDrmFd(drm_file.GetPlatformFile());
-+
-+  const char kNvidiaPath[] = "/dev/dri/nvidiactl";
-+  base::File nvidia_file = base::File(
-+      base::FilePath::FromUTF8Unsafe(kNvidiaPath),
-+      base::File::FLAG_OPEN | base::File::FLAG_READ | base::File::FLAG_WRITE);
- }
- 
- VADisplayState::VADisplayState()
-@@ -430,10 +435,6 @@ bool VADisplayState::Initialize() {
- }
- 
- bool VADisplayState::InitializeOnce() {
--  static_assert(
--      VA_MAJOR_VERSION >= 2 || (VA_MAJOR_VERSION == 1 && VA_MINOR_VERSION >= 1),
--      "Requires VA-API >= 1.1.0");
--
-   switch (gl::GetGLImplementation()) {
-     case gl::kGLImplementationEGLGLES2:
-       va_display_ = vaGetDisplayDRM(drm_fd_.get());
-@@ -441,10 +442,10 @@ bool VADisplayState::InitializeOnce() {
-     case gl::kGLImplementationDesktopGL:
- #if defined(USE_X11)
-       va_display_ = vaGetDisplay(gfx::GetXDisplay());
--#else
--      LOG(WARNING) << "VAAPI video acceleration not available without "
--                      "DesktopGL (GLX).";
-+      if (vaDisplayIsValid(va_display_))
-+        break;
- #endif  // USE_X11
-+      va_display_ = vaGetDisplayDRM(drm_fd_.get());
-       break;
-     // Cannot infer platform from GL, try all available displays
-     case gl::kGLImplementationNone:
-@@ -477,8 +478,19 @@ bool VADisplayState::InitializeOnce() {
-   int major_version, minor_version;
-   VAStatus va_res = vaInitialize(va_display_, &major_version, &minor_version);
-   if (va_res != VA_STATUS_SUCCESS) {
--    LOG(ERROR) << "vaInitialize failed: " << vaErrorStr(va_res);
--    return false;
-+    LOG(ERROR) << "vaInitialize failed (ignore if using Wayland desktop environment): " << vaErrorStr(va_res);
-+    va_display_ = vaGetDisplayDRM(drm_fd_.get());
-+    if (!vaDisplayIsValid(va_display_)) {
-+      LOG(ERROR) << "Could not get a valid DRM VA display";
-+      return false;
-+    }
-+    va_res = vaInitialize(va_display_, &major_version, &minor_version);
-+    if (va_res != VA_STATUS_SUCCESS) {
-+      LOG(ERROR) << "vaInitialize failed using DRM: " << vaErrorStr(va_res);
-+      return false;
-+    } else {
-+      LOG(WARNING) << "vaInitialize succeeded for DRM";
-+    }
++#if defined(OS_ANDROID) || defined(OS_CHROMEOS)
++  // Move this to chromeOs only as it is causing problem in some intel linux drivers
+   // On Gemini Lake, Kaby Lake and later we can pass to libva the client's
+   // PictureBuffers to decode onto, which skips the use of the Vpp unit and its
+   // associated format reconciliation copy, avoiding all internal buffer
+@@ -1171,6 +1175,7 @@ VaapiVideoDecodeAccelerator::DecideBufferAllocationMode() {
+       num_extra_pics_ = 3;
+     return BufferAllocationMode::kNone;
    }
++#endif
  
-   va_initialized_ = true;
-@@ -486,7 +498,7 @@ bool VADisplayState::InitializeOnce() {
-   va_vendor_string_ = vaQueryVendorString(va_display_);
-   DLOG_IF(WARNING, va_vendor_string_.empty())
-       << "Vendor string empty or error reading.";
--  DVLOG(1) << "VAAPI version: " << major_version << "." << minor_version << " "
-+  VLOG(1) << "VAAPI version: " << major_version << "." << minor_version << " "
-            << va_vendor_string_;
+   // If we're here, we have to use the Vpp unit and allocate buffers for
+   // |decoder_|; usually we'd have to allocate the |decoder_|s
+diff --git a/media/mojo/services/gpu_mojo_media_client.cc b/media/mojo/services/gpu_mojo_media_client.cc
+index 5074b4350a07..181feb96fef8 100644
+--- a/media/mojo/services/gpu_mojo_media_client.cc
++++ b/media/mojo/services/gpu_mojo_media_client.cc
+@@ -99,14 +99,14 @@ D3D11VideoDecoder::GetD3D11DeviceCB GetD3D11DeviceCallback() {
+ }
+ #endif
  
-   // The VAAPI version is determined from what is loaded on the system by
-@@ -878,7 +890,7 @@ bool VASupportedProfiles::AreAttribsSupported_Locked(
-     if (attribs[i].type != required_attribs[i].type ||
-         (attribs[i].value & required_attribs[i].value) !=
-             required_attribs[i].value) {
--      DVLOG(1) << "Unsupported value " << required_attribs[i].value
-+      VLOG(1) << "Unsupported value " << required_attribs[i].value
-                << " for attribute type " << required_attribs[i].type;
-       return false;
-     }
+-#if BUILDFLAG(USE_CHROMEOS_MEDIA_ACCELERATION)
++#if defined(OS_CHROMEOS) && BUILDFLAG(USE_CHROMEOS_MEDIA_ACCELERATION)
+ // Return true if we switch to use new HW-accelerated video decoder.
+ bool IsNewAcceleratedVideoDecoderUsed(
+     const gpu::GpuPreferences& gpu_preferences) {
+   return !gpu_preferences.force_disable_new_accelerated_video_decoder &&
+          base::FeatureList::IsEnabled(kChromeosVideoDecoder);
+ }
+-#endif  // BUILDFLAG(USE_CHROMEOS_MEDIA_ACCELERATION)
++#endif  // defined(OS_CHROMEOS) && BUILDFLAG(USE_CHROMEOS_MEDIA_ACCELERATION)
+ 
+ }  // namespace
+ 
 -- 
-2.26.0
+2.26.2
 
