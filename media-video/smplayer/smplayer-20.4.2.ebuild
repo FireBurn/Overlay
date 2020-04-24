@@ -10,18 +10,9 @@ PLOCALE_BACKUP="en_US"
 
 inherit l10n qmake-utils toolchain-funcs xdg
 
-case "${PV}" in
-9999)
-    ESVN_REPO_URI="https://subversion.assembla.com/svn/smplayer/smplayer/trunk"
-    inherit subversion
-    ;;
-*)
-    SRC_URI="mirror://sourceforge/${PN}/${P}.tar.bz2"
-    ;;
-esac
-
 DESCRIPTION="Great Qt GUI front-end for mplayer/mpv"
 HOMEPAGE="https://www.smplayer.eu/"
+SRC_URI="mirror://sourceforge/${PN}/${P}.tar.bz2"
 
 LICENSE="GPL-2+ BSD-2"
 SLOT="0"
@@ -96,7 +87,6 @@ src_prepare() {
 
 	# Commented out because it gives false positives
 	#l10n_find_plocales_changes "${S}"/src/translations ${PN}_ .ts
-	echo '#define SVN_REVISION "0UNKNOWN"' > src/svn_revision.h
 }
 
 src_configure() {
