@@ -27,7 +27,7 @@ REQUIRED_USE="
 	?? ( consolekit elogind systemd )
 "
 
-KEYWORDS="~alpha amd64 arm arm64 ~ia64 ppc ppc64 ~sparc x86"
+KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~ia64 ~ppc ~ppc64 ~sparc ~x86"
 
 # gobject-introspection-0.10.3 is needed due to gnome bug 642300
 # wpa_supplicant-0.7.3-r3 is needed due to bug 359271
@@ -104,6 +104,7 @@ DEPEND="${COMMON_DEPEND}
 
 PATCHES=(
 	"${FILESDIR}"/${PN}-data-fix-the-ID_NET_DRIVER-udev-rule.patch
+	"${FILESDIR}"/1.18.4-iwd1-compat.patch # included in 1.21.3+
 )
 
 python_check_deps() {
@@ -200,6 +201,8 @@ multilib_src_configure() {
 		$(multilib_native_use_with ncurses nmtui)
 		$(multilib_native_use_with ofono)
 		$(multilib_native_use_enable ovs)
+		$(multilib_native_use_enable policykit polkit)
+		$(multilib_native_use_enable policykit polkit-agent)
 		$(multilib_native_use_with resolvconf)
 		$(multilib_native_use_with selinux)
 		$(multilib_native_use_with systemd systemd-journal)
@@ -211,12 +214,6 @@ multilib_src_configure() {
 		$(multilib_native_use_with wext)
 		$(multilib_native_use_enable wifi)
 	)
-
-	if multilib_is_native_abi && use policykit; then
-		myconf+=( --enable-polkit=yes )
-	else
-		myconf+=( --enable-polkit=disabled )
-	fi
 
 	# Same hack as net-dialup/pptpd to get proper plugin dir for ppp, bug #519986
 	if use ppp; then
@@ -264,6 +261,8 @@ multilib_src_install() {
 	if multilib_is_native_abi; then
 		# Install completions at proper place, bug #465100
 		gnome2_src_install completiondir="$(get_bashcompdir)"
+		insinto /usr/lib/NetworkManager/conf.d #702476
+		doins "${S}"/examples/nm-conf.d/31-mac-addr-change.conf
 	else
 		local targets=(
 			install-libLTLIBRARIES
@@ -286,7 +285,7 @@ multilib_src_install_all() {
 	einstalldocs
 	! use systemd && readme.gentoo_create_doc
 
-	newinitd "${FILESDIR}/init.d.NetworkManager-r1" NetworkManager
+	newinitd "${FILESDIR}/init.d.NetworkManager-r2" NetworkManager
 	newconfd "${FILESDIR}/conf.d.NetworkManager" NetworkManager
 
 	# Need to keep the /etc/NetworkManager/dispatched.d for dispatcher scripts
