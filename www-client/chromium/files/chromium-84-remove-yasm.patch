@@ -1,0 +1,22 @@
+From eeface3689aae604167234acd29f23945fee48c0 Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Thu, 30 Apr 2020 10:03:59 +0100
+Subject: [PATCH] Remove yasm from replace_gn_files.py
+
+yasm has been removed
+---
+ build/linux/unbundle/replace_gn_files.py | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/build/linux/unbundle/replace_gn_files.py b/build/linux/unbundle/replace_gn_files.py
+index d4d07f23d9909..eba4bd1fb3c83 100755
+--- a/build/linux/unbundle/replace_gn_files.py
++++ b/build/linux/unbundle/replace_gn_files.py
+@@ -35,7 +35,6 @@
+   'opus': 'third_party/opus/BUILD.gn',
+   're2': 'third_party/re2/BUILD.gn',
+   'snappy': 'third_party/snappy/BUILD.gn',
+-  'yasm': 'third_party/yasm/yasm_assemble.gni',
+   'zlib': 'third_party/zlib/BUILD.gn',
+ }
+ 
