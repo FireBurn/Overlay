@@ -36,6 +36,7 @@ DEPEND="${RDEPEND}
 	dev-util/glslang"
 
 PATCHES=(
+	"${FILESDIR}/winelib-revert.patch"
 	"${FILESDIR}/flags.patch"
 )
 
