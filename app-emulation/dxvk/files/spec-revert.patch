@@ -1,0 +1,161 @@
+From 2257cef25f68133147bc9ee4ac53247d37a3f2ea Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Wed, 6 May 2020 00:25:39 +0100
+Subject: [PATCH] Revert "[build] Remove .spec files"
+
+This reverts commit f1e069568dedf91f402d768e9a758a3091c28a81.
+---
+ src/d3d10/d3d10.spec     | 34 ++++++++++++++++++++++++++++++++++
+ src/d3d10/d3d10_1.spec   | 34 ++++++++++++++++++++++++++++++++++
+ src/d3d10/d3d10core.spec |  3 +++
+ src/d3d11/d3d11.spec     |  3 +++
+ src/d3d9/d3d9.spec       | 20 ++++++++++++++++++++
+ src/dxgi/dxgi.spec       |  3 +++
+ 6 files changed, 97 insertions(+)
+ create mode 100644 src/d3d10/d3d10.spec
+ create mode 100644 src/d3d10/d3d10_1.spec
+ create mode 100644 src/d3d10/d3d10core.spec
+ create mode 100644 src/d3d11/d3d11.spec
+ create mode 100644 src/d3d9/d3d9.spec
+ create mode 100644 src/dxgi/dxgi.spec
+
+diff --git a/src/d3d10/d3d10.spec b/src/d3d10/d3d10.spec
+new file mode 100644
+index 00000000..be224e0b
+--- /dev/null
++++ b/src/d3d10/d3d10.spec
+@@ -0,0 +1,34 @@
++@ stdcall D3D10CreateDevice(ptr long ptr long long ptr)
++@ stdcall D3D10CreateDeviceAndSwapChain(ptr long ptr long long ptr ptr ptr)
++
++@ stdcall D3D10GetVertexShaderProfile(ptr)
++@ stdcall D3D10GetGeometryShaderProfile(ptr)
++@ stdcall D3D10GetPixelShaderProfile(ptr)
++
++@ stdcall D3D10CreateBlob(long ptr)
++@ stdcall D3D10GetInputSignatureBlob(ptr long ptr)
++@ stdcall D3D10GetOutputSignatureBlob(ptr long ptr)
++
++@ stdcall D3D10ReflectShader(ptr long ptr)
++@ stdcall D3D10CompileShader(ptr long str ptr ptr str str long ptr ptr)
++
++@ stdcall D3D10CreateEffectFromMemory(ptr long long ptr ptr ptr)
++@ stdcall D3D10CreateEffectPoolFromMemory(ptr long long ptr ptr)
++@ stdcall D3D10CompileEffectFromMemory(ptr long ptr ptr ptr long long ptr ptr)
++
++@ stub D3D10DisassembleEffect
++@ stdcall D3D10DisassembleShader(ptr long long ptr ptr)
++@ stub D3D10PreprocessShader
++
++@ stdcall D3D10CreateStateBlock(ptr ptr ptr)
++@ stdcall D3D10StateBlockMaskDifference(ptr ptr ptr)
++@ stdcall D3D10StateBlockMaskDisableAll(ptr)
++@ stdcall D3D10StateBlockMaskDisableCapture(ptr long long long)
++@ stdcall D3D10StateBlockMaskEnableAll(ptr)
++@ stdcall D3D10StateBlockMaskEnableCapture(ptr long long long)
++@ stdcall D3D10StateBlockMaskGetSetting(ptr long long)
++@ stdcall D3D10StateBlockMaskIntersect(ptr ptr ptr)
++@ stdcall D3D10StateBlockMaskUnion(ptr ptr ptr)
++
++@ stdcall D3D10GetVersion()
++@ stdcall D3D10RegisterLayers()
+\ No newline at end of file
+diff --git a/src/d3d10/d3d10_1.spec b/src/d3d10/d3d10_1.spec
+new file mode 100644
+index 00000000..1f8662ef
+--- /dev/null
++++ b/src/d3d10/d3d10_1.spec
+@@ -0,0 +1,34 @@
++@ stdcall D3D10CreateDevice1(ptr long ptr long long long ptr)
++@ stdcall D3D10CreateDeviceAndSwapChain1(ptr long ptr long long long ptr ptr ptr)
++
++@ stdcall D3D10GetVertexShaderProfile(ptr)
++@ stdcall D3D10GetGeometryShaderProfile(ptr)
++@ stdcall D3D10GetPixelShaderProfile(ptr)
++
++@ stdcall D3D10CreateBlob(long ptr)
++@ stdcall D3D10GetInputSignatureBlob(ptr long ptr)
++@ stdcall D3D10GetOutputSignatureBlob(ptr long ptr)
++
++@ stdcall D3D10ReflectShader(ptr long ptr)
++@ stdcall D3D10CompileShader(ptr long str ptr ptr str str long ptr ptr)
++
++@ stdcall D3D10CreateEffectFromMemory(ptr long long ptr ptr ptr)
++@ stdcall D3D10CreateEffectPoolFromMemory(ptr long long ptr ptr)
++@ stdcall D3D10CompileEffectFromMemory(ptr long ptr ptr ptr long long ptr ptr)
++
++@ stub D3D10DisassembleEffect
++@ stdcall D3D10DisassembleShader(ptr long long ptr ptr)
++@ stub D3D10PreprocessShader
++
++@ stdcall D3D10CreateStateBlock(ptr ptr ptr)
++@ stdcall D3D10StateBlockMaskDifference(ptr ptr ptr)
++@ stdcall D3D10StateBlockMaskDisableAll(ptr)
++@ stdcall D3D10StateBlockMaskDisableCapture(ptr long long long)
++@ stdcall D3D10StateBlockMaskEnableAll(ptr)
++@ stdcall D3D10StateBlockMaskEnableCapture(ptr long long long)
++@ stdcall D3D10StateBlockMaskGetSetting(ptr long long)
++@ stdcall D3D10StateBlockMaskIntersect(ptr ptr ptr)
++@ stdcall D3D10StateBlockMaskUnion(ptr ptr ptr)
++
++@ stdcall D3D10GetVersion()
++@ stdcall D3D10RegisterLayers()
+\ No newline at end of file
+diff --git a/src/d3d10/d3d10core.spec b/src/d3d10/d3d10core.spec
+new file mode 100644
+index 00000000..6d40fdf8
+--- /dev/null
++++ b/src/d3d10/d3d10core.spec
+@@ -0,0 +1,3 @@
++@ stdcall D3D10CoreCreateDevice(ptr ptr long long ptr)
++@ stdcall D3D10CoreGetVersion()
++@ stdcall D3D10CoreRegisterLayers()
+\ No newline at end of file
+diff --git a/src/d3d11/d3d11.spec b/src/d3d11/d3d11.spec
+new file mode 100644
+index 00000000..a54278f7
+--- /dev/null
++++ b/src/d3d11/d3d11.spec
+@@ -0,0 +1,3 @@
++@ stdcall D3D11CreateDevice(ptr long ptr long ptr long long ptr ptr ptr)
++@ stdcall D3D11CreateDeviceAndSwapChain(ptr long ptr long ptr long long ptr ptr ptr ptr ptr)
++@ stdcall D3D11CoreCreateDevice(ptr ptr long ptr long ptr)
+diff --git a/src/d3d9/d3d9.spec b/src/d3d9/d3d9.spec
+new file mode 100644
+index 00000000..67dc522d
+--- /dev/null
++++ b/src/d3d9/d3d9.spec
+@@ -0,0 +1,20 @@
++@ stdcall Direct3DShaderValidatorCreate9()
++
++@ stdcall PSGPError(ptr long long)
++@ stdcall PSGPSampleTexture(ptr long ptr long ptr)
++
++@ stdcall D3DPERF_BeginEvent(long wstr)
++@ stdcall D3DPERF_EndEvent()
++@ stdcall D3DPERF_GetStatus()
++@ stdcall D3DPERF_QueryRepeatFrame()
++@ stdcall D3DPERF_SetMarker(long wstr)
++@ stdcall D3DPERF_SetOptions(long)
++@ stdcall D3DPERF_SetRegion(long wstr)
++
++@ stdcall DebugSetLevel()
++@ stdcall DebugSetMute()
++
++@ stdcall Direct3D9EnableMaximizedWindowedModeShim(long)
++
++@ stdcall Direct3DCreate9(long)
++@ stdcall Direct3DCreate9Ex(long ptr)
+\ No newline at end of file
+diff --git a/src/dxgi/dxgi.spec b/src/dxgi/dxgi.spec
+new file mode 100644
+index 00000000..acf80cee
+--- /dev/null
++++ b/src/dxgi/dxgi.spec
+@@ -0,0 +1,3 @@
++@ stdcall CreateDXGIFactory(ptr ptr)
++@ stdcall CreateDXGIFactory1(ptr ptr)
++@ stdcall CreateDXGIFactory2(long ptr ptr)
+-- 
+2.26.2
+

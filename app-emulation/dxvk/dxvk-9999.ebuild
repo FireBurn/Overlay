@@ -37,6 +37,7 @@ DEPEND="${RDEPEND}
 
 PATCHES=(
 	"${FILESDIR}/winelib-revert.patch"
+	"${FILESDIR}/spec-revert.patch"
 	"${FILESDIR}/flags.patch"
 )
 
