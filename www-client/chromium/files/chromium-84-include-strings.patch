@@ -1,0 +1,103 @@
+From 8604187f324c28734fa88cdd755b3842a012c3ef Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Sat, 9 May 2020 17:50:01 +0100
+Subject: [PATCH 3/3] Include strings.h
+
+---
+ cc/base/list_container_helper.cc                                | 1 +
+ .../crashpad/snapshot/minidump/minidump_context_converter.cc    | 2 ++
+ third_party/crashpad/crashpad/util/linux/ptrace_client.cc       | 1 +
+ .../crashpad/crashpad/util/net/http_multipart_builder.cc        | 1 +
+ third_party/crashpad/crashpad/util/net/http_transport_socket.cc | 1 +
+ third_party/crashpad/crashpad/util/process/process_memory.cc    | 1 +
+ third_party/crashpad/crashpad/util/stream/log_output_stream.cc  | 1 +
+ 7 files changed, 8 insertions(+)
+
+diff --git a/cc/base/list_container_helper.cc b/cc/base/list_container_helper.cc
+index afd386e3a883..ab4dce42e567 100644
+--- a/cc/base/list_container_helper.cc
++++ b/cc/base/list_container_helper.cc
+@@ -5,6 +5,7 @@
+ #include "cc/base/list_container_helper.h"
+ 
+ #include <stddef.h>
++#include <string.h>
+ 
+ #include <algorithm>
+ #include <vector>
+diff --git a/third_party/crashpad/crashpad/snapshot/minidump/minidump_context_converter.cc b/third_party/crashpad/crashpad/snapshot/minidump/minidump_context_converter.cc
+index 0c840deac227..24d2585b376e 100644
+--- a/third_party/crashpad/crashpad/snapshot/minidump/minidump_context_converter.cc
++++ b/third_party/crashpad/crashpad/snapshot/minidump/minidump_context_converter.cc
+@@ -14,6 +14,8 @@
+ 
+ #include "snapshot/minidump/minidump_context_converter.h"
+ 
++#include <string.h>
++
+ #include "base/stl_util.h"
+ #include "minidump/minidump_context.h"
+ 
+diff --git a/third_party/crashpad/crashpad/util/linux/ptrace_client.cc b/third_party/crashpad/crashpad/util/linux/ptrace_client.cc
+index f097ad98593d..43214a18af20 100644
+--- a/third_party/crashpad/crashpad/util/linux/ptrace_client.cc
++++ b/third_party/crashpad/crashpad/util/linux/ptrace_client.cc
+@@ -16,6 +16,7 @@
+ 
+ #include <errno.h>
+ #include <stdio.h>
++#include <string.h>
+ 
+ #include <string>
+ 
+diff --git a/third_party/crashpad/crashpad/util/net/http_multipart_builder.cc b/third_party/crashpad/crashpad/util/net/http_multipart_builder.cc
+index 267960b274f9..3f13aebc0f7c 100644
+--- a/third_party/crashpad/crashpad/util/net/http_multipart_builder.cc
++++ b/third_party/crashpad/crashpad/util/net/http_multipart_builder.cc
+@@ -16,6 +16,7 @@
+ 
+ #include <sys/types.h>
+ 
++#include <string.h>
+ #include <utility>
+ #include <vector>
+ 
+diff --git a/third_party/crashpad/crashpad/util/net/http_transport_socket.cc b/third_party/crashpad/crashpad/util/net/http_transport_socket.cc
+index 4dd01b6e7a69..b9c6c9c5e064 100644
+--- a/third_party/crashpad/crashpad/util/net/http_transport_socket.cc
++++ b/third_party/crashpad/crashpad/util/net/http_transport_socket.cc
+@@ -17,6 +17,7 @@
+ #include <fcntl.h>
+ #include <netdb.h>
+ #include <poll.h>
++#include <string.h>
+ #include <sys/socket.h>
+ 
+ #include "base/logging.h"
+diff --git a/third_party/crashpad/crashpad/util/process/process_memory.cc b/third_party/crashpad/crashpad/util/process/process_memory.cc
+index ab87b940fa14..ca6d6c868982 100644
+--- a/third_party/crashpad/crashpad/util/process/process_memory.cc
++++ b/third_party/crashpad/crashpad/util/process/process_memory.cc
+@@ -15,6 +15,7 @@
+ #include "util/process/process_memory.h"
+ 
+ #include <algorithm>
++#include <string.h>
+ 
+ #include "base/logging.h"
+ #include "util/numeric/safe_assignment.h"
+diff --git a/third_party/crashpad/crashpad/util/stream/log_output_stream.cc b/third_party/crashpad/crashpad/util/stream/log_output_stream.cc
+index 03c0a5a02dbe..7f99f9b1b05e 100644
+--- a/third_party/crashpad/crashpad/util/stream/log_output_stream.cc
++++ b/third_party/crashpad/crashpad/util/stream/log_output_stream.cc
+@@ -15,6 +15,7 @@
+ #include "util/stream/log_output_stream.h"
+ 
+ #include <algorithm>
++#include <string.h>
+ 
+ #include "base/logging.h"
+ 
+-- 
+2.26.2
+

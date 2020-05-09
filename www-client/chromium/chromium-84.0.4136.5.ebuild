@@ -13,7 +13,8 @@ inherit check-reqs chromium-2 desktop flag-o-matic multilib ninja-utils pax-util
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://chromium.org/"
 SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}.tar.xz
-	https://files.pythonhosted.org/packages/ed/7b/bbf89ca71e722b7f9464ebffe4b5ee20a9e5c9a555a56e2d3914bb9119a6/setuptools-44.1.0.zip"
+	https://files.pythonhosted.org/packages/ed/7b/bbf89ca71e722b7f9464ebffe4b5ee20a9e5c9a555a56e2d3914bb9119a6/setuptools-44.1.0.zip
+	https://xcb.freedesktop.org/dist/xcb-proto-1.14.tar.xz"
 
 LICENSE="BSD"
 SLOT="0"
@@ -105,8 +106,8 @@ BDEPEND="
 	)
 "
 
-: ${CHROMIUM_FORCE_CLANG=yes}
-: ${CHROMIUM_FORCE_LIBCXX=yes}
+: ${CHROMIUM_FORCE_CLANG=no}
+: ${CHROMIUM_FORCE_LIBCXX=no}
 
 if [[ ${CHROMIUM_FORCE_CLANG} == yes ]]; then
 	BDEPEND+=" >=sys-devel/clang-9"
@@ -125,7 +126,7 @@ else
 		dev-libs/libxslt:=
 		>=dev-libs/re2-0.2019.08.01:=
 		>=media-libs/openh264-1.6.0:=
-		system-icu? ( >=dev-libs/icu-65:= )
+		system-icu? ( >=dev-libs/icu-67.1:= )
 	"
 	RDEPEND+="${COMMON_DEPEND}"
 	DEPEND+="${COMMON_DEPEND}"
@@ -174,13 +175,13 @@ PATCHES=(
 	"${FILESDIR}/chromium-82-gcc-constexpr.patch"
 	"${FILESDIR}/chromium-82-gcc-noexcept.patch"
 	"${FILESDIR}/chromium-82-gcc-template.patch"
-	"${FILESDIR}/chromium-82-gcc-iterator.patch"
-	"${FILESDIR}/chromium-83-gcc-include.patch"
-	"${FILESDIR}/chromium-83-gcc-permissive.patch"
 	"${FILESDIR}/chromium-83-gcc-iterator.patch"
 	"${FILESDIR}/chromium-83-gcc-10.patch"
 	"${FILESDIR}/chromium-84-remove-yasm.patch"
 	"${FILESDIR}/chromium-83-vaapi.patch"
+	"${FILESDIR}/chromium-84-fix-segments.patch"
+	"${FILESDIR}/chromium-84-include-bitset.patch"
+	"${FILESDIR}/chromium-84-include-strings.patch"
 )
 
 pre_build_checks() {
@@ -305,6 +306,7 @@ src_prepare() {
 		third_party/depot_tools
 		third_party/devscripts
 		third_party/devtools-frontend
+		third_party/devtools-frontend/src/front_end/third_party/codemirror
 		third_party/devtools-frontend/src/front_end/third_party/fabricjs
 		third_party/devtools-frontend/src/front_end/third_party/lighthouse
 		third_party/devtools-frontend/src/front_end/third_party/wasmparser
@@ -697,6 +699,7 @@ src_compile() {
 
 	# https://bugs.gentoo.org/717456
 	local -x PYTHONPATH="${WORKDIR}/setuptools-44.1.0${PYTHONPATH+:}${PYTHONPATH}"
+	local -x PYTHONPATH="${WORKDIR}/xcb-proto-1.14${PYTHONPATH+:}${PYTHONPATH}"
 
 	#"${EPYTHON}" tools/clang/scripts/update.py --force-local-build --gcc-toolchain /usr --skip-checkout --use-system-cmake --without-android || die
 

@@ -1,0 +1,25 @@
+From 5b286af3f92d458dcc39dc4726952942ce96e816 Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Sat, 9 May 2020 17:49:09 +0100
+Subject: [PATCH 1/3] libstdc++ fix segments.get
+
+---
+ .../blink/renderer/core/layout/ng/inline/ng_inline_node.cc      | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_node.cc b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_node.cc
+index 55ca9e3f7c9d..ee691dfafade 100644
+--- a/third_party/blink/renderer/core/layout/ng/inline/ng_inline_node.cc
++++ b/third_party/blink/renderer/core/layout/ng/inline/ng_inline_node.cc
+@@ -891,7 +891,7 @@ void NGInlineNode::SegmentText(NGInlineNodeData* data) {
+ 
+ // Segment NGInlineItem by script, Emoji, and orientation using RunSegmenter.
+ void NGInlineNode::SegmentScriptRuns(NGInlineNodeData* data) {
+-  DCHECK_EQ(data->segments, nullptr);
++  DCHECK_EQ(data->segments.get(), nullptr);
+ 
+   String& text_content = data->text_content;
+   if (text_content.IsEmpty()) {
+-- 
+2.26.2
+
