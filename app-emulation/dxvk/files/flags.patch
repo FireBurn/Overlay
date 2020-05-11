@@ -11,7 +11,7 @@ index 9f13dbd..a56f2fa 100644
 -cpp_link_args=['-m32', '-mwindows']
 +c_args= @CFLAGS@ + ['-m32', '-msse', '-msse2', '-fvisibility=hidden']
 +cpp_args= @CXXFLAGS@ + ['-m32', '-msse', '-msse2', '-fvisibility=hidden', '-fvisibility-inlines-hidden', '-D__WIDL_objidl_generated_name_0000000C=']
-+cpp_link_args= @LDFLAGS@ + ['-m32', '-mwindows']
++cpp_link_args= @LDFLAGS@ + ['-m32', '-mwindows', '-lpthread']
  
  [host_machine]
  system = 'linux'
@@ -28,7 +28,7 @@ index fd7be2f..8228a5b 100644
 -cpp_link_args=['-m64', '-mwindows']
 +c_args= @CFLAGS@ + ['-m64', '-fvisibility=hidden']
 +cpp_args= @CXXFLAGS@ + ['-m64', '-fvisibility=hidden', '-fvisibility-inlines-hidden', '-D__WIDL_objidl_generated_name_0000000C=']
-+cpp_link_args= @LDFLAGS@ + ['-m64', '-mwindows']
++cpp_link_args= @LDFLAGS@ + ['-m64', '-mwindows', '-lpthread']
  
  [host_machine]
  system = 'linux'
