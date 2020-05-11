@@ -182,6 +182,7 @@ PATCHES=(
 	"${FILESDIR}/chromium-84-fix-segments.patch"
 	"${FILESDIR}/chromium-84-include-bitset.patch"
 	"${FILESDIR}/chromium-84-include-strings.patch"
+	"${FILESDIR}/chromium-84-detemplatize.patch"
 )
 
 pre_build_checks() {
