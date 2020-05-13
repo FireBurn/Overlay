@@ -44,8 +44,8 @@ BDEPEND="
 PDEPEND="video_cards_nvidia? ( >=x11-libs/libva-vdpau-driver-0.7.4-r1[${MULTILIB_USEDEP}] )
 	video_cards_nouveau? ( >=x11-libs/libva-vdpau-driver-0.7.4-r3[${MULTILIB_USEDEP}] )
 	vdpau? ( >=x11-libs/libva-vdpau-driver-0.7.4-r1[${MULTILIB_USEDEP}] )
-	video_cards_intel? ( >=x11-libs/libva-intel-driver-2.0.0[${MULTILIB_USEDEP}] )
-	video_cards_i965? ( >=x11-libs/libva-intel-driver-2.0.0[${MULTILIB_USEDEP}] )
+	video_cards_intel? ( x11-libs/libva-intel-media-driver )
+	video_cards_i965? ( x11-libs/libva-intel-media-driver )
 	utils? ( media-video/libva-utils )
 "
 
