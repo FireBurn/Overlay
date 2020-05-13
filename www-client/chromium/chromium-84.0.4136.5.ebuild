@@ -12,13 +12,14 @@ inherit check-reqs chromium-2 desktop flag-o-matic multilib ninja-utils pax-util
 
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://chromium.org/"
+XCB_PROTO_VERSION="1.14"
 SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}.tar.xz
 	https://files.pythonhosted.org/packages/ed/7b/bbf89ca71e722b7f9464ebffe4b5ee20a9e5c9a555a56e2d3914bb9119a6/setuptools-44.1.0.zip
-	https://xcb.freedesktop.org/dist/xcb-proto-1.14.tar.xz"
+	https://www.x.org/releases/individual/proto/xcb-proto-${XCB_PROTO_VERSION}.tar.xz"
 
 LICENSE="BSD"
 SLOT="0"
-KEYWORDS="-*"
+KEYWORDS="~amd64 ~arm64 ~x86"
 IUSE="+closure-compile component-build cups cpu_flags_arm_neon +hangouts kerberos pic +proprietary-codecs pulseaudio selinux +suid +system-ffmpeg +system-icu +system-libvpx +tcmalloc vaapi widevine"
 RESTRICT="!system-ffmpeg? ( proprietary-codecs? ( bindist ) )"
 REQUIRED_USE="component-build? ( !suid )"
@@ -39,6 +40,7 @@ COMMON_DEPEND="
 	>=media-libs/harfbuzz-2.4.0:0=[icu(-)]
 	media-libs/libjpeg-turbo:=
 	media-libs/libpng:=
+	media-libs/mesa:=[gbm]
 	system-libvpx? ( >=media-libs/libvpx-1.8.2:=[postproc,svc] )
 	pulseaudio? ( media-sound/pulseaudio:= )
 	system-ffmpeg? (
@@ -172,17 +174,15 @@ PATCHES=(
 	"${FILESDIR}/chromium-78-protobuf-export.patch"
 	"${FILESDIR}/chromium-79-gcc-alignas.patch"
 	"${FILESDIR}/chromium-80-gcc-quiche.patch"
-	"${FILESDIR}/chromium-82-gcc-constexpr.patch"
-	"${FILESDIR}/chromium-82-gcc-noexcept.patch"
 	"${FILESDIR}/chromium-82-gcc-template.patch"
-	"${FILESDIR}/chromium-83-gcc-iterator.patch"
+	"${FILESDIR}/chromium-83-gcc-serviceworker.patch"
 	"${FILESDIR}/chromium-83-gcc-10.patch"
-	"${FILESDIR}/chromium-84-remove-yasm.patch"
+	"${FILESDIR}/chromium-84-gcc-noexcept.patch"
+	"${FILESDIR}/chromium-84-gcc-template.patch"
+	"${FILESDIR}/chromium-84-gcc-include.patch"
+	"${FILESDIR}/chromium-84-gcc-unique_ptr.patch"
+	"${FILESDIR}/chromium-84-template.patch"
 	"${FILESDIR}/chromium-83-vaapi.patch"
-	"${FILESDIR}/chromium-84-fix-segments.patch"
-	"${FILESDIR}/chromium-84-include-bitset.patch"
-	"${FILESDIR}/chromium-84-include-strings.patch"
-	"${FILESDIR}/chromium-84-detemplatize.patch"
 )
 
 pre_build_checks() {
@@ -333,10 +333,10 @@ src_prepare() {
 		third_party/leveldatabase
 		third_party/libXNVCtrl
 		third_party/libaddressinput
-		third_party/libavif
 		third_party/libaom
 		third_party/libaom/source/libaom/third_party/vector
 		third_party/libaom/source/libaom/third_party/x86inc
+		third_party/libavif
 		third_party/libjingle
 		third_party/libphonenumber
 		third_party/libsecret
@@ -699,8 +699,8 @@ src_compile() {
 	python_setup
 
 	# https://bugs.gentoo.org/717456
-	local -x PYTHONPATH="${WORKDIR}/setuptools-44.1.0${PYTHONPATH+:}${PYTHONPATH}"
-	local -x PYTHONPATH="${WORKDIR}/xcb-proto-1.14${PYTHONPATH+:}${PYTHONPATH}"
+	# Use bundled xcb-proto, because system xcb-proto doesn't have Python 2.7 support
+	local -x PYTHONPATH="${WORKDIR}/setuptools-44.1.0:${WORKDIR}/xcb-proto-${XCB_PROTO_VERSION}${PYTHONPATH+:}${PYTHONPATH}"
 
 	#"${EPYTHON}" tools/clang/scripts/update.py --force-local-build --gcc-toolchain /usr --skip-checkout --use-system-cmake --without-android || die
 
