@@ -38,6 +38,7 @@ COMMON_DEPEND="
 	>=media-libs/harfbuzz-2.4.0:0=[icu(-)]
 	media-libs/libjpeg-turbo:=
 	media-libs/libpng:=
+	media-libs/mesa:=[gbm]
 	system-libvpx? ( >=media-libs/libvpx-1.8.2:=[postproc,svc] )
 	pulseaudio? ( media-sound/pulseaudio:= )
 	system-ffmpeg? (
@@ -171,7 +172,6 @@ PATCHES=(
 	"${FILESDIR}/chromium-78-protobuf-export.patch"
 	"${FILESDIR}/chromium-79-gcc-alignas.patch"
 	"${FILESDIR}/chromium-80-gcc-quiche.patch"
-	"${FILESDIR}/chromium-82-gcc-constexpr.patch"
 	"${FILESDIR}/chromium-82-gcc-noexcept.patch"
 	"${FILESDIR}/chromium-82-gcc-incomplete-type.patch"
 	"${FILESDIR}/chromium-82-gcc-template.patch"
