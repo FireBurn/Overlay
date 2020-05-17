@@ -5,7 +5,7 @@ EAPI=7
 
 MULTILIB_COMPAT=( abi_x86_{32,64} )
 
-inherit meson multilib-minimal flag-o-matic eutils
+inherit meson multilib-minimal flag-o-matic
 
 DESCRIPTION="A Vulkan-based translation layer for Direct3D 10/11"
 HOMEPAGE="https://github.com/doitsujin/dxvk"
@@ -104,7 +104,7 @@ src_prepare() {
 	if use mingw; then
 		local buildtype="win"
 		filter-flags -Wl,--hash-style*
-		epatch -R "${FILESDIR}/gcc-10.patch"
+		eapply -R "${FILESDIR}/gcc-10.patch"
 	else
 		local buildtype="wine"
 		filter-flags -flto*
