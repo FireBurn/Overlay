@@ -1,8 +1,56 @@
+From 212f3190c36d96b030ae8c19bf0fd9e9b7b7e9b3 Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Sun, 17 May 2020 23:17:39 +0100
+Subject: [PATCH] Flags
+
+---
+ build-win32.txt  | 8 ++++----
+ build-win64.txt  | 6 ++++--
+ build-wine32.txt | 8 ++++----
+ build-wine64.txt | 8 ++++----
+ 4 files changed, 16 insertions(+), 14 deletions(-)
+
+diff --git a/build-win32.txt b/build-win32.txt
+index 97ec8a35..8e9ae94b 100644
+--- a/build-win32.txt
++++ b/build-win32.txt
+@@ -5,10 +5,10 @@ ar = 'i686-w64-mingw32-ar'
+ strip = 'i686-w64-mingw32-strip'
+ 
+ [properties]
+-c_args=['-msse', '-msse2']
+-cpp_args=['-msse', '-msse2']
+-c_link_args = ['-static', '-static-libgcc']
+-cpp_link_args = ['-static', '-static-libgcc', '-static-libstdc++']
++c_args= @CFLAGS@ + ['-msse', '-msse2']
++cpp_args= @CXXFLAGS@ + ['-msse', '-msse2']
++c_link_args = @LDFLAGS@ + ['-static', '-static-libgcc']
++cpp_link_args = @LDFLAGS@ + ['-static', '-static-libgcc', '-static-libstdc++']
+ needs_exe_wrapper = true
+ 
+ [host_machine]
+diff --git a/build-win64.txt b/build-win64.txt
+index 2a7fbee3..c081c876 100644
+--- a/build-win64.txt
++++ b/build-win64.txt
+@@ -5,8 +5,10 @@ ar = 'x86_64-w64-mingw32-ar'
+ strip = 'x86_64-w64-mingw32-strip'
+ 
+ [properties]
+-c_link_args = ['-static', '-static-libgcc']
+-cpp_link_args = ['-static', '-static-libgcc', '-static-libstdc++']
++c_args= @CFLAGS@ 
++cpp_args= @CXXFLAGS@
++c_link_args = @LDFLAGS@ + ['-static', '-static-libgcc']
++cpp_link_args = @LDFLAGS@ + ['-static', '-static-libgcc', '-static-libstdc++']
+ needs_exe_wrapper = true
+ 
+ [host_machine]
 diff --git a/build-wine32.txt b/build-wine32.txt
-index 9f13dbd..a56f2fa 100644
+index 9f13dbdf..1c5c5813 100644
 --- a/build-wine32.txt
 +++ b/build-wine32.txt
-@@ -7,9 +7,9 @@ strip = 'strip'
+@@ -7,13 +7,13 @@ strip = 'strip'
  [properties]
  needs_exe_wrapper = true
  
@@ -11,15 +59,20 @@ index 9f13dbd..a56f2fa 100644
 -cpp_link_args=['-m32', '-mwindows']
 +c_args= @CFLAGS@ + ['-m32', '-msse', '-msse2', '-fvisibility=hidden']
 +cpp_args= @CXXFLAGS@ + ['-m32', '-msse', '-msse2', '-fvisibility=hidden', '-fvisibility-inlines-hidden', '-D__WIDL_objidl_generated_name_0000000C=']
++c_link_args = @LDFLAGS@ + ['-m32', '-mwindows', '-lpthread']
 +cpp_link_args= @LDFLAGS@ + ['-m32', '-mwindows', '-lpthread']
  
  [host_machine]
  system = 'linux'
+ cpu_family = 'x86'
+ cpu = 'i686'
+ endian = 'little'
+-
 diff --git a/build-wine64.txt b/build-wine64.txt
-index fd7be2f..8228a5b 100644
+index fd7be2f8..195ecca8 100644
 --- a/build-wine64.txt
 +++ b/build-wine64.txt
-@@ -7,9 +7,9 @@ strip = 'strip'
+@@ -7,13 +7,13 @@ strip = 'strip'
  [properties]
  needs_exe_wrapper = true
  
@@ -28,7 +81,15 @@ index fd7be2f..8228a5b 100644
 -cpp_link_args=['-m64', '-mwindows']
 +c_args= @CFLAGS@ + ['-m64', '-fvisibility=hidden']
 +cpp_args= @CXXFLAGS@ + ['-m64', '-fvisibility=hidden', '-fvisibility-inlines-hidden', '-D__WIDL_objidl_generated_name_0000000C=']
++c_link_args = @LDFLAGS@ + ['-m64', '-mwindows', '-lpthread']
 +cpp_link_args= @LDFLAGS@ + ['-m64', '-mwindows', '-lpthread']
  
  [host_machine]
  system = 'linux'
+ cpu_family = 'x86_64'
+ cpu = 'x86_64'
+ endian = 'little'
+-
+-- 
+2.26.2
+
