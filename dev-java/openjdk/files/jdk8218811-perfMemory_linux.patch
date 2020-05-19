@@ -1,0 +1,12 @@
+diff --git a/hotspot/src/os/linux/vm/perfMemory_linux.cpp b/hotspot/src/os/linux/vm/perfMemory_linux.cpp
+--- a/hotspot/src/os/linux/vm/perfMemory_linux.cpp
++++ b/hotspot/src/os/linux/vm/perfMemory_linux.cpp
+@@ -878,7 +878,7 @@
+ 
+   // open the file
+   int result;
+-  RESTARTABLE(::open(filename, oflags), result);
++  RESTARTABLE(::open(filename, oflags, 0), result);
+   if (result == OS_ERR) {
+     if (errno == ENOENT) {
+       THROW_MSG_(vmSymbols::java_lang_IllegalArgumentException(),
