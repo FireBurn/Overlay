@@ -169,8 +169,8 @@ PATCHES=(
 pre_build_checks() {
 	if [[ ${MERGE_TYPE} != binary ]]; then
 		local -x CPP="$(tc-getCXX) -E"
-		if tc-is-gcc && ! ver_test "$(gcc-version)" -ge 8.0; then
-			die "At least gcc 8.0 is required"
+		if tc-is-gcc && ! ver_test "$(gcc-version)" -ge 9.2; then
+			die "At least gcc 9.2 is required"
 		fi
 		# component build hangs with tcmalloc enabled due to sandbox issue, bug #695976.
 		if has usersandbox ${FEATURES} && use tcmalloc && use component-build; then
@@ -212,6 +212,7 @@ src_prepare() {
 	python_setup
 
 	eapply "${WORKDIR}/patches"
+	eapply "${FILESDIR}"/chromium-84-mediaalloc.patch
 
 	default
 
@@ -663,6 +664,9 @@ src_configure() {
 
 	# Chromium relies on this, but was disabled in >=clang-10, crbug.com/1042470
 	append-cxxflags $(test-flags-CXX -flax-vector-conversions=all)
+
+	# Silence lots of GCC warnings upstream doesn't seem to care about
+	append-cxxflags -Wno-invalid-offsetof -Wno-attributes -Wno-pragmas
 
 	# Explicitly disable ICU data file support for system-icu builds.
 	if use system-icu; then
