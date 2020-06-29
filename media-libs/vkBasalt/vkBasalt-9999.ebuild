@@ -10,7 +10,7 @@ HOMEPAGE="https://github.com/DadSchoorse/vkBasalt"
 
 if [[ ${PV} == 9999 ]]; then
 	EGIT_REPO_URI="https://github.com/DadSchoorse/${PN}.git"
-	KEYWORDS="-*"
+	KEYWORDS=""
 	inherit git-r3
 else
 	SRC_URI="https://github.com/DadSchoorse/${PN}/archive/v${PV}.tar.gz -> ${P}.tar.gz"
