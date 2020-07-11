@@ -1,46 +1,61 @@
-From 5f9ff731bf33bd1f33331f7d5c3a2637e77d23a1 Mon Sep 17 00:00:00 2001
+From 7cda9be20eedac2f972f4b99d71a7732d87f1b9b Mon Sep 17 00:00:00 2001
 From: Mike Lothian <mike@fireburn.co.uk>
-Date: Mon, 6 Jul 2020 17:55:56 +0100
-Subject: [PATCH] From fdc08048a3841fde5ee8eb50ffb24ca62f66a741 Mon Sep 17
- 00:00:00 2001 From: Tuukka Toivonen <tuukka.toivonen@intel.com> Date: Wed, 06
- May 2020 13:54:04 +0300 Subject: [PATCH] Enable VA-API on Linux for video
- acceleration
+Date: Thu, 23 Apr 2020 09:51:10 +0100
+Subject: [PATCH] Enable VAVDA, VAVEA and VAJDA on linux with VAAPI only
 
-This patch enables the usage of Video Acceleration API
-(VA-API) on Linux. It requires that the Chrome flags are
-set to enable hardware video encoding and decoding
-acceleration.
+This patch contains all the changes necessary to use VA-API along with
+vaapi-driver to run all media use cases supported with hardware acceleration.
 
-Original patch[1] from Akarshan Biswas which was modified
-to disable BufferAllocationMode::kNone on Linux which caused
-incompatible frame buffer formats.
+It is intended to remain as experimental accessible from chrome://flags on linux.
+It requires libva/intel-vaapi-driver to be installed on the system path where
+chrome is executed.  Other drivers could be tested if available. Flags are
+kept independent for linux, where this feature has to be enabled before
+actually using it.  This should not change how other OSes use the flags
+already, the new flags will show at the buttom on the section of unavailable
+experiments
 
-[1] https://src.fedoraproject.org/rpms/chromium/blob/master/f/enable-vaapi.patch
+The changes cover a range of compiler pre-processor flags to enable the stack.
+It moves the presandbox operations to the vaapi_wrapper class as the hook function
+is available there. vaInit will open driver on the correct installed folder.
 
-Change-Id: I51722b432334dba19a5e7774a1a30c1c09116516
+chrome flags consolidtation into only two flags for linux.  Mjpeg and accelerated
+video are used.  The other flags are kept for ChromeOS and other OSes.
+
+Developer testing was made on skylake hardware, ChromeOS and Ubuntu.
+
+BUG=NONE
+TEST="subjective testing with VAVDA,VAVEA and VAJDA, autotest for encoder"
+TEST="and decoder hardware accelerated"
+TEST="have libva/intel-vaapi-driver installed and not installed in the system"
+TEST="repeat on different hardware families"
+R=posciak@chromium.org
+R=kcwu@chromium.org
+
+Cq-Include-Trybots: master.tryserver.chromium.android:android_optional_gpu_tests_rel;master.tryserver.chromium.linux:linux_optional_gpu_tests_rel;master.tryserver.chromium.mac:mac_optional_gpu_tests_rel;master.tryserver.chromium.win:win_optional_gpu_tests_rel
+Change-Id: Ifbbf5c9e5221a8b5733fc6d4d0cf984a1f103171
+Signed-off-by: Daniel Charles <daniel.charles@intel.com>
 ---
  chrome/browser/about_flags.cc                     |  8 ++++----
- chrome/browser/flag_descriptions.cc               | 11 ++++++++---
+ chrome/browser/flag_descriptions.cc               |  9 ++++++---
  chrome/browser/flag_descriptions.h                | 10 ++++++++--
  gpu/config/software_rendering_list.json           |  3 ++-
- media/gpu/vaapi/vaapi_image_processor_backend.cc  |  2 ++
- media/gpu/vaapi/vaapi_video_decode_accelerator.cc |  4 ++++
- 6 files changed, 28 insertions(+), 10 deletions(-)
+ media/gpu/vaapi/vaapi_video_decode_accelerator.cc |  5 +++++
+ 5 files changed, 25 insertions(+), 10 deletions(-)
 
 diff --git a/chrome/browser/about_flags.cc b/chrome/browser/about_flags.cc
-index beadf3225b3a..7037fcea720f 100644
+index 65f76461ec12..5820726d7ad5 100644
 --- a/chrome/browser/about_flags.cc
 +++ b/chrome/browser/about_flags.cc
-@@ -2361,7 +2361,7 @@ const FeatureEntry kFeatureEntries[] = {
+@@ -2153,7 +2153,7 @@ const FeatureEntry kFeatureEntries[] = {
          "disable-accelerated-video-decode",
          flag_descriptions::kAcceleratedVideoDecodeName,
          flag_descriptions::kAcceleratedVideoDecodeDescription,
 -        kOsMac | kOsWin | kOsCrOS | kOsAndroid,
-+        kOsMac | kOsWin | kOsCrOS | kOsAndroid | kOsLinux,
++        kOsMac | kOsWin | kOsCrOS | kOsAndroid |  kOsLinux,
          SINGLE_DISABLE_VALUE_TYPE(switches::kDisableAcceleratedVideoDecode),
      },
      {
-@@ -2808,12 +2808,12 @@ const FeatureEntry kFeatureEntries[] = {
+@@ -2585,12 +2585,12 @@ const FeatureEntry kFeatureEntries[] = {
       flag_descriptions::kWebXrForceRuntimeDescription, kOsDesktop,
       MULTI_VALUE_TYPE(kWebXrForceRuntimeChoices)},
  #endif  // ENABLE_VR
@@ -57,18 +72,17 @@ index beadf3225b3a..7037fcea720f 100644
       flag_descriptions::kSystemKeyboardLockDescription, kOsDesktop,
       FEATURE_VALUE_TYPE(features::kSystemKeyboardLock)},
 diff --git a/chrome/browser/flag_descriptions.cc b/chrome/browser/flag_descriptions.cc
-index facf860e35aa..0f0427bac0e1 100644
+index e80fab827621..98b36fa0bcca 100644
 --- a/chrome/browser/flag_descriptions.cc
 +++ b/chrome/browser/flag_descriptions.cc
-@@ -3223,16 +3223,21 @@ const char kMetalDescription[] =
+@@ -2980,16 +2980,19 @@ const char kMetalDescription[] =
  
  #endif
  
 -// Chrome OS -------------------------------------------------------------------
 -
 -#if defined(OS_CHROMEOS)
-+// Chrome OS and Linux
-+// -------------------------------------------------------------------
++// Chrome OS and Linux -------------------------------------------------------------------
  
 +#if defined(OS_CHROMEOS) || (defined(OS_LINUX) && !defined(OS_ANDROID))
  const char kAcceleratedMjpegDecodeName[] =
@@ -78,18 +92,17 @@ index facf860e35aa..0f0427bac0e1 100644
      "available.";
 +#endif
  
-+// Chrome OS
-+// -----------------------------------------------------------------------------
++// Chrome OS -----------------------------------------------------------------------------
 +
 +#if defined(OS_CHROMEOS)
  const char kAggregatedMlAppRankingName[] = "Rank suggested apps with ML.";
  const char kAggregatedMlAppRankingDescription[] =
      "Use the aggregated ML model to rank the suggested apps.";
 diff --git a/chrome/browser/flag_descriptions.h b/chrome/browser/flag_descriptions.h
-index 93fc9cbb7a68..6652ae9ce7b5 100644
+index 7672b58e6a25..a3baa084c5a0 100644
 --- a/chrome/browser/flag_descriptions.h
 +++ b/chrome/browser/flag_descriptions.h
-@@ -1863,13 +1863,19 @@ extern const char kMetalDescription[];
+@@ -1711,13 +1711,19 @@ extern const char kMetalDescription[];
  
  #endif  // defined(OS_MACOSX)
  
@@ -112,7 +125,7 @@ index 93fc9cbb7a68..6652ae9ce7b5 100644
  extern const char kAggregatedMlAppRankingDescription[];
  
 diff --git a/gpu/config/software_rendering_list.json b/gpu/config/software_rendering_list.json
-index 5b5c542dbc95..add2fed97e82 100644
+index 68bed9e49ddf..5e7fe9cf433b 100644
 --- a/gpu/config/software_rendering_list.json
 +++ b/gpu/config/software_rendering_list.json
 @@ -337,11 +337,12 @@
@@ -129,35 +142,15 @@ index 5b5c542dbc95..add2fed97e82 100644
        "exceptions": [
          {
            "machine_model_name": ["Chromecast"]
-diff --git a/media/gpu/vaapi/vaapi_image_processor_backend.cc b/media/gpu/vaapi/vaapi_image_processor_backend.cc
-index 3c72d13786b6..02364f68f2c3 100644
---- a/media/gpu/vaapi/vaapi_image_processor_backend.cc
-+++ b/media/gpu/vaapi/vaapi_image_processor_backend.cc
-@@ -33,6 +33,7 @@ enum class VaIPFailure {
-   kMaxValue = kVaapiVppError,
- };
- 
-+#ifdef OS_CHROMEOS
- void ReportToUMA(base::RepeatingClosure error_cb, VaIPFailure failure) {
-   base::UmaHistogramEnumeration("Media.VAIP.VppFailure", failure);
-   error_cb.Run();
-@@ -66,6 +67,7 @@ bool IsSupported(uint32_t input_va_fourcc,
- 
-   return true;
- }
-+#endif
- 
- }  // namespace
- #endif
 diff --git a/media/gpu/vaapi/vaapi_video_decode_accelerator.cc b/media/gpu/vaapi/vaapi_video_decode_accelerator.cc
-index 63ea51830eed..f37fd01bca1d 100644
+index 5020b2b8bf96..a6f1d681b851 100644
 --- a/media/gpu/vaapi/vaapi_video_decode_accelerator.cc
 +++ b/media/gpu/vaapi/vaapi_video_decode_accelerator.cc
 @@ -66,6 +66,7 @@ void ReportToUMA(VAVDADecoderFailure failure) {
                              VAVDA_DECODER_FAILURES_MAX + 1);
  }
  
-+#if defined(OS_CHROMEOS)
++#if defined(OS_ANDROID) || defined(OS_CHROMEOS)
  // Returns true if the CPU is an Intel Gemini Lake or later (including Kaby
  // Lake) Cpu platform id's are referenced from the following file in kernel
  // source arch/x86/include/asm/intel-family.h
@@ -169,22 +162,23 @@ index 63ea51830eed..f37fd01bca1d 100644
  
  }  // namespace
  
-@@ -1174,6 +1176,7 @@ VaapiVideoDecodeAccelerator::DecideBufferAllocationMode() {
+@@ -1155,6 +1157,8 @@ VaapiVideoDecodeAccelerator::DecideBufferAllocationMode() {
+   if (output_mode_ == VideoDecodeAccelerator::Config::OutputMode::IMPORT)
+     return BufferAllocationMode::kNormal;
+ 
++#if defined(OS_ANDROID) || defined(OS_CHROMEOS)
++  // Move this to chromeOs only as it is causing problem in some intel linux drivers
+   // On Gemini Lake, Kaby Lake and later we can pass to libva the client's
+   // PictureBuffers to decode onto, which skips the use of the Vpp unit and its
    // associated format reconciliation copy, avoiding all internal buffer
-   // allocations.
-   // TODO(crbug.com/911754): Enable for VP9 Profile 2.
-+#if defined(OS_CHROMEOS)
-   if (IsGeminiLakeOrLater() &&
-       (profile_ == VP9PROFILE_PROFILE0 || profile_ == VP8PROFILE_ANY ||
-        (profile_ >= H264PROFILE_MIN && profile_ <= H264PROFILE_MAX))) {
-@@ -1184,6 +1187,7 @@ VaapiVideoDecodeAccelerator::DecideBufferAllocationMode() {
+@@ -1171,6 +1175,7 @@ VaapiVideoDecodeAccelerator::DecideBufferAllocationMode() {
        num_extra_pics_ = 3;
      return BufferAllocationMode::kNone;
    }
 +#endif
  
-   // For H.264 on older devices, another +1 is experimentally needed for
-   // high-to-high resolution changes.
+   // If we're here, we have to use the Vpp unit and allocate buffers for
+   // |decoder_|; usually we'd have to allocate the |decoder_|s
 -- 
-2.27.0
+2.26.2
 
