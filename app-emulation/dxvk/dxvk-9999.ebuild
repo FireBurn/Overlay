@@ -40,7 +40,7 @@ DEPEND="${RDEPEND}
 	dev-util/vulkan-headers"
 
 PATCHES=(
-	"${FILESDIR}/winelib-revert.patch"
+	"${FILESDIR}/winelib-revert-r2.patch"
 	"${FILESDIR}/spec-revert.patch"
 )
 
