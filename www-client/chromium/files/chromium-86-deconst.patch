@@ -1,0 +1,13 @@
+diff --git a/components/autofill/core/browser/data_model/autofill_structured_address_component.cc b/components/autofill/core/browser/data_model/autofill_structured_address_component.cc
+index 424a18218014..cc0de859d905 100644
+--- a/components/autofill/core/browser/data_model/autofill_structured_address_component.cc
++++ b/components/autofill/core/browser/data_model/autofill_structured_address_component.cc
+@@ -433,7 +433,7 @@ base::string16 AddressComponent::ReplacePlaceholderTypesWithValues(
+   result_pieces.reserve(10);
+ 
+   // Store the inserted values to allow the used StringPieces to stay valid.
+-  std::vector<const base::string16> inserted_values;
++  std::vector<base::string16> inserted_values;
+   inserted_values.reserve(4);
+ 
+   // Use a StringPiece rather than the string since this allows for getting
