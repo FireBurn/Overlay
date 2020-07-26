@@ -12,8 +12,8 @@ inherit check-reqs chromium-2 desktop flag-o-matic multilib ninja-utils pax-util
 
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://chromium.org/"
-PATCHSET="2"
-PATCHSET_NAME="chromium-85-patchset-${PATCHSET}"
+PATCHSET="1"
+PATCHSET_NAME="chromium-$(ver_cut 1)-patchset-${PATCHSET}"
 SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}.tar.xz
 	https://files.pythonhosted.org/packages/ed/7b/bbf89ca71e722b7f9464ebffe4b5ee20a9e5c9a555a56e2d3914bb9119a6/setuptools-44.1.0.zip
 	https://github.com/stha09/chromium-patches/releases/download/${PATCHSET_NAME}/${PATCHSET_NAME}.tar.xz"
@@ -132,12 +132,12 @@ BDEPEND="
 : ${CHROMIUM_FORCE_LIBCXX=no}
 
 if [[ ${CHROMIUM_FORCE_CLANG} == yes ]]; then
-	BDEPEND+=" >=sys-devel/clang-9"
+	BDEPEND+=" >=sys-devel/clang-10"
 fi
 
 if [[ ${CHROMIUM_FORCE_LIBCXX} == yes ]]; then
-	RDEPEND+=" >=sys-libs/libcxx-9"
-	DEPEND+=" >=sys-libs/libcxx-9"
+	RDEPEND+=" >=sys-libs/libcxx-10"
+	DEPEND+=" >=sys-libs/libcxx-10"
 else
 	COMMON_DEPEND="
 		app-arch/snappy:=
@@ -185,11 +185,6 @@ in /etc/chromium/default.
 
 PATCHES=(
 	"${FILESDIR}/chromium-84-mediaalloc.patch"
-	"${FILESDIR}/chromium-86-compiler.patch"
-	"${FILESDIR}/chromium-86-template-specialization.patch"
-	"${FILESDIR}/chromium-86-nearby-include.patch"
-	"${FILESDIR}/chromium-86-nearby-explicit.patch"
-	"${FILESDIR}/chromium-86-deconst.patch"
 	"${FILESDIR}/chromium-83-vaapi.patch"
 	"${FILESDIR}/libdav1d.patch"
 )
@@ -238,19 +233,6 @@ pkg_setup() {
 src_prepare() {
 	# Calling this here supports resumption via FEATURES=keepwork
 	python_setup
-
-	rm -f "${WORKDIR}/patches/chromium-84-compiler.patch"
-	rm -f "${WORKDIR}/patches/chromium-85-DelayNode-cast.patch"
-	rm -f "${WORKDIR}/patches/chromium-85-FrameWidget-namespace.patch"
-	rm -f "${WORKDIR}/patches/chromium-85-NearbyConnection-abstract.patch"
-	rm -f "${WORKDIR}/patches/chromium-85-NearbyShareEncryptedMetadataKey-include.patch"
-	rm -f "${WORKDIR}/patches/chromium-85-oscillator_node-cast.patch"
-	rm -f "${WORKDIR}/patches/chromium-85-ostream-operator.patch"
-	rm -f "${WORKDIR}/patches/chromium-85-ozone-include.patch"
-	rm -f "${WORKDIR}/patches/chromium-85-sim_hash-include.patch"
-	rm -f "${WORKDIR}/patches/chromium-blink-gcc-diagnostic-pragma.patch"
-	rm -f "${WORKDIR}/patches/chromium-quiche-invalid-offsetof.patch"
-	rm -f "${WORKDIR}/patches/chromium-skia-no_sanitize.patch"
 
 	eapply "${WORKDIR}/patches"
 
@@ -814,7 +796,7 @@ src_install() {
 			"s:/usr/lib/:/usr/$(get_libdir)/:g;
 			s:@@OZONE_AUTO_SESSION@@:$(ozone_auto_session):g"
 	)
-	sed "${sedargs[@]}" "${FILESDIR}/chromium-launcher-r4.sh" > chromium-launcher.sh || die
+	sed "${sedargs[@]}" "${FILESDIR}/chromium-launcher-r5.sh" > chromium-launcher.sh || die
 	doexe chromium-launcher.sh
 
 	if use vaapi; then
