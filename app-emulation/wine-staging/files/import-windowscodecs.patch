@@ -1,0 +1,11 @@
+--- a/dlls/d3dx10_43/Makefile.in	2020-07-30 12:23:06.918814528 +0100
++++ b/dlls/d3dx10_43/Makefile.in	2020-07-30 12:23:34.037329783 +0100
+@@ -1,7 +1,6 @@
+ MODULE    = d3dx10_43.dll
+ IMPORTLIB = d3dx10
+-IMPORTS   = d3d10_1 d3dcompiler dxguid
+-DELAYIMPORTS = windowscodecs
++IMPORTS   = d3d10_1 d3dcompiler dxguid windowscodecs
+ 
+ EXTRADLLFLAGS = -mno-cygwin
+ 

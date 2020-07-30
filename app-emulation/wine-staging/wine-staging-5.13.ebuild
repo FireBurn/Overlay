@@ -168,6 +168,7 @@ PATCHES=(
 	"${PATCHDIR}/patches/${MY_PN}-4.7-multilib-portage.patch" #395615
 	"${PATCHDIR}/patches/${MY_PN}-2.0-multislot-apploader.patch" #310611
 	"${PATCHDIR}/patches/${MY_PN}-5.9-Revert-makedep-Install-also-generated-typelib-for-in.patch"
+	"${FILESDIR}/import-windowscodecs.patch"
 )
 PATCHES_BIN=()
 
@@ -453,8 +454,9 @@ src_configure() {
 	export LDCONFIG=/bin/true
 	use custom-cflags || strip-flags
 	if use mingw; then
-		filter-flags -Wl,--hash-style*
-		filter-flags -Wl,--as-needed
+		filter-ldflags -Wl,--hash-style*
+		filter-ldflags -Wl,--as-needed
+		export CROSSCFLAGS="${CFLAGS}"
 	fi
 
 	multilib-minimal_src_configure
