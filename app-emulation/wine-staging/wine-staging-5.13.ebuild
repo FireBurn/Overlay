@@ -1,12 +1,12 @@
 # Copyright 1999-2020 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=6
+EAPI=7
 
 PLOCALES="ar ast bg ca cs da de el en en_US eo es fa fi fr he hi hr hu it ja ko lt ml nb_NO nl or pa pl pt_BR pt_PT rm ro ru si sk sl sr_RS@cyrillic sr_RS@latin sv ta te th tr uk wa zh_CN zh_TW"
 PLOCALE_BACKUP="en"
 
-inherit autotools eapi7-ver estack eutils flag-o-matic gnome2-utils l10n multilib multilib-minimal pax-utils toolchain-funcs virtualx xdg-utils
+inherit autotools estack eutils flag-o-matic gnome2-utils l10n multilib multilib-minimal pax-utils toolchain-funcs virtualx xdg-utils
 
 MY_PN="${PN%%-*}"
 MY_P="${MY_PN}-${PV}"
@@ -26,7 +26,7 @@ S="${WORKDIR}/${MY_P}"
 
 STAGING_P="wine-staging-${PV}"
 STAGING_DIR="${WORKDIR}/${STAGING_P}"
-GWP_V="20191222"
+GWP_V="20200523"
 PATCHDIR="${WORKDIR}/gentoo-wine-patches"
 
 DESCRIPTION="Free implementation of Windows(tm) on Unix, with Wine-Staging patchset"
@@ -44,7 +44,7 @@ fi
 
 LICENSE="LGPL-2.1"
 SLOT="${PV}"
-IUSE="+abi_x86_32 +abi_x86_64 +alsa capi cups custom-cflags dos elibc_glibc +faudio +fontconfig +gcrypt +gecko gphoto2 gsm gssapi gstreamer +jpeg kerberos kernel_FreeBSD +lcms ldap +mono mp3 ncurses netapi nls odbc openal opencl +opengl osmesa oss +perl pcap pipelight +png prelink pulseaudio +realtime +run-exes samba scanner sdl selinux +ssl staging test themes +threads +truetype udev +udisks +unwind v4l vaapi vkd3d vulkan +X +xcomposite xinerama +xml"
+IUSE="+abi_x86_32 +abi_x86_64 +alsa capi cups custom-cflags dos elibc_glibc +faudio +fontconfig +gcrypt +gecko gphoto2 gsm gssapi gstreamer +jpeg kerberos kernel_FreeBSD +lcms ldap mingw +mono mp3 ncurses netapi nls odbc openal opencl +opengl osmesa oss +perl pcap pipelight +png prelink pulseaudio +realtime +run-exes samba scanner sdl selinux +ssl staging test themes +threads +truetype udev +udisks +unwind v4l vaapi vkd3d vulkan +X +xcomposite xinerama +xml"
 REQUIRED_USE="|| ( abi_x86_32 abi_x86_64 )
 	X? ( truetype )
 	elibc_glibc? ( threads )
@@ -130,7 +130,7 @@ RDEPEND="${COMMON_DEPEND}
 	!app-emulation/wine:0
 	dos? ( >=games-emulation/dosbox-0.74_p20160629 )
 	gecko? ( app-emulation/wine-gecko:2.47.1[abi_x86_32?,abi_x86_64?] )
-	mono? ( app-emulation/wine-mono:5.0.0 )
+	mono? ( app-emulation/wine-mono:5.1.0 )
 	perl? (
 		dev-lang/perl
 		dev-perl/XML-Simple
@@ -167,6 +167,7 @@ PATCHES=(
 	"${PATCHDIR}/patches/${MY_PN}-5.0-winegcc.patch" #260726
 	"${PATCHDIR}/patches/${MY_PN}-4.7-multilib-portage.patch" #395615
 	"${PATCHDIR}/patches/${MY_PN}-2.0-multislot-apploader.patch" #310611
+	"${PATCHDIR}/patches/${MY_PN}-5.9-Revert-makedep-Install-also-generated-typelib-for-in.patch"
 )
 PATCHES_BIN=()
 
@@ -223,6 +224,38 @@ wine_compiler_check() {
 			eerror
 			return 1
 		fi
+	fi
+
+	if use mingw; then
+		local -a categories
+		use abi_x86_64 && categories+=("cross-x86_64-w64-mingw32")
+		use abi_x86_32 && categories+=("cross-i686-w64-mingw32")
+
+		for cat in ${categories[@]}; do
+			local thread_model="$(LC_ALL=C ${cat/cross-/}-gcc -v 2>&1 \
+				| grep 'Thread model' | cut -d' ' -f3)"
+			if ! has_version -b "${cat}/mingw64-runtime[libraries]" ||
+					! has_version -b "${cat}/gcc" ||
+					[[ "${thread_model}" != "posix" ]]; then
+				eerror "The ${cat} toolchain is not properly installed."
+				eerror "Make sure to install ${cat}/gcc with EXTRA_ECONF=\"--enable-threads=posix\""
+				eerror "and ${cat}/mingw64-runtime with USE=\"libraries\"."
+				elog "See <https://wiki.gentoo.org/wiki/Mingw> for more information."
+				einfo "In short:"
+				einfo "echo '~${cat}/mingw64-runtime-7.0.0 ~amd64' >> \\"
+				einfo "    /etc/portage/package.accept_keywords/mingw"
+				einfo "crossdev --stable --target ${cat}"
+				einfo "echo 'EXTRA_ECONF=\"--enable-threads=posix\"' >> \\"
+				einfo "    /etc/portage/env/mingw-gcc.conf"
+				einfo "echo '${cat}/gcc mingw-gcc.conf' >> \\"
+				einfo "    /etc/portage/package.env/mingw"
+				einfo "echo '${cat}/mingw64-runtime libraries' >> \\"
+				einfo "    /etc/portage/package.use/mingw"
+				einfo "emerge --oneshot ${cat}/gcc ${cat}/mingw64-runtime"
+
+				die "${cat} toolchain is not properly installed."
+			fi
+		done
 	fi
 }
 
@@ -419,6 +452,10 @@ src_configure() {
 
 	export LDCONFIG=/bin/true
 	use custom-cflags || strip-flags
+	if use mingw; then
+		filter-flags -Wl,--hash-style*
+		filter-flags -Wl,--as-needed
+	fi
 
 	multilib-minimal_src_configure
 }
@@ -454,7 +491,7 @@ multilib_src_configure() {
 		$(use_with jpeg)
 		$(use_with kerberos krb5)
 		$(use_with ldap)
-		--without-mingw # linux LDFLAGS leak in mingw32: bug #685172
+		$(use_with mingw)
 		$(use_enable mono mscoree)
 		$(use_with mp3 mpg123)
 		$(use_with netapi)
