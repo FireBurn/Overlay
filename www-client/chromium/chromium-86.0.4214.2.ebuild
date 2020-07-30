@@ -234,6 +234,9 @@ src_prepare() {
 	# Calling this here supports resumption via FEATURES=keepwork
 	python_setup
 
+	rm -f "${WORKDIR}/patches/chromium-86-AddressComponent-const.patch"
+	rm -f "${WORKDIR}/patches/chromium-86-template-specialization.patch"
+
 	eapply "${WORKDIR}/patches"
 
 	default
@@ -312,6 +315,7 @@ src_prepare() {
 		third_party/devscripts
 		third_party/devtools-frontend
 		third_party/devtools-frontend/src/front_end/third_party/acorn
+		third_party/devtools-frontend/src/front_end/third_party/chromium
 		third_party/devtools-frontend/src/front_end/third_party/codemirror
 		third_party/devtools-frontend/src/front_end/third_party/fabricjs
 		third_party/devtools-frontend/src/front_end/third_party/i18n
@@ -410,7 +414,7 @@ src_prepare() {
 		third_party/sqlite
 		third_party/swiftshader
 		third_party/swiftshader/third_party/astc-encoder
-		third_party/swiftshader/third_party/llvm-7.0
+		third_party/swiftshader/third_party/llvm-10.0
 		third_party/swiftshader/third_party/llvm-subzero
 		third_party/swiftshader/third_party/marl
 		third_party/swiftshader/third_party/subzero
