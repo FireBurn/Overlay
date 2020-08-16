@@ -1,0 +1,13 @@
+diff --git a/dlls/winegstreamer/mf_decode.c b/dlls/winegstreamer/mf_decode.c
+index 878b6c8..e3cf120 100644
+--- a/dlls/winegstreamer/mf_decode.c
++++ b/dlls/winegstreamer/mf_decode.c
+@@ -1048,7 +1048,7 @@ static HRESULT WINAPI mf_decoder_ProcessInput(IMFTransform *iface, DWORD id, IMF
+ 
+     drain = gst_query_new_drain();
+     gst_pad_peer_query(decoder->input_src, drain);
+-    gst_query_unref (query);
++    gst_query_unref(drain);
+ 
+     if (decoder->output_counter || decoder->draining)
+     {
