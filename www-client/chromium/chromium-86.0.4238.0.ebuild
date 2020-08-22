@@ -184,7 +184,6 @@ in /etc/chromium/default.
 "
 
 PATCHES=(
-	"${FILESDIR}/chromium-84-mediaalloc.patch"
 	"${FILESDIR}/chromium-83-vaapi.patch"
 	"${FILESDIR}/libdav1d.patch"
 )
