@@ -184,7 +184,7 @@ in /etc/chromium/default.
 "
 
 PATCHES=(
-	"${FILESDIR}/chromium-83-vaapi.patch"
+	"${FILESDIR}/chromium-86-vaapi.patch"
 	"${FILESDIR}/libdav1d.patch"
 )
 
