@@ -227,6 +227,10 @@ src_prepare() {
 	# Calling this here supports resumption via FEATURES=keepwork
 	python_setup
 
+	rm -f "${WORKDIR}/patches/chromium-87-AXEventGenerator-include.patch"
+	rm -f "${WORKDIR}/patches/chromium-87-NGOutOfFlowLayoutPart-floor.patch"
+	rm -f "${WORKDIR}/patches/chromium-87-QRCodeGenerator-include.patch"
+
 	eapply "${WORKDIR}/patches"
 
 	default
@@ -384,6 +388,7 @@ src_prepare() {
 		third_party/ply
 		third_party/polymer
 		third_party/private-join-and-compute
+		third_party/private_membership
 		third_party/protobuf
 		third_party/protobuf/third_party/six
 		third_party/pyjson5
@@ -392,6 +397,7 @@ src_prepare() {
 		third_party/s2cellid
 		third_party/schema_org
 		third_party/securemessage
+		third_party/shell-encryption
 		third_party/simplejson
 		third_party/skia
 		third_party/skia/include/third_party/skcms
