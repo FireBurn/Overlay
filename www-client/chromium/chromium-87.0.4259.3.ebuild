@@ -12,7 +12,7 @@ inherit check-reqs chromium-2 desktop flag-o-matic multilib ninja-utils pax-util
 
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://chromium.org/"
-PATCHSET="1"
+PATCHSET="2"
 PATCHSET_NAME="chromium-$(ver_cut 1)-patchset-${PATCHSET}"
 SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}.tar.xz
 	https://files.pythonhosted.org/packages/ed/7b/bbf89ca71e722b7f9464ebffe4b5ee20a9e5c9a555a56e2d3914bb9119a6/setuptools-44.1.0.zip
@@ -21,7 +21,7 @@ SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}
 LICENSE="BSD"
 SLOT="0"
 KEYWORDS="~amd64 ~arm64 ~x86"
-IUSE="component-build cups cpu_flags_arm_neon +hangouts headless +js-type-check kerberos official pic +proprietary-codecs pulseaudio selinux +suid +system-ffmpeg +system-icu +system-libvpx +tcmalloc vaapi wayland widevine"
+IUSE="component-build cups cpu_flags_arm_neon +hangouts headless +js-type-check kerberos official pic +proprietary-codecs pulseaudio selinux +suid +system-ffmpeg +system-icu +system-libvpx +tcmalloc wayland vaapi widevine"
 RESTRICT="!system-ffmpeg? ( proprietary-codecs? ( bindist ) )"
 REQUIRED_USE="
 	component-build? ( !suid )
@@ -57,7 +57,7 @@ COMMON_DEPEND="
 	>=media-libs/harfbuzz-2.4.0:0=[icu(-)]
 	media-libs/libjpeg-turbo:=
 	media-libs/libpng:=
-	system-libvpx? ( >=media-libs/libvpx-1.8.2:=[postproc,svc] )
+	system-libvpx? ( >=media-libs/libvpx-1.8.2:=[postproc] )
 	pulseaudio? ( media-sound/pulseaudio:= )
 	system-ffmpeg? (
 		>=media-video/ffmpeg-4.3:=
@@ -221,15 +221,17 @@ pkg_setup() {
 	pre_build_checks
 
 	chromium_suid_sandbox_check_kernel_config
+
+	# nvidia-drivers does not work correctly with Wayland due to unsupported EGLStreams
+	if use wayland && ! use headless && has_version "x11-drivers/nvidia-drivers"; then
+		ewarn "Proprietary nVidia driver does not work with Wayland. You can disable"
+		ewarn "Wayland by setting DISABLE_OZONE_PLATFORM=true in /etc/chromium/default."
+	fi
 }
 
 src_prepare() {
 	# Calling this here supports resumption via FEATURES=keepwork
 	python_setup
-
-	rm -f "${WORKDIR}/patches/chromium-87-AXEventGenerator-include.patch"
-	rm -f "${WORKDIR}/patches/chromium-87-NGOutOfFlowLayoutPart-floor.patch"
-	rm -f "${WORKDIR}/patches/chromium-87-QRCodeGenerator-include.patch"
 
 	eapply "${WORKDIR}/patches"
 
@@ -716,6 +718,7 @@ src_configure() {
 		myconf_gn+=" ozone_platform_headless=true"
 		if use headless; then
 			myconf_gn+=" ozone_platform=\"headless\""
+			myconf_gn+=" use_x11=false"
 		else
 			myconf_gn+=" ozone_platform_wayland=true"
 			myconf_gn+=" use_system_libdrm=true"
