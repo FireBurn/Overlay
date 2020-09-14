@@ -821,11 +821,6 @@ src_install() {
 	sed "${sedargs[@]}" "${FILESDIR}/chromium-launcher-r5.sh" > chromium-launcher.sh || die
 	doexe chromium-launcher.sh
 
-	if use vaapi; then
-		insinto /usr/share/drirc.d
-		newins "${FILESDIR}"/01-chromium.conf 01-chromium.conf
-	fi
-
 	# It is important that we name the target "chromium-browser",
 	# xdg-utils expect it; bug #355517.
 	dosym "${CHROMIUM_HOME}/chromium-launcher.sh" /usr/bin/chromium-browser
