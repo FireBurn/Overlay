@@ -109,6 +109,7 @@ src_prepare() {
 		local buildtype="wine"
 		filter-flags -flto*
 		eapply "${FILESDIR}/gcc-10.patch"
+		eapply "${FILESDIR}/ascii-revert.patch"
 	fi
 
 	# Filter -march flags as this has been causing issues
