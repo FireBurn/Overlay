@@ -9,8 +9,7 @@ PLOCALE_BACKUP="en"
 inherit autotools estack eutils flag-o-matic gnome2-utils l10n multilib multilib-minimal pax-utils toolchain-funcs virtualx xdg-utils
 
 MY_PN="${PN%%-*}"
-MY_PV=5.17
-MY_P="${MY_PN}-${MY_PV}"
+MY_P="${MY_PN}-${PV}"
 
 if [[ ${PV} == "9999" ]] ; then
 	EGIT_REPO_URI="https://source.winehq.org/git/wine.git"
