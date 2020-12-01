@@ -28,7 +28,7 @@ LICENSE="MIT BSD"
 SLOT="0"
 IUSE=""
 
-DEPEND=">=media-libs/gmmlib-${PV}
+DEPEND=">=media-libs/gmmlib-20.3.2
 	>=x11-libs/libva-2.4.0
 	>=x11-libs/libpciaccess-0.13.1-r1:=
 "
