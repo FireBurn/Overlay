@@ -618,12 +618,12 @@ multilib_src_install_all() {
 }
 
 pkg_postinst() {
-	eselect wine register ${P}
+	eselect wine register ${PN}-${MY_PV}
 	if [[ ${PN} == "wine-vanilla" ]]; then
-		eselect wine register --vanilla ${P} || die
+		eselect wine register --vanilla ${PN}-${MY_PV} || die
 	else
 		if use staging; then
-			eselect wine register --staging ${P} || die
+			eselect wine register --staging ${PN}-${MY_PV} || die
 		fi
 	fi
 
@@ -646,12 +646,12 @@ pkg_postinst() {
 }
 
 pkg_prerm() {
-	eselect wine deregister ${P}
+	eselect wine deregister ${PN}-${MY_PV}
 	if [[ ${PN} == "wine-vanilla" ]]; then
-		eselect wine deregister --vanilla ${P} || die
+		eselect wine deregister --vanilla ${PN}-${MY_PV} || die
 	else
 		if use staging; then
-			eselect wine deregister --staging ${P} || die
+			eselect wine deregister --staging  ${PN}-${MY_PV}|| die
 		fi
 	fi
 
