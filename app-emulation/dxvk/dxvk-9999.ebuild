@@ -114,7 +114,7 @@ src_prepare() {
 	fi
 
 	# Filter -march flags as this has been causing issues
-	filter-flags "-march=*"
+	#filter-flags "-march=*"
 
 	# Create versioned setup script
 	cp "setup_dxvk.sh" "dxvk-setup"
