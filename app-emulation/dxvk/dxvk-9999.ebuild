@@ -113,9 +113,6 @@ src_prepare() {
 		eapply "${FILESDIR}/ascii-revert.patch"
 	fi
 
-	# Filter -march flags as this has been causing issues
-	#filter-flags "-march=*"
-
 	# Create versioned setup script
 	cp "setup_dxvk.sh" "dxvk-setup"
 	sed -e "s#basedir=.*#basedir=\"${EPREFIX}/usr\"#" -i "dxvk-setup" || die
