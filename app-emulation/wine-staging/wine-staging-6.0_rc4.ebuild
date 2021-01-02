@@ -288,45 +288,47 @@ wine_env_vcs_vars() {
 	fi
 }
 
-src_pretend() {
-	wine_build_environment_check || die
+pkg_pretend() {
+	if [[ ${MERGE_TYPE} != binary ]] ; then
+		wine_build_environment_check || die
 
-	# Verify OSS support
-	if use oss && ! use kernel_FreeBSD; then
-		if ! has_version ">=media-sound/oss-4"; then
-			eerror "You cannot build wine with USE=oss without having support from a"
-			eerror "FreeBSD kernel or >=media-sound/oss-4 (only available through external repos)"
-			eerror
-			die
+		# Verify OSS support
+		if use oss && ! use kernel_FreeBSD; then
+			if ! has_version ">=media-sound/oss-4"; then
+				eerror "You cannot build wine with USE=oss without having support from a"
+				eerror "FreeBSD kernel or >=media-sound/oss-4 (only available through external repos)"
+				eerror
+				die
+			fi
 		fi
-	fi
 
-	if use mingw && use abi_x86_32 && ! has_version "cross-i686-w64-mingw32/gcc"; then
-		eerror
-		eerror "USE=\"mingw\" is currently experimental, and requires the"
-		eerror "'cross-i686-w64-mingw32' compiler and its runtime for 32-bit builds."
-		eerror
-		eerror "These can be installed by using 'sys-devel/crossdev':"
-		eerror
-		eerror "crossdev --target i686-w64-mingw32"
-		eerror
-		eerror "For more information on setting up MinGW, see: https://wiki.gentoo.org/wiki/Mingw"
-		eerror
-		die "MinGW build was enabled, but no compiler to support it was found."
-	fi
+		if use mingw && use abi_x86_32 && ! has_version "cross-i686-w64-mingw32/gcc"; then
+			eerror
+			eerror "USE=\"mingw\" is currently experimental, and requires the"
+			eerror "'cross-i686-w64-mingw32' compiler and its runtime for 32-bit builds."
+			eerror
+			eerror "These can be installed by using 'sys-devel/crossdev':"
+			eerror
+			eerror "crossdev --target i686-w64-mingw32"
+			eerror
+			eerror "For more information on setting up MinGW, see: https://wiki.gentoo.org/wiki/Mingw"
+			eerror
+			die "MinGW build was enabled, but no compiler to support it was found."
+		fi
 
-	if use mingw && use abi_x86_64 && ! has_version "cross-x86_64-w64-mingw32/gcc"; then
-		eerror
-		eerror "USE=\"mingw\" is currently experimental, and requires the"
-		eerror "'cross-x86_64-w64-mingw32' compiler and its runtime for 64-bit builds."
-		eerror
-		eerror "These can be installed by using 'sys-devel/crossdev':"
-		eerror
-		eerror "crossdev --target x86_64-w64-mingw32"
-		eerror
-		eerror "For more information on setting up MinGW, see: https://wiki.gentoo.org/wiki/Mingw"
-		eerror
-		die "MinGW build was enabled, but no compiler to support it was found."
+		if use mingw && use abi_x86_64 && ! has_version "cross-x86_64-w64-mingw32/gcc"; then
+			eerror
+			eerror "USE=\"mingw\" is currently experimental, and requires the"
+			eerror "'cross-x86_64-w64-mingw32' compiler and its runtime for 64-bit builds."
+			eerror
+			eerror "These can be installed by using 'sys-devel/crossdev':"
+			eerror
+			eerror "crossdev --target x86_64-w64-mingw32"
+			eerror
+			eerror "For more information on setting up MinGW, see: https://wiki.gentoo.org/wiki/Mingw"
+			eerror
+			die "MinGW build was enabled, but no compiler to support it was found."
+		fi
 	fi
 }
 
