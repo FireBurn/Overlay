@@ -42,7 +42,7 @@ DEPEND="${RDEPEND}
 PATCHES=(
 	"${FILESDIR}/winelib-revert-r3.patch"
 	"${FILESDIR}/spec-revert.patch"
-	"${FILESDIR}/double-define.patch"
+	"${FILESDIR}/double-define-r2.patch"
 )
 
 bits() { [[ ${ABI} = amd64 ]] && echo 64 || echo 32; }
