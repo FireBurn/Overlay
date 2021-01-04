@@ -1,8 +1,20 @@
-From 0963e97d495c7cd275872ee50104395f8c7412b3 Mon Sep 17 00:00:00 2001
+From 0fb09da3fb27c1870b72f48a68b9abdcd28e90ca Mon Sep 17 00:00:00 2001
 From: Mike Lothian <mike@fireburn.co.uk>
-Date: Sat, 2 Jan 2021 18:16:44 +0000
+Date: Mon, 4 Jan 2021 18:37:32 +0000
 Subject: [PATCH] This re-adds winelib support
 
+---
+ README.md             |  2 +
+ build-win32.txt       |  8 ++--
+ build-win64.txt       |  8 ++--
+ build-wine32.txt      | 18 ++++++++
+ build-wine64.txt      | 18 ++++++++
+ meson.build           | 97 ++++++++++++++++++++++++++-----------------
+ package-release.sh    | 13 ++++--
+ src/d3d10/meson.build |  4 +-
+ 8 files changed, 119 insertions(+), 49 deletions(-)
+ create mode 100644 build-wine32.txt
+ create mode 100644 build-wine64.txt
 
 diff --git a/README.md b/README.md
 index ef3530ea..e3e4ec72 100644
@@ -18,22 +30,20 @@ index ef3530ea..e3e4ec72 100644
  ```
  # 64-bit build. For 32-bit builds, replace
 diff --git a/build-win32.txt b/build-win32.txt
-index a4c89505..8e9ae94b 100644
+index 2cb5cf0a..eacb4e40 100644
 --- a/build-win32.txt
 +++ b/build-win32.txt
-@@ -4,13 +4,11 @@ cpp = 'i686-w64-mingw32-g++'
+@@ -4,11 +4,11 @@ cpp = 'i686-w64-mingw32-g++'
  ar = 'i686-w64-mingw32-ar'
  strip = 'i686-w64-mingw32-strip'
  
 -[built-in options]
--c_args=['-msse', '-msse2']
--cpp_args=['-msse', '-msse2']
 -c_link_args = ['-static', '-static-libgcc']
 -cpp_link_args = ['-static', '-static-libgcc', '-static-libstdc++']
 -
  [properties]
-+c_args= @CFLAGS@ + ['-msse', '-msse2']
-+cpp_args= @CXXFLAGS@ + ['-msse', '-msse2']
++c_args= @CFLAGS@
++cpp_args= @CXXFLAGS@
 +c_link_args = @LDFLAGS@ + ['-static', '-static-libgcc']
 +cpp_link_args = @LDFLAGS@ + ['-static', '-static-libgcc', '-static-libstdc++']
  needs_exe_wrapper = true
@@ -61,10 +71,10 @@ index 1fad5ab7..fcae4eec 100644
  [host_machine]
 diff --git a/build-wine32.txt b/build-wine32.txt
 new file mode 100644
-index 00000000..1c5c5813
+index 00000000..bf4e26da
 --- /dev/null
 +++ b/build-wine32.txt
-@@ -0,0 +1,19 @@
+@@ -0,0 +1,18 @@
 +[binaries]
 +c = 'winegcc'
 +cpp = 'wineg++'
@@ -72,12 +82,11 @@ index 00000000..1c5c5813
 +strip = 'strip'
 +
 +[properties]
-+needs_exe_wrapper = true
-+
-+c_args= @CFLAGS@ + ['-m32', '-msse', '-msse2', '-fvisibility=hidden']
-+cpp_args= @CXXFLAGS@ + ['-m32', '-msse', '-msse2', '-fvisibility=hidden', '-fvisibility-inlines-hidden', '-D__WIDL_objidl_generated_name_0000000C=']
++c_args= @CFLAGS@ + ['-m32', '-fvisibility=hidden']
++cpp_args= @CXXFLAGS@ + ['-m32', '-fvisibility=hidden', '-fvisibility-inlines-hidden', '-D__WIDL_objidl_generated_name_0000000C=']
 +c_link_args = @LDFLAGS@ + ['-m32', '-mwindows', '-lpthread']
 +cpp_link_args= @LDFLAGS@ + ['-m32', '-mwindows', '-lpthread']
++needs_exe_wrapper = true
 +
 +[host_machine]
 +system = 'linux'
@@ -86,10 +95,10 @@ index 00000000..1c5c5813
 +endian = 'little'
 diff --git a/build-wine64.txt b/build-wine64.txt
 new file mode 100644
-index 00000000..195ecca8
+index 00000000..02a151c2
 --- /dev/null
 +++ b/build-wine64.txt
-@@ -0,0 +1,19 @@
+@@ -0,0 +1,18 @@
 +[binaries]
 +c = 'winegcc'
 +cpp = 'wineg++'
@@ -97,12 +106,11 @@ index 00000000..195ecca8
 +strip = 'strip'
 +
 +[properties]
-+needs_exe_wrapper = true
-+
 +c_args= @CFLAGS@ + ['-m64', '-fvisibility=hidden']
 +cpp_args= @CXXFLAGS@ + ['-m64', '-fvisibility=hidden', '-fvisibility-inlines-hidden', '-D__WIDL_objidl_generated_name_0000000C=']
 +c_link_args = @LDFLAGS@ + ['-m64', '-mwindows', '-lpthread']
 +cpp_link_args= @LDFLAGS@ + ['-m64', '-mwindows', '-lpthread']
++needs_exe_wrapper = true
 +
 +[host_machine]
 +system = 'linux'
@@ -110,10 +118,10 @@ index 00000000..195ecca8
 +cpu = 'x86_64'
 +endian = 'little'
 diff --git a/meson.build b/meson.build
-index 572546df..3001a5e2 100644
+index 5cb6299a..b5fe6701 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -34,51 +34,74 @@ else
+@@ -34,55 +34,78 @@ else
    dxvk_library_path = meson.source_root() + '/lib32'
  endif
  
@@ -171,9 +179,17 @@ index 572546df..3001a5e2 100644
 +    if dxvk_compiler.has_link_argument('-Wl,--enable-stdcall-fixup')
 +      add_global_link_arguments('-Wl,--enable-stdcall-fixup', language: 'cpp')
 +    endif
++    if dxvk_compiler.has_argument('-msse') and dxvk_compiler.has_argument('-msse2')
++      add_project_arguments('-msse', '-msse2', language: 'c')
++      add_project_arguments('-msse', '-msse2', language: 'cpp')
++    endif
    endif
 -  if dxvk_compiler.has_link_argument('-Wl,--enable-stdcall-fixup')
 -    add_global_link_arguments('-Wl,--enable-stdcall-fixup', language: 'cpp')
+-  endif
+-  if dxvk_compiler.has_argument('-msse') and dxvk_compiler.has_argument('-msse2')
+-    add_project_arguments('-msse', '-msse2', language: 'c')
+-    add_project_arguments('-msse', '-msse2', language: 'cpp')
 -  endif
 -endif
  
