@@ -109,6 +109,7 @@ src_prepare() {
 	else
 		local buildtype="wine"
 		filter-flags -flto*
+        append-cxxflags -fpermissive
 		eapply "${FILESDIR}/gcc-10.patch"
 		eapply "${FILESDIR}/ascii-revert.patch"
 	fi
