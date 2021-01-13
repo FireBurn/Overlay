@@ -1,20 +1,8 @@
-From 0fb09da3fb27c1870b72f48a68b9abdcd28e90ca Mon Sep 17 00:00:00 2001
+From 87c95a7b7458c5a9073e252fbb51cb8a8ad4f0cd Mon Sep 17 00:00:00 2001
 From: Mike Lothian <mike@fireburn.co.uk>
-Date: Mon, 4 Jan 2021 18:37:32 +0000
+Date: Wed, 13 Jan 2021 08:55:34 +0000
 Subject: [PATCH] This re-adds winelib support
 
----
- README.md             |  2 +
- build-win32.txt       |  8 ++--
- build-win64.txt       |  8 ++--
- build-wine32.txt      | 18 ++++++++
- build-wine64.txt      | 18 ++++++++
- meson.build           | 97 ++++++++++++++++++++++++++-----------------
- package-release.sh    | 13 ++++--
- src/d3d10/meson.build |  4 +-
- 8 files changed, 119 insertions(+), 49 deletions(-)
- create mode 100644 build-wine32.txt
- create mode 100644 build-wine64.txt
 
 diff --git a/README.md b/README.md
 index ef3530ea..e3e4ec72 100644
@@ -30,42 +18,32 @@ index ef3530ea..e3e4ec72 100644
  ```
  # 64-bit build. For 32-bit builds, replace
 diff --git a/build-win32.txt b/build-win32.txt
-index 2cb5cf0a..eacb4e40 100644
+index a1406832..1200d92e 100644
 --- a/build-win32.txt
 +++ b/build-win32.txt
-@@ -4,11 +4,11 @@ cpp = 'i686-w64-mingw32-g++'
- ar = 'i686-w64-mingw32-ar'
+@@ -5,6 +5,10 @@ ar = 'i686-w64-mingw32-ar'
  strip = 'i686-w64-mingw32-strip'
  
--[built-in options]
--c_link_args = ['-static', '-static-libgcc']
--cpp_link_args = ['-static', '-static-libgcc', '-static-libstdc++']
--
  [properties]
 +c_args= @CFLAGS@
 +cpp_args= @CXXFLAGS@
-+c_link_args = @LDFLAGS@ + ['-static', '-static-libgcc']
-+cpp_link_args = @LDFLAGS@ + ['-static', '-static-libgcc', '-static-libstdc++']
++c_link_args = @LDFLAGS@
++cpp_link_args = @LDFLAGS@
  needs_exe_wrapper = true
  
  [host_machine]
 diff --git a/build-win64.txt b/build-win64.txt
-index 1fad5ab7..fcae4eec 100644
+index 1aee4626..17690e8b 100644
 --- a/build-win64.txt
 +++ b/build-win64.txt
-@@ -4,11 +4,11 @@ cpp = 'x86_64-w64-mingw32-g++'
- ar = 'x86_64-w64-mingw32-ar'
+@@ -5,6 +5,10 @@ ar = 'x86_64-w64-mingw32-ar'
  strip = 'x86_64-w64-mingw32-strip'
  
--[built-in options]
--c_link_args = ['-static', '-static-libgcc']
--cpp_link_args = ['-static', '-static-libgcc', '-static-libstdc++']
--
  [properties]
 +c_args= @CFLAGS@
 +cpp_args= @CXXFLAGS@
-+c_link_args = @LDFLAGS@ + ['-static', '-static-libgcc']
-+cpp_link_args = @LDFLAGS@ + ['-static', '-static-libgcc', '-static-libstdc++']
++c_link_args = @LDFLAGS@
++cpp_link_args = @LDFLAGS@
  needs_exe_wrapper = true
  
  [host_machine]
@@ -118,10 +96,10 @@ index 00000000..02a151c2
 +cpu = 'x86_64'
 +endian = 'little'
 diff --git a/meson.build b/meson.build
-index 5cb6299a..b5fe6701 100644
+index 97182367..db001861 100644
 --- a/meson.build
 +++ b/meson.build
-@@ -34,55 +34,78 @@ else
+@@ -34,58 +34,81 @@ else
    dxvk_library_path = meson.source_root() + '/lib32'
  endif
  
@@ -151,6 +129,9 @@ index 5cb6299a..b5fe6701 100644
 +  res_ext = '.res'
 +  def_spec_ext = '.spec'
  else
+-  add_global_link_arguments('-static', '-static-libgcc', language: 'c')
+-  add_global_link_arguments('-static', '-static-libgcc', '-static-libstdc++', language: 'cpp')
+-
 -  if cpu_family == 'x86_64'
 -    wrc = find_program('x86_64-w64-mingw32-windres')
 -  elif cpu_family == 'x86'
@@ -159,6 +140,9 @@ index 5cb6299a..b5fe6701 100644
 +    wrc = find_program('rc')
    else
 -    error('Unsupported target architecture')
++    add_global_link_arguments('-static', '-static-libgcc', language: 'c')
++    add_global_link_arguments('-static', '-static-libgcc', '-static-libstdc++', language: 'cpp')
++
 +    if cpu_family == 'x86_64'
 +      wrc = find_program('x86_64-w64-mingw32-windres')
 +    elif cpu_family == 'x86'

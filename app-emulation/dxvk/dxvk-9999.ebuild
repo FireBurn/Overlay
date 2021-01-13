@@ -43,6 +43,7 @@ PATCHES=(
 	"${FILESDIR}/winelib-revert-r3.patch"
 	"${FILESDIR}/spec-revert.patch"
 	"${FILESDIR}/double-define-r2.patch"
+	"${FILESDIR}/dxvk-wineopenxr.patch"
 )
 
 bits() { [[ ${ABI} = amd64 ]] && echo 64 || echo 32; }
@@ -109,7 +110,6 @@ src_prepare() {
 	else
 		local buildtype="wine"
 		filter-flags -flto*
-        append-cxxflags -fpermissive
 		eapply "${FILESDIR}/gcc-10.patch"
 		eapply "${FILESDIR}/ascii-revert.patch"
 	fi

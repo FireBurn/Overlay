@@ -1,0 +1,58 @@
+commit dfebb1ec797ce24544a68e4e94e1a80e5b650ccf
+Author: TheGreatMcPain <sixsupersonic@gmail.com>
+Date:   Thu Jan 7 20:38:45 2021 -0600
+
+    Fix build with winelib
+
+diff --git a/src/dxvk/dxvk_openxr.cpp b/src/dxvk/dxvk_openxr.cpp
+index d632b989..2ed87128 100644
+--- a/src/dxvk/dxvk_openxr.cpp
++++ b/src/dxvk/dxvk_openxr.cpp
+@@ -5,6 +5,10 @@
+ #pragma GCC diagnostic ignored "-Wnon-virtual-dtor"
+ #endif
+ 
++#ifdef __WINE__
++#include <dlfcn.h>
++#endif
++
+ using PFN___wineopenxr_GetVulkanInstanceExtensions = int (WINAPI *)(uint32_t, uint32_t *, char *);
+ using PFN___wineopenxr_GetVulkanDeviceExtensions = int (WINAPI *)(uint32_t, uint32_t *, char *);
+ 
+@@ -148,21 +152,36 @@ namespace dxvk {
+ 
+   SoHandle DxvkXrProvider::loadLibrary() {
+     SoHandle handle = nullptr;
++    #ifdef __WINE__
++    if (!(handle = ::dlopen("libwineopenxr.so", RTLD_LAZY | RTLD_NOLOAD)))
++      handle = ::dlopen("libwineopenxr.so", RTLD_LAZY | RTLD_LOCAL);
++    m_loadedOxrApi = handle != nullptr;
++    #else
+     if (!(handle = ::GetModuleHandle("wineopenxr.dll"))) {
+       handle = ::LoadLibrary("wineopenxr.dll");
+       m_loadedOxrApi = handle != nullptr;
+     }
++    #endif
+     return handle;
+   }
+ 
+ 
+   void DxvkXrProvider::freeLibrary() {
++    #ifdef __WINE__
++    ::dlclose(m_wineOxr);
++    #else
+     ::FreeLibrary(m_wineOxr);
++    #endif
+   }
+ 
+   
+   void* DxvkXrProvider::getSym(const char* sym) {
++    #ifdef __WINE__
++    return reinterpret_cast<void*>(
++      ::dlsym(m_wineOxr, sym));
++    #else
+     return reinterpret_cast<void*>(
+       ::GetProcAddress(m_wineOxr, sym));
++    #endif
+   }
+ }
