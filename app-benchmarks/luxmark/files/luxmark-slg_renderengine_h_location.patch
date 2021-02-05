@@ -1,0 +1,12 @@
+diff -Nurb /tmp/a/src/luxmarkapp.cpp /tmp/b/src/luxmarkapp.cpp
+--- /tmp/a/src/luxmarkapp.cpp	2015-12-05 12:57:14.295871240 +0100
++++ /tmp/b/src/luxmarkapp.cpp	2015-12-05 11:54:50.182003445 +0100
+@@ -26,7 +26,7 @@
+ #include <QGraphicsSceneMouseEvent>
+ 
+ #include "slg/film/film.h"
+-#include "slg/renderengine.h"
++#include "slg/engines/renderengine.h"
+ #include "slg/engines/pathocl/pathocl.h"
+ 
+ #include "luxmarkcfg.h"

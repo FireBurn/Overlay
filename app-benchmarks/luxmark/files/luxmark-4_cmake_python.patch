@@ -1,0 +1,121 @@
+diff -NurB a/cmake/Dependencies.cmake LuxMark-luxmark_v4.0alpha0/cmake/Dependencies.cmake
+--- a/cmake/Dependencies.cmake	2020-10-30 15:42:05.975803148 +0100
++++ LuxMark-luxmark_v4.0alpha0/cmake/Dependencies.cmake	2020-10-30 15:42:18.695802607 +0100
+@@ -40,14 +40,79 @@
+ include_directories(BEFORE SYSTEM ${JPEG_INCLUDE_DIR})
+ find_package(PNG REQUIRED)
+ include_directories(BEFORE SYSTEM ${PNG_PNG_INCLUDE_DIR})
+-# Find Python Libraries
+-if("${PYTHON_V}" EQUAL "27")
+-	find_package(PythonLibs 2.7)
++
++function( FindBoostPythonVersion LowVersion EndVersion )
++
++message(STATUS "Testing Python range:  ${LowVersion}...<${EndVersion}")
++find_package(Python ${LowVersion}...<${EndVersion}  COMPONENTS Interpreter Development)
++
++if(NOT Python_FOUND)
++	message(STATUS "pYTHON NOT FOUND")
++	set(PythonTestedVersion OFF PARENT_SCOPE)
++	set(PythonTestedVersionSuitable OFF PARENT_SCOPE)
++else()
++
++# Find Boost
++set(Boost_USE_STATIC_LIBS       OFF)
++set(Boost_USE_MULTITHREADED     ON)
++set(Boost_USE_STATIC_RUNTIME    OFF)
++set(BOOST_ROOT                  "${BOOST_SEARCH_PATH}")
++#set(Boost_DEBUG                 ON)
++set(Boost_MINIMUM_VERSION       "1.56.0")
++
++
++# For Windows builds, PYTHON_V must be defined as "3x" (x=Python minor version, e.g. "35")
++# For other platforms, specifying python minor version is not needed
++set(LUXRAYS_BOOST_COMPONENTS thread program_options filesystem serialization iostreams regex system python${Python_VERSION_MAJOR}${Python_VERSION_MINOR} chrono serialization)
++find_package(Boost ${Boost_MINIMUM_VERSION} COMPONENTS ${LUXRAYS_BOOST_COMPONENTS})
++if (NOT Boost_FOUND)
++        # Try again with the other type of libs
++        if(Boost_USE_STATIC_LIBS)
++                set(Boost_USE_STATIC_LIBS OFF)
++        else()
++                set(Boost_USE_STATIC_LIBS ON)
++        endif()
++		message(STATUS "Re-trying with link static = ${Boost_USE_STATIC_LIBS}")
++        find_package(Boost ${Boost_MINIMUM_VERSION} COMPONENTS ${LUXRAYS_BOOST_COMPONENTS})
++endif()
++
++if(Boost_FOUND)
++	set(PythonTestedVersion "${Python_VERSION}" PARENT_SCOPE)
++	set(PythonTestedVersionSuitable ON PARENT_SCOPE)
++
+ else()
+-	find_package(PythonLibs 3.4)
++	set(PythonTestedVersion "${Python_VERSION}" PARENT_SCOPE)
++	set(PythonTestedVersionSuitable OFF PARENT_SCOPE)
+ endif()
+ 
+-include_directories(${PYTHON_INCLUDE_DIRS})
++endif()
++endfunction()
++
++set(PythonVersionCandidates 9999 0)
++while(NOT Python_VERSION)
++	list(GET PythonVersionCandidates 0 PythonTestedVersionMax)
++	list(GET PythonVersionCandidates 1 PythonTestedVersionMin)
++	set(PACKAGE_FIND_VERSION_RANGE_MIN EXCLUDE)
++	FindBoostPythonVersion(${PythonTestedVersionMin}.1 ${PythonTestedVersionMax})
++	if(NOT PythonTestedVersion)
++		list(REMOVE_AT PythonVersionCandidates 0)
++		list(LENGTH PythonVersionCandidates CandidatesCount)
++		if(CandidatesCount LESS 2)
++			message(STATUS "No suitable version of python found")
++			break()
++		endif()
++		continue()
++	endif()
++	if(PythonTestedVersionSuitable)
++		message(STATUS "Suitable python version: ${PythonTestedVersion}")
++		find_package(Python ${PythonTestedVersion} COMPONENTS Interpreter Development)
++		break()
++	else()
++		list(INSERT PythonVersionCandidates 1 "${PythonTestedVersion}")
++	endif()
++endwhile()
++# Find Python Libraries
++
+ 
+ # Find Boost
+ set(Boost_USE_STATIC_LIBS       OFF)
+@@ -57,9 +122,10 @@
+ #set(Boost_DEBUG                 ON)
+ set(Boost_MINIMUM_VERSION       "1.56.0")
+ 
++
+ # For Windows builds, PYTHON_V must be defined as "3x" (x=Python minor version, e.g. "35")
+ # For other platforms, specifying python minor version is not needed
+-set(LUXRAYS_BOOST_COMPONENTS thread program_options filesystem serialization iostreams regex system python${PYTHON_V} chrono serialization numpy${PYTHON_V})
++set(LUXRAYS_BOOST_COMPONENTS thread program_options filesystem serialization iostreams regex system python${Python_VERSION_MAJOR}${Python_VERSION_MINOR} chrono serialization)
+ find_package(Boost ${Boost_MINIMUM_VERSION} COMPONENTS ${LUXRAYS_BOOST_COMPONENTS})
+ if (NOT Boost_FOUND)
+         # Try again with the other type of libs
+@@ -72,6 +138,8 @@
+         find_package(Boost ${Boost_MINIMUM_VERSION} COMPONENTS ${LUXRAYS_BOOST_COMPONENTS})
+ endif()
+ 
++include_directories(${PYTHON_INCLUDE_DIRS})
++
+ if (Boost_FOUND)
+ 	include_directories(BEFORE SYSTEM ${Boost_INCLUDE_DIRS})
+ 	link_directories(${Boost_LIBRARY_DIRS})
+diff -Nurb a/src/CMakeLists.txt LuxMark-luxmark_v4.0alpha0/src/CMakeLists.txt
+--- a/src/CMakeLists.txt        2019-11-22 23:58:04.602207980 +0100
++++ LuxMark-luxmark_v4.0alpha0/src/CMakeLists.txt       2019-11-22 23:58:55.385208544 +0100
+@@ -103,7 +103,7 @@
+ 
+ ADD_EXECUTABLE(luxmark WIN32 ${LUXMARK_SRCS})
+ 
+-TARGET_LINK_LIBRARIES(luxmark ${ALL_LUXCORE_LIBRARIES} ${Boost_LIBRARIES} ${Qt5_LIBRARIES} ${OPENGL_gl_LIBRARY} ${OPENCL_LIBRARIES})
++TARGET_LINK_LIBRARIES(luxmark ${ALL_LUXCORE_LIBRARIES} ${Boost_LIBRARIES} ${Qt5_LIBRARIES} ${OPENGL_gl_LIBRARY} ${OPENCL_LIBRARIES} ${Python_LIBRARIES})
+ if (WIN32)
+        # This is needed by Boost 1.67 but is not found automatically
+     TARGET_LINK_LIBRARIES(luxmark bcrypt.lib)

@@ -1,0 +1,28 @@
+diff -NurB b/cmake/Dependencies.cmake d/cmake/Dependencies.cmake
+--- b/cmake/Dependencies.cmake	2017-12-07 15:32:43.000000000 +0100
++++ d/cmake/Dependencies.cmake	2018-09-02 10:50:06.151819238 +0200
+@@ -121,7 +121,7 @@
+ 	FIND_LIBRARY(LUXRAYS_LIBRARY libluxrays.a ${OSX_DEPENDENCY_ROOT}/lib/LuxRays)
+ ELSE(APPLE)
+ 	FIND_PATH(LUXRAYS_INCLUDE_DIRS NAMES luxrays/luxrays.h PATHS ../luxrays/include ${LuxRays_HOME}/include )
+-	FIND_LIBRARY(LUXRAYS_LIBRARY luxrays PATHS ../luxrays/lib ${LuxRays_HOME}/lib PATH_SUFFIXES "" release relwithdebinfo minsizerel dist )
++	FIND_LIBRARY(LUXRAYS_LIBRARY luxrays.so PATHS ../luxrays/lib ${LuxRays_HOME}/lib PATH_SUFFIXES "" release relwithdebinfo minsizerel dist )
+ ENDIF(APPLE)
+ 
+ IF (LUXRAYS_INCLUDE_DIRS AND LUXRAYS_LIBRARY)
+@@ -148,11 +148,11 @@
+ 	FIND_LIBRARY(LUXCORE_LIBRARY libluxcore.a ${OSX_DEPENDENCY_ROOT}/lib/LuxRays)
+ ELSE(APPLE)
+ 	FIND_PATH(SLG_INCLUDE_DIRS NAMES slg/slg.h PATHS ../luxrays/include ${LuxRays_HOME}/include)
+-	FIND_LIBRARY(SLG_LIBRARY_CORE slg-core PATHS ${LuxRays_HOME}/lib ../luxrays/lib PATH_SUFFIXES "" release relwithdebinfo minsizerel dist )
+-	FIND_LIBRARY(SLG_LIBRARY_FILM slg-film PATHS ${LuxRays_HOME}/lib ../luxrays/lib PATH_SUFFIXES "" release relwithdebinfo minsizerel dist )
+-	FIND_LIBRARY(SLG_LIBRARY_KERNELS slg-kernels PATHS ${LuxRays_HOME}/lib ../luxrays/lib PATH_SUFFIXES "" release relwithdebinfo minsizerel dist )
++	FIND_LIBRARY(SLG_LIBRARY_CORE slg-core.so PATHS ${LuxRays_HOME}/lib ../luxrays/lib PATH_SUFFIXES "" release relwithdebinfo minsizerel dist )
++	FIND_LIBRARY(SLG_LIBRARY_FILM slg-film.so PATHS ${LuxRays_HOME}/lib ../luxrays/lib PATH_SUFFIXES "" release relwithdebinfo minsizerel dist )
++	FIND_LIBRARY(SLG_LIBRARY_KERNELS slg-kernels.so PATHS ${LuxRays_HOME}/lib ../luxrays/lib PATH_SUFFIXES "" release relwithdebinfo minsizerel dist )
+ 	FIND_PATH(LUXCORE_INCLUDE_DIRS NAMES luxcore/luxcore.h PATHS ../luxrays/include ${LuxRays_HOME}/include)
+-	FIND_LIBRARY(LUXCORE_LIBRARY luxcore PATHS ../luxrays/lib ${LuxRays_HOME}/lib PATH_SUFFIXES "" release relwithdebinfo minsizerel dist )
++	FIND_LIBRARY(LUXCORE_LIBRARY luxcore.so PATHS ../luxrays/lib ${LuxRays_HOME}/lib PATH_SUFFIXES "" release relwithdebinfo minsizerel dist )
+ ENDIF(APPLE)
+ 
+ IF (SLG_INCLUDE_DIRS AND SLG_LIBRARY_CORE AND SLG_LIBRARY_FILM AND SLG_LIBRARY_KERNELS)

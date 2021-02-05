@@ -1,0 +1,897 @@
+diff -NurB a/cmake/Dependencies.cmake b/cmake/Dependencies.cmake
+--- a/cmake/Dependencies.cmake	2015-09-01 12:07:29.000000000 +0200
++++ b/cmake/Dependencies.cmake	2017-12-07 15:32:43.000000000 +0100
+@@ -83,22 +83,6 @@
+ 	include_directories(SYSTEM ${OPENGL_INCLUDE_PATH})
+ endif()
+ 
+-# GLEW
+-set(GLEW_ROOT                  "${GLEW_SEARCH_PATH}")
+-if(NOT APPLE)
+-	find_package(GLEW)
+-endif()
+-if (GLEW_FOUND)
+-	include_directories(SYSTEM ${GLEW_INCLUDE_PATH})
+-endif ()
+-
+-# GLUT
+-set(GLUT_ROOT                  "${GLUT_SEARCH_PATH}")
+-find_package(GLUT)
+-if (GLUT_FOUND)
+-	include_directories(SYSTEM ${GLUT_INCLUDE_PATH})
+-endif ()
+-
+ set(OPENCL_ROOT                  "${OPENCL_SEARCH_PATH}")
+ find_package(OpenCL)
+ # OpenCL
+@@ -157,23 +141,28 @@
+ 
+ IF(APPLE)
+ 	FIND_PATH(SLG_INCLUDE_DIRS NAMES slg/slg.h PATHS ${OSX_DEPENDENCY_ROOT}/include/LuxRays)
+-	FIND_LIBRARY(SLG_LIBRARY libsmallluxgpu.a ${OSX_DEPENDENCY_ROOT}/lib/LuxRays)
++	FIND_LIBRARY(SLG_LIBRARY_CORE libslg-core.a ${OSX_DEPENDENCY_ROOT}/lib/LuxRays)
++	FIND_LIBRARY(SLG_LIBRARY_FILM libslg-film.a ${OSX_DEPENDENCY_ROOT}/lib/LuxRays)
++	FIND_LIBRARY(SLG_LIBRARY_KERNELS libslg-kernels.a ${OSX_DEPENDENCY_ROOT}/lib/LuxRays)
+ 	FIND_PATH(LUXCORE_INCLUDE_DIRS NAMES luxcore/luxcore.h PATHS ${OSX_DEPENDENCY_ROOT}/include/LuxRays)
+ 	FIND_LIBRARY(LUXCORE_LIBRARY libluxcore.a ${OSX_DEPENDENCY_ROOT}/lib/LuxRays)
+ ELSE(APPLE)
+-	FIND_PATH(SLG_INCLUDE_DIRS NAMES slg/slg.h PATHS ../luxrays/include)
+-	FIND_LIBRARY(SLG_LIBRARY smallluxgpu PATHS ../luxrays/lib ${LuxRays_HOME}/lib PATH_SUFFIXES "" release relwithdebinfo minsizerel dist )
+-	FIND_PATH(LUXCORE_INCLUDE_DIRS NAMES luxcore/luxcore.h PATHS ../luxrays/include)
++	FIND_PATH(SLG_INCLUDE_DIRS NAMES slg/slg.h PATHS ../luxrays/include ${LuxRays_HOME}/include)
++	FIND_LIBRARY(SLG_LIBRARY_CORE slg-core PATHS ${LuxRays_HOME}/lib ../luxrays/lib PATH_SUFFIXES "" release relwithdebinfo minsizerel dist )
++	FIND_LIBRARY(SLG_LIBRARY_FILM slg-film PATHS ${LuxRays_HOME}/lib ../luxrays/lib PATH_SUFFIXES "" release relwithdebinfo minsizerel dist )
++	FIND_LIBRARY(SLG_LIBRARY_KERNELS slg-kernels PATHS ${LuxRays_HOME}/lib ../luxrays/lib PATH_SUFFIXES "" release relwithdebinfo minsizerel dist )
++	FIND_PATH(LUXCORE_INCLUDE_DIRS NAMES luxcore/luxcore.h PATHS ../luxrays/include ${LuxRays_HOME}/include)
+ 	FIND_LIBRARY(LUXCORE_LIBRARY luxcore PATHS ../luxrays/lib ${LuxRays_HOME}/lib PATH_SUFFIXES "" release relwithdebinfo minsizerel dist )
+ ENDIF(APPLE)
+ 
+-IF (SLG_INCLUDE_DIRS AND SLG_LIBRARY)
++IF (SLG_INCLUDE_DIRS AND SLG_LIBRARY_CORE AND SLG_LIBRARY_FILM AND SLG_LIBRARY_KERNELS)
++	SET(SLG_LIBRARY ${SLG_LIBRARY_CORE};${SLG_LIBRARY_FILM};${SLG_LIBRARY_KERNELS})
+ 	MESSAGE(STATUS "SLG include directory: " ${SLG_INCLUDE_DIRS})
+ 	MESSAGE(STATUS "SLG library directory: " ${SLG_LIBRARY})
+ 	INCLUDE_DIRECTORIES(SYSTEM ${SLG_INCLUDE_DIRS})
+-ELSE (SLG_INCLUDE_DIRS AND SLG_LIBRARY)
++ELSE (SLG_INCLUDE_DIRS AND SLG_LIBRARY_CORE AND SLG_LIBRARY_FILM AND SLG_LIBRARY_KERNELS)
+ 	MESSAGE(FATAL_ERROR "SLG Library not found.")
+-ENDIF (SLG_INCLUDE_DIRS AND SLG_LIBRARY)
++ENDIF (SLG_INCLUDE_DIRS AND SLG_LIBRARY_CORE AND SLG_LIBRARY_FILM AND SLG_LIBRARY_KERNELS)
+ 
+ IF (LUXCORE_INCLUDE_DIRS AND LUXCORE_LIBRARY)
+ 	MESSAGE(STATUS "LuxCore include directory: " ${LUXCORE_INCLUDE_DIRS})
+@@ -182,3 +171,5 @@
+ ELSE (LUXCORE_INCLUDE_DIRS AND LUXCORE_LIBRARY)
+ 	MESSAGE(FATAL_ERROR "LuxCore Library not found.")
+ ENDIF (LUXCORE_INCLUDE_DIRS AND LUXCORE_LIBRARY)
++
++INCLUDE_DIRECTORIES(SYSTEM "${LUXCORE_INCLUDE_DIRS}/../deps/eos_portable_archive-v5.1")
+diff -NurB a/cmake/exportmaps/linux_symbol_exports.map b/cmake/exportmaps/linux_symbol_exports.map
+--- a/cmake/exportmaps/linux_symbol_exports.map	1970-01-01 01:00:00.000000000 +0100
++++ b/cmake/exportmaps/linux_symbol_exports.map	2017-12-07 15:32:43.000000000 +0100
+@@ -0,0 +1,21 @@
++/* Exclude symbols that may clash with system 
++ * components, such as mesa, gtk etc.. This is also
++ * good to keep ELF tables clean and small.
++ * The symbols will be treated as if they were marked as __private_extern__
++ * (aka visibility=hidden) and will not be global in the output file
++ * essentially for png and boost atm., can be enlarged later
++ */
++
++{
++global:
++	*;
++	*_boost*;
++local:
++	*png*;
++	*boost*;
++	*TIFF*;
++	*OpenImageIO*;
++	*jpeg*;
++	*jinit*;
++};
++
+diff -NurB a/cmake/PlatformSpecific.cmake b/cmake/PlatformSpecific.cmake
+--- a/cmake/PlatformSpecific.cmake	2015-09-01 12:07:29.000000000 +0200
++++ b/cmake/PlatformSpecific.cmake	2017-12-07 15:32:43.000000000 +0100
+@@ -119,6 +119,9 @@
+   
+ ENDIF()
+ 
++IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
++  set(CMAKE_EXE_LINKER_FLAGS -Wl,--version-script='${CMAKE_SOURCE_DIR}/cmake/exportmaps/linux_symbol_exports.map')
++ENDIF()
+ 
+ # Setting Universal Binary Properties, only for Mac OS X
+ #  generate with xcode/crosscompile, setting: ( darwin - 10.6 - gcc - g++ - MacOSX10.6.sdk - Find from root, then native system )
+@@ -143,7 +146,10 @@
+ 
+ execute_process(COMMAND uname -r OUTPUT_VARIABLE MAC_SYS) # check for actual system-version
+ 
+-	if(${MAC_SYS} MATCHES 14)
++	if(${MAC_SYS} MATCHES 15)
++		set(OSX_SYSTEM 10.11)
++		cmake_minimum_required(VERSION 3.0.0) # throw an error here, older cmake cannot handle 2 digit subversion !
++	elseif(${MAC_SYS} MATCHES 14)
+ 		set(OSX_SYSTEM 10.10)
+ 		cmake_minimum_required(VERSION 3.0.0) # throw an error here, older cmake cannot handle 2 digit subversion !
+ 	elseif(${MAC_SYS} MATCHES 13)
+diff -NurB a/cmake/SpecializedConfig/Config_Dade.cmake b/cmake/SpecializedConfig/Config_Dade.cmake
+--- a/cmake/SpecializedConfig/Config_Dade.cmake	2015-09-01 12:07:29.000000000 +0200
++++ b/cmake/SpecializedConfig/Config_Dade.cmake	2017-12-07 15:32:43.000000000 +0100
+@@ -9,14 +9,15 @@
+ 
+ MESSAGE(STATUS "Using Dade's Linux Configuration settings")
+ 
+-#SET(BOOST_SEARCH_PATH		"/home/david/projects/luxrender-dev/boost_1_47_0")
+-#SET(OPENIMAGEIO_ROOT_DIR	"/home/david/projects/luxrender-dev/oiio-RB-1.3/dist/linux64")
+-#SET(OPENEXR_ROOT			"/usr/local")
++SET(BOOST_SEARCH_PATH		"/home/david/projects/luxcorerender/boost_1_56_0-bin")
++SET(OPENIMAGEIO_ROOT_DIR	"/home/david/projects/luxcorerender/oiio/dist/linux64")
+ 
+ SET(OPENCL_SEARCH_PATH	"$ENV{AMDAPPSDKROOT}")
+ SET(OPENCL_INCLUDEPATH	"${OPENCL_SEARCH_PATH}/include")
+-#SET(OPENCL_LIBRARYDIR	"${OPENCL_SEARCH_PATH}/lib/x86_64")
+-SET(EMBREE_SEARCH_PATH	"/home/david/src/embree-bin-2.3.3_linux")
++
++SET(EMBREE_SEARCH_PATH	"/home/david/projects/luxcorerender/embree-dade")
++
++SET(LuxRays_HOME		"/home/david/projects/luxcorerender/LuxCore")
+ 
+ #SET(CMAKE_BUILD_TYPE "Debug")
+ SET(CMAKE_BUILD_TYPE "Release")
+diff -NurB a/cmake/SpecializedConfig/Config_Linux-Static.cmake b/cmake/SpecializedConfig/Config_Linux-Static.cmake
+--- a/cmake/SpecializedConfig/Config_Linux-Static.cmake	1970-01-01 01:00:00.000000000 +0100
++++ b/cmake/SpecializedConfig/Config_Linux-Static.cmake	2017-12-07 15:32:43.000000000 +0100
+@@ -0,0 +1,21 @@
++
++###########################################################################
++#
++# Configuration
++#
++###########################################################################
++
++#cmake -DLUXRAYS_CUSTOM_CONFIG=cmake/SpecializedConfig/Config_Linux-Static.cmake .
++
++MESSAGE(STATUS "Using my own settings")
++
++set(FREEIMAGE_ROOT            "${LuxRays_SOURCE_DIR}/../target/include")
++set(BOOST_SEARCH_PATH         "${LuxRays_SOURCE_DIR}/../target/lib")
++
++# set(OPENCL_SEARCH_PATH        "$ENV{ATISTREAMSDKROOT}")
++set(OPENCL_SEARCH_PATH        "/usr/src/opencl-sdk/include")
++set(OPENCL_LIBRARYDIR         "${OPENCL_SEARCH_PATH}/lib/x86_64")
++
++# set(BUILD_LUXMARK TRUE)
++set(CMAKE_BUILD_TYPE "Release")
++
+diff -NurB a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt	2015-09-01 12:07:29.000000000 +0200
++++ b/CMakeLists.txt	2017-12-07 15:32:43.000000000 +0100
+@@ -139,14 +139,6 @@
+ 	MESSAGE(FATAL_ERROR "--> Could not locate required OpenGL files")
+ endif()
+ 
+-if (NOT GLEW_FOUND)
+-	MESSAGE(FATAL_ERROR "--> Could not locate required GLEW files, disabling samples build - Please check ${GLEW_SEARCH_PATH}")
+-endif()
+-
+-if (NOT GLUT_FOUND)
+-	MESSAGE(FATAL_ERROR "--> Could not locate required GLUT files, disabling samples build - Please check ${GLUT_SEARCH_PATH}")
+-endif()
+-
+ if(NOT WIN32)
+ 	ADD_DEFINITIONS(-msse2 -mfpmath=sse -ftree-vectorize -funroll-loops -Wall -fPIC -DHAVE_PTHREAD_H)
+ endif()
+diff -NurB a/src/CMakeLists.txt b/src/CMakeLists.txt
+--- a/src/CMakeLists.txt	2015-09-01 12:07:29.000000000 +0200
++++ b/src/CMakeLists.txt	2017-12-07 15:32:43.000000000 +0100
+@@ -57,6 +57,9 @@
+     resultdialog.cpp
+ 	submitdialog.cpp
+ 	luxrendersession.cpp
++	convtest/convtest.cpp
++	convtest/pdiff/lpyramid.cpp
++	convtest/pdiff/metric.cpp
+ 	)
+ set(LUXMARK_MOC
+ 	aboutdialog.h
+diff -NurB a/src/convtest/convtest.cpp b/src/convtest/convtest.cpp
+--- a/src/convtest/convtest.cpp	1970-01-01 01:00:00.000000000 +0100
++++ b/src/convtest/convtest.cpp	2017-12-07 15:32:43.000000000 +0100
+@@ -0,0 +1,67 @@
++ /***************************************************************************
++ *   Copyright (C) 1998-2013 by authors (see AUTHORS.txt)                  *
++ *                                                                         *
++ *   This file is part of LuxMark.                                         *
++ *                                                                         *
++ *   LuxMark is free software; you can redistribute it and/or modify       *
++ *   it under the terms of the GNU General Public License as published by  *
++ *   the Free Software Foundation; either version 3 of the License, or     *
++ *   (at your option) any later version.                                   *
++ *                                                                         *
++ *   LuxMark is distributed in the hope that it will be useful,            *
++ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
++ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
++ *   GNU General Public License for more details.                          *
++ *                                                                         *
++ *   You should have received a copy of the GNU General Public License     *
++ *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
++ *                                                                         *
++ *   LuxMark website: http://www.luxrender.net                             *
++ ***************************************************************************/
++
++#include <cstdio>
++#include <cmath>
++#include <algorithm>
++
++#include "convtest/convtest.h"
++#include "convtest/pdiff/metric.h"
++
++using namespace lux;
++
++//------------------------------------------------------------------------------
++// ConvergenceTest class
++//------------------------------------------------------------------------------
++
++ConvergenceTest::ConvergenceTest(const u_int w, const u_int h) : width(w), height(h) {
++}
++
++ConvergenceTest::~ConvergenceTest() {
++}
++
++void ConvergenceTest::NeedTVI() {
++	tvi.resize(width * height, 0.f);
++}
++
++void ConvergenceTest::Reset() {
++	reference.resize(0);
++}
++
++void ConvergenceTest::Reset(const u_int w, const u_int h) {
++	width = w;
++	height = h;
++	reference.resize(0);	
++}
++
++u_int ConvergenceTest::Test(const float *image) {
++	const u_int pixelCount = width * height;
++
++	if (reference.size() == 0) {
++		reference.resize(pixelCount * 3);
++		std::copy(image, image + pixelCount * 3, reference.begin());
++		return pixelCount;
++	} else {
++		const u_int count = Yee_Compare(&reference[0], image, NULL, &tvi[0], width, height);
++		std::copy(image, image + pixelCount * 3, reference.begin());
++		return count;
++	}
++}
+diff -NurB a/src/convtest/convtest.h b/src/convtest/convtest.h
+--- a/src/convtest/convtest.h	1970-01-01 01:00:00.000000000 +0100
++++ b/src/convtest/convtest.h	2017-12-07 15:32:43.000000000 +0100
+@@ -0,0 +1,53 @@
++ /***************************************************************************
++ *   Copyright (C) 1998-2013 by authors (see AUTHORS.txt)                  *
++ *                                                                         *
++ *   This file is part of LuxMark.                                         *
++ *                                                                         *
++ *   LuxMark is free software; you can redistribute it and/or modify       *
++ *   it under the terms of the GNU General Public License as published by  *
++ *   the Free Software Foundation; either version 3 of the License, or     *
++ *   (at your option) any later version.                                   *
++ *                                                                         *
++ *   LuxMark is distributed in the hope that it will be useful,            *
++ *   but WITHOUT ANY WARRANTY; without even the implied warranty of        *
++ *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         *
++ *   GNU General Public License for more details.                          *
++ *                                                                         *
++ *   You should have received a copy of the GNU General Public License     *
++ *   along with this program.  If not, see <http://www.gnu.org/licenses/>. *
++ *                                                                         *
++ *   LuxMark website: http://www.luxrender.net                             *
++ ***************************************************************************/
++
++#ifndef LUX_CONVTEST_H
++#define LUX_CONVTEST_H
++
++#include <vector>
++
++#include "luxrays/luxrays.h"
++#include "convtest/pdiff/metric.h"
++
++namespace lux {
++
++class ConvergenceTest {
++public:
++	ConvergenceTest(const u_int w, const u_int h);
++	virtual ~ConvergenceTest();
++
++	void NeedTVI();
++	const float *GetTVI() const { return &tvi[0]; }
++	
++	void Reset();
++	void Reset(const u_int w, const u_int h);
++	u_int Test(const float *image);
++
++private:
++	u_int width, height;
++	
++	std::vector<float> reference;
++	std::vector<float> tvi;
++};
++
++}
++
++#endif
+diff -NurB a/src/convtest/pdiff/lpyramid.cpp b/src/convtest/pdiff/lpyramid.cpp
+--- a/src/convtest/pdiff/lpyramid.cpp	1970-01-01 01:00:00.000000000 +0100
++++ b/src/convtest/pdiff/lpyramid.cpp	2017-12-07 15:32:43.000000000 +0100
+@@ -0,0 +1,92 @@
++/*
++Laplacian Pyramid
++Copyright (C) 2006 Yangli Hector Yee
++
++This program is free software; you can redistribute it and/or modify it under the terms of the
++GNU General Public License as published by the Free Software Foundation; either version 2 of the License,
++or (at your option) any later version.
++
++This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
++without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
++See the GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License along with this program;
++if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++*/
++
++// Adapted for LuxRender/LuxRays by Dade
++
++#include "convtest/pdiff/lpyramid.h"
++
++using namespace lux;
++
++//////////////////////////////////////////////////////////////////////
++// Construction/Destruction
++//////////////////////////////////////////////////////////////////////
++
++LPyramid::LPyramid(float *image, int width, int height) :
++	Width(width),
++	Height(height)
++{
++	// Make the Laplacian pyramid by successively
++	// copying the earlier levels and blurring them
++	for (int i=0; i<MAX_PYR_LEVELS; i++) {
++		if (i == 0) {
++			Levels[i] = Copy(image);
++		} else {
++			Levels[i] = new float[Width * Height];
++			Convolve(Levels[i], Levels[i - 1]);
++		}
++	}
++}
++
++LPyramid::~LPyramid()
++{
++	for (int i=0; i<MAX_PYR_LEVELS; i++) {
++		if (Levels[i]) delete Levels[i];
++	}
++}
++
++float *LPyramid::Copy(float *img)
++{
++	int max = Width * Height;
++	float *out = new float[max];
++	for (int i = 0; i < max; i++) out[i] = img[i];
++	
++	return out;
++}
++
++void LPyramid::Convolve(float *a, float *b)
++// convolves image b with the filter kernel and stores it in a
++{
++	int y,x,i,j,nx,ny;
++	const float Kernel[] = {0.05f, 0.25f, 0.4f, 0.25f, 0.05f};
++
++	for (y=0; y<Height; y++) {
++		for (x=0; x<Width; x++) {
++			int index = y * Width + x;
++			a[index] = 0.0f;
++			for (i=-2; i<=2; i++) {
++				for (j=-2; j<=2; j++) {
++					nx=x+i;
++					ny=y+j;
++					if (nx<0) nx=-nx;
++					if (ny<0) ny=-ny;
++					if (nx>=Width) nx=2*Width-nx-1;
++					if (ny>=Height) ny=2*Height-ny-1;
++					a[index] += Kernel[i+2] * Kernel[j+2] * b[ny * Width + nx];
++				} 
++			}
++		}
++	}
++}
++
++float LPyramid::Get_Value(int x, int y, int level)
++{
++	int index = x + y * Width;
++	int l = level;
++	if (l > MAX_PYR_LEVELS) l = MAX_PYR_LEVELS;
++	return Levels[level][index];
++}
++
++
+diff -NurB a/src/convtest/pdiff/lpyramid.h b/src/convtest/pdiff/lpyramid.h
+--- a/src/convtest/pdiff/lpyramid.h	1970-01-01 01:00:00.000000000 +0100
++++ b/src/convtest/pdiff/lpyramid.h	2017-12-07 15:32:43.000000000 +0100
+@@ -0,0 +1,46 @@
++/*
++Laplacian Pyramid
++Copyright (C) 2006 Yangli Hector Yee
++
++This program is free software; you can redistribute it and/or modify it under the terms of the
++GNU General Public License as published by the Free Software Foundation; either version 2 of the License,
++or (at your option) any later version.
++
++This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
++without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
++See the GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License along with this program;
++if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++*/
++
++// Adapted for LuxRender/LuxRays by Dade
++
++#ifndef _PDIFF_LPYRAMID_H
++#define _PDIFF_LPYRAMID_H
++
++namespace lux {
++
++#define MAX_PYR_LEVELS 8
++
++class LPyramid
++{
++public:	
++	LPyramid(float *image, int width, int height);
++	virtual ~LPyramid();
++	float Get_Value(int x, int y, int level);
++protected:
++	float *Copy(float *img);
++	void Convolve(float *a, float *b);
++	
++	// Succesively blurred versions of the original image
++	float *Levels[MAX_PYR_LEVELS];
++
++	int Width;
++	int Height;
++};
++
++}
++
++#endif // _LPYRAMID_H
++
+diff -NurB a/src/convtest/pdiff/metric.cpp b/src/convtest/pdiff/metric.cpp
+--- a/src/convtest/pdiff/metric.cpp	1970-01-01 01:00:00.000000000 +0100
++++ b/src/convtest/pdiff/metric.cpp	2017-12-07 15:32:43.000000000 +0100
+@@ -0,0 +1,302 @@
++/*
++Metric
++Copyright (C) 2006 Yangli Hector Yee
++
++This program is free software; you can redistribute it and/or modify it under the terms of the
++GNU General Public License as published by the Free Software Foundation; either version 2 of the License,
++or (at your option) any later version.
++
++This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
++without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
++See the GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License along with this program;
++if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++*/
++
++// Adapted for LuxRender/LuxRays by Dade
++
++#include <cstdio>
++#include <cmath>
++
++#include "convtest/pdiff/metric.h"
++#include "convtest/pdiff/lpyramid.h"
++
++#ifndef M_PI
++#define M_PI 3.14159265f
++#endif
++
++using namespace lux;
++
++/*
++* Given the adaptation luminance, this function returns the
++* threshold of visibility in cd per m^2
++* TVI means Threshold vs Intensity function
++* This version comes from Ward Larson Siggraph 1997
++*/ 
++
++static float tvi(float adaptation_luminance)
++{
++      // returns the threshold luminance given the adaptation luminance
++      // units are candelas per meter squared
++
++      float log_a, r, result; 
++      log_a = log10f(adaptation_luminance);
++
++      if (log_a < -3.94f) {
++            r = -2.86f;
++      } else if (log_a < -1.44f) {
++            r = powf(0.405f * log_a + 1.6f , 2.18f) - 2.86f;
++      } else if (log_a < -0.0184f) {
++            r = log_a - 0.395f;
++      } else if (log_a < 1.9f) {
++            r = powf(0.249f * log_a + 0.65f, 2.7f) - 0.72f;
++      } else {
++            r = log_a - 1.255f;
++      }
++
++      result = powf(10.0f , r); 
++
++      return result;
++
++} 
++
++// computes the contrast sensitivity function (Barten SPIE 1989)
++// given the cycles per degree (cpd) and luminance (lum)
++static float csf(float cpd, float lum)
++{
++	float a, b, result; 
++	
++	a = 440.0f * powf((1.0f + 0.7f / lum), -0.2f);
++	b = 0.3f * powf((1.0f + 100.0f / lum), 0.15f);
++		
++	result = a * cpd * expf(-b * cpd) * sqrtf(1.0f + 0.06f * expf(b * cpd)); 
++	
++	return result;	
++}
++
++/*
++* Visual Masking Function
++* from Daly 1993
++*/
++static float mask(float contrast)
++{
++      float a, b, result;
++      a = powf(392.498f * contrast,  0.7f);
++      b = powf(0.0153f * a, 4.0f);
++      result = powf(1.0f + b, 0.25f); 
++
++      return result;
++} 
++
++// convert Adobe RGB (1998) with reference white D65 to XYZ
++static void AdobeRGBToXYZ(float r, float g, float b, float &x, float &y, float &z)
++{
++	// matrix is from http://www.brucelindbloom.com/
++	x = r * 0.576700f + g * 0.185556f + b * 0.188212f;
++	y = r * 0.297361f + g * 0.627355f + b * 0.0752847f;
++	z = r * 0.0270328f + g * 0.0706879f + b * 0.991248f;
++}
++
++static void XYZToLAB(float x, float y, float z, float &L, float &A, float &B)
++{
++	static float xw = -1;
++	static float yw;
++	static float zw;
++	// reference white
++	if (xw < 0) {
++		AdobeRGBToXYZ(1, 1, 1, xw, yw, zw);
++	}
++	const float epsilon  = 216.0f / 24389.0f;
++	const float kappa = 24389.0f / 27.0f;
++	float f[3];
++	float r[3];
++	r[0] = x / xw;
++	r[1] = y / yw;
++	r[2] = z / zw;
++	for (int i = 0; i < 3; i++) {
++		if (r[i] > epsilon) {
++			f[i] = powf(r[i], 1.0f / 3.0f);
++		} else {
++			f[i] = (kappa * r[i] + 16.0f) / 116.0f;
++		}
++	}
++	L = 116.0f * f[1] - 16.0f;
++	A = 500.0f * (f[0] - f[1]);
++	B = 200.0f * (f[1] - f[2]);
++}
++
++unsigned int lux::Yee_Compare(
++		const float *rgbA,
++		const float *rgbB,
++		std::vector<bool> *diff,
++		float *tviBuffer,
++		const unsigned int width,
++		const unsigned int height,
++		const bool LuminanceOnly,
++		const float FieldOfView,
++		const float Gamma,
++		const float Luminance,
++		const float ColorFactor,
++		const unsigned int DownSample)
++{
++	unsigned int i, dim;
++	dim = width * height;
++	bool identical = true;
++	for (i = 0; i < 3 * dim; i++) {
++		if (rgbA[i] != rgbB[i]) {
++		  identical = false;
++		  break;
++		}
++	}
++	if (identical) {
++		// Images are binary identical
++		return true;
++	}
++	
++	// assuming colorspaces are in Adobe RGB (1998) convert to XYZ
++	float *aX = new float[dim];
++	float *aY = new float[dim];
++	float *aZ = new float[dim];
++	float *bX = new float[dim];
++	float *bY = new float[dim];
++	float *bZ = new float[dim];
++	float *aLum = new float[dim];
++	float *bLum = new float[dim];
++	
++	float *aA = new float[dim];
++	float *bA = new float[dim];
++	float *aB = new float[dim];
++	float *bB = new float[dim];
++	
++	unsigned int x, y;
++	for (y = 0; y < height; y++) {
++		for (x = 0; x < width; x++) {
++			float r, g, b, l;
++			i = x + y * width;
++			r = powf(rgbA[3 * i], Gamma);
++			g = powf(rgbA[3 * i + 1], Gamma);
++			b = powf(rgbA[3 * i + 2], Gamma);						
++			AdobeRGBToXYZ(r,g,b,aX[i],aY[i],aZ[i]);			
++			XYZToLAB(aX[i], aY[i], aZ[i], l, aA[i], aB[i]);
++			r = powf(rgbB[3 * i], Gamma);
++			g = powf(rgbB[3 * i + 1], Gamma);
++			b = powf(rgbB[3 * i + 2], Gamma);						
++			AdobeRGBToXYZ(r,g,b,bX[i],bY[i],bZ[i]);
++			XYZToLAB(bX[i], bY[i], bZ[i], l, bA[i], bB[i]);
++			aLum[i] = aY[i] * Luminance;
++			bLum[i] = bY[i] * Luminance;
++		}
++	}
++
++	// Constructing Laplacian Pyramids
++	
++	LPyramid *la = new LPyramid(aLum, width, height);
++	LPyramid *lb = new LPyramid(bLum, width, height);
++	
++	float num_one_degree_pixels = (float) (2 * tan(FieldOfView * 0.5 * M_PI / 180) * 180 / M_PI);
++	float pixels_per_degree = width / num_one_degree_pixels;
++	
++	// Performing test
++	
++	float num_pixels = 1;
++	unsigned int adaptation_level = 0;
++	for (i = 0; i < MAX_PYR_LEVELS; i++) {
++		adaptation_level = i;
++		if (num_pixels > num_one_degree_pixels) break;
++		num_pixels *= 2;
++	}
++	
++	float cpd[MAX_PYR_LEVELS];
++	cpd[0] = 0.5f * pixels_per_degree;
++	for (i = 1; i < MAX_PYR_LEVELS; i++) cpd[i] = 0.5f * cpd[i - 1];
++	float csf_max = csf(3.248f, 100.0f);
++	
++	float F_freq[MAX_PYR_LEVELS - 2];
++	for (i = 0; i < MAX_PYR_LEVELS - 2; i++) F_freq[i] = csf_max / csf( cpd[i], 100.0f);
++	
++	unsigned int pixels_failed = 0;
++	for (y = 0; y < height; y++) {
++	  for (x = 0; x < width; x++) {
++		int index = x + y * width;
++		float contrast[MAX_PYR_LEVELS - 2];
++		float sum_contrast = 0;
++		for (i = 0; i < MAX_PYR_LEVELS - 2; i++) {
++			float n1 = fabsf(la->Get_Value(x,y,i) - la->Get_Value(x,y,i + 1));
++			float n2 = fabsf(lb->Get_Value(x,y,i) - lb->Get_Value(x,y,i + 1));
++			float numerator = (n1 > n2) ? n1 : n2;
++			float d1 = fabsf(la->Get_Value(x,y,i+2));
++			float d2 = fabsf(lb->Get_Value(x,y,i+2));
++			float denominator = (d1 > d2) ? d1 : d2;
++			if (denominator < 1e-5f) denominator = 1e-5f;
++			contrast[i] = numerator / denominator;
++			sum_contrast += contrast[i];
++		}
++		if (sum_contrast < 1e-5) sum_contrast = 1e-5f;
++		float F_mask[MAX_PYR_LEVELS - 2];
++		float adapt = la->Get_Value(x,y,adaptation_level) + lb->Get_Value(x,y,adaptation_level);
++		adapt *= 0.5f;
++		if (adapt < 1e-5) adapt = 1e-5f;
++		for (i = 0; i < MAX_PYR_LEVELS - 2; i++) {
++			F_mask[i] = mask(contrast[i] * csf(cpd[i], adapt)); 
++		}
++		float factor = 0;
++		for (i = 0; i < MAX_PYR_LEVELS - 2; i++) {
++			factor += contrast[i] * F_freq[i] * F_mask[i] / sum_contrast;
++		}
++		if (factor < 1) factor = 1;
++		if (factor > 10) factor = 10;
++		float delta = fabsf(la->Get_Value(x,y,0) - lb->Get_Value(x,y,0));
++		bool pass = true;
++		// pure luminance test
++		const float tviValue = tvi(adapt);
++		if (tviBuffer)
++			tviBuffer[x + y * width] = tviValue;
++		if (delta > factor * tviValue) {
++			pass = false;
++		} else if (!LuminanceOnly) {
++			// CIE delta E test with modifications
++			float color_scale = ColorFactor;
++			// ramp down the color test in scotopic regions
++			if (adapt < 10.0f) {
++				// Don't do color test at all.
++				color_scale = 0.0;
++			}
++			float da = aA[index] - bA[index];
++			float db = aB[index] - bB[index];
++			da = da * da;
++			db = db * db;
++			float delta_e = (da + db) * color_scale;
++			if (delta_e > factor) {
++				pass = false;
++			}
++		}
++		if (!pass) {
++			pixels_failed++;
++
++			if (diff)
++				(*diff)[index] = false;
++		} else {
++			if (diff)
++				(*diff)[index] = true;
++		}
++	  }
++	}
++	
++	if (aX) delete[] aX;
++	if (aY) delete[] aY;
++	if (aZ) delete[] aZ;
++	if (bX) delete[] bX;
++	if (bY) delete[] bY;
++	if (bZ) delete[] bZ;
++	if (aLum) delete[] aLum;
++	if (bLum) delete[] bLum;
++	if (la) delete la;
++	if (lb) delete lb;
++	if (aA) delete[] aA;
++	if (bA) delete[] bA;
++	if (aB) delete[] aB;
++	if (bB) delete[] bB;
++	
++	return pixels_failed;
++}
+diff -NurB a/src/convtest/pdiff/metric.h b/src/convtest/pdiff/metric.h
+--- a/src/convtest/pdiff/metric.h	1970-01-01 01:00:00.000000000 +0100
++++ b/src/convtest/pdiff/metric.h	2017-12-07 15:32:43.000000000 +0100
+@@ -0,0 +1,45 @@
++/*
++Metric
++Copyright (C) 2006 Yangli Hector Yee
++
++This program is free software; you can redistribute it and/or modify it under the terms of the
++GNU General Public License as published by the Free Software Foundation; either version 2 of the License,
++or (at your option) any later version.
++
++This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
++without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
++See the GNU General Public License for more details.
++
++You should have received a copy of the GNU General Public License along with this program;
++if not, write to the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
++*/
++
++// Adapted for LuxRender/LuxRays by Dade
++
++#ifndef _PDIFF_METRIC_H
++#define _PDIFF_METRIC_H
++
++#include <vector>
++
++namespace lux {
++
++// Image comparison metric using Yee's method
++// References: A Perceptual Metric for Production Testing, Hector Yee, Journal of Graphics Tools 2004
++extern unsigned int Yee_Compare(
++		const float *rgbA,
++		const float *rgbB,
++		std::vector<bool> *diff,
++		float *tviBuffer,
++		const unsigned int width,
++		const unsigned int height,
++		const bool LuminanceOnly = false,
++		const float FieldOfView = 45.f,
++		const float Gamma = 2.2f,
++		const float Luminance = 100.f,
++		const float ColorFactor = 1.f,
++		const unsigned int DownSample = 0);
++
++}
++
++#endif
++
+diff -NurB a/src/luxmarkapp.cpp b/src/luxmarkapp.cpp
+--- a/src/luxmarkapp.cpp	2015-09-01 12:07:29.000000000 +0200
++++ b/src/luxmarkapp.cpp	2017-12-07 15:32:43.000000000 +0100
+@@ -26,7 +26,7 @@
+ #include <QGraphicsSceneMouseEvent>
+ 
+ #include "slg/film/film.h"
+-#include "slg/renderengine.h"
++#include "slg/engines/renderengine.h"
+ #include "slg/engines/pathocl/pathocl.h"
+ 
+ #include "luxmarkcfg.h"
+diff -NurB a/src/luxrendersession.cpp b/src/luxrendersession.cpp
+--- a/src/luxrendersession.cpp	2015-09-01 12:07:29.000000000 +0200
++++ b/src/luxrendersession.cpp	2017-12-07 15:32:43.000000000 +0100
+@@ -113,8 +113,8 @@
+ 		}
+ 	}
+ 
+-	config = new RenderConfig(props);
+-	session = new RenderSession(config);
++	config = RenderConfig::Create(props);
++	session = RenderSession::Create(config);
+ 
+ 	session->Start();
+ }
+@@ -127,7 +127,7 @@
+ }
+ 
+ const float *LuxRenderSession::GetFrameBuffer() const {
+-	return session->GetFilm().GetChannel<float>(Film::CHANNEL_RGB_TONEMAPPED);
++	return session->GetFilm().GetChannel<float>(Film::CHANNEL_IMAGEPIPELINE);
+ }
+ 
+ u_int LuxRenderSession::GetFrameBufferWidth() const {
+diff -NurB a/src/resultdialog.cpp b/src/resultdialog.cpp
+--- a/src/resultdialog.cpp	2015-09-01 12:07:29.000000000 +0200
++++ b/src/resultdialog.cpp	2017-12-07 15:32:43.000000000 +0100
+@@ -22,7 +22,9 @@
+ #include <QFile>
+ #include <QCryptographicHash>
+ 
+-#include "slg/utils/convtest/convtest.h"
++#include <boost/foreach.hpp>
++
++#include "convtest/convtest.h"
+ #include "luxmarkcfg.h"
+ #include "resultdialog.h"
+ #include "submitdialog.h"
+@@ -310,7 +312,7 @@
+ 			testImage[i] = resultDialog->frameBuffer[i] / 255.f;
+ 
+ 		// Run the image comparison
+-		slg::ConvergenceTest convTest(resultDialog->frameBufferWidth, resultDialog->frameBufferHeight);
++		lux::ConvergenceTest convTest(resultDialog->frameBufferWidth, resultDialog->frameBufferHeight);
+ 
+ 		// Reference image
+ 		convTest.Test(referenceImage);
+diff -NurB a/src/submitdialog.cpp b/src/submitdialog.cpp
+--- a/src/submitdialog.cpp	2015-09-01 12:07:29.000000000 +0200
++++ b/src/submitdialog.cpp	2017-12-07 15:32:43.000000000 +0100
+@@ -22,8 +22,6 @@
+ #include <QDateTime>
+ #include <QTextStream>
+ 
+-#include "luxrays/core/utils.h"
+-
+ #include "luxmarkcfg.h"
+ #include "submitdialog.h"
+ 

@@ -1,0 +1,42 @@
+diff -NurB a/cmake/Dependencies.cmake LuxMark-luxmark_v4.0alpha0/cmake/Dependencies.cmake
+--- a/cmake/Dependencies.cmake	2020-09-04 21:37:12.359746850 +0200
++++ LuxMark-luxmark_v4.0alpha0/cmake/Dependencies.cmake	2020-09-04 21:42:08.141734888 +0200
+@@ -88,11 +88,11 @@
+ endif()
+ 
+ # OpenCL
+-set(OPENCL_ROOT                "${OPENCL_SEARCH_PATH}")
++set(OpenCL_ROOT                "${OPENCL_SEARCH_PATH}")
+ find_package(OpenCL)
+ 
+-if (OPENCL_FOUND)
+-	include_directories(BEFORE SYSTEM ${OPENCL_INCLUDE_DIR} ${OPENCL_C_INCLUDE_DIR})
++if (OpenCL_FOUND)
++	include_directories(BEFORE SYSTEM ${OpenCL_INCLUDE_DIR} ${OpenCL_C_INCLUDE_DIR})
+ endif ()
+ 
+ # Intel Embree
+diff -NurB a/CMakeLists.txt LuxMark-luxmark_v4.0alpha0/CMakeLists.txt
+--- a/CMakeLists.txt	2020-09-04 21:37:12.358746850 +0200
++++ LuxMark-luxmark_v4.0alpha0/CMakeLists.txt	2020-09-04 21:40:43.668738304 +0200
+@@ -121,7 +121,7 @@
+ 	MESSAGE(FATAL_ERROR "--> Could not locate required OpenImageIO files - Please check ${OPENIMAGEIO_SEARCH_PATH}")
+ endif()
+ 
+-if (NOT OPENCL_FOUND AND NOT LUXRAYS_DISABLE_OPENCL)
++if (NOT OpenCL_FOUND AND NOT LUXRAYS_DISABLE_OPENCL)
+ 	MESSAGE(ERROR "--> Could not locate required OpenCL files, disabling OpenCL support - Please check ${OPENCL_SEARCH_PATH}")
+ 	SET(LUXRAYS_DISABLE_OPENCL 1)
+ endif()
+diff -NurB a/src/CMakeLists.txt LuxMark-luxmark_v4.0alpha0/src/CMakeLists.txt
+--- a/src/CMakeLists.txt	2020-09-04 21:37:12.359746850 +0200
++++ LuxMark-luxmark_v4.0alpha0/src/CMakeLists.txt	2020-09-04 21:42:51.742733124 +0200
+@@ -94,7 +94,7 @@
+ 
+ ADD_EXECUTABLE(luxmark WIN32 ${LUXMARK_SRCS})
+ 
+-TARGET_LINK_LIBRARIES(luxmark ${ALL_LUXCORE_LIBRARIES} ${Boost_LIBRARIES} ${Qt5_LIBRARIES} ${OPENGL_gl_LIBRARY} ${OPENCL_LIBRARIES} ${Python_LIBRARIES})
++TARGET_LINK_LIBRARIES(luxmark ${ALL_LUXCORE_LIBRARIES} ${Boost_LIBRARIES} ${Qt5_LIBRARIES} ${OPENGL_gl_LIBRARY} ${OpenCL_LIBRARIES} ${Python_LIBRARIES})
+ if (WIN32)
+ 	# This is needed by Boost 1.67 but is not found automatically
+     TARGET_LINK_LIBRARIES(luxmark bcrypt.lib)

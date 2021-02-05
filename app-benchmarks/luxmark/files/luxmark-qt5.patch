@@ -1,0 +1,242 @@
+diff -NurB a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt	2018-05-29 15:20:13.518028860 +0200
++++ b/CMakeLists.txt	2018-05-29 15:22:32.598029827 +0200
+@@ -107,7 +107,7 @@
+         SET(BOOST_LIBRARYDIR          "$ENV{LIB_DIR}")
+         SET(QT_HEADERS_DIR            "$ENV{INCLUDE_DIR}/Qt/include")
+         SET(QT_QTCORE_INCLUDE_DIR     "$ENV{INCLUDE_DIR}/Qt/include/QtCore")
+-        SET(QT_QTCORE_LIBRARY_RELEASE "$ENV{LIB_DIR}/QtCore4.lib") 
++        SET(QT_QTCORE_LIBRARY_RELEASE "$ENV{LIB_DIR}/QtCore5.lib") 
+         SET(QT_QTGUI_INCLUDE_DIR      "$ENV{INCLUDE_DIR}/Qt/include/QtGui")
+         SET(QT_QMAKE_EXECUTABLE       "$ENV{LIB_DIR}/qmake.exe")
+         SET(QT_BINARY_DIR             "$ENV{LIB_DIR}")
+diff -NurB a/src/CMakeLists.txt b/src/CMakeLists.txt
+--- a/src/CMakeLists.txt	2018-05-29 15:20:13.574028861 +0200
++++ b/src/CMakeLists.txt	2018-05-29 16:13:36.593051117 +0200
+@@ -22,13 +22,13 @@
+ set(LUXMARK_VERSION_MAJOR 3)
+ set(LUXMARK_VERSION_MINOR 1)
+ 
+-FIND_PACKAGE(Qt4 4.6.0 COMPONENTS QtCore QtGui QtNetwork QtMain)
+-IF(QT4_FOUND)
+-  include(${QT_USE_FILE})
++FIND_PACKAGE(Qt5 COMPONENTS Core Gui Widgets Network REQUIRED)
++IF(QT5_FOUND)
++#  include(${QT_USE_FILE})
+   include_directories(${QT_INCLUDES} ${QT_QTNETWORK_INCLUDE_DIR})
+-ELSE(QT4_FOUND)
++ELSE(QT5_FOUND)
+   message(STATUS "Is env variable QTDIR set correctly? Currently: $ENV{QTDIR}")
+-ENDIF(QT4_FOUND)
++ENDIF(QT5_FOUND)
+ 
+ 
+ # Configure a header file to pass some of the CMake settings
+@@ -45,7 +45,7 @@
+ #############################################################################
+ 
+ set(QT_USE_QTOPENGL true)
+-include(${QT_USE_FILE})
++#include(${QT_USE_FILE})
+ 
+ set(LUXMARK_SRCS
+ 	aboutdialog.cpp
+@@ -78,12 +78,12 @@
+ 	resources.qrc
+ 	)
+ 
+-QT4_ADD_RESOURCES(LUXMARK_RC_SRCS ${LUXMARK_RCS})
+-QT4_WRAP_UI(LUXMARK_UI_HDRS ${LUXMARK_UIS})
++QT5_ADD_RESOURCES(LUXMARK_RC_SRCS ${LUXMARK_RCS})
++QT5_WRAP_UI(LUXMARK_UI_HDRS ${LUXMARK_UIS})
+ # The next OPTIONS directive prevent the moc to include some boost files
+ # because qt 4 moc parser fails on some complexes macro definiton in boost >=
+ # 1.53.
+-QT4_WRAP_CPP(LUXMARK_MOC_SRCS ${LUXMARK_MOC} OPTIONS -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED -DBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
++QT5_WRAP_CPP(LUXMARK_MOC_SRCS ${LUXMARK_MOC} OPTIONS -DBOOST_TT_HAS_OPERATOR_HPP_INCLUDED -DBOOST_NO_TEMPLATE_PARTIAL_SPECIALIZATION)
+ 
+ include_directories(".")
+ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
+@@ -120,7 +120,7 @@
+ 
+ IF(APPLE)
+ 	add_executable(LuxMark  ${GUI_TYPE} ${LUXMARK_SRCS})
+-	target_link_libraries(LuxMark ${LUXCORE_LIBRARY} ${SLG_LIBRARY} ${LUXRAYS_LIBRARY} ${EMBREE_LIBRARY} ${Boost_LIBRARIES} ${QT_LIBRARIES} ${QT_QTNETWORK_LIBRARIES} ${GLEW_LIBRARY} ${GLUT_LIBRARY} ${OPENGL_gl_LIBRARY} ${OPENCL_LIBRARIES} ${OPENIMAGEIO_LIBRARIES} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
++	target_link_libraries(LuxMark ${LUXCORE_LIBRARY} ${SLG_LIBRARY} ${LUXRAYS_LIBRARY} ${EMBREE_LIBRARY} ${Boost_LIBRARIES} ${QT_LIBRARIES} ${QT_QTNETWORK_LIBRARIES} ${GLEW_LIBRARY} ${GLUT_LIBRARY} ${OPENGL_gl_LIBRARY} ${OPENCL_LIBRARIES} ${OPENIMAGEIO_LIBRARIES} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Network )
+ 
+ 	set_target_properties(LuxMark PROPERTIES MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/osx-bundle/Info.plist)
+ 	ADD_CUSTOM_COMMAND(
+@@ -139,7 +139,7 @@
+ ELSE(APPLE)
+ 	ADD_EXECUTABLE(luxmark ${LUXMARK_SRCS})
+ 
+-	TARGET_LINK_LIBRARIES(luxmark ${LUXCORE_LIBRARY} ${SLG_LIBRARY} ${LUXRAYS_LIBRARY} ${EMBREE_LIBRARY} ${Boost_LIBRARIES} ${QT_LIBRARIES} ${QT_QTNETWORK_LIBRARIES} ${GLEW_LIBRARY} ${GLUT_LIBRARY} ${OPENGL_gl_LIBRARY} ${OPENCL_LIBRARIES} ${OPENIMAGEIO_LIBRARIES} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
++	TARGET_LINK_LIBRARIES(luxmark ${LUXCORE_LIBRARY} ${SLG_LIBRARY} ${LUXRAYS_LIBRARY} ${EMBREE_LIBRARY} ${Boost_LIBRARIES} ${QT_LIBRARIES} ${QT_QTNETWORK_LIBRARIES} ${GLEW_LIBRARY} ${GLUT_LIBRARY} ${OPENGL_gl_LIBRARY} ${OPENCL_LIBRARIES} ${OPENIMAGEIO_LIBRARIES} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Network )
+ 	
+ 	# This instructs FREEGLUT to emit a pragma for the static version
+ 	SET_TARGET_PROPERTIES(luxmark PROPERTIES COMPILE_DEFINITIONS FREEGLUT_STATIC)
+diff -NurB a/src/luxmarkapp.h b/src/luxmarkapp.h
+--- a/src/luxmarkapp.h	2018-05-29 15:20:13.575028861 +0200
++++ b/src/luxmarkapp.h	2018-05-29 16:16:28.499052311 +0200
+@@ -23,7 +23,7 @@
+ #define _LUXMARKAPP_H
+ 
+ #ifndef Q_MOC_RUN
+-#include <QtGui/QApplication>
++#include <QtWidgets/QApplication>
+ #include <QTimer>
+ 
+ #include <boost/thread.hpp>
+diff -NurB a/src/main.cpp b/src/main.cpp
+--- a/src/main.cpp	2018-05-29 15:20:13.575028861 +0200
++++ b/src/main.cpp	2018-05-29 16:20:12.855053870 +0200
+@@ -27,7 +27,7 @@
+ #include "luxmarkapp.h"
+ 
+ static void PrintCmdLineHelp(const QString &cmd) {
+-	cerr << "Usage: " << cmd.toAscii().data() << " [options]" << endl <<
++	cerr << "Usage: " << cmd.toLatin1().data() << " [options]" << endl <<
+ 			" --help (display this help and exit)" << endl <<
+ 			" --scene=LUXBALL_HDR|MICROPHONE|HOTEL (select the scene to use)" << endl <<
+ 			" --mode="
+@@ -83,7 +83,7 @@
+ 			else if (scene.compare("HOTEL", Qt::CaseInsensitive) == 0)
+ 				scnName = SCENE_HOTEL;
+ 			else {
+-				cerr << "Unknown scene name: " << argScene.cap(1).toAscii().data() << endl;
++				cerr << "Unknown scene name: " << argScene.cap(1).toLatin1().data() << endl;
+ 				PrintCmdLineHelp(argsList.at(0));
+ 				exit = true;
+ 				break;
+@@ -109,7 +109,7 @@
+ 			else if (scene.compare("PAUSE", Qt::CaseInsensitive) == 0)
+ 				mode = PAUSE;
+ 			else {
+-				cerr << "Unknown mode name: " << argMode.cap(1).toAscii().data() << endl;
++				cerr << "Unknown mode name: " << argMode.cap(1).toLatin1().data() << endl;
+ 				PrintCmdLineHelp(argsList.at(0));
+ 				exit = true;
+ 				break;
+@@ -119,7 +119,7 @@
+ 		} else if (argSingleRunExtInfo.indexIn(argsList.at(i)) != -1 ) {   
+ 			singleRunExtInfo = true;
+         } else {
+-            cerr << "Unknown argument: " << argsList.at(i).toAscii().data() << endl;
++            cerr << "Unknown argument: " << argsList.at(i).toLatin1().data() << endl;
+ 			PrintCmdLineHelp(argsList.at(0));
+ 			exit = true;
+ 			break;
+diff -NurB a/src/mainwindow.cpp b/src/mainwindow.cpp
+--- a/src/mainwindow.cpp	2018-05-29 15:20:13.575028861 +0200
++++ b/src/mainwindow.cpp	2018-05-29 16:21:27.987054392 +0200
+@@ -367,7 +367,7 @@
+ }
+ 
+ bool MainWindow::event(QEvent *event) {
+-	bool retval = FALSE;
++	bool retval = false;
+ 	int eventtype = event->type();
+ 
+ 	// Check if it's one of "our" events
+diff -NurB a/src/submitdialog.cpp b/src/submitdialog.cpp
+--- a/src/submitdialog.cpp	2018-05-29 15:20:13.576028861 +0200
++++ b/src/submitdialog.cpp	2018-05-29 19:28:57.422033502 +0200
+@@ -21,6 +21,7 @@
+ 
+ #include <QDateTime>
+ #include <QTextStream>
++#include <QUrlQuery>
+ 
+ #include "luxrays/core/utils.h"
+ 
+@@ -130,67 +131,69 @@
+ 		request.setHeader(QNetworkRequest::ContentTypeHeader, "application/x-www-form-urlencoded");
+ 
+ 		// Create the http request parameters
+-		QUrl params;
+-		params.addEncodedQueryItem("name", QUrl::toPercentEncoding(name));
+-		params.addEncodedQueryItem("password", QUrl::toPercentEncoding(pwd));
++		//QUrl params;
++		QUrlQuery query;
++		
++		query.addQueryItem("name", QUrl::toPercentEncoding(name));
++		query.addQueryItem("password", QUrl::toPercentEncoding(pwd));
+ 
+ 		SD_LOG("Submitted data:");
+ 
+-		params.addEncodedQueryItem("version", QUrl::toPercentEncoding(version));
++		query.addQueryItem("version", QUrl::toPercentEncoding(version));
+ 		SD_LOG("version = " << version.toStdString());
+ 
+-		params.addEncodedQueryItem("os", QUrl::toPercentEncoding(os));
++		query.addQueryItem("os", QUrl::toPercentEncoding(os));
+ 		SD_LOG("os = " << os.toStdString());
+ 
+-		params.addEncodedQueryItem("mode", QUrl::toPercentEncoding(benchMode));
++		query.addQueryItem("mode", QUrl::toPercentEncoding(benchMode));
+ 		SD_LOG("mode = " << benchMode.toStdString());
+ 
+-		params.addEncodedQueryItem("scene_name", QUrl::toPercentEncoding(scene));
++		query.addQueryItem("scene_name", QUrl::toPercentEncoding(scene));
+ 		SD_LOG("scene_name = " << scene.toStdString());
+ 
+-		params.addEncodedQueryItem("score", QUrl::toPercentEncoding(score));
++		query.addQueryItem("score", QUrl::toPercentEncoding(score));
+ 		SD_LOG("score = " << score.toStdString());
+ 
+-		params.addEncodedQueryItem("note", QUrl::toPercentEncoding(note));
++		query.addQueryItem("note", QUrl::toPercentEncoding(note));
+ 		SD_LOG("note = " << note.toStdString());
+ 
+-		params.addEncodedQueryItem("dev_count", QUrl::toPercentEncoding(devCount));
++		query.addQueryItem("dev_count", QUrl::toPercentEncoding(devCount));
+ 		SD_LOG("dev_count = " << devCount.toStdString());
+ 
+ 		for (size_t i = 0; i < descs.size(); ++i) {
+ 			SD_LOG("dev_platform_name = " << descs[i].platformName);
+-			params.addEncodedQueryItem("dev_platform_name[]", QUrl::toPercentEncoding(QString(descs[i].platformName.c_str())));
++			query.addQueryItem("dev_platform_name[]", QUrl::toPercentEncoding(QString(descs[i].platformName.c_str())));
+ 
+ 			SD_LOG("dev_platform_ver = " << descs[i].platformVersion);
+-			params.addEncodedQueryItem("dev_platform_ver[]", QUrl::toPercentEncoding(QString(descs[i].platformVersion.c_str())));
++			query.addQueryItem("dev_platform_ver[]", QUrl::toPercentEncoding(QString(descs[i].platformVersion.c_str())));
+ 
+ 			SD_LOG("dev_name = " << descs[i].deviceName);
+-			params.addEncodedQueryItem("dev_name[]", QUrl::toPercentEncoding(QString(descs[i].deviceName.c_str())));
++			query.addQueryItem("dev_name[]", QUrl::toPercentEncoding(QString(descs[i].deviceName.c_str())));
+ 
+ 			SD_LOG("dev_type = " << descs[i].deviceType);
+-			params.addEncodedQueryItem("dev_type[]", QUrl::toPercentEncoding(QString(descs[i].deviceType.c_str())));
++			query.addQueryItem("dev_type[]", QUrl::toPercentEncoding(QString(descs[i].deviceType.c_str())));
+ 
+ 			SD_LOG("dev_units = " << descs[i].units);
+-			params.addEncodedQueryItem("dev_units[]", QUrl::toPercentEncoding(QString(ToString(descs[i].units).c_str())));
++			query.addQueryItem("dev_units[]", QUrl::toPercentEncoding(QString(ToString(descs[i].units).c_str())));
+ 
+ 			SD_LOG("dev_clock = " << descs[i].clock);
+-			params.addEncodedQueryItem("dev_clock[]", QUrl::toPercentEncoding(QString(ToString(descs[i].clock).c_str())));
++			query.addQueryItem("dev_clock[]", QUrl::toPercentEncoding(QString(ToString(descs[i].clock).c_str())));
+ 
+ 			SD_LOG("dev_native_float_vec_width = " << descs[i].nativeVectorWidthFloat);
+-			params.addEncodedQueryItem("dev_native_float_vec_width[]", QUrl::toPercentEncoding(QString(ToString(descs[i].nativeVectorWidthFloat).c_str())));
++			query.addQueryItem("dev_native_float_vec_width[]", QUrl::toPercentEncoding(QString(ToString(descs[i].nativeVectorWidthFloat).c_str())));
+ 
+ 			SD_LOG("dev_global_mem = " << descs[i].globalMem);
+-			params.addEncodedQueryItem("dev_global_mem[]", QUrl::toPercentEncoding(QString(ToString(descs[i].globalMem).c_str())));
++			query.addQueryItem("dev_global_mem[]", QUrl::toPercentEncoding(QString(ToString(descs[i].globalMem).c_str())));
+ 
+ 			SD_LOG("dev_local_mem = " << descs[i].localMem);
+-			params.addEncodedQueryItem("dev_local_mem[]", QUrl::toPercentEncoding(QString(ToString(descs[i].localMem).c_str())));
++			query.addQueryItem("dev_local_mem[]", QUrl::toPercentEncoding(QString(ToString(descs[i].localMem).c_str())));
+ 
+ 			SD_LOG("dev_constant_mem = " << descs[i].constantMem);
+-			params.addEncodedQueryItem("dev_constant_mem[]", QUrl::toPercentEncoding(QString(ToString(descs[i].constantMem).c_str())));
++			query.addQueryItem("dev_constant_mem[]", QUrl::toPercentEncoding(QString(ToString(descs[i].constantMem).c_str())));
+ 		}
+ 
+ 		QByteArray data;
+-		data = params.encodedQuery();
++		data = query.query().toUtf8();
+ 
+ 		// Send the request
+ 		SD_LOG("Posting result...");

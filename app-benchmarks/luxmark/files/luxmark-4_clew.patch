@@ -1,0 +1,27 @@
+diff -NurB a/cmake/Dependencies.cmake LuxMark-luxmark_v4.0alpha0/cmake/Dependencies.cmake
+--- a/cmake/Dependencies.cmake	2020-09-28 15:27:52.016167091 +0200
++++ LuxMark-luxmark_v4.0alpha0/cmake/Dependencies.cmake	2020-09-28 15:32:02.420156964 +0200
+@@ -94,6 +94,11 @@
+ if (OpenCL_FOUND)
+ 	include_directories(BEFORE SYSTEM ${OpenCL_INCLUDE_DIR} ${OpenCL_C_INCLUDE_DIR})
+ endif ()
++find_package(clew)
++
++if (clew_FOUND)
++	include_directories(BEFORE SYSTEM ${clew_INCLUDE_DIR})
++endif ()
+ 
+ # Intel Embree
+ set(EMBREE_ROOT                "${EMBREE_SEARCH_PATH}")
+diff -NurB a/src/CMakeLists.txt LuxMark-luxmark_v4.0alpha0/src/CMakeLists.txt
+--- a/src/CMakeLists.txt	2020-09-28 15:27:52.018167091 +0200
++++ LuxMark-luxmark_v4.0alpha0/src/CMakeLists.txt	2020-09-28 15:31:06.480159226 +0200
+@@ -94,7 +94,7 @@
+ 
+ ADD_EXECUTABLE(luxmark WIN32 ${LUXMARK_SRCS})
+ 
+-TARGET_LINK_LIBRARIES(luxmark ${ALL_LUXCORE_LIBRARIES} ${Boost_LIBRARIES} ${Qt5_LIBRARIES} ${OPENGL_gl_LIBRARY} ${OpenCL_LIBRARIES} ${Python_LIBRARIES})
++TARGET_LINK_LIBRARIES(luxmark ${ALL_LUXCORE_LIBRARIES} ${Boost_LIBRARIES} ${Qt5_LIBRARIES} ${OPENGL_gl_LIBRARY} ${OpenCL_LIBRARIES} ${Python_LIBRARIES} ${clew_LIBRARIES})
+ if (WIN32)
+ 	# This is needed by Boost 1.67 but is not found automatically
+     TARGET_LINK_LIBRARIES(luxmark bcrypt.lib)

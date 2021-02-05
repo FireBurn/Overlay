@@ -1,0 +1,46 @@
+diff -NurB c/cmake/Dependencies.cmake e/cmake/Dependencies.cmake
+--- c/cmake/Dependencies.cmake	2015-09-01 12:07:29.000000000 +0200
++++ e/cmake/Dependencies.cmake	2018-11-25 23:34:59.702643988 +0100
+@@ -83,6 +83,16 @@
+ 	include_directories(SYSTEM ${OPENGL_INCLUDE_PATH})
+ endif()
+ 
++# OpenVDB
++set(OPENVDB_ROOT                   "${OPENVDB_SEARCH_PATH}")
++
++find_package(OpenVDB REQUIRED)
++
++if (OpenVDB_FOUND)
++	include_directories(BEFORE SYSTEM ${OPENVDB_INCLUDE_PATH})
++endif ()
++
++
+ # GLEW
+ set(GLEW_ROOT                  "${GLEW_SEARCH_PATH}")
+ if(NOT APPLE)
+diff -NurB c/CMakeLists.txt e/CMakeLists.txt
+--- c/CMakeLists.txt	2018-11-25 23:20:24.556699223 +0100
++++ e/CMakeLists.txt	2018-11-25 23:33:49.541648416 +0100
+@@ -139,6 +139,10 @@
+ 	MESSAGE(FATAL_ERROR "--> Could not locate required OpenGL files")
+ endif()
+ 
++if (NOT OpenVDB_FOUND)
++	MESSAGE(FATAL_ERROR "--> Could not locate required OpenVDB files")
++endif()
++
+ if (NOT GLEW_FOUND)
+ 	MESSAGE(FATAL_ERROR "--> Could not locate required GLEW files, disabling samples build - Please check ${GLEW_SEARCH_PATH}")
+ endif()
+diff -NurB c/src/CMakeLists.txt e/src/CMakeLists.txt
+--- c/src/CMakeLists.txt	2018-11-25 23:20:24.556699223 +0100
++++ e/src/CMakeLists.txt	2018-11-25 23:32:33.670653205 +0100
+@@ -139,7 +139,7 @@
+ ELSE(APPLE)
+ 	ADD_EXECUTABLE(luxmark ${LUXMARK_SRCS})
+ 
+-	TARGET_LINK_LIBRARIES(luxmark ${LUXCORE_LIBRARY} ${SLG_LIBRARY} ${LUXRAYS_LIBRARY} ${EMBREE_LIBRARY} ${Boost_LIBRARIES} ${QT_LIBRARIES} ${QT_QTNETWORK_LIBRARIES} ${GLEW_LIBRARY} ${GLUT_LIBRARY} ${OPENGL_gl_LIBRARY} ${OPENCL_LIBRARIES} ${OPENIMAGEIO_LIBRARIES} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Network )
++	TARGET_LINK_LIBRARIES(luxmark ${OpenVDB_LIBRARIES} ${LUXCORE_LIBRARY} ${SLG_LIBRARY} ${LUXRAYS_LIBRARY} ${EMBREE_LIBRARY} ${Boost_LIBRARIES} ${QT_LIBRARIES} ${QT_QTNETWORK_LIBRARIES} ${GLEW_LIBRARY} ${GLUT_LIBRARY} ${OPENGL_gl_LIBRARY} ${OPENCL_LIBRARIES} ${OPENIMAGEIO_LIBRARIES} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES} Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Network )
+ 	
+ 	# This instructs FREEGLUT to emit a pragma for the static version
+ 	SET_TARGET_PROPERTIES(luxmark PROPERTIES COMPILE_DEFINITIONS FREEGLUT_STATIC)
