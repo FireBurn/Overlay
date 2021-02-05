@@ -1,0 +1,36 @@
+diff -Nurb a/src/luxcore/CMakeLists.txt b/src/luxcore/CMakeLists.txt
+--- a/src/luxcore/CMakeLists.txt	2018-03-26 17:07:07.400179038 +0200
++++ b/src/luxcore/CMakeLists.txt	2018-03-26 17:10:59.617181233 +0200
+@@ -122,7 +122,7 @@
+ 	${LUXCORE_SRCS}
+ )
+ 
+-add_library(luxcore STATIC ${LUXCORE_LIB_SRCS} ${LUX_PARSER_SRC})
++add_library(luxcore SHARED ${LUXCORE_LIB_SRCS} ${LUX_PARSER_SRC})
+ 
+ add_definitions(-DCPP_API_EXPORTS ${VISIBILITY_FLAGS}) # for controlling visibility
+ link_directories (${SLG_LIB_DIR} ${LuxRays_LIB_DIR})
+diff -Nurb a/src/luxrays/CMakeLists.txt b/src/luxrays/CMakeLists.txt
+--- a/src/luxrays/CMakeLists.txt	2018-03-26 17:07:07.403179038 +0200
++++ b/src/luxrays/CMakeLists.txt	2018-03-26 17:11:31.923181539 +0200
+@@ -224,7 +224,7 @@
+ 	${LUXRAYS_SRCS_KERNELS}
+ )
+ 
+-add_library(luxrays STATIC ${LUXRAYS_LIB_SRCS})
++add_library(luxrays SHARED ${LUXRAYS_LIB_SRCS})
+ 
+ IF(GCC AND NOT APPLE)
+ 	# These accelerators needs to be compiled with much reduced optimizations
+diff -Nurb a/src/slg/CMakeLists.txt b/src/slg/CMakeLists.txt
+--- a/src/slg/CMakeLists.txt	2018-03-26 17:07:07.401179038 +0200
++++ b/src/slg/CMakeLists.txt	2018-03-26 17:12:04.534181847 +0200
+@@ -386,7 +386,7 @@
+ 	${SLG_SRCS_KERNELS}
+ )
+ 
+-add_library(smallluxgpu STATIC ${SLG_LIB_SRCS})
++add_library(smallluxgpu SHARED ${SLG_LIB_SRCS})
+ 
+ link_directories (${LuxRays_LIB_DIR})
+ 

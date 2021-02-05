@@ -1,0 +1,448 @@
+diff -Nurb LuxCore-luxrender_v1.6/include/luxrays/core/ocldevice.h c/include/luxrays/core/ocldevice.h
+--- LuxCore-luxrender_v1.6/include/luxrays/core/ocldevice.h	2016-05-09 22:17:57.000000000 +0200
++++ c/include/luxrays/core/ocldevice.h	2020-11-12 19:52:42.760166105 +0100
+@@ -103,7 +103,7 @@
+ 	}
+ 
+ 	bool IsAMDPlatform() const {
+-		cl::Platform platform = oclDevice.getInfo<CL_DEVICE_PLATFORM>();
++		cl::Platform platform(oclDevice.getInfo<CL_DEVICE_PLATFORM>());
+ 		return !strcmp(platform.getInfo<CL_PLATFORM_VENDOR>().c_str(), "Advanced Micro Devices, Inc.");
+ 	}
+ 
+diff -Nurb LuxCore-luxrender_v1.6/include/luxrays/core/oclintersectiondevice.h c/include/luxrays/core/oclintersectiondevice.h
+--- LuxCore-luxrender_v1.6/include/luxrays/core/oclintersectiondevice.h	2016-05-09 22:17:57.000000000 +0200
++++ c/include/luxrays/core/oclintersectiondevice.h	2020-11-12 19:52:42.760166105 +0100
+@@ -48,7 +48,7 @@
+ 	virtual void Update(const DataSet *newDataSet) = 0;
+ 	virtual void EnqueueRayBuffer(cl::CommandQueue &oclQueue, const u_int kernelIndex,
+ 		cl::Buffer &rBuff, cl::Buffer &hBuff, const unsigned int rayCount,
+-		const VECTOR_CLASS<cl::Event> *events, cl::Event *event) = 0;
++		const cl::vector<cl::Event> *events, cl::Event *event) = 0;
+ 
+ 	const std::string &GetIntersectionKernelSource() { return intersectionKernelSource; }
+ 	virtual u_int SetIntersectionKernelArgs(cl::Kernel &kernel, const u_int argIndex) { return 0; }
+@@ -101,7 +101,7 @@
+ 
+ 	void EnqueueTraceRayBuffer(cl::Buffer &rBuff,  cl::Buffer &hBuff,
+ 		const unsigned int rayCount,
+-		const VECTOR_CLASS<cl::Event> *events, cl::Event *event,
++		const cl::vector<cl::Event> *events, cl::Event *event,
+ 		const u_int queueIndex = 0) {
+ 		// Enqueue the intersection kernel
+ 		oclQueues[queueIndex]->EnqueueTraceRayBuffer(rBuff, hBuff, rayCount, events, event);
+@@ -165,7 +165,7 @@
+ 
+ 		void EnqueueTraceRayBuffer(cl::Buffer &rBuff,  cl::Buffer &hBuff,
+ 			const unsigned int rayCount,
+-			const VECTOR_CLASS<cl::Event> *events, cl::Event *event) {
++			const cl::vector<cl::Event> *events, cl::Event *event) {
+ 			freeElem[0]->EnqueueTraceRayBuffer(rBuff, hBuff, rayCount, events, event);
+ 			statsTotalDataParallelRayCount += rayCount;
+ 		}
+@@ -181,7 +181,7 @@
+ 
+ 			void EnqueueTraceRayBuffer(cl::Buffer &rBuff,  cl::Buffer &hBuff,
+ 			const unsigned int rayCount,
+-			const VECTOR_CLASS<cl::Event> *events, cl::Event *event) {
++			const cl::vector<cl::Event> *events, cl::Event *event) {
+ 				device->kernels->EnqueueRayBuffer(*oclQueue, kernelIndex, rBuff, hBuff, rayCount, events, event);
+ 			}
+ 
+diff -Nurb LuxCore-luxrender_v1.6/include/luxrays/utils/ocl.h c/include/luxrays/utils/ocl.h
+--- LuxCore-luxrender_v1.6/include/luxrays/utils/ocl.h	2016-05-09 22:17:57.000000000 +0200
++++ c/include/luxrays/utils/ocl.h	2020-11-12 19:52:42.760166105 +0100
+@@ -32,7 +32,7 @@
+ #if defined(__APPLE__)
+ #include <OpenCL/cl.hpp>
+ #else
+-#include <CL/cl.hpp>
++#include <CL/cl2.hpp>
+ #endif
+ #include "luxrays/core/utils.h"
+ 
+@@ -49,11 +49,11 @@
+ 
+ 	virtual cl::Program *Compile(cl::Context &context, cl::Device &device,
+ 		const std::string &kernelsParameters, const std::string &kernelSource,
+-		bool *cached, cl::STRING_CLASS *error) = 0;
++		bool *cached, cl::string *error) = 0;
+ 
+ 	static cl::Program *ForcedCompile(cl::Context &context, cl::Device &device,
+ 		const std::string &kernelsParameters, const std::string &kernelSource,
+-		cl::STRING_CLASS *error);
++		cl::string *error);
+ };
+ 
+ class oclKernelDummyCache : public oclKernelCache {
+@@ -63,7 +63,7 @@
+ 
+ 	cl::Program *Compile(cl::Context &context, cl::Device &device,
+ 		const std::string &kernelsParameters, const std::string &kernelSource,
+-		bool *cached, cl::STRING_CLASS *error) {
++		bool *cached, cl::string *error) {
+ 		if (cached)
+ 			*cached = false;
+ 
+@@ -78,7 +78,7 @@
+ 
+ 	cl::Program *Compile(cl::Context &context, cl::Device &device,
+ 		const std::string &kernelsParameters, const std::string &kernelSource,
+-		bool *cached, cl::STRING_CLASS *error);
++		bool *cached, cl::string *error);
+ 
+ private:
+ 	boost::unordered_map<std::string, cl::Program::Binaries> kernelCache;
+@@ -93,7 +93,7 @@
+ 
+ 	cl::Program *Compile(cl::Context &context, cl::Device &device,
+ 		const std::string &kernelsParameters, const std::string &kernelSource,
+-		bool *cached, cl::STRING_CLASS *error);
++		bool *cached, cl::string *error);
+ 
+ 	static std::string HashString(const std::string &ss);
+ 	static u_int HashBin(const char *s, const size_t size);
+diff -Nurb LuxCore-luxrender_v1.6/src/luxrays/accelerators/bvhaccel.cpp c/src/luxrays/accelerators/bvhaccel.cpp
+--- LuxCore-luxrender_v1.6/src/luxrays/accelerators/bvhaccel.cpp	2016-05-09 22:17:57.000000000 +0200
++++ c/src/luxrays/accelerators/bvhaccel.cpp	2020-11-12 19:52:42.772166106 +0100
+@@ -218,14 +218,14 @@
+ 			luxrays::ocl::KernelSource_triangle_funcs +
+ 			luxrays::ocl::KernelSource_bvh_types +
+ 			luxrays::ocl::KernelSource_bvh);
+-		cl::Program::Sources source(1, std::make_pair(code.c_str(), code.length()));
++		cl::Program::Sources source(1, code);
+ 		cl::Program program = cl::Program(oclContext, source);
+ 		try {
+-			VECTOR_CLASS<cl::Device> buildDevice;
++			cl::vector<cl::Device> buildDevice;
+ 			buildDevice.push_back(oclDevice);
+ 			program.build(buildDevice, opts.str().c_str());
+ 		} catch (cl::Error &err) {
+-			cl::STRING_CLASS strError = program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(oclDevice);
++			cl::string strError = program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(oclDevice);
+ 			LR_LOG(deviceContext, "[OpenCL device::" << deviceName << "] BVH compilation error:\n" << strError.c_str());
+ 
+ 			throw err;
+@@ -262,7 +262,7 @@
+ 	virtual void Update(const DataSet *newDataSet) { assert(false); }
+ 	virtual void EnqueueRayBuffer(cl::CommandQueue &oclQueue, const u_int kernelIndex,
+ 		cl::Buffer &rBuff, cl::Buffer &hBuff, const u_int rayCount,
+-		const VECTOR_CLASS<cl::Event> *events, cl::Event *event);
++		const cl::vector<cl::Event> *events, cl::Event *event);
+ 
+ 	virtual u_int SetIntersectionKernelArgs(cl::Kernel &kernel, const u_int argIndex);
+ 
+@@ -273,7 +273,7 @@
+ 
+ void OpenCLBVHKernels::EnqueueRayBuffer(cl::CommandQueue &oclQueue, const u_int kernelIndex,
+ 		cl::Buffer &rBuff, cl::Buffer &hBuff, const u_int rayCount,
+-		const VECTOR_CLASS<cl::Event> *events, cl::Event *event) {
++		const cl::vector<cl::Event> *events, cl::Event *event) {
+ 	kernels[kernelIndex]->setArg(0, rBuff);
+ 	kernels[kernelIndex]->setArg(1, hBuff);
+ 	kernels[kernelIndex]->setArg(2, rayCount);
+diff -Nurb LuxCore-luxrender_v1.6/src/luxrays/accelerators/mbvhaccel.cpp c/src/luxrays/accelerators/mbvhaccel.cpp
+--- LuxCore-luxrender_v1.6/src/luxrays/accelerators/mbvhaccel.cpp	2016-05-09 22:17:57.000000000 +0200
++++ c/src/luxrays/accelerators/mbvhaccel.cpp	2020-11-12 19:52:42.772166106 +0100
+@@ -388,14 +388,14 @@
+ 			luxrays::ocl::KernelSource_triangle_funcs +
+ 			luxrays::ocl::KernelSource_bvh_types +
+ 			luxrays::ocl::KernelSource_mbvh);
+-		cl::Program::Sources source(1, std::make_pair(code.c_str(), code.length()));
++		cl::Program::Sources source(1, code);
+ 		cl::Program program = cl::Program(oclContext, source);
+ 		try {
+-			VECTOR_CLASS<cl::Device> buildDevice;
++			cl::vector<cl::Device> buildDevice;
+ 			buildDevice.push_back(oclDevice);
+ 			program.build(buildDevice, opts.str().c_str());
+ 		} catch (cl::Error &err) {
+-			cl::STRING_CLASS strError = program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(oclDevice);
++			cl::string strError = program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(oclDevice);
+ 			LR_LOG(deviceContext, "[OpenCL device::" << deviceName << "] MBVH compilation error:\n" << strError.c_str());
+ 
+ 			throw err;
+@@ -445,7 +445,7 @@
+ 	virtual void Update(const DataSet *newDataSet) { assert(false); }
+ 	virtual void EnqueueRayBuffer(cl::CommandQueue &oclQueue, const u_int kernelIndex,
+ 		cl::Buffer &rBuff, cl::Buffer &hBuff, const u_int rayCount,
+-		const VECTOR_CLASS<cl::Event> *events, cl::Event *event);
++		const cl::vector<cl::Event> *events, cl::Event *event);
+ 
+ 	virtual u_int SetIntersectionKernelArgs(cl::Kernel &kernel, const u_int argIndex);
+ 
+@@ -459,7 +459,7 @@
+ 
+ void OpenCLMBVHKernels::EnqueueRayBuffer(cl::CommandQueue &oclQueue, const u_int kernelIndex,
+ 		cl::Buffer &rBuff, cl::Buffer &hBuff, const u_int rayCount,
+-		const VECTOR_CLASS<cl::Event> *events, cl::Event *event) {
++		const cl::vector<cl::Event> *events, cl::Event *event) {
+ 	kernels[kernelIndex]->setArg(0, rBuff);
+ 	kernels[kernelIndex]->setArg(1, hBuff);
+ 	kernels[kernelIndex]->setArg(2, rayCount);
+diff -Nurb LuxCore-luxrender_v1.6/src/luxrays/accelerators/mqbvhaccel.cpp c/src/luxrays/accelerators/mqbvhaccel.cpp
+--- LuxCore-luxrender_v1.6/src/luxrays/accelerators/mqbvhaccel.cpp	2016-05-09 22:17:57.000000000 +0200
++++ c/src/luxrays/accelerators/mqbvhaccel.cpp	2020-11-12 19:52:42.772166106 +0100
+@@ -276,14 +276,14 @@
+ 			luxrays::ocl::KernelSource_motionsystem_funcs +
+ 			luxrays::ocl::KernelSource_qbvh_types +
+ 			luxrays::ocl::KernelSource_mqbvh);
+-		cl::Program::Sources source(1, std::make_pair(code.c_str(), code.length()));
++		cl::Program::Sources source(1, code);
+ 		cl::Program program = cl::Program(oclContext, source);
+ 		try {
+-			VECTOR_CLASS<cl::Device> buildDevice;
++			cl::vector<cl::Device> buildDevice;
+ 			buildDevice.push_back(oclDevice);
+ 			program.build(buildDevice, opts.str().c_str());
+ 		} catch (cl::Error &err) {
+-			cl::STRING_CLASS strError = program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(oclDevice);
++			cl::string strError = program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(oclDevice);
+ 			LR_LOG(deviceContext, "[OpenCL device::" << deviceName <<
+ 				"] MQBVH compilation error:\n" << strError.c_str());
+ 			throw err;
+@@ -350,7 +350,7 @@
+ 	virtual void Update(const DataSet *newDataSet);
+ 	virtual void EnqueueRayBuffer(cl::CommandQueue &oclQueue, const u_int kernelIndex,
+ 		cl::Buffer &rBuff, cl::Buffer &hBuff, const u_int rayCount,
+-		const VECTOR_CLASS<cl::Event> *events, cl::Event *event);
++		const cl::vector<cl::Event> *events, cl::Event *event);
+ 
+ 	virtual u_int SetIntersectionKernelArgs(cl::Kernel &kernel, const u_int argIndex);
+ 
+@@ -421,7 +421,7 @@
+ 
+ void OpenCLMQBVHKernels::EnqueueRayBuffer(cl::CommandQueue &oclQueue, const u_int kernelIndex,
+ 		cl::Buffer &rBuff, cl::Buffer &hBuff, const u_int rayCount,
+-		const VECTOR_CLASS<cl::Event> *events, cl::Event *event) {
++		const cl::vector<cl::Event> *events, cl::Event *event) {
+ 	kernels[kernelIndex]->setArg(0, rBuff);
+ 	kernels[kernelIndex]->setArg(1, hBuff);
+ 	kernels[kernelIndex]->setArg(2, rayCount);
+diff -Nurb LuxCore-luxrender_v1.6/src/luxrays/accelerators/qbvhaccel.cpp c/src/luxrays/accelerators/qbvhaccel.cpp
+--- LuxCore-luxrender_v1.6/src/luxrays/accelerators/qbvhaccel.cpp	2016-05-09 22:17:57.000000000 +0200
++++ c/src/luxrays/accelerators/qbvhaccel.cpp	2020-11-12 19:52:42.772166106 +0100
+@@ -102,14 +102,14 @@
+ 			luxrays::ocl::KernelSource_bbox_types +
+ 			luxrays::ocl::KernelSource_qbvh_types +
+ 			luxrays::ocl::KernelSource_qbvh);
+-		cl::Program::Sources source(1, std::make_pair(code.c_str(), code.length()));
++		cl::Program::Sources source(1, code);
+ 		cl::Program program = cl::Program(oclContext, source);
+ 		try {
+-			VECTOR_CLASS<cl::Device> buildDevice;
++			cl::vector<cl::Device> buildDevice;
+ 			buildDevice.push_back(oclDevice);
+ 			program.build(buildDevice, opts.str().c_str());
+ 		} catch (cl::Error &err) {
+-			cl::STRING_CLASS strError = program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(oclDevice);
++			cl::string strError = program.getBuildInfo<CL_PROGRAM_BUILD_LOG>(oclDevice);
+ 			LR_LOG(deviceContext, "[OpenCL device::" << deviceName <<
+ 				"] QBVH compilation error:\n" << strError.c_str());
+ 
+@@ -153,7 +153,7 @@
+ 	virtual void Update(const DataSet *newDataSet) { assert(false); }
+ 	virtual void EnqueueRayBuffer(cl::CommandQueue &oclQueue, const u_int kernelIndex,
+ 		cl::Buffer &rBuff, cl::Buffer &hBuff, const u_int rayCount,
+-		const VECTOR_CLASS<cl::Event> *events, cl::Event *event);
++		const cl::vector<cl::Event> *events, cl::Event *event);
+ 
+ 	virtual u_int SetIntersectionKernelArgs(cl::Kernel &kernel, const u_int argIndex);
+ 
+@@ -165,7 +165,7 @@
+ 
+ void OpenCLQBVHKernels::EnqueueRayBuffer(cl::CommandQueue &oclQueue, const u_int kernelIndex,
+ 		cl::Buffer &rBuff, cl::Buffer &hBuff, const u_int rayCount,
+-		const VECTOR_CLASS<cl::Event> *events, cl::Event *event) {
++		const cl::vector<cl::Event> *events, cl::Event *event) {
+ 	kernels[kernelIndex]->setArg(0, rBuff);
+ 	kernels[kernelIndex]->setArg(1, hBuff);
+ 	kernels[kernelIndex]->setArg(2, rayCount);
+diff -Nurb LuxCore-luxrender_v1.6/src/luxrays/core/context.cpp c/src/luxrays/core/context.cpp
+--- LuxCore-luxrender_v1.6/src/luxrays/core/context.cpp	2016-05-09 22:17:57.000000000 +0200
++++ c/src/luxrays/core/context.cpp	2020-11-12 19:52:42.773166106 +0100
+@@ -44,7 +44,7 @@
+ 
+ #if !defined(LUXRAYS_DISABLE_OPENCL)
+ 	// Platform info
+-	VECTOR_CLASS<cl::Platform> platforms;
++	cl::vector<cl::Platform> platforms;
+ 	cl::Platform::get(&platforms);
+ 	for (size_t i = 0; i < platforms.size(); ++i)
+ 		LR_LOG(this, "OpenCL Platform " << i << ": " << platforms[i].getInfo<CL_PLATFORM_VENDOR>().c_str());
+diff -Nurb LuxCore-luxrender_v1.6/src/luxrays/core/device.cpp c/src/luxrays/core/device.cpp
+--- LuxCore-luxrender_v1.6/src/luxrays/core/device.cpp	2016-05-09 22:17:57.000000000 +0200
++++ c/src/luxrays/core/device.cpp	2020-11-12 19:52:42.773166106 +0100
+@@ -17,6 +17,7 @@
+  ***************************************************************************/
+ 
+ #if !defined(LUXRAYS_DISABLE_OPENCL) && !defined(WIN32) && !defined(__APPLE__)
++#include <CL/cl2.hpp>
+ #include <GL/glx.h>
+ #endif
+ 
+@@ -173,7 +174,7 @@
+ 	const DeviceType filter, std::vector<DeviceDescription *> &descriptions)
+ {
+ 	// Get the list of devices available on the platform
+-	VECTOR_CLASS<cl::Device> oclDevices;
++	cl::vector<cl::Device> oclDevices;
+ 	oclPlatform.getDevices(CL_DEVICE_TYPE_ALL, &oclDevices);
+ 
+ 	// Build the descriptions
+@@ -196,9 +197,9 @@
+ cl::Context &OpenCLDeviceDescription::GetOCLContext() const {
+ 	if (!oclContext) {
+ 		// Allocate a context with the selected device
+-		VECTOR_CLASS<cl::Device> devices;
++		cl::vector<cl::Device> devices;
+ 		devices.push_back(oclDevice);
+-		cl::Platform platform = oclDevice.getInfo<CL_DEVICE_PLATFORM>();
++		cl::Platform platform (oclDevice.getInfo<CL_DEVICE_PLATFORM>());
+ 
+ 		if (enableOpenGLInterop) {
+ #if defined (__APPLE__)
+diff -Nurb LuxCore-luxrender_v1.6/src/luxrays/utils/ocl.cpp c/src/luxrays/utils/ocl.cpp
+--- LuxCore-luxrender_v1.6/src/luxrays/utils/ocl.cpp	2016-05-09 22:17:57.000000000 +0200
++++ c/src/luxrays/utils/ocl.cpp	2020-11-12 19:52:42.773166106 +0100
+@@ -147,14 +147,14 @@
+ 
+ cl::Program *oclKernelCache::ForcedCompile(cl::Context &context, cl::Device &device,
+ 		const string &kernelsParameters, const string &kernelSource,
+-		cl::STRING_CLASS *error) {
++		cl::string *error) {
+ 	cl::Program *program = NULL;
+ 
+ 	try {
+-		cl::Program::Sources source(1, make_pair(kernelSource.c_str(), kernelSource.length()));
++		cl::Program::Sources source(1, cl::Program::Sources::value_type(kernelSource.c_str(), kernelSource.length()));
+ 		program = new cl::Program(context, source);
+ 
+-		VECTOR_CLASS<cl::Device> buildDevice;
++		cl::vector<cl::Device> buildDevice;
+ 		buildDevice.push_back(device);
+ 		program->build(buildDevice, kernelsParameters.c_str());
+ 	} catch (cl::Error &err) {
+@@ -188,7 +188,7 @@
+ 
+ cl::Program *oclKernelVolatileCache::Compile(cl::Context &context, cl::Device& device,
+ 		const string &kernelsParameters, const string &kernelSource,
+-		bool *cached, cl::STRING_CLASS *error) {
++		bool *cached, cl::string *error) {
+ 	// Check if the kernel is available in the cache
+ 	boost::unordered_map<string, cl::Program::Binaries>::iterator it = kernelCache.find(kernelsParameters);
+ 
+@@ -200,18 +200,18 @@
+ 			return NULL;
+ 
+ 		// Obtain the binaries of the sources
+-		VECTOR_CLASS<char *> bins = program->getInfo<CL_PROGRAM_BINARIES>();
++		auto bins = program->getInfo<CL_PROGRAM_BINARIES>();
+ 		assert (bins.size() == 1);
+-		VECTOR_CLASS<size_t> sizes = program->getInfo<CL_PROGRAM_BINARY_SIZES>();
+-		assert (sizes.size() == 1);
++//		cl::vector<size_t> sizes = program->getInfo<CL_PROGRAM_BINARY_SIZES>();
++//		assert (sizes.size() == 1);
+ 
+-		if (sizes[0] > 0) {
++		if (bins[0].size() > 0) {
+ 			// Add the kernel to the cache
+-			char *bin = new char[sizes[0]];
+-			memcpy(bin, bins[0], sizes[0]);
++			char *bin = new char[bins[0].size()];
++			memcpy(bin, bins[0].data(), bins[0].size());
+ 			kernels.push_back(bin);
+ 
+-			kernelCache[kernelsParameters] = cl::Program::Binaries(1, make_pair(bin, sizes[0]));
++			kernelCache[kernelsParameters] = cl::Program::Binaries(1, cl::Program::Binaries::value_type(bin, bin + bins[0].size()));
+ 		}
+ 
+ 		if (cached)
+@@ -220,7 +220,7 @@
+ 		return program;
+ 	} else {
+ 		// Compile from the binaries
+-		VECTOR_CLASS<cl::Device> buildDevice;
++		cl::vector<cl::Device> buildDevice;
+ 		buildDevice.push_back(device);
+ 		cl::Program *program = new cl::Program(context, buildDevice, it->second);
+ 		program->build(buildDevice);
+@@ -301,10 +301,10 @@
+ 
+ cl::Program *oclKernelPersistentCache::Compile(cl::Context &context, cl::Device& device,
+ 		const string &kernelsParameters, const string &kernelSource,
+-		bool *cached, cl::STRING_CLASS *error) {
++		bool *cached, cl::string *error) {
+ 	// Check if the kernel is available in the cache
+ 
+-	const cl::Platform platform = device.getInfo<CL_DEVICE_PLATFORM>();
++	const cl::Platform platform(device.getInfo<CL_DEVICE_PLATFORM>());
+ 	const string platformName = boost::trim_copy(platform.getInfo<CL_PLATFORM_VENDOR>());
+ 	const string deviceName = boost::trim_copy(device.getInfo<CL_DEVICE_NAME>());
+ 	const string deviceUnits = ToString(device.getInfo<CL_DEVICE_MAX_COMPUTE_UNITS>());
+@@ -322,22 +322,22 @@
+ 			return NULL;
+ 
+ 		// Obtain the binaries of the sources
+-		VECTOR_CLASS<char *> bins = program->getInfo<CL_PROGRAM_BINARIES>();
++		auto bins = program->getInfo<CL_PROGRAM_BINARIES>();
+ 		assert (bins.size() == 1);
+-		VECTOR_CLASS<size_t> sizes = program->getInfo<CL_PROGRAM_BINARY_SIZES>();
+-		assert (sizes.size() == 1);
++		//cl::vector<size_t> sizes = program->getInfo<CL_PROGRAM_BINARY_SIZES>();
++		assert (bins[0].size() == 1);
+ 
+ 		// Create the file only if the binaries include something
+-		if (sizes[0] > 0) {
++		if (bins[0].size() > 0) {
+ 			// Add the kernel to the cache
+ 			boost::filesystem::create_directories(dirPath);
+ 			BOOST_OFSTREAM file(fileName.c_str(), ios_base::out | ios_base::binary);
+ 
+ 			// Write the binary hash
+-			const u_int hashBin = HashBin(bins[0], sizes[0]);
++			const u_int hashBin = HashBin((char*)(bins[0].data()), bins[0].size());
+ 			file.write((char *)&hashBin, sizeof(int));
+ 
+-			file.write(bins[0], sizes[0]);
++			file.write((char*)(bins[0].data()), bins[0].size());
+ 			// Check for errors
+ 			char buf[512];
+ 			if (file.fail()) {
+@@ -383,10 +383,10 @@
+ 				return Compile(context, device, kernelsParameters, kernelSource, cached, error);
+ 			} else {
+ 				// Compile from the binaries
+-				VECTOR_CLASS<cl::Device> buildDevice;
++				cl::vector<cl::Device> buildDevice;
+ 				buildDevice.push_back(device);
+ 				cl::Program *program = new cl::Program(context, buildDevice,
+-						cl::Program::Binaries(1, make_pair(kernelBin, kernelSize)));
++						cl::Program::Binaries(1, cl::Program::Binaries::value_type(kernelBin, kernelBin + kernelSize)));
+ 				program->build(buildDevice);
+ 
+ 				if (cached)
+diff -Nurb LuxCore-luxrender_v1.6/src/slg/engines/pathoclbase/pathoclbasethread.cpp c/src/slg/engines/pathoclbase/pathoclbasethread.cpp
+--- LuxCore-luxrender_v1.6/src/slg/engines/pathoclbase/pathoclbasethread.cpp	2016-05-09 22:17:57.000000000 +0200
++++ c/src/slg/engines/pathoclbase/pathoclbasethread.cpp	2020-11-12 19:52:42.775166106 +0100
+@@ -1394,7 +1394,7 @@
+ 	}
+ 
+ 	bool cached;
+-	cl::STRING_CLASS error;
++	cl::string error;
+ 	cl::Program *program = kernelCache->Compile(oclContext, oclDevice,
+ 			kernelsParameters, kernelSource,
+ 			&cached, &error);
+diff -Nurb LuxCore-luxrender_v1.6/src/slg/film/imagepipeline/imagepipeline.cpp c/src/slg/film/imagepipeline/imagepipeline.cpp
+--- LuxCore-luxrender_v1.6/src/slg/film/imagepipeline/imagepipeline.cpp	2016-05-09 22:17:57.000000000 +0200
++++ c/src/slg/film/imagepipeline/imagepipeline.cpp	2020-11-12 19:52:42.776166106 +0100
+@@ -41,7 +41,7 @@
+ 	SLG_LOG("[" << name << "] Compiling kernels ");
+ 
+ 	bool cached;
+-	cl::STRING_CLASS error;
++	cl::string error;
+ 	cl::Program *program = film.kernelCache->Compile(oclContext, oclDevice,
+ 			kernelsParameters, kernelSource,
+ 			&cached, &error);

@@ -1,0 +1,282 @@
+diff -Nurb LuxCore-luxrender_v1.6/cmake/Dependencies.cmake c/cmake/Dependencies.cmake
+--- LuxCore-luxrender_v1.6/cmake/Dependencies.cmake	2016-05-09 22:17:57.000000000 +0200
++++ c/cmake/Dependencies.cmake	2020-11-12 19:52:42.759166105 +0100
+@@ -16,8 +16,8 @@
+ # limitations under the License.
+ ################################################################################
+ 
+-include(FindPkgMacros)
+-getenv_path(LuxRays_DEPENDENCIES_DIR)
++#include(FindPkgMacros)
++#getenv_path(LuxRays_DEPENDENCIES_DIR)
+ 
+ ################################################################################
+ #
+@@ -32,6 +32,43 @@
+ include_directories(BEFORE SYSTEM ${OPENIMAGEIO_INCLUDE_DIR})
+ find_package(OpenEXR REQUIRED)
+ 
++set(PythonVersions "" CACHE STRING "Eglible python versions") 
++
++function(TestPythonVersion TestVersion)
++	message(STATUS "Testing PythonVersion ${TestVersion}")
++	find_package(Python ${TestVersion} EXACT COMPONENTS Interpreter Development)
++	if(NOT ${Python_FOUND})
++		set(PythonVersionEgligible OFF PARENT_SCOPE)
++		return()
++	endif()
++# Find Boost
++set(Boost_USE_STATIC_LIBS       OFF)
++set(Boost_USE_MULTITHREADED     ON)
++set(Boost_USE_STATIC_RUNTIME    OFF)
++set(BOOST_ROOT                  "${BOOST_SEARCH_PATH}")
++#set(Boost_DEBUG                 ON)
++set(Boost_MINIMUM_VERSION       "1.44.0")
++
++
++set(LUXRAYS_BOOST_COMPONENTS thread program_options filesystem serialization iostreams regex system "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}" chrono)
++find_package(Boost ${Boost_MINIMUM_VERSION} COMPONENTS ${LUXRAYS_BOOST_COMPONENTS})
++if (NOT Boost_FOUND)
++        # Try again with the other type of libs
++        if(Boost_USE_STATIC_LIBS)
++                set(Boost_USE_STATIC_LIBS OFF)
++        else()
++                set(Boost_USE_STATIC_LIBS ON)
++        endif()
++        find_package(Boost ${Boost_MINIMUM_VERSION} COMPONENTS ${LUXRAYS_BOOST_COMPONENTS})
++endif()
++	if(NOT ${Boost_FOUND})
++		set(PythonVersionEligible OFF PARENT_SCOPE)
++		return()
++	endif()
++	set(PythonVersionEligible ON PARENT_SCOPE)
++
++endfunction()
++
+ if(NOT APPLE)
+     # Apple has these available hardcoded and matched in macos repo, see Config_OSX.cmake
+ 
+@@ -42,11 +79,25 @@
+     include_directories(BEFORE SYSTEM ${JPEG_INCLUDE_DIR})
+     find_package(PNG REQUIRED)
+     include_directories(BEFORE SYSTEM ${PNG_PNG_INCLUDE_DIR})
+-	# Find Python Libraries
+-	find_package(PythonLibs)
++
++	list(REVERSE PythonVersions)
++        message(STATUS "PythonsVersions: ${PythonVersions}")
++        foreach(PythonVersionCandidate IN LISTS PythonVersions )
++                if("X${PythonVersionCandidate}" STREQUAL "X")
++			continue()
++                endif()
++                message(STATUS "PythonsVersionCandidate: ${PythonVersionCandidate}")
++                TestPythonVersion("${PythonVersionCandidate}")
++                if(${PythonVersionEligible})
++			find_package(Python ${PythonVersionCandidate} EXACT COMPONENTS Interpreter Development)
++                        message(STATUS "Going with Python ${PythonVersionCandidate}")
++                        break()
++                endif()
++        endforeach()
+ endif()
++#find_package(Python 3.7 EXACT COMPONENTS Interpreter Development)
+ 
+-include_directories(${PYTHON_INCLUDE_DIRS})
++include_directories(${Python_INCLUDE_DIRS})
+ 
+ # Find Boost
+ set(Boost_USE_STATIC_LIBS       OFF)
+@@ -56,9 +107,8 @@
+ #set(Boost_DEBUG                 ON)
+ set(Boost_MINIMUM_VERSION       "1.44.0")
+ 
+-set(Boost_ADDITIONAL_VERSIONS "1.47.0" "1.46.1" "1.46" "1.46.0" "1.45" "1.45.0" "1.44" "1.44.0")
++set(LUXRAYS_BOOST_COMPONENTS thread program_options filesystem serialization iostreams regex system "python${Python_VERSION_MAJOR}${Python_VERSION_MINOR}" chrono)
+ 
+-set(LUXRAYS_BOOST_COMPONENTS thread program_options filesystem serialization iostreams regex system python chrono)
+ find_package(Boost ${Boost_MINIMUM_VERSION} COMPONENTS ${LUXRAYS_BOOST_COMPONENTS})
+ if (NOT Boost_FOUND)
+         # Try again with the other type of libs
+@@ -71,6 +121,7 @@
+ endif()
+ 
+ if (Boost_FOUND)
++	message(STATUS "Boost found ${Boost_VERSION}")
+ 	include_directories(BEFORE SYSTEM ${Boost_INCLUDE_DIRS})
+ 	link_directories(${Boost_LIBRARY_DIRS})
+ 	# Don't use old boost versions interfaces
+@@ -108,19 +159,19 @@
+ endif ()
+ 
+ # OpenCL
+-set(OPENCL_ROOT                "${OPENCL_SEARCH_PATH}")
+ find_package(OpenCL)
+ 
+-if (OPENCL_FOUND)
+-	include_directories(BEFORE SYSTEM ${OPENCL_INCLUDE_DIR} ${OPENCL_C_INCLUDE_DIR})
++if (Opencl_FOUND)
++	include_directories(BEFORE SYSTEM ${OpenCL_INCLUDE_DIR} ${OpenCL_C_INCLUDE_DIR})
+ endif ()
+ 
+ # Intel Embree
+ set(EMBREE_ROOT                "${EMBREE_SEARCH_PATH}")
+-find_package(Embree)
++find_package(Embree 2)
+ 
+-if (EMBREE_FOUND)
+-	include_directories(BEFORE SYSTEM ${EMBREE_INCLUDE_PATH})
++if (Embree_FOUND)
++	message(STATUS              "Embree found: ${Embree_VERSION}")
++	include_directories(BEFORE SYSTEM ${Embree_INCLUDE_PATH})
+ endif ()
+ 
+ # OpenMP
+@@ -159,3 +210,4 @@
+ 		SET(FLEX_NOT_AVAILABLE 1)
+ 	ENDIF (NOT FLEX_FOUND)
+ ENDIF (NOT FLEX_NOT_AVAILABLE)
++
+diff -Nurb LuxCore-luxrender_v1.6/CMakeLists.txt c/CMakeLists.txt
+--- LuxCore-luxrender_v1.6/CMakeLists.txt	2016-05-09 22:17:57.000000000 +0200
++++ c/CMakeLists.txt	2020-11-12 19:52:42.778166106 +0100
+@@ -25,8 +25,8 @@
+ #
+ ################################################################################
+ # Fresh start
+-cmake_minimum_required(VERSION 2.8)
+-cmake_policy(VERSION 2.8)
++cmake_minimum_required(VERSION 3.2)
++cmake_policy(VERSION 3.2)
+ #Remove the following when the version check is at least 2.8.4
+ SET(CMAKE_LEGACY_CYGWIN_WIN32 0)
+ 
+@@ -54,9 +54,9 @@
+ # cmake does need to know which of the possible configurations
+ # to generate
+ if(NOT CMAKE_BUILD_TYPE)
+-	set(CMAKE_BUILD_TYPE Release)
++#_cmake_modify_IGNORE 	set(CMAKE_BUILD_TYPE Release)
+ endif(NOT CMAKE_BUILD_TYPE)
+-SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "assure config" FORCE) # makes sure type is shown in cmake gui
++#_cmake_modify_IGNORE SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "assure config" FORCE) # makes sure type is shown in cmake gui
+ 
+ message(STATUS "Building mode: " ${CMAKE_BUILD_TYPE})
+ 
+@@ -81,14 +81,14 @@
+ 	MESSAGE(FATAL_ERROR "--> Could not locate required OpenImageIO files - Please check ${OPENIMAGEIO_SEARCH_PATH}")
+ endif()
+ 
+-if (NOT OPENCL_FOUND AND NOT LUXRAYS_DISABLE_OPENCL)
+-	MESSAGE(ERROR "--> Could not locate required OpenCL files, disabling OpenCL support - Please check ${OPENCL_SEARCH_PATH}")
+-	SET(LUXRAYS_DISABLE_OPENCL 1)
++if (NOT OpenCL_FOUND AND NOT LUXRAYS_DISABLE_OPENCL)
++	MESSAGE(FATAL_ERROR "--> Could not locate required OpenCL files")
++#	SET(LUXRAYS_DISABLE_OPENCL 1)
+ endif()
+ 
+ if (NOT OPENGL_FOUND AND NOT LUXRAYS_DISABLE_OPENCL)
+-	MESSAGE(ERROR "--> Could not locate required OpenGL files, disabling OpenCL support, disabling samples build")
+-	SET(LUXRAYS_DISABLE_OPENCL 1)
++	MESSAGE(FATAL_ERROR "--> Could not locate required OpenGL files")
++#	SET(LUXRAYS_DISABLE_OPENCL 1)
+ endif()
+ 
+ if (NOT GLEW_FOUND)
+@@ -99,8 +99,8 @@
+ 	MESSAGE(FATAL_ERROR "--> Could not locate required GLUT files, disabling samples build - Please check ${GLUT_SEARCH_PATH}")
+ endif()
+ 
+-if (NOT EMBREE_FOUND)
+-	MESSAGE(FATAL_ERROR "--> Could not locate required Intel Embree files - Please check ${EMBREE_SEARCH_PATH}")
++if (NOT Embree_FOUND)
++	MESSAGE(FATAL_ERROR "--> Could not locate required Intel Embree files - Please check ${Embree_SEARCH_PATH}")
+ endif()
+ 
+ if (LUXRAYS_DISABLE_OPENCL)
+diff -Nurb LuxCore-luxrender_v1.6/samples/benchsimple/CMakeLists.txt c/samples/benchsimple/CMakeLists.txt
+--- LuxCore-luxrender_v1.6/samples/benchsimple/CMakeLists.txt	2016-05-09 22:17:57.000000000 +0200
++++ c/samples/benchsimple/CMakeLists.txt	2020-11-12 19:52:42.766166105 +0100
+@@ -21,4 +21,4 @@
+ 
+ add_executable(benchsimple benchsimple.cpp)
+ add_definitions(${VISIBILITY_FLAGS})
+-target_link_libraries(benchsimple luxrays ${EMBREE_LIBRARY})
++target_link_libraries(benchsimple luxrays ${Embree_LIBRARY})
+diff -Nurb LuxCore-luxrender_v1.6/samples/luxcoreconsole/CMakeLists.txt c/samples/luxcoreconsole/CMakeLists.txt
+--- LuxCore-luxrender_v1.6/samples/luxcoreconsole/CMakeLists.txt	2016-05-09 22:17:57.000000000 +0200
++++ c/samples/luxcoreconsole/CMakeLists.txt	2020-11-12 19:52:42.766166105 +0100
+@@ -28,4 +28,4 @@
+ 
+ add_executable(luxcoreconsole ${LUXCORECONSOLE_SRCS})
+ 
+-TARGET_LINK_LIBRARIES(luxcoreconsole luxcore smallluxgpu luxrays ${EMBREE_LIBRARY} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
++TARGET_LINK_LIBRARIES(luxcoreconsole luxcore smallluxgpu luxrays ${Embree_LIBRARY} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
+diff -Nurb LuxCore-luxrender_v1.6/samples/luxcoredemo/CMakeLists.txt c/samples/luxcoredemo/CMakeLists.txt
+--- LuxCore-luxrender_v1.6/samples/luxcoredemo/CMakeLists.txt	2016-05-09 22:17:57.000000000 +0200
++++ c/samples/luxcoredemo/CMakeLists.txt	2020-11-12 19:52:42.766166105 +0100
+@@ -29,4 +29,4 @@
+ add_executable(luxcoredemo ${LUXCORELIBDEMO_SRCS})
+ add_definitions(${VISIBILITY_FLAGS})
+ 
+-TARGET_LINK_LIBRARIES(luxcoredemo luxcore smallluxgpu luxrays ${EMBREE_LIBRARY} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
++TARGET_LINK_LIBRARIES(luxcoredemo luxcore smallluxgpu luxrays ${Embree_LIBRARY} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
+diff -Nurb LuxCore-luxrender_v1.6/samples/luxcoreimplserializationdemo/CMakeLists.txt c/samples/luxcoreimplserializationdemo/CMakeLists.txt
+--- LuxCore-luxrender_v1.6/samples/luxcoreimplserializationdemo/CMakeLists.txt	2016-05-09 22:17:57.000000000 +0200
++++ c/samples/luxcoreimplserializationdemo/CMakeLists.txt	2020-11-12 19:52:42.766166105 +0100
+@@ -28,4 +28,4 @@
+ 
+ add_executable(luxcoreimplserializationdemo ${LUXCOREIMPL_SERIALIZATIONDEMO_SRCS})
+ 
+-TARGET_LINK_LIBRARIES(luxcoreimplserializationdemo luxcore smallluxgpu luxrays ${EMBREE_LIBRARY} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
++TARGET_LINK_LIBRARIES(luxcoreimplserializationdemo luxcore smallluxgpu luxrays ${Embree_LIBRARY} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
+diff -Nurb LuxCore-luxrender_v1.6/samples/luxcorescenedemo/CMakeLists.txt c/samples/luxcorescenedemo/CMakeLists.txt
+--- LuxCore-luxrender_v1.6/samples/luxcorescenedemo/CMakeLists.txt	2016-05-09 22:17:57.000000000 +0200
++++ c/samples/luxcorescenedemo/CMakeLists.txt	2020-11-12 19:52:42.766166105 +0100
+@@ -29,4 +29,4 @@
+ add_executable(luxcorescenedemo ${LUXCORESCENEDEMO_SRCS})
+ add_definitions(${VISIBILITY_FLAGS})
+ 
+-TARGET_LINK_LIBRARIES(luxcorescenedemo luxcore smallluxgpu luxrays ${EMBREE_LIBRARY} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
++TARGET_LINK_LIBRARIES(luxcorescenedemo luxcore smallluxgpu luxrays ${Embree_LIBRARY} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
+diff -Nurb LuxCore-luxrender_v1.6/samples/luxcoreui/CMakeLists.txt c/samples/luxcoreui/CMakeLists.txt
+--- LuxCore-luxrender_v1.6/samples/luxcoreui/CMakeLists.txt	2016-05-09 22:17:57.000000000 +0200
++++ c/samples/luxcoreui/CMakeLists.txt	2020-11-12 19:52:42.770166106 +0100
+@@ -84,7 +84,7 @@
+ 	glfw
+ 	${GLFW_LIBRARIES}
+ 	luxcore smallluxgpu luxrays
+-	${EMBREE_LIBRARY}
++	${Embree_LIBRARY}
+ 	${OPENGL_LIBRARIES}
+ 	${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES}
+ 	${GTK3_LIBRARIES})
+diff -Nurb LuxCore-luxrender_v1.6/samples/smallluxgpu4/CMakeLists.txt c/samples/smallluxgpu4/CMakeLists.txt
+--- LuxCore-luxrender_v1.6/samples/smallluxgpu4/CMakeLists.txt	2016-05-09 22:17:57.000000000 +0200
++++ c/samples/smallluxgpu4/CMakeLists.txt	2020-11-12 19:52:42.766166105 +0100
+@@ -30,9 +30,9 @@
+ add_executable(slg4 ${SMALLLUXGPU_SRCS})
+ 
+ if(APPLE)
+-	TARGET_LINK_LIBRARIES(slg4 luxcore smallluxgpu luxrays ${EMBREE_LIBRARY} ${OPENGL_LIBRARIES} ${GLEW_LIBRARY} ${GLUT_LIBRARY} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
++	TARGET_LINK_LIBRARIES(slg4 luxcore smallluxgpu luxrays ${Embree_LIBRARY} ${OPENGL_LIBRARIES} ${GLEW_LIBRARY} ${GLUT_LIBRARY} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
+ else(APPLE)
+-	TARGET_LINK_LIBRARIES(slg4 luxcore smallluxgpu luxrays ${EMBREE_LIBRARY} ${OPENGL_LIBRARIES} ${GLEW_LIBRARY} ${GLUT_LIBRARY} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
++	TARGET_LINK_LIBRARIES(slg4 luxcore smallluxgpu luxrays ${Embree_LIBRARY} ${OPENGL_LIBRARIES} ${GLEW_LIBRARY} ${GLUT_LIBRARY} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
+ endif(APPLE)
+ 
+ # This instructs FREEGLUT to emit a pragma for the static version
+diff -Nurb LuxCore-luxrender_v1.6/src/luxcore/CMakeLists.txt c/src/luxcore/CMakeLists.txt
+--- LuxCore-luxrender_v1.6/src/luxcore/CMakeLists.txt	2016-05-09 22:17:57.000000000 +0200
++++ c/src/luxcore/CMakeLists.txt	2020-11-12 19:52:42.772166106 +0100
+@@ -141,10 +141,10 @@
+ add_library(pyluxcore MODULE ${PYLUXCORE_SRCS})
+ add_definitions(${VISIBILITY_FLAGS})
+ if(APPLE)
+-	target_link_libraries(pyluxcore -Wl,-undefined -Wl,dynamic_lookup luxcore smallluxgpu luxrays ${EMBREE_LIBRARY} ${Boost_LIBRARIES} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
++	target_link_libraries(pyluxcore -Wl,-undefined -Wl,dynamic_lookup luxcore smallluxgpu luxrays ${Embree_LIBRARY} ${Boost_LIBRARIES} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
+     SET_TARGET_PROPERTIES(pyluxcore PROPERTIES XCODE_ATTRIBUTE_DEPLOYMENT_POSTPROCESSING NO) # exclude pylux from strip, not possible
+ else()
+-	target_link_libraries(pyluxcore luxcore smallluxgpu luxrays ${EMBREE_LIBRARY} ${Boost_LIBRARIES} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
++	target_link_libraries(pyluxcore luxcore smallluxgpu luxrays ${Embree_LIBRARY} ${Boost_LIBRARIES} ${TIFF_LIBRARIES} ${OPENEXR_LIBRARIES} ${PNG_LIBRARIES} ${JPEG_LIBRARIES})
+ endif()
+ 
+ set_target_properties(pyluxcore PROPERTIES PREFIX "")
