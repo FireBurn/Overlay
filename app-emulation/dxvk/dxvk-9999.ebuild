@@ -23,7 +23,7 @@ fi
 LICENSE="ZLIB"
 SLOT=0
 
-IUSE="+d3d9 +d3d10 +d3d11 debug +dxgi +mingw test winelib"
+IUSE="+d3d9 +d3d10 +d3d11 debug dxgi +mingw test winelib"
 REQUIRED_USE="^^ ( mingw winelib )"
 
 RESTRICT="test"
