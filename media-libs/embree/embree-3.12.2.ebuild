@@ -92,6 +92,7 @@ src_configure() {
 		-DEMBREE_GEOMETRY_SUBDIVISION=ON		# default
 		-DEMBREE_GEOMETRY_TRIANGLE=ON			# default
 		-DEMBREE_GEOMETRY_USER=ON				# default
+		-DEMBREE_IGNORE_CMAKE_CXX_FLAGS=OFF
 		-DEMBREE_IGNORE_INVALID_RAYS=OFF		# default
 		-DEMBREE_ISPC_SUPPORT=$(usex ispc)
 		-DEMBREE_RAY_MASK=$(usex raymask)
@@ -102,6 +103,7 @@ src_configure() {
 		-DEMBREE_TASKING_SYSTEM:STRING=$(usex tbb "TBB" "INTERNAL")
 		-DEMBREE_TUTORIALS=$(usex tutorial)
 		-DEMBREE_MAX_ISA:STRING=AVX2
+EMBREE_IGNORE_CMAKE_CXX_FLAGS
 	)
 
 	if use tutorial; then
