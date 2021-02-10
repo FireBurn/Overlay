@@ -170,11 +170,16 @@ multilib_src_install() {
 multilib_src_install_all() {
 	if use mingw; then
 		find "${D}" -name '*.a' -delete -print
-		mv "${D}/usr/lib/dxvk/" "${D}/usr/lib/temp/"
-		mv "${D}/usr/lib64/dxvk/" "${D}/usr/lib64/temp/"
-		mv "${D}/usr/lib/temp/bin/" "${D}/usr/lib/dxvk/"
-		mv "${D}/usr/lib64/temp/bin/" "${D}/usr/lib64/dxvk/"
-		rm -rf "${D}/usr/lib/temp/" "${D}/usr/lib64/temp/"
+		if use abi_x86_32; then
+			mv "${D}/usr/lib/dxvk/" "${D}/usr/lib/temp/"
+			mv "${D}/usr/lib/temp/bin/" "${D}/usr/lib/dxvk/"
+			rm -rf "${D}/usr/lib/temp/"
+		fi
+		if use abi_x86_64; then
+			mv "${D}/usr/lib64/dxvk/" "${D}/usr/lib64/temp/"
+			mv "${D}/usr/lib64/temp/bin/" "${D}/usr/lib64/dxvk/"
+			rm -rf "${D}/usr/lib64/temp/"
+		fi
 	fi
 
 	# create combined setup helper
