@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE pkgmetadata SYSTEM "http://www.gentoo.org/dtd/metadata.dtd">
 <pkgmetadata>
-	<maintainer type="person">
-		<email>holger@applied-asynchrony.com</email>
-		<name>Holger Hoffst&auml;tte</name>
+	<maintainer type="project">
+		<email>freedesktop-bugs@gentoo.org</email>
 	</maintainer>
 	<use>
 		<flag name="elogind">Use <pkg>sys-auth/elogind</pkg> for session tracking</flag>
