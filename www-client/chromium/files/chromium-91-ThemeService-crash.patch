@@ -1,0 +1,42 @@
+From ec1fe9eaf6acdcaf010d5b88caa5cf3bc013ea88 Mon Sep 17 00:00:00 2001
+From: Stephan Hartmann <stha09@googlemail.com>
+Date: Sat, 10 Apr 2021 16:50:37 +0000
+Subject: [PATCH] fix crash in theme_service
+
+---
+ chrome/browser/themes/theme_service.cc          | 4 +++-
+ chrome/browser/themes/theme_syncable_service.cc | 4 +---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/chrome/browser/themes/theme_service.cc b/chrome/browser/themes/theme_service.cc
+index e484006..28899f0 100644
+--- a/chrome/browser/themes/theme_service.cc
++++ b/chrome/browser/themes/theme_service.cc
+@@ -264,7 +264,9 @@ ThemeService::ThemeService(Profile* profile, const ThemeHelper& theme_helper)
+       original_theme_provider_(theme_helper_, false, this),
+       incognito_theme_provider_(theme_helper_, true, this) {}
+ 
+-ThemeService::~ThemeService() = default;
++ThemeService::~ThemeService() {
++  RemoveObserver(theme_syncable_service_.get());
++}
+ 
+ void ThemeService::Init() {
+   theme_helper_.DCheckCalledOnValidSequence();
+diff --git a/chrome/browser/themes/theme_syncable_service.cc b/chrome/browser/themes/theme_syncable_service.cc
+index e936747..2e74ac7 100644
+--- a/chrome/browser/themes/theme_syncable_service.cc
++++ b/chrome/browser/themes/theme_syncable_service.cc
+@@ -48,9 +48,7 @@ ThemeSyncableService::ThemeSyncableService(Profile* profile,
+   theme_service_->AddObserver(this);
+ }
+ 
+-ThemeSyncableService::~ThemeSyncableService() {
+-  theme_service_->RemoveObserver(this);
+-}
++ThemeSyncableService::~ThemeSyncableService() = default;
+ 
+ void ThemeSyncableService::OnThemeChanged() {
+   if (sync_processor_.get()) {
+-- 
+2.26.3
