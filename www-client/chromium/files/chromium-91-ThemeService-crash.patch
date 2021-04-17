@@ -1,42 +1,36 @@
-From ec1fe9eaf6acdcaf010d5b88caa5cf3bc013ea88 Mon Sep 17 00:00:00 2001
+From 265192616d494ed586df9123ceb63389a7c48916 Mon Sep 17 00:00:00 2001
 From: Stephan Hartmann <stha09@googlemail.com>
-Date: Sat, 10 Apr 2021 16:50:37 +0000
+Date: Tue, 13 Apr 2021 06:20:25 +0000
 Subject: [PATCH] fix crash in theme_service
 
 ---
- chrome/browser/themes/theme_service.cc          | 4 +++-
- chrome/browser/themes/theme_syncable_service.cc | 4 +---
- 2 files changed, 4 insertions(+), 4 deletions(-)
+ chrome/browser/themes/theme_service.h | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/chrome/browser/themes/theme_service.cc b/chrome/browser/themes/theme_service.cc
-index e484006..28899f0 100644
---- a/chrome/browser/themes/theme_service.cc
-+++ b/chrome/browser/themes/theme_service.cc
-@@ -264,7 +264,9 @@ ThemeService::ThemeService(Profile* profile, const ThemeHelper& theme_helper)
-       original_theme_provider_(theme_helper_, false, this),
-       incognito_theme_provider_(theme_helper_, true, this) {}
+diff --git a/chrome/browser/themes/theme_service.h b/chrome/browser/themes/theme_service.h
+index 592d40a..337dfac 100644
+--- a/chrome/browser/themes/theme_service.h
++++ b/chrome/browser/themes/theme_service.h
+@@ -299,6 +299,10 @@ class ThemeService : public KeyedService,
+   // The number of infobars currently displayed.
+   int number_of_reinstallers_ = 0;
  
--ThemeService::~ThemeService() = default;
-+ThemeService::~ThemeService() {
-+  RemoveObserver(theme_syncable_service_.get());
-+}
++  // Declared before |theme_syncable_service_|, because ThemeSyncableService
++  // removes itself from the |observers_| list on destruction.
++  base::ObserverList<ThemeServiceObserver> observers_;
++
+   std::unique_ptr<ThemeSyncableService> theme_syncable_service_;
  
- void ThemeService::Init() {
-   theme_helper_.DCheckCalledOnValidSequence();
-diff --git a/chrome/browser/themes/theme_syncable_service.cc b/chrome/browser/themes/theme_syncable_service.cc
-index e936747..2e74ac7 100644
---- a/chrome/browser/themes/theme_syncable_service.cc
-+++ b/chrome/browser/themes/theme_syncable_service.cc
-@@ -48,9 +48,7 @@ ThemeSyncableService::ThemeSyncableService(Profile* profile,
-   theme_service_->AddObserver(this);
- }
+ #if BUILDFLAG(ENABLE_EXTENSIONS)
+@@ -320,8 +324,6 @@ class ThemeService : public KeyedService,
+   ScopedObserver<ui::NativeTheme, ui::NativeThemeObserver>
+       native_theme_observer_{this};
  
--ThemeSyncableService::~ThemeSyncableService() {
--  theme_service_->RemoveObserver(this);
--}
-+ThemeSyncableService::~ThemeSyncableService() = default;
+-  base::ObserverList<ThemeServiceObserver> observers_;
+-
+   base::WeakPtrFactory<ThemeService> weak_ptr_factory_{this};
  
- void ThemeSyncableService::OnThemeChanged() {
-   if (sync_processor_.get()) {
+   DISALLOW_COPY_AND_ASSIGN(ThemeService);
 -- 
 2.26.3
+
