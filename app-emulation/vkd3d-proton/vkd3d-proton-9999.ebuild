@@ -42,7 +42,6 @@ DEPEND="${RDEPEND}
 
 PATCHES=(
 	"${FILESDIR}/flags.patch"
-	"${FILESDIR}/install.patch"
 )
 
 bits() { [[ ${ABI} = amd64 ]] && echo 64 || echo 32; }
