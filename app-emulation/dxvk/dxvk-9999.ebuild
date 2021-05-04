@@ -23,8 +23,7 @@ fi
 LICENSE="ZLIB"
 SLOT=0
 
-IUSE="+d3d9 +d3d10 +d3d11 debug dxgi +mingw test winelib"
-REQUIRED_USE="^^ ( mingw winelib )"
+IUSE="+d3d9 +d3d10 +d3d11 debug dxgi test"
 
 RESTRICT="test"
 
@@ -32,17 +31,13 @@ RDEPEND="
 	|| (
 		>=app-emulation/wine-vanilla-3.14:*[${MULTILIB_USEDEP},vulkan]
 		>=app-emulation/wine-staging-3.14:*[${MULTILIB_USEDEP},vulkan]
-		>=app-emulation/wine-d3d9-3.14:*[${MULTILIB_USEDEP},vulkan]
-		>=app-emulation/wine-any-3.14:*[${MULTILIB_USEDEP},vulkan]
 	)"
 DEPEND="${RDEPEND}
 	dev-util/glslang
 	dev-util/vulkan-headers"
 
 PATCHES=(
-	"${FILESDIR}/winelib-revert-r6.patch"
-	"${FILESDIR}/spec-revert.patch"
-	"${FILESDIR}/double-define-r2.patch"
+	"${FILESDIR}/flags-r2.patch"
 	"${FILESDIR}/dxvk-wineopenxr.patch"
 )
 
@@ -60,37 +55,35 @@ dxvk_check_requirements() {
 		die
 	fi
 
-	if use mingw; then
-		local -a categories
-		use abi_x86_64 && categories+=("cross-x86_64-w64-mingw32")
-		use abi_x86_32 && categories+=("cross-i686-w64-mingw32")
+	local -a categories
+	use abi_x86_64 && categories+=("cross-x86_64-w64-mingw32")
+	use abi_x86_32 && categories+=("cross-i686-w64-mingw32")
 
-		for cat in ${categories[@]}; do
-			local thread_model="$(LC_ALL=C ${cat/cross-/}-gcc -v 2>&1 \
-				  | grep 'Thread model' | cut -d' ' -f3)"
-			if ! has_version -b "${cat}/mingw64-runtime[libraries]" ||
-					! has_version -b "${cat}/gcc" ||
-					[[ "${thread_model}" != "posix" ]]; then
-				eerror "The ${cat} toolchain is not properly installed."
-				eerror "Make sure to install ${cat}/gcc with EXTRA_ECONF=\"--enable-threads=posix\""
-				eerror "and ${cat}/mingw64-runtime with USE=\"libraries\"."
-				elog "See <https://wiki.gentoo.org/wiki/Mingw> for more information."
-				einfo "In short:"
-				einfo "echo '~${cat}/mingw64-runtime-7.0.0 ~amd64' >> \\"
-				einfo "    /etc/portage/package.accept_keywords/mingw"
-				einfo "crossdev --stable --target ${cat}"
-				einfo "echo 'EXTRA_ECONF=\"--enable-threads=posix\"' >> \\"
-				einfo "    /etc/portage/env/mingw-gcc.conf"
-				einfo "echo '${cat}/gcc mingw-gcc.conf' >> \\"
-				einfo "    /etc/portage/package.env/mingw"
-				einfo "echo '${cat}/mingw64-runtime libraries' >> \\"
-				einfo "    /etc/portage/package.use/mingw"
-				einfo "emerge --oneshot ${cat}/gcc ${cat}/mingw64-runtime"
+	for cat in ${categories[@]}; do
+		local thread_model="$(LC_ALL=C ${cat/cross-/}-gcc -v 2>&1 \
+			  | grep 'Thread model' | cut -d' ' -f3)"
+		if ! has_version -b "${cat}/mingw64-runtime[libraries]" ||
+				! has_version -b "${cat}/gcc" ||
+				[[ "${thread_model}" != "posix" ]]; then
+			eerror "The ${cat} toolchain is not properly installed."
+			eerror "Make sure to install ${cat}/gcc with EXTRA_ECONF=\"--enable-threads=posix\""
+			eerror "and ${cat}/mingw64-runtime with USE=\"libraries\"."
+			elog "See <https://wiki.gentoo.org/wiki/Mingw> for more information."
+			einfo "In short:"
+			einfo "echo '~${cat}/mingw64-runtime-7.0.0 ~amd64' >> \\"
+			einfo "    /etc/portage/package.accept_keywords/mingw"
+			einfo "crossdev --stable --target ${cat}"
+			einfo "echo 'EXTRA_ECONF=\"--enable-threads=posix\"' >> \\"
+			einfo "    /etc/portage/env/mingw-gcc.conf"
+			einfo "echo '${cat}/gcc mingw-gcc.conf' >> \\"
+			einfo "    /etc/portage/package.env/mingw"
+			einfo "echo '${cat}/mingw64-runtime libraries' >> \\"
+			einfo "    /etc/portage/package.use/mingw"
+			einfo "emerge --oneshot ${cat}/gcc ${cat}/mingw64-runtime"
 
-				die "${cat} toolchain is not properly installed."
-			fi
-		done
-	fi
+			die "${cat} toolchain is not properly installed."
+		fi
+	done
 }
 
 pkg_pretend() {
@@ -104,15 +97,7 @@ pkg_setup() {
 src_prepare() {
 	default
 
-	if use mingw; then
-		local buildtype="win"
-		filter-flags -Wl,--hash-style*
-	else
-		local buildtype="wine"
-		filter-flags -flto*
-		eapply "${FILESDIR}/gcc-10.patch"
-		eapply "${FILESDIR}/ascii-revert.patch"
-	fi
+	filter-flags -Wl,--hash-style*
 
 	# Create versioned setup script
 	cp "setup_dxvk.sh" "dxvk-setup"
@@ -127,7 +112,7 @@ src_prepare() {
 			-e "s!@CFLAGS@!$(_meson_env_array "${CFLAGS}")!" \
 			-e "s!@CXXFLAGS@!$(_meson_env_array "${CXXFLAGS}")!" \
 			-e "s!@LDFLAGS@!$(_meson_env_array "${LDFLAGS}")!" \
-			build-${buildtype}$(bits).txt || die
+			build-win$(bits).txt || die
 	}
 
 	multilib_foreach_abi bootstrap_dxvk
@@ -142,14 +127,8 @@ src_prepare() {
 }
 
 multilib_src_configure() {
-	if use mingw; then
-		local buildtype="win"
-	else
-		local buildtype="wine"
-	fi
-
 	local emesonargs=(
-		--cross-file="${S}/build-${buildtype}$(bits).txt"
+		--cross-file="${S}/build-win$(bits).txt"
 		--libdir="$(get_libdir)/dxvk"
 		--bindir="$(get_libdir)/dxvk/bin"
 		--buildtype="release"
@@ -168,18 +147,16 @@ multilib_src_install() {
 }
 
 multilib_src_install_all() {
-	if use mingw; then
-		find "${D}" -name '*.a' -delete -print
-		if use abi_x86_32; then
-			mv "${D}/usr/lib/dxvk/" "${D}/usr/lib/temp/"
-			mv "${D}/usr/lib/temp/bin/" "${D}/usr/lib/dxvk/"
-			rm -rf "${D}/usr/lib/temp/"
-		fi
-		if use abi_x86_64; then
-			mv "${D}/usr/lib64/dxvk/" "${D}/usr/lib64/temp/"
-			mv "${D}/usr/lib64/temp/bin/" "${D}/usr/lib64/dxvk/"
-			rm -rf "${D}/usr/lib64/temp/"
-		fi
+	find "${D}" -name '*.a' -delete -print
+	if use abi_x86_32; then
+		mv "${D}/usr/lib/dxvk/" "${D}/usr/lib/temp/"
+		mv "${D}/usr/lib/temp/bin/" "${D}/usr/lib/dxvk/"
+		rm -rf "${D}/usr/lib/temp/"
+	fi
+	if use abi_x86_64; then
+		mv "${D}/usr/lib64/dxvk/" "${D}/usr/lib64/temp/"
+		mv "${D}/usr/lib64/temp/bin/" "${D}/usr/lib64/dxvk/"
+		rm -rf "${D}/usr/lib64/temp/"
 	fi
 
 	# create combined setup helper
@@ -190,15 +167,4 @@ multilib_src_install_all() {
 	doins "dxvk.conf"
 
 	einstalldocs
-}
-
-pkg_postinst() {
-	if use winelib; then
-		ewarn "******************************************************************************"
-		ewarn "*** Winelib builds of dxvk (like this one) are no longer supported upsteam ***"
-		ewarn "***           Please do not file any issues upsteam                        ***"
-		ewarn "*** Feel free to report them at https://github.com/FireBurn/Overlay/issues ***"
-		ewarn "***               I'll try to help where I can                             ***"
-		ewarn "******************************************************************************"
-	fi
 }

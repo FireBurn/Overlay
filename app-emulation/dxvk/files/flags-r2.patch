@@ -1,0 +1,43 @@
+From 5862733fb75f6d95086ce3509e9880dee8ced207 Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Wed, 5 May 2021 00:40:12 +0100
+Subject: [PATCH] Use flags
+
+---
+ build-win32.txt | 4 ++++
+ build-win64.txt | 4 ++++
+ 2 files changed, 8 insertions(+)
+
+diff --git a/build-win32.txt b/build-win32.txt
+index a1406832..1200d92e 100644
+--- a/build-win32.txt
++++ b/build-win32.txt
+@@ -5,6 +5,10 @@ ar = 'i686-w64-mingw32-ar'
+ strip = 'i686-w64-mingw32-strip'
+ 
+ [properties]
++c_args= @CFLAGS@
++cpp_args= @CXXFLAGS@
++c_link_args = @LDFLAGS@
++cpp_link_args = @LDFLAGS@
+ needs_exe_wrapper = true
+ 
+ [host_machine]
+diff --git a/build-win64.txt b/build-win64.txt
+index 1aee4626..17690e8b 100644
+--- a/build-win64.txt
++++ b/build-win64.txt
+@@ -5,6 +5,10 @@ ar = 'x86_64-w64-mingw32-ar'
+ strip = 'x86_64-w64-mingw32-strip'
+ 
+ [properties]
++c_args= @CFLAGS@
++cpp_args= @CXXFLAGS@
++c_link_args = @LDFLAGS@
++cpp_link_args = @LDFLAGS@
+ needs_exe_wrapper = true
+ 
+ [host_machine]
+-- 
+2.31.1
+
