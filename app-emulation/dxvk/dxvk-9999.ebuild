@@ -97,7 +97,11 @@ pkg_setup() {
 src_prepare() {
 	default
 
+	# mingw ld doesn't like hash style
 	filter-flags -Wl,--hash-style*
+
+	# Filter -march flags as this has been causing issues
+	filter-flags "-march=*"
 
 	# Create versioned setup script
 	cp "setup_dxvk.sh" "dxvk-setup"
