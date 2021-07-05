@@ -38,7 +38,6 @@ DEPEND="${RDEPEND}
 
 PATCHES=(
 	"${FILESDIR}/flags-r2.patch"
-	"${FILESDIR}/dxvk-wineopenxr.patch"
 )
 
 bits() { [[ ${ABI} = amd64 ]] && echo 64 || echo 32; }
