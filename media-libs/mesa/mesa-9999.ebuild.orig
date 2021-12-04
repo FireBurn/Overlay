@@ -27,7 +27,11 @@ RESTRICT="
 "
 
 RADEON_CARDS="r300 r600 radeon radeonsi"
+<<<<<<< HEAD
+VIDEO_CARDS="${RADEON_CARDS} crocus freedreno intel iris lima nouveau panfrost v3d vc4 virgl vivante vmware"
+=======
 VIDEO_CARDS="${RADEON_CARDS} crocus freedreno i915 intel iris lima nouveau panfrost v3d vc4 virgl vivante vmware"
+>>>>>>> bdca57a (Remove classic drivers from mesa ebuild)
 for card in ${VIDEO_CARDS}; do
 	IUSE_VIDEO_CARDS+=" video_cards_${card}"
 done
@@ -44,7 +48,10 @@ REQUIRED_USE="
 	vulkan-overlay? ( vulkan )
 	video_cards_crocus? ( gallium )
 	video_cards_freedreno?  ( gallium )
+<<<<<<< HEAD
+=======
 	video_cards_i915?	( gallium )
+>>>>>>> bdca57a (Remove classic drivers from mesa ebuild)
 	video_cards_intel?  ( gallium )
 	video_cards_iris?   ( gallium )
 	video_cards_lima?   ( gallium )
@@ -100,9 +107,14 @@ RDEPEND="
 	)
 	${LIBDRM_DEPSTRING}[video_cards_freedreno?,video_cards_nouveau?,video_cards_vc4?,video_cards_vivante?,video_cards_vmware?,${MULTILIB_USEDEP}]
 	video_cards_intel? (
+<<<<<<< HEAD
+		!video_cards_iris? ( ${LIBDRM_DEPSTRING}[video_cards_intel] )
+	)
+=======
 		!video_cards_crocus? ( !video_cards_iris? ( ${LIBDRM_DEPSTRING}[video_cards_intel] ) )
 	)
 	video_cards_i915? ( ${LIBDRM_DEPSTRING}[video_cards_intel] )
+>>>>>>> bdca57a (Remove classic drivers from mesa ebuild)
 	vulkan-overlay? ( dev-util/glslang:0=[${MULTILIB_USEDEP}] )
 	X? (
 		>=x11-libs/libX11-1.6.2:=[${MULTILIB_USEDEP}]
@@ -424,6 +436,14 @@ multilib_src_configure() {
 		gallium_enable video_cards_nouveau nouveau
 		gallium_enable zink zink
 
+<<<<<<< HEAD
+		gallium_enable video_cards_crocus crocus
+		gallium_enable video_cards_iris iris
+        if ! use video_cards_crocus && \
+            ! use video_cards_iris; then
+            gallium_enable video_cards_intel crocus iris
+        fi
+=======
 		gallium_enable video_cards_i915 i915
 		gallium_enable video_cards_crocus crocus
 		gallium_enable video_cards_iris iris
@@ -432,6 +452,7 @@ multilib_src_configure() {
 			! use video_cards_iris; then
 			gallium_enable video_cards_intel i915 crocus iris
 		fi
+>>>>>>> bdca57a (Remove classic drivers from mesa ebuild)
 
 		gallium_enable video_cards_r300 r300
 		gallium_enable video_cards_r600 r600
