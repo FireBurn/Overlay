@@ -44,7 +44,7 @@ REQUIRED_USE="
 	vulkan-overlay? ( vulkan )
 	video_cards_crocus? ( gallium )
 	video_cards_freedreno?  ( gallium )
-	video_cards_i915?	( gallium )
+	video_cards_i915?   ( gallium )
 	video_cards_intel?  ( gallium )
 	video_cards_iris?   ( gallium )
 	video_cards_lima?   ( gallium )
