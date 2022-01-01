@@ -210,7 +210,7 @@ multilib_src_configure() {
 		--nopyc
 		--nopyo
 		--without-winexe
-		--accel-aes=$(usex cpu_flags_aes intelaesni none)
+		--accel-aes=$(usex cpu_flags_x86_aes intelaesni none)
 		$(multilib_native_use_with acl acl-support)
 		$(multilib_native_usex addc '' '--without-ad-dc')
 		$(multilib_native_use_with ads)
