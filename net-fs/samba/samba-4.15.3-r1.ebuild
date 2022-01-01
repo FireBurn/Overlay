@@ -64,7 +64,10 @@ COMMON_DEPEND="
 	dev-libs/popt[${MULTILIB_USEDEP}]
 	dev-perl/Parse-Yapp
 	>=net-libs/gnutls-3.4.7[${MULTILIB_USEDEP}]
-	sys-libs/e2fsprogs-libs[${MULTILIB_USEDEP}]
+	|| (
+		>=sys-fs/e2fsprogs-1.46.4-r51[${MULTILIB_USEDEP}]
+		sys-libs/e2fsprogs-libs[${MULTILIB_USEDEP}]
+	)
 	>=sys-libs/ldb-2.4.1[ldap(+)?,${MULTILIB_USEDEP}]
 	<sys-libs/ldb-2.5.0[ldap(+)?,${MULTILIB_USEDEP}]
 	sys-libs/libcap[${MULTILIB_USEDEP}]
@@ -207,12 +210,12 @@ multilib_src_configure() {
 		--nopyc
 		--nopyo
 		--without-winexe
+		--accel-aes=$(usex cpu_flags_aes intelaesni none)
 		$(multilib_native_use_with acl acl-support)
 		$(multilib_native_usex addc '' '--without-ad-dc')
 		$(multilib_native_use_with ads)
 		$(multilib_native_use_enable ceph cephfs)
 		$(multilib_native_use_with cluster cluster-support)
-		$(usex cpu_flags_x86_aes "--accel-aes=intelaesni" "--accel-aes=none")
 		$(multilib_native_use_enable cups)
 		$(multilib_native_use_with dmapi)
 		$(multilib_native_use_with fam)
