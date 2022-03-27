@@ -18,14 +18,12 @@ KEYWORDS="amd64 x86"
 IUSE="+khronos-headers"
 
 BDEPEND="${RUBY_DEPS}"
-DEPEND=">=dev-util/opencl-headers-2021.04.29"
+DEPEND="~dev-util/opencl-headers-2020.06.16"
 RDEPEND="${DEPEND}
 	!app-eselect/eselect-opencl
 	!dev-libs/opencl-icd-loader"
 
-PATCHES=(
-	"${FILESDIR}"/${P}-new-headers.patch
-)
+PATCHES=("${FILESDIR}"/${P}-gcc-10.patch)
 
 src_prepare() {
 	replace-flags -Os -O2 # bug 646122
@@ -38,19 +36,6 @@ multilib_src_configure() {
 	# dev-util/opencl-headers ARE official Khronos Group headers, what this option
 	# does is disable the use of the bundled ones
 	ECONF_SOURCE="${S}" econf --enable-pthread-once --disable-official-khronos-headers
-}
-
-multilib_src_compile() {
-	local candidates=(${USE_RUBY})
-	local ruby=
-	for (( idx=${#candidates[@]}-1 ; idx>=0 ; idx-- )) ; do
-		if ${candidates[idx]} --version &> /dev/null; then
-			ruby=${candidates[idx]} && break
-		fi
-	done
-	[[ -z ${ruby} ]] && die "No ruby executable found"
-
-	emake RUBY=${ruby}
 }
 
 multilib_src_install() {

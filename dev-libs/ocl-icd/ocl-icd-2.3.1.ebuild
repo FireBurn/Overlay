@@ -1,4 +1,4 @@
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2022 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=7
@@ -11,7 +11,7 @@ HOMEPAGE="https://github.com/OCL-dev/ocl-icd"
 SRC_URI="https://github.com/OCL-dev/${PN}/archive/v${PV}.tar.gz -> ${P}.tar.gz"
 LICENSE="BSD-2"
 SLOT="0"
-KEYWORDS="amd64 x86"
+KEYWORDS="~amd64 ~x86"
 
 # Does nothing now but by keeping it here we avoid having to have virtual/opencl
 # handle ebuilds both with and without this flag.
@@ -22,10 +22,6 @@ DEPEND=">=dev-util/opencl-headers-2021.04.29"
 RDEPEND="${DEPEND}
 	!app-eselect/eselect-opencl
 	!dev-libs/opencl-icd-loader"
-
-PATCHES=(
-	"${FILESDIR}"/${P}-new-headers.patch
-)
 
 src_prepare() {
 	replace-flags -Os -O2 # bug 646122
