@@ -78,6 +78,13 @@ BDEPEND="${PYTHON_DEPS}
 	)
 	|| (
 		(
+			sys-devel/llvm:14
+			clang? (
+				sys-devel/clang:14
+				lto? ( =sys-devel/lld-14* )
+			)
+		)
+		(
 			sys-devel/llvm:13
 			clang? (
 				sys-devel/clang:13
@@ -89,13 +96,6 @@ BDEPEND="${PYTHON_DEPS}
 			clang? (
 				sys-devel/clang:12
 				lto? ( =sys-devel/lld-12* )
-			)
-		)
-		(
-			sys-devel/llvm:11
-			clang? (
-				sys-devel/clang:11
-				lto? ( =sys-devel/lld-11* )
 			)
 		)
 	)"
