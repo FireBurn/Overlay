@@ -1,12 +1,12 @@
-# Copyright 1999-2021 Gentoo Authors
+# Copyright 1999-2022 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
-EAPI=6
+EAPI=8
 
 PLOCALES="ar ast bg ca cs da de el en en_US eo es fa fi fr he hi hr hu it ja ko lt ml nb_NO nl or pa pl pt_BR pt_PT rm ro ru si sk sl sr_RS@cyrillic sr_RS@latin sv ta te th tr uk wa zh_CN zh_TW"
 PLOCALE_BACKUP="en"
 
-inherit autotools eapi7-ver estack eutils flag-o-matic gnome2-utils multilib multilib-minimal pax-utils plocale toolchain-funcs virtualx xdg-utils
+inherit autotools estack flag-o-matic multilib-minimal pax-utils plocale toolchain-funcs virtualx wrapper xdg-utils
 MY_PN="${PN%%-*}"
 MY_PV="${PV/_/-}"
 MY_P="${MY_PN}-${MY_PV}"
@@ -48,7 +48,7 @@ fi
 
 LICENSE="LGPL-2.1"
 SLOT="${MY_PV}"
-IUSE="+abi_x86_32 +abi_x86_64 +alsa capi cups custom-cflags dos elibc_glibc +fontconfig +gecko gphoto2 gssapi gstreamer kerberos kernel_FreeBSD ldap mingw +mono mp3 netapi nls odbc openal opencl +opengl osmesa oss +perl pcap pipelight prelink pulseaudio +realtime +run-exes samba scanner sdl selinux +ssl staging test +threads +truetype udev +udisks +unwind usb v4l vkd3d vulkan +X +xcomposite xinerama"
+IUSE="+abi_x86_32 +abi_x86_64 +alsa capi cups custom-cflags dos +fontconfig +gecko gphoto2 gssapi gstreamer kerberos ldap mingw +mono mp3 netapi nls odbc openal opencl +opengl osmesa oss +perl pcap pipelight pulseaudio +realtime +run-exes samba scanner sdl selinux +ssl staging test +threads +truetype udev +udisks +unwind usb v4l vkd3d vulkan +X +xcomposite xinerama"
 REQUIRED_USE="|| ( abi_x86_32 abi_x86_64 )
 	X? ( truetype )
 	elibc_glibc? ( threads )
@@ -60,6 +60,10 @@ REQUIRED_USE="|| ( abi_x86_32 abi_x86_64 )
 # FIXME: the test suite is unsuitable for us; many tests require net access
 # or fail due to Xvfb's opengl limitations.
 RESTRICT="test"
+
+BDEPEND="sys-devel/flex
+	virtual/yacc
+	virtual/pkgconfig"
 
 COMMON_DEPEND="
 	X? (
@@ -76,7 +80,7 @@ COMMON_DEPEND="
 	fontconfig? ( media-libs/fontconfig:=[${MULTILIB_USEDEP}] )
 	gphoto2? (
 		media-libs/libgphoto2:=[${MULTILIB_USEDEP}]
-		virtual/jpeg:0=[${MULTILIB_USEDEP}]
+		media-libs/libjpeg-turbo:0=[${MULTILIB_USEDEP}]
 	)
 	gssapi? ( virtual/krb5[${MULTILIB_USEDEP}] )
 	gstreamer? (
@@ -114,10 +118,9 @@ COMMON_DEPEND="
 RDEPEND="${COMMON_DEPEND}
 	app-emulation/wine-desktop-common
 	>app-eselect/eselect-wine-0.3
-	!app-emulation/wine:0
 	dos? ( >=games-emulation/dosbox-0.74_p20160629 )
 	gecko? ( app-emulation/wine-gecko:2.47.2[abi_x86_32?,abi_x86_64?] )
-	mono? ( app-emulation/wine-mono:7.0.0 )
+	mono? ( app-emulation/wine-mono:7.2.0 )
 	perl? (
 		dev-lang/perl
 		dev-perl/XML-Simple
@@ -131,12 +134,9 @@ RDEPEND="${COMMON_DEPEND}
 
 # tools/make_requests requires perl
 DEPEND="${COMMON_DEPEND}
-	sys-devel/flex
+	${BDEPEND}
 	>=sys-kernel/linux-headers-2.6
-	virtual/pkgconfig
-	virtual/yacc
 	X? ( x11-base/xorg-proto )
-	prelink? ( sys-devel/prelink )
 	staging? (
 		dev-lang/perl
 		dev-perl/XML-Simple
@@ -274,10 +274,10 @@ pkg_pretend() {
 		wine_build_environment_check || die
 
 		# Verify OSS support
-		if use oss && ! use kernel_FreeBSD; then
+		if use oss; then
 			if ! has_version ">=media-sound/oss-4"; then
-				eerror "You cannot build wine with USE=oss without having support from a"
-				eerror "FreeBSD kernel or >=media-sound/oss-4 (only available through external repos)"
+				eerror "You cannot build wine with USE=oss without having support from"
+				eerror ">=media-sound/oss-4 (only available through external repos)"
 				eerror
 				die
 			fi
@@ -463,6 +463,7 @@ multilib_src_configure() {
 		$(use_with gphoto2 gphoto)
 		$(use_with gssapi)
 		$(use_with gstreamer)
+		--without-hal
 		$(use_with kerberos krb5)
 		$(use_with ldap)
 		# TODO: Will bug 685172 still need special handling?
@@ -544,12 +545,12 @@ multilib_src_install_all() {
 	find "${ED}" -name *.la -delete || die
 
 	if ! use perl ; then # winedump calls function_grep.pl, and winemaker is a perl script
-		rm "${D%/}${MY_PREFIX}"/bin/{wine{dump,maker},function_grep.pl} \
-			"${D%/}${MY_MANDIR}"/man1/wine{dump,maker}.1 || die
+		rm "${D%}${MY_PREFIX}"/bin/{wine{dump,maker},function_grep.pl} \
+			"${D%}${MY_MANDIR}"/man1/wine{dump,maker}.1 || die
 	fi
 
-	use abi_x86_32 && pax-mark psmr "${D%/}${MY_PREFIX}"/bin/wine{,-preloader} #255055
-	use abi_x86_64 && pax-mark psmr "${D%/}${MY_PREFIX}"/bin/wine64{,-preloader}
+	use abi_x86_32 && pax-mark psmr "${D%}${MY_PREFIX}"/bin/wine{,-preloader} #255055
+	use abi_x86_64 && pax-mark psmr "${D%}${MY_PREFIX}"/bin/wine64{,-preloader}
 
 	# Avoid double prefix from dosym and make_wrapper
 	MY_PREFIX=${MY_PREFIX#${EPREFIX}}
@@ -564,7 +565,7 @@ multilib_src_install_all() {
 	# Make wrappers for binaries for handling multiple variants
 	# Note: wrappers instead of symlinks because some are shell which use basename
 	local b
-	for b in "${ED%/}${MY_PREFIX}"/bin/*; do
+	for b in "${ED%}${MY_PREFIX}"/bin/*; do
 		make_wrapper "${b##*/}-${WINE_VARIANT}" "${MY_PREFIX}/bin/${b##*/}"
 	done
 	eshopts_pop
