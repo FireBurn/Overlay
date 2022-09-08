@@ -24,6 +24,7 @@ PATCHES=(
 	"${FILESDIR}/${PN}-5.1.3-clang-fix-include.patch"
 	"${FILESDIR}/${PN}-5.1.3-rocm-path.patch"
 	"${FILESDIR}/0001-COMGR-changes-needed-for-upstream-llvm.patch"
+	"${FILESDIR}/${PN}-llvm15.patch"
 )
 
 DESCRIPTION="Radeon Open Compute Code Object Manager"
