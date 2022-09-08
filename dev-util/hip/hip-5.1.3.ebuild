@@ -7,7 +7,7 @@ PYTHON_COMPAT=( python3_{8..11} )
 
 inherit cmake llvm prefix python-any-r1
 
-LLVM_MAX_SLOT=14
+LLVM_MAX_SLOT=15
 
 DESCRIPTION="C++ Heterogeneous-Compute Interface for Portability"
 HOMEPAGE="https://github.com/ROCm-Developer-Tools/hipamd"
