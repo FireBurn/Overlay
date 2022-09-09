@@ -1,0 +1,382 @@
+diff --git a/compiler/rustc_codegen_llvm/src/common.rs b/compiler/rustc_codegen_llvm/src/common.rs
+index b69d7a000..d37aadeb5 100644
+--- a/compiler/rustc_codegen_llvm/src/common.rs
++++ b/compiler/rustc_codegen_llvm/src/common.rs
+@@ -109,8 +109,7 @@ impl<'ll> CodegenCx<'ll, '_> {
+     pub fn const_get_elt(&self, v: &'ll Value, idx: u64) -> &'ll Value {
+         unsafe {
+             assert_eq!(idx as c_uint as u64, idx);
+-            let us = &[idx as c_uint];
+-            let r = llvm::LLVMConstExtractValue(v, us.as_ptr(), us.len() as c_uint);
++            let r = llvm::LLVMGetAggregateElement(v, idx as c_uint).unwrap();
+ 
+             debug!("const_get_elt(v={:?}, idx={}, r={:?})", v, idx, r);
+ 
+diff --git a/compiler/rustc_codegen_llvm/src/llvm/ffi.rs b/compiler/rustc_codegen_llvm/src/llvm/ffi.rs
+index b83142399..d92d9d96f 100644
+--- a/compiler/rustc_codegen_llvm/src/llvm/ffi.rs
++++ b/compiler/rustc_codegen_llvm/src/llvm/ffi.rs
+@@ -1134,11 +1134,7 @@ extern "C" {
+     pub fn LLVMConstIntToPtr<'a>(ConstantVal: &'a Value, ToType: &'a Type) -> &'a Value;
+     pub fn LLVMConstBitCast<'a>(ConstantVal: &'a Value, ToType: &'a Type) -> &'a Value;
+     pub fn LLVMConstPointerCast<'a>(ConstantVal: &'a Value, ToType: &'a Type) -> &'a Value;
+-    pub fn LLVMConstExtractValue(
+-        AggConstant: &Value,
+-        IdxList: *const c_uint,
+-        NumIdx: c_uint,
+-    ) -> &Value;
++    pub fn LLVMGetAggregateElement(ConstantVal: &Value, Idx: c_uint) -> Option<&Value>;
+ 
+     // Operations on global variables, functions, and aliases (globals)
+     pub fn LLVMIsDeclaration(Global: &Value) -> Bool;
+diff --git a/compiler/rustc_codegen_ssa/src/back/write.rs b/compiler/rustc_codegen_ssa/src/back/write.rs
+index 632f07c5c..78ecda08c 100644
+--- a/compiler/rustc_codegen_ssa/src/back/write.rs
++++ b/compiler/rustc_codegen_ssa/src/back/write.rs
+@@ -37,6 +37,7 @@ use rustc_target::spec::{MergeFunctions, SanitizerSet};
+ use std::any::Any;
+ use std::fs;
+ use std::io;
++use std::marker::PhantomData;
+ use std::mem;
+ use std::path::{Path, PathBuf};
+ use std::str;
+@@ -473,10 +474,13 @@ pub fn start_async_codegen<B: ExtraBackendMethods>(
+         metadata_module,
+         crate_info,
+ 
+-        coordinator_send,
+         codegen_worker_receive,
+         shared_emitter_main,
+-        future: coordinator_thread,
++        coordinator: Coordinator {
++            sender: coordinator_send,
++            future: Some(coordinator_thread),
++            phantom: PhantomData,
++        },
+         output_filenames: tcx.output_filenames(()).clone(),
+     }
+ }
+@@ -1245,6 +1249,7 @@ fn start_executing_work<B: ExtraBackendMethods>(
+         // work to be done.
+         while !codegen_done
+             || running > 0
++            || main_thread_worker_state == MainThreadWorkerState::LLVMing
+             || (!codegen_aborted
+                 && !(work_items.is_empty()
+                     && needs_fat_lto.is_empty()
+@@ -1464,7 +1469,6 @@ fn start_executing_work<B: ExtraBackendMethods>(
+                     assert!(!codegen_aborted);
+                     codegen_done = true;
+                     codegen_aborted = true;
+-                    assert_eq!(main_thread_worker_state, MainThreadWorkerState::Codegenning);
+                 }
+                 Message::Done { result: Ok(compiled_module), worker_id } => {
+                     free_worker(worker_id);
+@@ -1511,6 +1515,10 @@ fn start_executing_work<B: ExtraBackendMethods>(
+             }
+         }
+ 
++        if codegen_aborted {
++            return Err(());
++        }
++
+         let needs_link = mem::take(&mut needs_link);
+         if !needs_link.is_empty() {
+             assert!(compiled_modules.is_empty());
+@@ -1800,16 +1808,39 @@ impl SharedEmitterMain {
+     }
+ }
+ 
++pub struct Coordinator<B: ExtraBackendMethods> {
++    pub sender: Sender<Box<dyn Any + Send>>,
++    future: Option<thread::JoinHandle<Result<CompiledModules, ()>>>,
++    // Only used for the Message type.
++    phantom: PhantomData<B>,
++}
++
++impl<B: ExtraBackendMethods> Coordinator<B> {
++    fn join(mut self) -> std::thread::Result<Result<CompiledModules, ()>> {
++        self.future.take().unwrap().join()
++    }
++}
++
++impl<B: ExtraBackendMethods> Drop for Coordinator<B> {
++    fn drop(&mut self) {
++        if let Some(future) = self.future.take() {
++            // If we haven't joined yet, signal to the coordinator that it should spawn no more
++            // work, and wait for worker threads to finish.
++            drop(self.sender.send(Box::new(Message::CodegenAborted::<B>)));
++            drop(future.join());
++        }
++    }
++}
++
+ pub struct OngoingCodegen<B: ExtraBackendMethods> {
+     pub backend: B,
+     pub metadata: EncodedMetadata,
+     pub metadata_module: Option<CompiledModule>,
+     pub crate_info: CrateInfo,
+-    pub coordinator_send: Sender<Box<dyn Any + Send>>,
+     pub codegen_worker_receive: Receiver<Message<B>>,
+     pub shared_emitter_main: SharedEmitterMain,
+-    pub future: thread::JoinHandle<Result<CompiledModules, ()>>,
+     pub output_filenames: Arc<OutputFilenames>,
++    pub coordinator: Coordinator<B>,
+ }
+ 
+ impl<B: ExtraBackendMethods> OngoingCodegen<B> {
+@@ -1817,8 +1848,7 @@ impl<B: ExtraBackendMethods> OngoingCodegen<B> {
+         let _timer = sess.timer("finish_ongoing_codegen");
+ 
+         self.shared_emitter_main.check(sess, true);
+-        let future = self.future;
+-        let compiled_modules = sess.time("join_worker_thread", || match future.join() {
++        let compiled_modules = sess.time("join_worker_thread", || match self.coordinator.join() {
+             Ok(Ok(compiled_modules)) => compiled_modules,
+             Ok(Err(())) => {
+                 sess.abort_if_errors();
+@@ -1866,26 +1896,13 @@ impl<B: ExtraBackendMethods> OngoingCodegen<B> {
+ 
+         // These are generally cheap and won't throw off scheduling.
+         let cost = 0;
+-        submit_codegened_module_to_llvm(&self.backend, &self.coordinator_send, module, cost);
++        submit_codegened_module_to_llvm(&self.backend, &self.coordinator.sender, module, cost);
+     }
+ 
+     pub fn codegen_finished(&self, tcx: TyCtxt<'_>) {
+         self.wait_for_signal_to_codegen_item();
+         self.check_for_errors(tcx.sess);
+-        drop(self.coordinator_send.send(Box::new(Message::CodegenComplete::<B>)));
+-    }
+-
+-    /// Consumes this context indicating that codegen was entirely aborted, and
+-    /// we need to exit as quickly as possible.
+-    ///
+-    /// This method blocks the current thread until all worker threads have
+-    /// finished, and all worker threads should have exited or be real close to
+-    /// exiting at this point.
+-    pub fn codegen_aborted(self) {
+-        // Signal to the coordinator it should spawn no more work and start
+-        // shutdown.
+-        drop(self.coordinator_send.send(Box::new(Message::CodegenAborted::<B>)));
+-        drop(self.future.join());
++        drop(self.coordinator.sender.send(Box::new(Message::CodegenComplete::<B>)));
+     }
+ 
+     pub fn check_for_errors(&self, sess: &Session) {
+diff --git a/compiler/rustc_codegen_ssa/src/base.rs b/compiler/rustc_codegen_ssa/src/base.rs
+index 7e2e85ead..5019a2c08 100644
+--- a/compiler/rustc_codegen_ssa/src/base.rs
++++ b/compiler/rustc_codegen_ssa/src/base.rs
+@@ -39,7 +39,6 @@ use rustc_target::abi::{Align, VariantIdx};
+ 
+ use std::collections::BTreeSet;
+ use std::convert::TryFrom;
+-use std::ops::{Deref, DerefMut};
+ use std::time::{Duration, Instant};
+ 
+ use itertools::Itertools;
+@@ -583,7 +582,6 @@ pub fn codegen_crate<B: ExtraBackendMethods>(
+         metadata_module,
+         codegen_units.len(),
+     );
+-    let ongoing_codegen = AbortCodegenOnDrop::<B>(Some(ongoing_codegen));
+ 
+     // Codegen an allocator shim, if necessary.
+     //
+@@ -704,7 +702,7 @@ pub fn codegen_crate<B: ExtraBackendMethods>(
+ 
+                 submit_codegened_module_to_llvm(
+                     &backend,
+-                    &ongoing_codegen.coordinator_send,
++                    &ongoing_codegen.coordinator.sender,
+                     module,
+                     cost,
+                 );
+@@ -714,7 +712,7 @@ pub fn codegen_crate<B: ExtraBackendMethods>(
+                 submit_pre_lto_module_to_llvm(
+                     &backend,
+                     tcx,
+-                    &ongoing_codegen.coordinator_send,
++                    &ongoing_codegen.coordinator.sender,
+                     CachedModuleCodegen {
+                         name: cgu.name().to_string(),
+                         source: cgu.previous_work_product(tcx),
+@@ -725,7 +723,7 @@ pub fn codegen_crate<B: ExtraBackendMethods>(
+             CguReuse::PostLto => {
+                 submit_post_lto_module_to_llvm(
+                     &backend,
+-                    &ongoing_codegen.coordinator_send,
++                    &ongoing_codegen.coordinator.sender,
+                     CachedModuleCodegen {
+                         name: cgu.name().to_string(),
+                         source: cgu.previous_work_product(tcx),
+@@ -752,55 +750,7 @@ pub fn codegen_crate<B: ExtraBackendMethods>(
+     }
+ 
+     ongoing_codegen.check_for_errors(tcx.sess);
+-
+-    ongoing_codegen.into_inner()
+-}
+-
+-/// A curious wrapper structure whose only purpose is to call `codegen_aborted`
+-/// when it's dropped abnormally.
+-///
+-/// In the process of working on rust-lang/rust#55238 a mysterious segfault was
+-/// stumbled upon. The segfault was never reproduced locally, but it was
+-/// suspected to be related to the fact that codegen worker threads were
+-/// sticking around by the time the main thread was exiting, causing issues.
+-///
+-/// This structure is an attempt to fix that issue where the `codegen_aborted`
+-/// message will block until all workers have finished. This should ensure that
+-/// even if the main codegen thread panics we'll wait for pending work to
+-/// complete before returning from the main thread, hopefully avoiding
+-/// segfaults.
+-///
+-/// If you see this comment in the code, then it means that this workaround
+-/// worked! We may yet one day track down the mysterious cause of that
+-/// segfault...
+-struct AbortCodegenOnDrop<B: ExtraBackendMethods>(Option<OngoingCodegen<B>>);
+-
+-impl<B: ExtraBackendMethods> AbortCodegenOnDrop<B> {
+-    fn into_inner(mut self) -> OngoingCodegen<B> {
+-        self.0.take().unwrap()
+-    }
+-}
+-
+-impl<B: ExtraBackendMethods> Deref for AbortCodegenOnDrop<B> {
+-    type Target = OngoingCodegen<B>;
+-
+-    fn deref(&self) -> &OngoingCodegen<B> {
+-        self.0.as_ref().unwrap()
+-    }
+-}
+-
+-impl<B: ExtraBackendMethods> DerefMut for AbortCodegenOnDrop<B> {
+-    fn deref_mut(&mut self) -> &mut OngoingCodegen<B> {
+-        self.0.as_mut().unwrap()
+-    }
+-}
+-
+-impl<B: ExtraBackendMethods> Drop for AbortCodegenOnDrop<B> {
+-    fn drop(&mut self) {
+-        if let Some(codegen) = self.0.take() {
+-            codegen.codegen_aborted();
+-        }
+-    }
++    ongoing_codegen
+ }
+ 
+ impl CrateInfo {
+diff --git a/compiler/rustc_llvm/llvm-wrapper/PassWrapper.cpp b/compiler/rustc_llvm/llvm-wrapper/PassWrapper.cpp
+index 38fddbdba..0f4973ebf 100644
+--- a/compiler/rustc_llvm/llvm-wrapper/PassWrapper.cpp
++++ b/compiler/rustc_llvm/llvm-wrapper/PassWrapper.cpp
+@@ -985,7 +985,9 @@ LLVMRustOptimizeWithNewPassManager(
+     if (SanitizerOptions->SanitizeAddress) {
+       OptimizerLastEPCallbacks.push_back(
+         [SanitizerOptions](ModulePassManager &MPM, OptimizationLevel Level) {
++#if LLVM_VERSION_LT(15, 0)
+           MPM.addPass(RequireAnalysisPass<ASanGlobalsMetadataAnalysis, Module>());
++#endif
+ #if LLVM_VERSION_GE(14, 0)
+           AddressSanitizerOptions opts = AddressSanitizerOptions{
+             /*CompileKernel=*/false,
+diff --git a/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp b/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp
+index a52d53402..7ac3157e7 100644
+--- a/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp
++++ b/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp
+@@ -411,8 +411,14 @@ LLVMRustInlineAsm(LLVMTypeRef Ty, char *AsmString, size_t AsmStringLen,
+ 
+ extern "C" bool LLVMRustInlineAsmVerify(LLVMTypeRef Ty, char *Constraints,
+                                         size_t ConstraintsLen) {
++#if LLVM_VERSION_LT(15, 0)
+   return InlineAsm::Verify(unwrap<FunctionType>(Ty),
+                            StringRef(Constraints, ConstraintsLen));
++#else
++  // llvm::Error converts to true if it is an error.
++  return !llvm::errorToBool(InlineAsm::verify(
++      unwrap<FunctionType>(Ty), StringRef(Constraints, ConstraintsLen)));
++#endif
+ }
+ 
+ extern "C" void LLVMRustAppendModuleInlineAsm(LLVMModuleRef M, const char *Asm,
+@@ -1865,3 +1871,11 @@ extern "C" void LLVMRustGetMangledName(LLVMValueRef V, RustStringRef Str) {
+   GlobalValue *GV = unwrap<GlobalValue>(V);
+   Mangler().getNameWithPrefix(OS, GV, true);
+ }
++
++// LLVMGetAggregateElement was added in LLVM 15. For earlier LLVM versions just
++// use its implementation.
++#if LLVM_VERSION_LT(15, 0)
++extern "C" LLVMValueRef LLVMGetAggregateElement(LLVMValueRef C, unsigned Idx) {
++    return wrap(unwrap<Constant>(C)->getAggregateElement(Idx));
++}
++#endif
+diff --git a/src/test/codegen/function-arguments.rs b/src/test/codegen/function-arguments.rs
+index ae6abe7a1..a13947605 100644
+--- a/src/test/codegen/function-arguments.rs
++++ b/src/test/codegen/function-arguments.rs
+@@ -215,10 +215,3 @@ pub fn enum_id_1(x: Option<Result<u16, u16>>) -> Option<Result<u16, u16>> {
+ pub fn enum_id_2(x: Option<u8>) -> Option<u8> {
+   x
+ }
+-
+-// CHECK: noalias {{i8\*|ptr}} @allocator()
+-#[no_mangle]
+-#[rustc_allocator]
+-pub fn allocator() -> *const i8 {
+-  std::ptr::null()
+-}
+diff --git a/src/test/codegen/repr-transparent-aggregates-2.rs b/src/test/codegen/repr-transparent-aggregates-2.rs
+index b68e8e9eb..df7e88f08 100644
+--- a/src/test/codegen/repr-transparent-aggregates-2.rs
++++ b/src/test/codegen/repr-transparent-aggregates-2.rs
+@@ -37,19 +37,19 @@ pub enum TeBigS {
+     Variant(BigS),
+ }
+ 
+-// CHECK: define void @test_BigS(%BigS* [[BIGS_RET_ATTRS1:.*]] sret(%BigS) [[BIGS_RET_ATTRS2:.*]], [16 x i32]
++// CHECK: define void @test_BigS({{%BigS\*|ptr}} [[BIGS_RET_ATTRS1:.*]] sret(%BigS) [[BIGS_RET_ATTRS2:.*]], [16 x i32]
+ #[no_mangle]
+ pub extern fn test_BigS(_: BigS) -> BigS { loop {} }
+ 
+-// CHECK: define void @test_TsBigS(%TsBigS* [[BIGS_RET_ATTRS1]] sret(%TsBigS) [[BIGS_RET_ATTRS2]], [16 x i32]
++// CHECK: define void @test_TsBigS({{%TsBigS\*|ptr}} [[BIGS_RET_ATTRS1]] sret(%TsBigS) [[BIGS_RET_ATTRS2]], [16 x i32]
+ #[no_mangle]
+ pub extern fn test_TsBigS(_: TsBigS) -> TsBigS { loop {} }
+ 
+-// CHECK: define void @test_TuBigS(%TuBigS* [[BIGS_RET_ATTRS1]] sret(%TuBigS) [[BIGS_RET_ATTRS2]], [16 x i32]
++// CHECK: define void @test_TuBigS({{%TuBigS\*|ptr}} [[BIGS_RET_ATTRS1]] sret(%TuBigS) [[BIGS_RET_ATTRS2]], [16 x i32]
+ #[no_mangle]
+ pub extern fn test_TuBigS(_: TuBigS) -> TuBigS { loop {} }
+ 
+-// CHECK: define void @test_TeBigS(%"TeBigS::Variant"* [[BIGS_RET_ATTRS1]] sret(%"TeBigS::Variant") [[BIGS_RET_ATTRS2]], [16 x i32]
++// CHECK: define void @test_TeBigS({{%"TeBigS::Variant"\*|ptr}} [[BIGS_RET_ATTRS1]] sret(%"TeBigS::Variant") [[BIGS_RET_ATTRS2]], [16 x i32]
+ #[no_mangle]
+ pub extern fn test_TeBigS(_: TeBigS) -> TeBigS { loop {} }
+ 
+@@ -73,18 +73,18 @@ pub enum TeBigU {
+     Variant(BigU),
+ }
+ 
+-// CHECK: define void @test_BigU(%BigU* [[BIGU_RET_ATTRS1:.*]] sret(%BigU) [[BIGU_RET_ATTRS2:.*]], [16 x i32]
++// CHECK: define void @test_BigU({{%BigU\*|ptr}} [[BIGU_RET_ATTRS1:.*]] sret(%BigU) [[BIGU_RET_ATTRS2:.*]], [16 x i32]
+ #[no_mangle]
+ pub extern fn test_BigU(_: BigU) -> BigU { loop {} }
+ 
+-// CHECK: define void @test_TsBigU(%TsBigU* [[BIGU_RET_ATTRS1]] sret(%TsBigU) [[BIGU_RET_ATTRS2]], [16 x i32]
++// CHECK: define void @test_TsBigU({{%TsBigU\*|ptr}} [[BIGU_RET_ATTRS1]] sret(%TsBigU) [[BIGU_RET_ATTRS2]], [16 x i32]
+ #[no_mangle]
+ pub extern fn test_TsBigU(_: TsBigU) -> TsBigU { loop {} }
+ 
+-// CHECK: define void @test_TuBigU(%TuBigU* [[BIGU_RET_ATTRS1]] sret(%TuBigU) [[BIGU_RET_ATTRS2]], [16 x i32]
++// CHECK: define void @test_TuBigU({{%TuBigU\*|ptr}} [[BIGU_RET_ATTRS1]] sret(%TuBigU) [[BIGU_RET_ATTRS2]], [16 x i32]
+ #[no_mangle]
+ pub extern fn test_TuBigU(_: TuBigU) -> TuBigU { loop {} }
+ 
+-// CHECK: define void @test_TeBigU(%"TeBigU::Variant"* [[BIGU_RET_ATTRS1]] sret(%"TeBigU::Variant") [[BIGU_RET_ATTRS2]], [16 x i32]
++// CHECK: define void @test_TeBigU({{%"TeBigU::Variant"\*|ptr}} [[BIGU_RET_ATTRS1]] sret(%"TeBigU::Variant") [[BIGU_RET_ATTRS2]], [16 x i32]
+ #[no_mangle]
+ pub extern fn test_TeBigU(_: TeBigU) -> TeBigU { loop {} }
