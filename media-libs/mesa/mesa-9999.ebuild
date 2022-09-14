@@ -32,8 +32,8 @@ done
 
 IUSE="${IUSE_VIDEO_CARDS}
 	cpu_flags_x86_sse2 d3d9 debug gles1 +gles2 +llvm
-	lm-sensors opencl osmesa +proprietary-codecs selinux
-	test unwind vaapi valgrind vdpau vulkan
+	lm-sensors opencl osmesa +proprietary-codecs rusticl
+	selinux test unwind vaapi valgrind vdpau vulkan
 	vulkan-overlay wayland +X xa xvmc zink +zstd"
 
 REQUIRED_USE="
@@ -71,6 +71,12 @@ RDEPEND="
 				dev-libs/libclc
 				virtual/libelf:0=[${MULTILIB_USEDEP}]
 			)
+	rusticl? (
+		>=virtual/rust-1.62.0
+		dev-libs/libclc[rusticl]
+		dev-util/cbindgen
+		dev-util/spirv-llvm-translator
+		)
 	vaapi? (
 		>=x11-libs/libva-1.7.3:=[${MULTILIB_USEDEP}]
 	)
@@ -216,6 +222,10 @@ llvm_check_deps() {
 	then
 		flags+=",llvm_targets_AMDGPU(-)"
 	fi
+	if use rusticl
+	then
+		flags+=",llvm_targets_SPIRV(-)"
+	fi
 
 	if use opencl; then
 		has_version "sys-devel/clang:${LLVM_SLOT}[${flags}]" || return 1
@@ -277,6 +287,7 @@ pkg_pretend() {
 
 	if ! use llvm; then
 		use opencl     && ewarn "Ignoring USE=opencl     since USE does not contain llvm"
+		use rusticl	   && ewarn "Ignoring USE=rusticl    since USE does not contain llvm"
 	fi
 
 	if use osmesa && ! use llvm; then
@@ -408,6 +419,13 @@ multilib_src_configure() {
 	emesonargs+=(
 		-Dgallium-opencl="$(usex opencl icd disabled)"
 	)
+
+	if use rusticl; then
+		emesonargs+=(
+			$(meson_native_true gallium-rusticl)
+			-Drust_std=2021
+		)
+	fi
 
 	if use vulkan; then
 		vulkan_enable video_cards_freedreno freedreno
