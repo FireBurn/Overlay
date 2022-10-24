@@ -19,13 +19,11 @@ REQUIRED_USE="|| ( ${IUSE_VIDEO_CARDS} )"
 LLVM_MAX_SLOT=15
 BDEPEND="
 	${PYTHON_DEPS}
+	dev-util/spirv-llvm-translator
 	|| (
 		sys-devel/clang:15
 		sys-devel/clang:14
 		sys-devel/clang:13
-		sys-devel/clang:12
-		sys-devel/clang:11
-		sys-devel/clang:10
 	)
 "
 
