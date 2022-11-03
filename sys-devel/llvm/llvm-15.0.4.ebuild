@@ -17,9 +17,12 @@ HOMEPAGE="https://llvm.org/"
 # 4. ConvertUTF.h: TODO.
 
 LICENSE="Apache-2.0-with-LLVM-exceptions UoI-NCSA BSD public-domain rc"
-SLOT="$(ver_cut 1)"
+SLOT="${LLVM_MAJOR}/${LLVM_SOABI}"
 KEYWORDS="~amd64 ~arm ~arm64 ~ppc ~ppc64 ~riscv ~sparc ~x86 ~amd64-linux ~ppc-macos ~x64-macos"
-IUSE="+binutils-plugin debug doc exegesis libedit +libffi ncurses test xar xml z3"
+IUSE="
+	+binutils-plugin debug doc exegesis libedit +libffi ncurses test xar
+	xml z3 zstd
+"
 RESTRICT="!test? ( test )"
 
 RDEPEND="
@@ -32,6 +35,7 @@ RDEPEND="
 	xar? ( app-arch/xar )
 	xml? ( dev-libs/libxml2:2=[${MULTILIB_USEDEP}] )
 	z3? ( >=sci-mathematics/z3-4.7.1:0=[${MULTILIB_USEDEP}] )
+	zstd? ( app-arch/zstd:=[${MULTILIB_USEDEP}] )
 "
 DEPEND="
 	${RDEPEND}
@@ -43,7 +47,7 @@ BDEPEND="
 	>=dev-util/cmake-3.16
 	sys-devel/gnuconfig
 	kernel_Darwin? (
-		<sys-libs/libcxx-$(ver_cut 1-3).9999
+		<sys-libs/libcxx-${LLVM_VERSION}.9999
 		>=sys-devel/binutils-apple-5.1
 	)
 	doc? ( $(python_gen_any_dep '
@@ -60,13 +64,13 @@ RDEPEND="
 "
 PDEPEND="
 	sys-devel/llvm-common
-	sys-devel/llvm-toolchain-symlinks:${SLOT}
-	binutils-plugin? ( >=sys-devel/llvmgold-${SLOT} )
+	sys-devel/llvm-toolchain-symlinks:${LLVM_MAJOR}
+	binutils-plugin? ( >=sys-devel/llvmgold-${LLVM_MAJOR} )
 "
 
 LLVM_COMPONENTS=( llvm cmake third-party )
 LLVM_MANPAGES=1
-LLVM_PATCHSET=${PV/_/-}-r2
+LLVM_PATCHSET=${PV/_/-}
 LLVM_USE_TARGETS=provide
 llvm.org_set_globals
 
@@ -178,18 +182,6 @@ src_prepare() {
 	check_uptodate
 
 	llvm.org_src_prepare
-}
-
-# Is LLVM being linked against libc++?
-is_libcxx_linked() {
-	local code='#include <ciso646>
-#if defined(_LIBCPP_VERSION)
-	HAVE_LIBCXX
-#endif
-'
-	local out=$($(tc-getCXX) ${CXXFLAGS} ${CPPFLAGS} -x c++ -E -P - <<<"${code}") || return 1
-
-	[[ ${out} == *HAVE_LIBCXX* ]]
 }
 
 get_distribution_components() {
@@ -342,7 +334,7 @@ multilib_src_configure() {
 		# disable appending VCS revision to the version to improve
 		# direct cache hit ratio
 		-DLLVM_APPEND_VC_REV=OFF
-		-DCMAKE_INSTALL_PREFIX="${EPREFIX}/usr/lib/llvm/${SLOT}"
+		-DCMAKE_INSTALL_PREFIX="${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}"
 		-DLLVM_LIBDIR_SUFFIX=${libdir#lib}
 
 		-DBUILD_SHARED_LIBS=OFF
@@ -365,7 +357,8 @@ multilib_src_configure() {
 		-DLLVM_ENABLE_EH=ON
 		-DLLVM_ENABLE_RTTI=ON
 		-DLLVM_ENABLE_Z3_SOLVER=$(usex z3)
-\		-DLLVM_ENABLE_DUMP=ON
+		-DLLVM_ENABLE_ZSTD=$(usex zstd)
+		-DLLVM_ENABLE_DUMP=ON
 
 		-DLLVM_HOST_TRIPLE="${CHOST}"
 
@@ -380,7 +373,7 @@ multilib_src_configure() {
 		-DOCAMLFIND=NO
 	)
 
-	if is_libcxx_linked; then
+	if [[ $(tc-get-cxx-stdlib) == libc++ ]]; then
 		# Smart hack: alter version suffix -> SOVERSION when linking
 		# against libc++. This way we won't end up mixing LLVM libc++
 		# libraries with libstdc++ clang, and the other way around.
@@ -407,7 +400,7 @@ multilib_src_configure() {
 		if llvm_are_manpages_built; then
 			build_docs=ON
 			mycmakeargs+=(
-				-DCMAKE_INSTALL_MANDIR="${EPREFIX}/usr/lib/llvm/${SLOT}/share/man"
+				-DCMAKE_INSTALL_MANDIR="${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}/share/man"
 				-DLLVM_INSTALL_SPHINX_HTML_DIR="${EPREFIX}/usr/share/doc/${PF}/html"
 				-DSPHINX_WARNINGS_AS_ERRORS=OFF
 			)
@@ -426,7 +419,7 @@ multilib_src_configure() {
 	fi
 
 	if tc-is-cross-compiler; then
-		local tblgen="${EPREFIX}/usr/lib/llvm/${SLOT}/bin/llvm-tblgen"
+		local tblgen="${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}/bin/llvm-tblgen"
 		[[ -x "${tblgen}" ]] \
 			|| die "${tblgen} not found or usable"
 		mycmakeargs+=(
@@ -453,7 +446,7 @@ multilib_src_configure() {
 	use debug || local -x CPPFLAGS="${CPPFLAGS} -DNDEBUG"
 	cmake_src_configure
 
-	grep -q -E "^CMAKE_PROJECT_VERSION_MAJOR(:.*)?=$(ver_cut 1)$" \
+	grep -q -E "^CMAKE_PROJECT_VERSION_MAJOR(:.*)?=${LLVM_MAJOR}$" \
 			CMakeCache.txt ||
 		die "Incorrect version, did you update _LLVM_MASTER_MAJOR?"
 	multilib_is_native_abi && check_distribution_components
@@ -481,7 +474,7 @@ multilib_src_test() {
 
 src_install() {
 	local MULTILIB_CHOST_TOOLS=(
-		/usr/lib/llvm/${SLOT}/bin/llvm-config
+		/usr/lib/llvm/${LLVM_MAJOR}/bin/llvm-config
 	)
 
 	local MULTILIB_WRAPPED_HEADERS=(
@@ -492,7 +485,7 @@ src_install() {
 	multilib-minimal_src_install
 
 	# move wrapped headers back
-	mv "${ED}"/usr/include "${ED}"/usr/lib/llvm/${SLOT}/include || die
+	mv "${ED}"/usr/include "${ED}"/usr/lib/llvm/${LLVM_MAJOR}/include || die
 }
 
 multilib_src_install() {
@@ -500,28 +493,28 @@ multilib_src_install() {
 
 	# move headers to /usr/include for wrapping
 	rm -rf "${ED}"/usr/include || die
-	mv "${ED}"/usr/lib/llvm/${SLOT}/include "${ED}"/usr/include || die
+	mv "${ED}"/usr/lib/llvm/${LLVM_MAJOR}/include "${ED}"/usr/include || die
 
-	LLVM_LDPATHS+=( "${EPREFIX}/usr/lib/llvm/${SLOT}/$(get_libdir)" )
+	LLVM_LDPATHS+=( "${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}/$(get_libdir)" )
 }
 
 multilib_src_install_all() {
-	local revord=$(( 9999 - ${SLOT} ))
+	local revord=$(( 9999 - ${LLVM_MAJOR} ))
 	newenvd - "60llvm-${revord}" <<-_EOF_
-		PATH="${EPREFIX}/usr/lib/llvm/${SLOT}/bin"
+		PATH="${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}/bin"
 		# we need to duplicate it in ROOTPATH for Portage to respect...
-		ROOTPATH="${EPREFIX}/usr/lib/llvm/${SLOT}/bin"
-		MANPATH="${EPREFIX}/usr/lib/llvm/${SLOT}/share/man"
+		ROOTPATH="${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}/bin"
+		MANPATH="${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}/share/man"
 		LDPATH="$( IFS=:; echo "${LLVM_LDPATHS[*]}" )"
 	_EOF_
 
-	docompress "/usr/lib/llvm/${SLOT}/share/man"
+	docompress "/usr/lib/llvm/${LLVM_MAJOR}/share/man"
 	llvm_install_manpages
 }
 
 pkg_postinst() {
 	elog "You can find additional opt-viewer utility scripts in:"
-	elog "  ${EROOT}/usr/lib/llvm/${SLOT}/share/opt-viewer"
+	elog "  ${EROOT}/usr/lib/llvm/${LLVM_MAJOR}/share/opt-viewer"
 	elog "To use these scripts, you will need Python along with the following"
 	elog "packages:"
 	elog "  dev-python/pygments (for opt-viewer)"

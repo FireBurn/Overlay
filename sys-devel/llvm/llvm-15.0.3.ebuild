@@ -18,7 +18,7 @@ HOMEPAGE="https://llvm.org/"
 
 LICENSE="Apache-2.0-with-LLVM-exceptions UoI-NCSA BSD public-domain rc"
 SLOT="${LLVM_MAJOR}/${LLVM_SOABI}"
-KEYWORDS="~amd64 ~arm ~arm64 ~ppc ~ppc64 ~riscv ~sparc ~x86 ~amd64-linux ~ppc-macos ~x64-macos"
+KEYWORDS="~amd64 arm arm64 ~ppc ppc64 ~riscv sparc x86 ~amd64-linux ~ppc-macos ~x64-macos"
 IUSE="
 	+binutils-plugin debug doc exegesis libedit +libffi ncurses test xar
 	xml z3 zstd
@@ -358,7 +358,7 @@ multilib_src_configure() {
 		-DLLVM_ENABLE_RTTI=ON
 		-DLLVM_ENABLE_Z3_SOLVER=$(usex z3)
 		-DLLVM_ENABLE_ZSTD=$(usex zstd)
-\		-DLLVM_ENABLE_DUMP=ON
+		-DLLVM_ENABLE_DUMP=ON
 
 		-DLLVM_HOST_TRIPLE="${CHOST}"
 
