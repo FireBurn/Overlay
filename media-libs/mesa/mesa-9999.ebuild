@@ -72,7 +72,7 @@ RDEPEND="
 			)
 	rusticl? (
 		>=virtual/rust-1.62.0
-		dev-libs/libclc[rusticl]
+		dev-libs/libclc[spirv]
 		dev-util/cbindgen
 		dev-util/spirv-llvm-translator
 		)
