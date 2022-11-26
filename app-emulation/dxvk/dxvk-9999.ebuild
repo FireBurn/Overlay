@@ -12,6 +12,7 @@ if [[ ${PV} == 9999 ]]; then
 	EGIT_SUBMODULES=(
 		# picky about headers and is cross-compiled making -I/usr/include troublesome
 		include/{spirv,vulkan}
+		subprojects/libdisplay-info
 	)
 else
 	HASH_SPIRV=0bcc624926a25a2a273d07877fd25a6ff5ba1cfb
