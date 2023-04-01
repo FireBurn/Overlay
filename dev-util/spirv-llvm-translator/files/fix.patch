@@ -1,0 +1,22 @@
+diff --git a/lib/SPIRV/CMakeLists.txt b/lib/SPIRV/CMakeLists.txt
+index bbef005..3043246 100644
+--- a/lib/SPIRV/CMakeLists.txt
++++ b/lib/SPIRV/CMakeLists.txt
+@@ -43,17 +43,6 @@ if(LLVM_LINK_LLVM_DYLIB)
+     ${SRC_LIST}
+     DEPENDS
+       intrinsics_gen
+-      LLVMAnalysis
+-      LLVMBitWriter
+-      LLVMCodeGen
+-      LLVMCore
+-      LLVMDemangle
+-      LLVMIRReader
+-      LLVMLinker
+-      LLVMPasses
+-      LLVMSupport
+-      LLVMTargetParser
+-      LLVMTransformUtils
+   )
+ else()
+   add_llvm_library(LLVMSPIRVLib
