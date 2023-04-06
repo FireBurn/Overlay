@@ -1,8 +1,13 @@
 diff --git a/lib/SPIRV/CMakeLists.txt b/lib/SPIRV/CMakeLists.txt
-index bbef005..3043246 100644
+index bbef005..e2b2447 100644
 --- a/lib/SPIRV/CMakeLists.txt
 +++ b/lib/SPIRV/CMakeLists.txt
-@@ -43,17 +43,6 @@ if(LLVM_LINK_LLVM_DYLIB)
+@@ -39,21 +39,10 @@ set(SRC_LIST
+   libSPIRV/SPIRVValue.cpp
+ )
+ if(LLVM_LINK_LLVM_DYLIB)
+-  add_llvm_library(LLVMSPIRVLib STATIC DISABLE_LLVM_LINK_LLVM_DYLIB
++  add_llvm_library(LLVMSPIRVLib
      ${SRC_LIST}
      DEPENDS
        intrinsics_gen
