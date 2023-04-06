@@ -73,7 +73,7 @@ RDEPEND="
 	rusticl? (
 		>=virtual/rust-1.62.0
 		dev-libs/libclc[spirv]
-		dev-util/cbindgen
+		dev-util/bindgen
 		dev-util/spirv-llvm-translator
 		)
 	vaapi? (
@@ -216,10 +216,6 @@ llvm_check_deps() {
 	if use video_cards_r600 || use video_cards_radeon || use video_cards_radeonsi
 	then
 		flags+=",llvm_targets_AMDGPU(-)"
-	fi
-	if use rusticl
-	then
-		flags+=",llvm_targets_SPIRV(-)"
 	fi
 
 	if use opencl; then
