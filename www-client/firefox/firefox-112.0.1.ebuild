@@ -3,7 +3,7 @@
 
 EAPI=8
 
-FIREFOX_PATCHSET="firefox-111-patches-02j.tar.xz"
+FIREFOX_PATCHSET="firefox-112-patches-03j.tar.xz"
 
 LLVM_MAX_SLOT=16
 
@@ -115,7 +115,7 @@ COMMON_DEPEND="${FF_ONLY_DEPEND}
 	dev-libs/expat
 	dev-libs/glib:2
 	dev-libs/libffi:=
-	>=dev-libs/nss-3.88
+	>=dev-libs/nss-3.89
 	>=dev-libs/nspr-4.35
 	media-libs/alsa-lib
 	media-libs/fontconfig
@@ -754,7 +754,7 @@ src_configure() {
 		--disable-strip \
 		--disable-tests \
 		--disable-updater \
-		--disable-wmf-cdm \
+		--disable-wmf \
 		--enable-negotiateauth \
 		--enable-new-pass-manager \
 		--enable-official-branding \
@@ -1009,9 +1009,9 @@ src_configure() {
 		fi
 	fi
 
-        if use elibc_musl && use arm64 ; then
-               	mozconfig_add_options_ac 'elf-hack is broken when using musl/arm64' --disable-elf-hack
-        fi
+	if use elibc_musl && use arm64 ; then
+		mozconfig_add_options_ac 'elf-hack is broken when using musl/arm64' --disable-elf-hack
+	fi
 
 	# Additional ARCH support
 	case "${ARCH}" in
