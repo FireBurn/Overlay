@@ -2,6 +2,7 @@
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
+
 PYTHON_COMPAT=( python3_{9..11} )
 PYTHON_REQ_USE="xml(+)"
 LLVM_MAX_SLOT=16
@@ -17,12 +18,9 @@ inherit python-any-r1 qmake-utils readme.gentoo-r1 toolchain-funcs virtualx xdg-
 
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://chromium.org/"
-PATCHSET="2"
-PATCHSET_NAME="chromium-$(ver_cut 1)-patchset-${PATCHSET}"
 PATCHSET_URI_PPC64="https://quickbuild.io/~raptor-engineering-public"
-PATCHSET_NAME_PPC64="chromium_111.0.5563.64-1raptor0~deb11u1.debian"
+PATCHSET_NAME_PPC64="chromium_112.0.5615.49-2raptor0~deb11u1.debian"
 SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}.tar.xz
-	https://github.com/stha09/chromium-patches/releases/download/${PATCHSET_NAME}/${PATCHSET_NAME}.tar.xz
 	ppc64? (
 		${PATCHSET_URI_PPC64}/+archive/ubuntu/chromium/+files/${PATCHSET_NAME_PPC64}.tar.xz
 		https://dev.gentoo.org/~sultan/distfiles/www-client/chromium/chromium-ppc64le-gentoo-patches-1.tar.xz
@@ -31,7 +29,7 @@ SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}
 
 LICENSE="BSD"
 SLOT="0/stable"
-KEYWORDS="amd64 arm64 ~ppc64"
+KEYWORDS="amd64 ~arm64 ~ppc64"
 IUSE="+X component-build cups cpu_flags_arm_neon debug gtk4 +hangouts headless kerberos libcxx lto +official pax-kernel pgo pic +proprietary-codecs pulseaudio qt5 screencast selinux +suid +system-av1 +system-ffmpeg +system-harfbuzz +system-icu +system-png vaapi wayland widevine"
 REQUIRED_USE="
 	component-build? ( !suid !libcxx )
@@ -331,19 +329,21 @@ src_prepare() {
 		"/\"GlobalMediaControlsCastStartStop\",/{n;s/ENABLED/DISABLED/;}" \
 		"chrome/browser/media/router/media_router_feature.cc" || die
 
-	rm "${WORKDIR}"/patches/chromium-110-dpf-arm64.patch || die
-	rm "${WORKDIR}"/patches/chromium-111-v8-std-layout1.patch || die
-	rm "${WORKDIR}"/patches/chromium-111-v8-std-layout2.patch || die
-
 	local PATCHES=(
-		"${WORKDIR}/patches"
+		#"${WORKDIR}/patches"
 		"${FILESDIR}/chromium-98-gtk4-build.patch"
 		"${FILESDIR}/chromium-108-EnumTable-crash.patch"
 		"${FILESDIR}/chromium-109-system-zlib.patch"
 		"${FILESDIR}/chromium-109-system-openh264.patch"
-		"${FILESDIR}/chromium-111-ozone-platform.patch"
+		"${FILESDIR}/chromium-111-InkDropHost-crash.patch"
 		"${FILESDIR}/chromium-use-oauth2-client-switches-as-default.patch"
 		"${FILESDIR}/chromium-cross-compile.patch"
+		"${FILESDIR}/chromium-112-compiler.patch"
+		"${FILESDIR}/chromium-112-libstdc++.patch"
+		"${FILESDIR}/chromium-112-libstdc++-1.patch"
+		"${FILESDIR}/chromium-112-sql-relax.patch"
+		"${FILESDIR}/chromium-112-gcc-mno-outline.patch"
+		"${FILESDIR}/chromium-112-swiftshader.patch"
 	)
 
 	if use ppc64 ; then
@@ -794,7 +794,6 @@ chromium_configure() {
 	myconf_gn+=" use_gnome_keyring=false"
 
 	# Optional dependencies.
-	myconf_gn+=" enable_js_type_check=false"
 	myconf_gn+=" enable_hangout_services_extension=$(usex hangouts true false)"
 	myconf_gn+=" enable_widevine=$(usex widevine true false)"
 
@@ -860,6 +859,11 @@ chromium_configure() {
 		# Prevent libvpx/xnnpack build failures. Bug 530248, 544702, 546984, 853646.
 		if [[ ${myarch} == amd64 || ${myarch} == x86 ]]; then
 			filter-flags -mno-mmx -mno-sse2 -mno-ssse3 -mno-sse4.1 -mno-avx -mno-avx2 -mno-fma -mno-fma4 -mno-xop -mno-sse4a
+		fi
+
+		if tc-is-gcc; then
+			# https://bugs.gentoo.org/904455
+			append-cxxflags "$(test-flags-CXX -fno-tree-vectorize)"
 		fi
 	fi
 
