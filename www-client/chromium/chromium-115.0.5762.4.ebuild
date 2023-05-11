@@ -359,9 +359,8 @@ src_prepare() {
 		"${FILESDIR}/chromium-use-oauth2-client-switches-as-default.patch"
 		"${FILESDIR}/chromium-cross-compile.patch"
 		"${WORKDIR}/chromium-112-gcc-13-patches"
-		"${FILESDIR}/chromium-113-swiftshader-cstdint.patch"
 		"${FILESDIR}/chromium-113-gcc-13-0001-vulkanmemoryallocator.patch"
-		"${FILESDIR}/chromium-114-compiler.patch"
+		"${FILESDIR}/chromium-115-compiler.patch"
 	)
 
 	if use ppc64 ; then
