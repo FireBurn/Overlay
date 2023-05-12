@@ -36,6 +36,10 @@ BDEPEND="
 	${PYTHON_DEPS}
 "
 
+PATCHES=(
+	"${FILESDIR}/gcc13.patch"
+)
+
 multilib_src_configure() {
 	local emesonargs=()
 
