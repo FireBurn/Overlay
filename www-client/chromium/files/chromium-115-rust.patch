@@ -1,0 +1,33 @@
+--- a/build/config/rust.gni	2023-05-24 22:42:08.751355400 +0100
++++ b/build/config/rust.gni	2023-05-31 00:05:25.075273734 +0100
+@@ -119,18 +119,8 @@
+ rustc_revision = ""
+ 
+ if (enable_rust) {
+-  if (use_chromium_rust_toolchain) {
+-    toolchain_has_rust = chromium_toolchain_supports_platform
+-    if (toolchain_has_rust) {
+-      update_rust_args = [ "--print-package-version" ]
+-      rustc_revision = exec_script("//tools/rust/update_rust.py",
+-                                   update_rust_args,
+-                                   "trim string")
+-    }
+-  } else {
+-    toolchain_has_rust = custom_toolchain_supports_platform
+-    rustc_revision = rustc_version
+-  }
++  toolchain_has_rust = custom_toolchain_supports_platform
++  rustc_revision = rustc_version
+ }
+ 
+ # TODO(crbug.com/1278030): To build unit tests for Android we need to build
+--- a/build/config/compiler/BUILD.gn	2023-05-31 00:13:43.240031460 +0100
++++ b/build/config/compiler/BUILD.gn	2023-05-31 00:13:51.671917853 +0100
+@@ -302,7 +302,6 @@
+ 
+   configs += [
+     # See the definitions below.
+-    ":rustc_revision",
+     ":compiler_codegen",
+     ":compiler_deterministic",
+   ]

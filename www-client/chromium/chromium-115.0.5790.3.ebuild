@@ -361,6 +361,7 @@ src_prepare() {
 		"${WORKDIR}/chromium-112-gcc-13-patches"
 		"${FILESDIR}/chromium-113-gcc-13-0001-vulkanmemoryallocator.patch"
 		"${FILESDIR}/chromium-115-compiler.patch"
+		"${FILESDIR}/chromium-115-rust.patch"
 	)
 
 	if use ppc64 ; then
@@ -554,6 +555,7 @@ src_prepare() {
 		third_party/private_membership
 		third_party/protobuf
 		third_party/pthreadpool
+		third_party/puffin
 		third_party/pyjson5
 		third_party/pyyaml
 		third_party/qcms
