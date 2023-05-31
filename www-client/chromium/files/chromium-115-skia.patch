@@ -1,0 +1,11 @@
+--- a/skia/ext/skcolorspace_trfn.cc	2023-05-31 00:58:41.590760452 +0100
++++ b/skia/ext/skcolorspace_trfn.cc	2023-05-31 00:59:25.972275199 +0100
+@@ -2,6 +2,8 @@
+ // Use of this source code is governed by a BSD-style license that can be
+ // found in the LICENSE file.
+ 
++#include <cmath>
++
+ #include "skia/ext/skcolorspace_trfn.h"
+ 
+ namespace skia {

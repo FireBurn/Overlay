@@ -362,6 +362,7 @@ src_prepare() {
 		"${FILESDIR}/chromium-113-gcc-13-0001-vulkanmemoryallocator.patch"
 		"${FILESDIR}/chromium-115-compiler.patch"
 		"${FILESDIR}/chromium-115-rust.patch"
+		"${FILESDIR}/chromium-115-skia.patch"
 	)
 
 	if use ppc64 ; then
