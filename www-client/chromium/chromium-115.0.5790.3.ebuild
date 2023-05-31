@@ -363,6 +363,7 @@ src_prepare() {
 		"${FILESDIR}/chromium-115-compiler.patch"
 		"${FILESDIR}/chromium-115-rust.patch"
 		"${FILESDIR}/chromium-115-skia.patch"
+		"${FILESDIR}/chromium-115-pki.patch"
 	)
 
 	if use ppc64 ; then
