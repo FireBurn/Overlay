@@ -21,7 +21,6 @@ HOMEPAGE="https://chromium.org/"
 PATCHSET_URI_PPC64="https://quickbuild.io/~raptor-engineering-public"
 PATCHSET_NAME_PPC64="chromium_112.0.5615.49-2raptor0~deb11u1.debian"
 SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}.tar.xz
-	https://dev.gentoo.org/~sam/distfiles/www-client/chromium/chromium-112-gcc-13-patches.tar.xz
 	ppc64? (
 		${PATCHSET_URI_PPC64}/+archive/ubuntu/chromium/+files/${PATCHSET_NAME_PPC64}.tar.xz
 		https://dev.gentoo.org/~sultan/distfiles/www-client/chromium/chromium-ppc64le-gentoo-patches-1.tar.xz
@@ -330,35 +329,19 @@ src_prepare() {
 		"/\"GlobalMediaControlsCastStartStop\",/{n;s/ENABLED/DISABLED/;}" \
 		"chrome/browser/media/router/media_router_feature.cc" || die
 
-	rm "${WORKDIR}/chromium-112-gcc-13-patches/chromium-112-gcc-13-0002-perfetto.patch" || die
-	rm "${WORKDIR}/chromium-112-gcc-13-patches/chromium-112-gcc-13-0004-swiftshader.patch" || die
-	rm "${WORKDIR}/chromium-112-gcc-13-patches/chromium-112-gcc-13-0007-misc.patch" || die
-	rm "${WORKDIR}/chromium-112-gcc-13-patches/chromium-112-gcc-13-0008-dawn.patch" || die
-	rm "${WORKDIR}/chromium-112-gcc-13-patches/chromium-112-gcc-13-0009-base.patch" || die
-	rm "${WORKDIR}/chromium-112-gcc-13-patches/chromium-112-gcc-13-0010-components.patch" || die
-	rm "${WORKDIR}/chromium-112-gcc-13-patches/chromium-112-gcc-13-0011-s2cellid.patch" || die
-	rm "${WORKDIR}/chromium-112-gcc-13-patches/chromium-112-gcc-13-0012-webrtc-base64.patch" || die
-	rm "${WORKDIR}/chromium-112-gcc-13-patches/chromium-112-gcc-13-0013-quiche.patch" || die
-	rm "${WORKDIR}/chromium-112-gcc-13-patches/chromium-112-gcc-13-0015-net.patch" || die
-	rm "${WORKDIR}/chromium-112-gcc-13-patches/chromium-112-gcc-13-0016-cc-targetproperty.patch" || die
-	rm "${WORKDIR}/chromium-112-gcc-13-patches/chromium-112-gcc-13-0017-gpu_feature_info.patch" || die
-	rm "${WORKDIR}/chromium-112-gcc-13-patches/chromium-112-gcc-13-0018-encounteredsurfacetracker.patch" || die
-	rm "${WORKDIR}/chromium-112-gcc-13-patches/chromium-112-gcc-13-0019-documentattachmentinfo.patch" || die
-	rm "${WORKDIR}/chromium-112-gcc-13-patches/chromium-112-gcc-13-0020-pdfium.patch" || die
-	rm "${WORKDIR}/chromium-112-gcc-13-patches/chromium-112-gcc-13-0021-gcc-copy-list-init-net-HostCache.patch" || die
-	rm "${WORKDIR}/chromium-112-gcc-13-patches/chromium-112-gcc-13-0022-gcc-ambiguous-ViewTransitionElementId-type.patch" || die
-	rm "${WORKDIR}/chromium-112-gcc-13-patches/chromium-112-gcc-13-0023-gcc-incomplete-type-v8-subtype.patch" || die
-
 	local PATCHES=(
-		#"${WORKDIR}/patches"
 		"${FILESDIR}/chromium-98-gtk4-build.patch"
 		"${FILESDIR}/chromium-108-EnumTable-crash.patch"
 		"${FILESDIR}/chromium-109-system-zlib.patch"
 		"${FILESDIR}/chromium-109-system-openh264.patch"
 		"${FILESDIR}/chromium-111-InkDropHost-crash.patch"
+		"${FILESDIR}/chromium-112-gcc-13-0001-openscreen.patch"
+		"${FILESDIR}/chromium-112-gcc-13-0003-ruy.patch"
+		"${FILESDIR}/chromium-112-gcc-13-0005-tensorflow-tflite.patch"
+		"${FILESDIR}/chromium-112-gcc-13-0006-vulkanmemoryallocator.patch"
+		"${FILESDIR}/chromium-112-gcc-13-0014-maldoca.patch"
 		"${FILESDIR}/chromium-use-oauth2-client-switches-as-default.patch"
 		"${FILESDIR}/chromium-cross-compile.patch"
-		"${WORKDIR}/chromium-112-gcc-13-patches"
 		"${FILESDIR}/chromium-113-gcc-13-0001-vulkanmemoryallocator.patch"
 		"${FILESDIR}/chromium-115-compiler.patch"
 		"${FILESDIR}/chromium-115-rust.patch"
