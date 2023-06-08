@@ -1,0 +1,10 @@
+--- a/chrome/browser/webauthn/authenticator_request_dialog_model.h	2023-06-08 12:24:22.941002621 +0100
++++ b/chrome/browser/webauthn/authenticator_request_dialog_model.h	2023-06-08 12:27:14.196580575 +0100
+@@ -7,6 +7,7 @@
+ 
+ #include <memory>
+ #include <string>
++#include <variant>
+ #include <vector>
+ 
+ #include "base/containers/span.h"
