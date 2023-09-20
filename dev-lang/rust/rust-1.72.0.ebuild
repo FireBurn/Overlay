@@ -165,6 +165,7 @@ PATCHES=(
 	"${FILESDIR}"/1.70.0-ignore-broken-and-non-applicable-tests.patch
 	"${FILESDIR}"/1.62.1-musl-dynamic-linking.patch
 	"${FILESDIR}"/1.67.0-doc-wasm.patch
+	"${FILESDIR}"/1.72.0-fix-llvm-17.patch
 )
 
 S="${WORKDIR}/${MY_P}-src"
