@@ -1,0 +1,27 @@
+From 6ddf9128b2b55f9def80af57f7353d2521527c6a Mon Sep 17 00:00:00 2001
+From: Krasimir Georgiev <krasimir@google.com>
+Date: Fri, 14 Jul 2023 12:10:29 +0000
+Subject: [PATCH] llvm-wrapper: update for LLVM API change
+
+No functional changes intended.
+
+Adds an include for llvm::SmallString. Previously, this must have been
+implicitly provided by some of the existing headers. With recent LLVM
+changes, not anymore:
+https://buildkite.com/llvm-project/rust-llvm-integrate-prototype/builds/20776#01895448-44a4-4a1e-8407-9d41d0186132/209-690
+---
+ compiler/rustc_llvm/llvm-wrapper/SymbolWrapper.cpp | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/compiler/rustc_llvm/llvm-wrapper/SymbolWrapper.cpp b/compiler/rustc_llvm/llvm-wrapper/SymbolWrapper.cpp
+index 0493d6b05d03..bf00d11edf6d 100644
+--- a/compiler/rustc_llvm/llvm-wrapper/SymbolWrapper.cpp
++++ b/compiler/rustc_llvm/llvm-wrapper/SymbolWrapper.cpp
+@@ -7,6 +7,7 @@
+ // * https://github.com/llvm/llvm-project/blob/8ef3e895ad8ab1724e2b87cabad1dacdc7a397a3/llvm/include/llvm/Object/ArchiveWriter.h
+ // * https://github.com/llvm/llvm-project/blob/8ef3e895ad8ab1724e2b87cabad1dacdc7a397a3/llvm/lib/Object/ArchiveWriter.cpp
+ 
++#include "llvm/ADT/SmallString.h"
+ #include "llvm/IR/LLVMContext.h"
+ #include "llvm/Object/ObjectFile.h"
+ 
