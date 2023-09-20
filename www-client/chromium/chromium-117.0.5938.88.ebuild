@@ -178,12 +178,12 @@ BDEPEND="
 		qt5? ( dev-qt/qtcore:5 )
 		qt6? ( dev-qt/qtbase:6 )
 	)
-	libcxx? ( >=sys-devel/clang-16 )
-	lto? ( $(depend_clang_llvm_versions 16) )
+	libcxx? ( >=sys-devel/clang-17 )
+	lto? ( $(depend_clang_llvm_versions 17) )
 	pgo? (
 		>=dev-python/selenium-3.141.0
 		>=dev-util/web_page_replay_go-20220314
-		$(depend_clang_llvm_versions 16)
+		$(depend_clang_llvm_versions 17)
 	)
 	dev-lang/perl
 	>=dev-util/gn-0.2114
@@ -200,7 +200,7 @@ BDEPEND="
 : ${CHROMIUM_FORCE_CLANG=no}
 
 if [[ ${CHROMIUM_FORCE_CLANG} == yes ]]; then
-	BDEPEND+=" >=sys-devel/clang-16"
+	BDEPEND+=" >=sys-devel/clang-17"
 fi
 
 if ! has chromium_pkg_die ${EBUILD_DEATH_HOOKS}; then
