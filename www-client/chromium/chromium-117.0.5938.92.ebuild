@@ -18,9 +18,7 @@ inherit python-any-r1 qmake-utils readme.gentoo-r1 toolchain-funcs virtualx xdg-
 
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://www.chromium.org/"
-PATCHSET="2"
-PATCHSET_NAME="chromium-116-patchset-${PATCHSET}"
-PATCHSET_PPC64="116.0.5845.140-1raptor0~deb12u1"
+PATCHSET_PPC64="117.0.5938.62-1raptor0~deb12u1"
 SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}.tar.xz
 	https://gitlab.com/Matt.Jolly/chromium-patches/-/archive/${PV}/chromium-patches-${PV}.tar.bz2
 	ppc64? (
@@ -178,7 +176,7 @@ BDEPEND="
 		qt5? ( dev-qt/qtcore:5 )
 		qt6? ( dev-qt/qtbase:6 )
 	)
-	libcxx? ( >=sys-devel/clang-17 )
+	libcxx? ( >=sys-devel/clang-16 )
 	lto? ( $(depend_clang_llvm_versions 17) )
 	pgo? (
 		>=dev-python/selenium-3.141.0
@@ -200,7 +198,7 @@ BDEPEND="
 : ${CHROMIUM_FORCE_CLANG=no}
 
 if [[ ${CHROMIUM_FORCE_CLANG} == yes ]]; then
-	BDEPEND+=" >=sys-devel/clang-17"
+	BDEPEND+=" >=sys-devel/clang-16"
 fi
 
 if ! has chromium_pkg_die ${EBUILD_DEATH_HOOKS}; then
@@ -628,6 +626,10 @@ src_prepare() {
 
 	if ! use system-zstd; then
 		keeplibs+=( third_party/zstd )
+	fi
+
+	if use libcxx; then
+		keeplibs+=( third_party/libc++ )
 	fi
 
 	# Arch-specific
