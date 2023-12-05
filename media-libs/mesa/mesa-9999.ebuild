@@ -84,14 +84,6 @@ RDEPEND="
 		>=media-libs/libva-1.7.3:=[${MULTILIB_USEDEP}]
 	)
 	vdpau? ( >=x11-libs/libvdpau-1.1:=[${MULTILIB_USEDEP}] )
-	vulkan? (
-		video_cards_intel? (
-			amd64? (
-				dev-libs/libclc[spirv(-)]
-				>=dev-util/spirv-tools-1.3.231.0
-			)
-		)
-	)
 	selinux? ( sys-libs/libselinux[${MULTILIB_USEDEP}] )
 	wayland? ( >=dev-libs/wayland-1.18.0[${MULTILIB_USEDEP}] )
 	${LIBDRM_DEPSTRING}[video_cards_freedreno?,video_cards_intel?,video_cards_nouveau?,video_cards_vc4?,video_cards_vivante?,video_cards_vmware?,${MULTILIB_USEDEP}]
@@ -121,7 +113,7 @@ RDEPEND="${RDEPEND}
 # simultaneously.
 #
 # How to use it:
-# 1. Specify LLVM_MAX_SLOT (inclusive), e.g. 16.
+# 1. Specify LLVM_MAX_SLOT (inclusive), e.g. 17.
 # 2. Specify LLVM_MIN_SLOT (inclusive), e.g. 15.
 LLVM_MAX_SLOT="17"
 LLVM_MIN_SLOT="15"
@@ -131,14 +123,6 @@ PER_SLOT_DEPSTR="
 		!opencl? ( sys-devel/llvm:@SLOT@[${LLVM_USE_DEPS}] )
 		opencl? ( sys-devel/clang:@SLOT@[${LLVM_USE_DEPS}] )
 		opencl? ( dev-util/spirv-llvm-translator:@SLOT@ )
-		vulkan? (
-			video_cards_intel? (
-				amd64? (
-					dev-util/spirv-llvm-translator:@SLOT@
-					sys-devel/clang:@SLOT@[${LLVM_USE_DEPS}]
-				)
-			)
-		)
 	)
 "
 LLVM_DEPSTR="
@@ -158,30 +142,30 @@ unset LLVM_MIN_SLOT {LLVM,PER_SLOT}_DEPSTR
 DEPEND="${RDEPEND}
 	video_cards_d3d12? ( >=dev-util/directx-headers-1.610.0[${MULTILIB_USEDEP}] )
 	valgrind? ( dev-util/valgrind )
-	wayland? ( >=dev-libs/wayland-protocols-1.24 )
+	wayland? ( >=dev-libs/wayland-protocols-1.30 )
 	X? (
 		x11-libs/libXrandr[${MULTILIB_USEDEP}]
 		x11-base/xorg-proto
 	)
 "
 BDEPEND="
-	>=dev-util/meson-1.0.0
 	${PYTHON_DEPS}
 	opencl? (
 		>=virtual/rust-1.62.0
 		>=dev-util/bindgen-0.58.0
-		>=dev-util/meson-1.2.0
 	)
 	sys-devel/bison
 	sys-devel/flex
 	virtual/pkgconfig
 	$(python_gen_any_dep ">=dev-python/mako-0.8.0[\${PYTHON_USEDEP}]")
-	llvm? (
-		vulkan? (
-			dev-util/glslang
+	vulkan? (
+		dev-util/glslang
+		llvm? (
 			video_cards_intel? (
 				amd64? (
 					$(python_gen_any_dep "dev-python/ply[\${PYTHON_USEDEP}]")
+					~dev-util/intel_clc-${PV}
+					dev-libs/libclc[spirv(-)]
 				)
 			)
 		)
@@ -202,8 +186,6 @@ x86? (
 llvm_check_deps() {
 	if use opencl; then
 		has_version "sys-devel/clang:${LLVM_SLOT}[${LLVM_USE_DEPS}]" || return 1
-	fi
-	if use opencl || { use vulkan && use video_cards_intel && use amd64; }; then
 		has_version "dev-util/spirv-llvm-translator:${LLVM_SLOT}" || return 1
 	fi
 	has_version "sys-devel/llvm:${LLVM_SLOT}[${LLVM_USE_DEPS}]"
@@ -406,9 +388,8 @@ multilib_src_configure() {
 	use vulkan-overlay && vulkan_layers+=",overlay"
 	emesonargs+=(-Dvulkan-layers=${vulkan_layers#,})
 
-	if use llvm && use vulkan && use video_cards_intel; then
-		PKG_CONFIG_PATH="$(get_llvm_prefix "${LLVM_MAX_SLOT}")/$(get_libdir)/pkgconfig"
-		emesonargs+=(-Dintel-clc=enabled)
+	if use llvm && use vulkan && use video_cards_intel && use amd64; then
+		emesonargs+=(-Dintel-clc=system)
 	else
 		emesonargs+=(-Dintel-clc=disabled)
 	fi
