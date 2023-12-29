@@ -66,6 +66,10 @@ BDEPEND="
 REQUIRED_USE="|| ( qt5 qt6 sdl ) discord? ( webservice )"
 RESTRICT="!test? ( test )"
 
+PATCHES=(
+	"${FILESDIR}/simplify-vkresult-lookup.patch"
+)
+
 pkg_setup() {
 	if tc-is-gcc; then
 		[[ "$(gcc-major-version)" -lt 11 ]] && \
@@ -99,7 +103,7 @@ src_prepare() {
 	rm .gitmodules || die
 
 	# Unbundle mbedtls
-	sed -i -e '/mbedtls/d' externals/CMakeLists.txt || die
+	sed -i -e '/^# mbedtls/,/^endif()/d' externals/CMakeLists.txt || die
 	sed -i -e 's/mbedtls/& mbedcrypto mbedx509/' \
 		src/dedicated_room/CMakeLists.txt \
 		src/core/CMakeLists.txt || die
@@ -124,7 +128,7 @@ src_prepare() {
 	sed -i '/^if.*cubeb/,/^endif()/d' externals/CMakeLists.txt || die
 
 	# Unbundle cpp-httplib
-	sed -i -e '/httplib/s/ 0.11//' CMakeLists.txt || die
+	sed -i -e '/httplib/s/ 0.12//' CMakeLists.txt || die
 	sed -i -e '/^# httplib/,/^endif()/d' externals/CMakeLists.txt || die
 
 	# Unbundle enet
@@ -135,13 +139,7 @@ src_prepare() {
 	sed -i 's/lz4::lz4/lz4/' src/common/CMakeLists.txt || die
 
 	# Allow compiling using older glslang
-	if has_version '<dev-util/glslang-1.3.238'; then
-		sed -i -e '/Vulkan/s/238/236/' CMakeLists.txt || die
-		sed -i -e '/VK_ERROR_IMAGE_USAGE_NOT_SUPPORTED_KHR/d;' -e '/VK_ERROR_VIDEO_PICTURE_LAYOUT_NOT_SUPPORTED_KHR/d' \
-			-e '/VK_ERROR_VIDEO_PROFILE_OPERATION_NOT_SUPPORTED_KHR/d' -e '/VK_ERROR_VIDEO_PROFILE_FORMAT_NOT_SUPPORTED_KHR/d' \
-			-e '/VK_ERROR_VIDEO_PROFILE_CODEC_NOT_SUPPORTED_KHR/d' -e '/VK_ERROR_VIDEO_STD_VERSION_NOT_SUPPORTED_KHR/d' \
-			src/video_core/vulkan_common/vulkan_wrapper.cpp
-	fi
+	sed -i -e '/Vulkan/s/274/268/' CMakeLists.txt || die
 
 	cmake_src_prepare
 }
