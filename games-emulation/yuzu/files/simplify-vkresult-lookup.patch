@@ -1,27 +1,20 @@
-From 5345a48396de1051de0296e2c1cefe9f8cacae93 Mon Sep 17 00:00:00 2001
+From 4d4af94c2bb2c832455a1fdc42c86866ccb36b6c Mon Sep 17 00:00:00 2001
 From: Mike Lothian <mike@fireburn.co.uk>
 Date: Fri, 22 Dec 2023 13:28:17 +0000
 Subject: [PATCH] Simplify VkResult lookup
 
 ---
- .../renderer_vulkan/vk_swapchain.cpp          |   5 +-
- .../vulkan_common/vulkan_wrapper.cpp          | 107 +-----------------
+ .../renderer_vulkan/vk_swapchain.cpp          |   4 +-
+ src/video_core/vulkan_common/vulkan.h         |   1 +
+ .../vulkan_common/vulkan_wrapper.cpp          | 106 +-----------------
  src/video_core/vulkan_common/vulkan_wrapper.h |   3 -
- 3 files changed, 6 insertions(+), 109 deletions(-)
+ 4 files changed, 5 insertions(+), 109 deletions(-)
 
 diff --git a/src/video_core/renderer_vulkan/vk_swapchain.cpp b/src/video_core/renderer_vulkan/vk_swapchain.cpp
-index 86a30dcd1..7dc0f6fdb 100644
+index 86a30dcd1..12e695414 100644
 --- a/src/video_core/renderer_vulkan/vk_swapchain.cpp
 +++ b/src/video_core/renderer_vulkan/vk_swapchain.cpp
-@@ -5,6 +5,7 @@
- #include <array>
- #include <limits>
- #include <vector>
-+#include <vulkan/vk_enum_string_helper.h>
- 
- #include "common/logging/log.h"
- #include "common/polyfill_ranges.h"
-@@ -151,7 +152,7 @@ bool Swapchain::AcquireNextImage() {
+@@ -151,7 +151,7 @@ bool Swapchain::AcquireNextImage() {
          vk::Check(result);
          break;
      default:
@@ -30,7 +23,7 @@ index 86a30dcd1..7dc0f6fdb 100644
          break;
      }
  
-@@ -187,7 +188,7 @@ void Swapchain::Present(VkSemaphore render_semaphore) {
+@@ -187,7 +187,7 @@ void Swapchain::Present(VkSemaphore render_semaphore) {
          vk::Check(result);
          break;
      default:
@@ -39,19 +32,23 @@ index 86a30dcd1..7dc0f6fdb 100644
          break;
      }
      ++frame_index;
-diff --git a/src/video_core/vulkan_common/vulkan_wrapper.cpp b/src/video_core/vulkan_common/vulkan_wrapper.cpp
-index 074aed964..1c1e8cfc3 100644
---- a/src/video_core/vulkan_common/vulkan_wrapper.cpp
-+++ b/src/video_core/vulkan_common/vulkan_wrapper.cpp
-@@ -6,6 +6,7 @@
- #include <optional>
- #include <utility>
- #include <vector>
+diff --git a/src/video_core/vulkan_common/vulkan.h b/src/video_core/vulkan_common/vulkan.h
+index 62aa13291..c758498c6 100644
+--- a/src/video_core/vulkan_common/vulkan.h
++++ b/src/video_core/vulkan_common/vulkan.h
+@@ -16,6 +16,7 @@
+ #endif
+ 
+ #include <vulkan/vulkan.h>
 +#include <vulkan/vk_enum_string_helper.h>
  
- #include "common/common_types.h"
- #include "common/logging/log.h"
-@@ -288,109 +289,7 @@ bool Load(VkInstance instance, InstanceDispatch& dld) noexcept {
+ // Sanitize macros
+ #undef CreateEvent
+diff --git a/src/video_core/vulkan_common/vulkan_wrapper.cpp b/src/video_core/vulkan_common/vulkan_wrapper.cpp
+index 074aed964..53abc9a02 100644
+--- a/src/video_core/vulkan_common/vulkan_wrapper.cpp
++++ b/src/video_core/vulkan_common/vulkan_wrapper.cpp
+@@ -288,109 +288,7 @@ bool Load(VkInstance instance, InstanceDispatch& dld) noexcept {
  }
  
  const char* Exception::what() const noexcept {
@@ -162,7 +159,7 @@ index 074aed964..1c1e8cfc3 100644
  }
  
  void Destroy(VkInstance instance, const InstanceDispatch& dld) noexcept {
-@@ -1057,7 +956,7 @@ u32 AvailableVersion(const InstanceDispatch& dld) noexcept {
+@@ -1057,7 +955,7 @@ u32 AvailableVersion(const InstanceDispatch& dld) noexcept {
      u32 version;
      if (const VkResult result = vkEnumerateInstanceVersion(&version); result != VK_SUCCESS) {
          LOG_ERROR(Render_Vulkan, "vkEnumerateInstanceVersion returned {}, assuming Vulkan 1.1",
