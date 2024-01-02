@@ -28,7 +28,6 @@ RDEPEND="
 	>=net-libs/enet-1.3
 	app-arch/lz4:=
 	dev-libs/boost:=[context]
-	dev-util/vulkan-utility-libraries
 	media-libs/opus
 	media-libs/vulkan-loader
 	sys-libs/zlib
@@ -54,7 +53,10 @@ RDEPEND="
 DEPEND="${RDEPEND}
 	dev-cpp/cpp-httplib
 	dev-cpp/cpp-jwt
-	system-vulkan? ( >=dev-util/vulkan-headers-1.3.236 )
+	system-vulkan? (
+		>=dev-util/vulkan-headers-1.3.236
+		>=dev-util/vulkan-utility-libraries-1.3.236
+	)
 	test? ( <dev-cpp/catch-3:0 )
 "
 BDEPEND="
@@ -83,7 +85,7 @@ src_unpack() {
 	fi
 
 	if use !system-vulkan; then
-		EGIT_SUBMODULES+=('Vulkan-Headers')
+		EGIT_SUBMODULES+=('Vulkan-Headers' 'Vulkan-Utility-Libraries')
 	fi
 
 	if use test; then
