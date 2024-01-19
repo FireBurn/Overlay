@@ -7,7 +7,7 @@ inherit cmake desktop xdg
 
 DESCRIPTION="Wii U emulator."
 HOMEPAGE="https://cemu.info/ https://github.com/cemu-project/Cemu"
-SHA="9499870cc993f39d8c25f5e434a4d25d9a24b556"
+SHA="72aacbdcecc064ea7c3b158c433e4803496ac296"
 MY_PN="Cemu"
 IMGUI_PV="1.88"
 SRC_URI="https://github.com/cemu-project/${MY_PN}/archive/${SHA}.tar.gz -> ${P}.tar.gz
@@ -23,6 +23,7 @@ DEPEND="app-arch/zarchive
 	cubeb? ( media-libs/cubeb )
 	dev-libs/boost
 	dev-libs/glib
+	dev-libs/hidapi
 	>=dev-libs/libfmt-9.1.0:=
 	dev-libs/libzip
 	dev-libs/openssl
@@ -37,7 +38,9 @@ DEPEND="app-arch/zarchive
 	vulkan? ( dev-util/vulkan-headers )
 	x11-libs/gtk+:3[wayland]
 	x11-libs/libX11
-	x11-libs/wxGTK:3.2-gtk3[opengl]"
+	x11-libs/wxGTK:3.2-gtk3[opengl]
+	virtual/libusb"
+
 RDEPEND="${DEPEND}"
 BDEPEND="media-libs/glm"
 
@@ -68,6 +71,7 @@ src_configure() {
 		-DENABLE_WXWIDGETS=ON
 		-DPORTABLE=OFF
 		"-DwxWidgets_CONFIG_EXECUTABLE=/usr/$(get_libdir)/wx/config/gtk3-unicode-3.2-gtk3"
+		-DCMAKE_DISABLE_PRECOMPILE_HEADERS=OFF
 		-Wno-dev
 	)
 	cmake_src_configure
