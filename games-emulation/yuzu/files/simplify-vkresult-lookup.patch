@@ -83,21 +83,16 @@ index 86a30dcd1..4f1d3b4e3 100644
      ++frame_index;
 diff --git a/src/video_core/vulkan_common/vk_enum_string_helper.h b/src/video_core/vulkan_common/vk_enum_string_helper.h
 new file mode 100644
-index 000000000..5c13192be
+index 000000000..3587ebb3c
 --- /dev/null
 +++ b/src/video_core/vulkan_common/vk_enum_string_helper.h
-@@ -0,0 +1,12 @@
-+// SPDX-FileCopyrightText: Copyright 2023 yuzu Emulator Project
+@@ -0,0 +1,7 @@
++// SPDX-FileCopyrightText: Copyright 2024 yuzu Emulator Project
 +// SPDX-License-Identifier: GPL-2.0-or-later
 +
 +#pragma once
 +
-+#ifdef _WIN32
-+#define VK_USE_PLATFORM_WIN32_KHR
-+#elif defined(__APPLE__)
-+#define VK_USE_PLATFORM_METAL_EXT
-+#endif
-+
++#include "video_core/vulkan_common/vulkan.h"
 +#include <vulkan/vk_enum_string_helper.h>
 diff --git a/src/video_core/vulkan_common/vulkan_wrapper.cpp b/src/video_core/vulkan_common/vulkan_wrapper.cpp
 index 074aed964..91a98a0dd 100644
