@@ -141,7 +141,7 @@ src_prepare() {
 	sed -i 's/lz4::lz4/lz4/' src/common/CMakeLists.txt || die
 
 	# Allow compiling using older glslang
-	sed -i -e '/Vulkan/s/274/268/' CMakeLists.txt || die
+	sed -i -e '/Vulkan/s/274/275/' CMakeLists.txt || die
 
 	cmake_src_prepare
 }
@@ -161,7 +161,8 @@ src_configure() {
 		-DSIRIT_USE_SYSTEM_SPIRV_HEADERS=yes
 		-DUSE_DISCORD_PRESENCE=$(usex discord)
 		-DYUZU_TESTS=$(usex test)
-		-DYUZU_USE_EXTERNAL_VULKAN_HEADERS=$(use system-vulkan no yes)
+		-DYUZU_USE_EXTERNAL_VULKAN_HEADERS=$(usex system-vulkan no yes)
+		-DYUZU_USE_EXTERNAL_VULKAN_UTILITY_LIBRARIES=$(usex system-vulkan no yes)
 		-DYUZU_USE_EXTERNAL_SDL2=OFF
 		-DYUZU_USE_QT_WEB_ENGINE=$(usex webengine)
 	)
