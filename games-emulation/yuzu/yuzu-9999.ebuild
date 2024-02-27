@@ -34,14 +34,10 @@ RDEPEND="
 	virtual/libusb:1
 	cubeb? ( media-libs/cubeb )
 	qt5? (
-		|| ( qt6? (
-			>=dev-qt/qtbase-6.6.0:6[gui,widgets]
-			)
 		>=dev-qt/qtcore-5.15:5
 		>=dev-qt/qtgui-5.15:5
 		>=dev-qt/qtmultimedia-5.15:5
 		>=dev-qt/qtwidgets-5.15:5
-		)
 	)
 	qt6? (
 		>=dev-qt/qtbase-6.6.0:6[gui,widgets]
@@ -149,8 +145,8 @@ src_configure() {
 		-DENABLE_COMPATIBILITY_LIST_DOWNLOAD=$(usex compatibility-list)
 		-DENABLE_CUBEB=$(usex cubeb)
 		-DENABLE_LIBUSB=ON
-		-DENABLE_QT=$(usex qt5)
-		-DENABLE_QT_TRANSLATION=$(usex qt5)
+		-DENABLE_QT=$(usev qt5 ON || usev qt6 ON || echo OFF )
+		-DENABLE_QT_TRANSLATION=$(usev qt5 ON || usev qt6 ON || echo OFF )
 		-DENABLE_QT6=$(usex qt6)
 		-DENABLE_SDL2=$(usex sdl)
 		-DENABLE_WEB_SERVICE=$(usex webservice)
