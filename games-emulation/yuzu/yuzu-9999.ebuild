@@ -86,7 +86,7 @@ src_unpack() {
 
 	git-r3_src_unpack
 	# Do not fetch via sources because this file always changes
-	use compatibility-list && curl https://api.yuzu-emu.org/gamedb/ > "${S}"/compatibility_list.json
+	#use compatibility-list && curl https://api.yuzu-emu.org/gamedb/ > "${S}"/compatibility_list.json
 }
 
 src_prepare() {
@@ -163,6 +163,7 @@ src_configure() {
 
 	# This would be better in src_unpack but it would be unlinked
 	if use compatibility-list; then
-		mv "${S}"/compatibility_list.json "${BUILD_DIR}"/dist/compatibility_list/ || die
+		#mv "${S}"/compatibility_list.json "${BUILD_DIR}"/dist/compatibility_list/ || die
+		xz --decompress --stdout "${FILESDIR}/gamedb.xz" > "${BUILD_DIR}"/dist/compatibility_list/compatibility_list.json || die
 	fi
 }
