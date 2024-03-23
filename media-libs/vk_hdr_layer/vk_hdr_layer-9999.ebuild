@@ -10,13 +10,13 @@ EGIT_SUBMODULES=( '-*' )
 DESCRIPTION="Vulkan layer utilizing a small color management HDR protocol for experimentation"
 HOMEPAGE="https://github.com/Zamundaaa/VK_hdr_layer"
 
-RDEPEND="media-libs/vulkan-loader
-		dev-libs/wayland
+RDEPEND="dev-libs/wayland
+		media-libs/vkroots
+		media-libs/vulkan-loader
 		x11-libs/libX11"
 DEPEND="${RDEPEND}
 		dev-util/vulkan-headers
-		dev-util/wayland-scanner
-		media-libs/vkroots"
+		dev-util/wayland-scanner"
 
 LICENSE="MIT"
 SLOT="0"
