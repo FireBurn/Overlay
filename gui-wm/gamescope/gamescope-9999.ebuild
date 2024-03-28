@@ -18,7 +18,6 @@ RDEPEND="
 	>=dev-libs/wayland-1.21
 	>=dev-libs/wayland-protocols-1.17
 	gui-libs/libdecor
-	=gui-libs/wlroots-0.17*[X,libinput(+)]
 	>=media-libs/libavif-1.0.0:=
 	>=media-libs/libdisplay-info-0.1.1
 	media-libs/libsdl2[video,vulkan]
