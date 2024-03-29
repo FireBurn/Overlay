@@ -24,6 +24,7 @@ RDEPEND="
 	media-libs/vulkan-loader
 	sys-apps/hwdata
 	sys-libs/libcap
+	sys-auth/seatd
 	>=x11-libs/libdrm-2.4.109
 	x11-libs/libX11
 	x11-libs/libXcomposite
