@@ -3,7 +3,7 @@
 
 EAPI=8
 
-FIREFOX_PATCHSET="firefox-124-patches-02.tar.xz"
+FIREFOX_PATCHSET="firefox-125-patches-01.tar.xz"
 
 LLVM_COMPAT=( 16 17 18 )
 
@@ -73,7 +73,6 @@ IUSE+=" geckodriver +gmp-autoupdate"
 #   firefox-120.0/intl/components/src/TimeZone.cpp:345:3: error: use of undeclared identifier 'MOZ_TRY'
 REQUIRED_USE="|| ( X wayland )
 	debug? ( !system-av1 )
-	!jumbo-build? ( !system-icu )
 	pgo? ( lto )
 	wifi? ( dbus )"
 
@@ -96,13 +95,8 @@ BDEPEND="${PYTHON_DEPS}
 	>=dev-util/cbindgen-0.26.0
 	net-libs/nodejs
 	virtual/pkgconfig
-	!clang? ( >=virtual/rust-1.70 )
-	!elibc_glibc? (
-		|| (
-			dev-lang/rust
-			<dev-lang/rust-bin-1.73
-		)
-	)
+	!clang? ( >=virtual/rust-1.74 )
+	!elibc_glibc? ( dev-lang/rust )
 	amd64? ( >=dev-lang/nasm-2.14 )
 	x86? ( >=dev-lang/nasm-2.14 )
 	pgo? (
@@ -121,7 +115,7 @@ COMMON_DEPEND="${FF_ONLY_DEPEND}
 	dev-libs/expat
 	dev-libs/glib:2
 	dev-libs/libffi:=
-	>=dev-libs/nss-3.98
+	>=dev-libs/nss-3.99
 	>=dev-libs/nspr-4.35
 	media-libs/alsa-lib
 	media-libs/fontconfig
@@ -612,7 +606,7 @@ src_prepare() {
 		rm -v "${WORKDIR}"/firefox-patches/*-LTO-Only-enable-LTO-*.patch || die
 	fi
 
-	if ! use ppc64; then
+	if ! use ppc64 && ! use riscv; then
 		rm -v "${WORKDIR}"/firefox-patches/*ppc64*.patch || die
 	fi
 
@@ -1062,8 +1056,9 @@ src_configure() {
 		else
 			mozconfig_add_options_ac 'relr elf-hack' --enable-elf-hack=relr
 		fi
-	elif use ppc64 ; then
-		# '--disable-elf-hack' is not recognized on ppc64, bgo#917049
+	elif use ppc64 || use riscv ; then
+		# '--disable-elf-hack' is not recognized on ppc64/riscv,
+		# see bgo #917049, #930046
 		:;
 	else
 		mozconfig_add_options_ac 'disable elf-hack on non-supported arches' --disable-elf-hack
