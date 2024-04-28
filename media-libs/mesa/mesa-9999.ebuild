@@ -21,10 +21,11 @@ else
 	SRC_URI="https://archive.mesa3d.org/${MY_P}.tar.xz"
 	KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~x64-solaris"
 fi
+S="${WORKDIR}/${MY_P}"
+EGIT_CHECKOUT_DIR=${S}
 
 LICENSE="MIT SGI-B-2.0"
 SLOT="0"
-RESTRICT="!test? ( test )"
 
 RADEON_CARDS="r300 r600 radeon radeonsi"
 VIDEO_CARDS="${RADEON_CARDS} d3d12 freedreno intel lavapipe lima nouveau panfrost v3d vc4 virgl vivante vmware"
@@ -33,11 +34,11 @@ for card in ${VIDEO_CARDS}; do
 done
 
 IUSE="${IUSE_VIDEO_CARDS}
-	cpu_flags_x86_sse2 d3d9 debug gles1 +gles2 +llvm
+	cpu_flags_x86_sse2 d3d9 debug +llvm
 	lm-sensors opencl +opengl osmesa +proprietary-codecs selinux
 	test unwind vaapi valgrind vdpau vulkan
 	vulkan-overlay wayland +X xa zink +zstd"
-
+RESTRICT="!test? ( test )"
 REQUIRED_USE="
 	d3d9? (
 		|| (
@@ -56,8 +57,7 @@ REQUIRED_USE="
 	video_cards_r300?   ( x86? ( llvm ) amd64? ( llvm ) )
 	vdpau? ( X )
 	xa? ( X )
-	X? ( gles1? ( opengl ) gles2? ( opengl ) )
-	zink? ( vulkan || ( opengl gles1 gles2 ) )
+	zink? ( opengl vulkan )
 "
 
 LIBDRM_DEPSTRING=">=x11-libs/libdrm-2.4.119"
@@ -101,7 +101,7 @@ RDEPEND="
 		>=x11-libs/libxshmfence-1.1[${MULTILIB_USEDEP}]
 		>=x11-libs/libXext-1.3.2[${MULTILIB_USEDEP}]
 		>=x11-libs/libXxf86vm-1.1.3[${MULTILIB_USEDEP}]
-		>=x11-libs/libxcb-1.13:=[${MULTILIB_USEDEP}]
+		>=x11-libs/libxcb-1.17:=[${MULTILIB_USEDEP}]
 		x11-libs/libXfixes[${MULTILIB_USEDEP}]
 		x11-libs/xcb-util-keysyms[${MULTILIB_USEDEP}]
 	)
@@ -118,9 +118,9 @@ RDEPEND="${RDEPEND}
 "
 
 DEPEND="${RDEPEND}
-	video_cards_d3d12? ( >=dev-util/directx-headers-1.611.0[${MULTILIB_USEDEP}] )
+	video_cards_d3d12? ( >=dev-util/directx-headers-1.613.0[${MULTILIB_USEDEP}] )
 	valgrind? ( dev-debug/valgrind )
-	wayland? ( >=dev-libs/wayland-protocols-1.30 )
+	wayland? ( >=dev-libs/wayland-protocols-1.34 )
 	X? (
 		x11-libs/libXrandr[${MULTILIB_USEDEP}]
 		x11-base/xorg-proto
@@ -145,9 +145,6 @@ BDEPEND="
 	vulkan? ( dev-util/glslang )
 	wayland? ( dev-util/wayland-scanner )
 "
-
-S="${WORKDIR}/${MY_P}"
-EGIT_CHECKOUT_DIR=${S}
 
 QA_WX_LOAD="
 x86? (
@@ -351,25 +348,13 @@ multilib_src_configure() {
 	use vulkan-overlay && vulkan_layers+=",overlay"
 	emesonargs+=(-Dvulkan-layers=${vulkan_layers#,})
 
-	if use opengl || use gles1 || use gles2; then
-		emesonargs+=(
-			-Degl=enabled
-			-Dgbm=enabled
-			-Dglvnd=true
-		)
-	else
-		emesonargs+=(
-			-Degl=disabled
-			-Dgbm=disabled
-			-Dglvnd=false
-		)
-	fi
-
 	if use opengl && use X; then
 		emesonargs+=(-Dglx=dri)
 	else
 		emesonargs+=(-Dglx=disabled)
 	fi
+
+	use debug && EMESON_BUILDTYPE=debug
 
 	emesonargs+=(
 		$(meson_use test build-tests)
@@ -377,8 +362,11 @@ multilib_src_configure() {
 		-Ddri3=enabled
 		-Dexpat=enabled
 		$(meson_use opengl)
-		$(meson_feature gles1)
-		$(meson_feature gles2)
+		$(meson_feature opengl gbm)
+		$(meson_feature opengl gles1)
+		$(meson_feature opengl gles2)
+		$(meson_feature opengl glvnd)
+		$(meson_feature opengl egl)
 		$(meson_feature llvm)
 		$(meson_feature lm-sensors lmsensors)
 		$(meson_use osmesa)
@@ -392,7 +380,6 @@ multilib_src_configure() {
 		-Dvideo-codecs=$(usex proprietary-codecs "all" "all_free")
 		-Dgallium-drivers=$(driver_list "${GALLIUM_DRIVERS[*]}")
 		-Dvulkan-drivers=$(driver_list "${VULKAN_DRIVERS[*]}")
-		-Dbuildtype=$(usex debug debug plain)
 		-Db_ndebug=$(usex debug false true)
 	)
 	meson_src_configure
