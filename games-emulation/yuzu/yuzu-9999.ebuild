@@ -7,7 +7,7 @@ inherit cmake git-r3 toolchain-funcs xdg
 
 DESCRIPTION="An emulator for Nintendo Switch"
 HOMEPAGE="https://yuzu-emu.org"
-EGIT_REPO_URI="https://github.com/yuzu-mirror/yuzu"
+EGIT_REPO_URI="https://codeberg.org/yuzu-emu/yuzu"
 EGIT_SUBMODULES=( '-*' 'dynarmic' 'simpleini' 'sirit' 'tzdb_to_nx' 'externals/nx_tzdb/tzdb_to_nx/externals/tz/tz' 'VulkanMemoryAllocator' 'xbyak' )
 # Dynarmic is not intended to be generic, it is tweaked to fit emulated processor
 # TODO wait 'xbyak' waiting version bump. see #860816
