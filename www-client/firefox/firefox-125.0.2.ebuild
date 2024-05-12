@@ -3,7 +3,7 @@
 
 EAPI=8
 
-FIREFOX_PATCHSET="firefox-125-patches-03.tar.xz"
+FIREFOX_PATCHSET="firefox-125-patches-01.tar.xz"
 
 LLVM_COMPAT=( 17 18 )
 
@@ -604,6 +604,10 @@ src_unpack() {
 src_prepare() {
 	if use lto; then
 		rm -v "${WORKDIR}"/firefox-patches/*-LTO-Only-enable-LTO-*.patch || die
+	fi
+
+	if ! use ppc64 && ! use riscv; then
+		rm -v "${WORKDIR}"/firefox-patches/*ppc64*.patch || die
 	fi
 
 	# Workaround for bgo#917599
