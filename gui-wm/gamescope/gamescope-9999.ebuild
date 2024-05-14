@@ -8,7 +8,7 @@ inherit fcaps git-r3 meson
 EGIT_REPO_URI="https://github.com/ValveSoftware/gamescope.git"
 DESCRIPTION="Efficient micro-compositor for running games"
 HOMEPAGE="https://github.com/ValveSoftware/gamescope"
-KEYWORDS="~amd64"
+KEYWORDS="-*"
 LICENSE="BSD-2"
 SLOT="0"
 IUSE="pipewire +wsi-layer"
