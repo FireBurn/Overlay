@@ -11,12 +11,12 @@ DESCRIPTION="Vulkan layer utilizing a small color management HDR protocol for ex
 HOMEPAGE="https://github.com/Zamundaaa/VK_hdr_layer"
 
 RDEPEND="dev-libs/wayland
-		media-libs/vkroots
 		media-libs/vulkan-loader
 		x11-libs/libX11"
 DEPEND="${RDEPEND}
 		dev-util/vulkan-headers
-		dev-util/wayland-scanner"
+		dev-util/wayland-scanner
+		media-libs/vkroots"
 
 LICENSE="MIT"
 SLOT="0"
