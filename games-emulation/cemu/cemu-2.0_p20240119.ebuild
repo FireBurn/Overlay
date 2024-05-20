@@ -48,6 +48,7 @@ S="${WORKDIR}/${MY_PN}-${SHA}"
 
 PATCHES=(
 	"${FILESDIR}/${PN}-0002-remove-default-from-system-g.patch"
+	"${FILESDIR}/${PN}-cstdarg.patch"
 )
 
 src_prepare() {
