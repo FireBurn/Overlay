@@ -375,6 +375,7 @@ multilib_src_configure() {
 		$(meson_native_use_feature video_cards_intel intel-rt)
 		$(meson_feature zstd)
 		$(meson_use cpu_flags_x86_sse2 sse2)
+		-Damd-use-llvm=false
 		-Dintel-clc=$(usex video_cards_intel system auto)
 		-Dvalgrind=$(usex valgrind auto disabled)
 		-Dvideo-codecs=$(usex proprietary-codecs "all" "all_free")
