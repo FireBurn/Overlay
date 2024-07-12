@@ -371,7 +371,6 @@ src_prepare() {
 		"${FILESDIR}/chromium-127-separate-qt56.patch"
 		"${FILESDIR}/chromium-127-angle-vulkan-wayland.patch"
 		"${FILESDIR}/chromium-127-vaapi-next-render.patch"
-		"${FILESDIR}/chromium-127-enable-hdr.patch"
 	)
 
 	# 127: test deps are broken for ui/lens with system ICU "//third_party/icu:icuuc_public"
@@ -1005,7 +1004,6 @@ chromium_configure() {
 	myconf_gn+=" use_ozone=true ozone_auto_platforms=false"
 	myconf_gn+=" ozone_platform_headless=true"
 	myconf_gn+=" skia_use_dawn=true"
-	myconf_gn+=" enable_color_manager=true"
 	if use headless; then
 		myconf_gn+=" ozone_platform=\"headless\""
 		myconf_gn+=" use_xkbcommon=false use_gtk=false use_qt=false"
