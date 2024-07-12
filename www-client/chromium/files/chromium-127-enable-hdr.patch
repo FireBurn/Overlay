@@ -1,0 +1,217 @@
+From aa30d18207d89038dfc8c8ac66d93a9677900e54 Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Fri, 12 Jul 2024 00:19:38 +0100
+Subject: [PATCH] Enable HDR
+
+---
+ chrome/browser/about_flags.cc                    | 16 ++++++++--------
+ chrome/browser/flag_descriptions.h               |  6 ++++++
+ ui/display/display_features.cc                   |  4 +---
+ ui/display/display_features.h                    |  4 +---
+ ui/display/util/display_util.cc                  |  9 ---------
+ ui/ozone/platform/drm/gpu/drm_display.cc         |  2 --
+ ui/ozone/platform/wayland/host/wayland_screen.cc |  2 --
+ 7 files changed, 16 insertions(+), 27 deletions(-)
+
+diff --git a/chrome/browser/about_flags.cc b/chrome/browser/about_flags.cc
+index 42ff5332e7610..b77bff6bd7d9a 100644
+--- a/chrome/browser/about_flags.cc
++++ b/chrome/browser/about_flags.cc
+@@ -4276,6 +4276,14 @@ const FeatureEntry kFeatureEntries[] = {
+     {"top-chrome-touch-ui", flag_descriptions::kTopChromeTouchUiName,
+      flag_descriptions::kTopChromeTouchUiDescription, kOsDesktop,
+      MULTI_VALUE_TYPE(kTopChromeTouchUiChoices)},
++    {"use-hdr-transfer-function",
++     flag_descriptions::kUseHDRTransferFunctionName,
++     flag_descriptions::kUseHDRTransferFunctionDescription, kOsAll,
++     FEATURE_VALUE_TYPE(display::features::kUseHDRTransferFunction)},
++    {"enable-external-display-hdr10",
++     flag_descriptions::kEnableExternalDisplayHdr10Name,
++     flag_descriptions::kEnableExternalDisplayHdr10Description, kOsAll,
++     FEATURE_VALUE_TYPE(display::features::kEnableExternalDisplayHDR10Mode)},
+ #if BUILDFLAG(ENABLE_WEBUI_TAB_STRIP)
+     {flag_descriptions::kWebUITabStripFlagId,
+      flag_descriptions::kWebUITabStripName,
+@@ -4356,14 +4364,6 @@ const FeatureEntry kFeatureEntries[] = {
+     // TODO(crbug.com/40652358): Remove this flag and provision when HDR is
+     // fully
+     //  supported on ChromeOS.
+-    {"use-hdr-transfer-function",
+-     flag_descriptions::kUseHDRTransferFunctionName,
+-     flag_descriptions::kUseHDRTransferFunctionDescription, kOsCrOS,
+-     FEATURE_VALUE_TYPE(display::features::kUseHDRTransferFunction)},
+-    {"enable-external-display-hdr10",
+-     flag_descriptions::kEnableExternalDisplayHdr10Name,
+-     flag_descriptions::kEnableExternalDisplayHdr10Description, kOsCrOS,
+-     FEATURE_VALUE_TYPE(display::features::kEnableExternalDisplayHDR10Mode)},
+     {"adaptive-charging", flag_descriptions::kAdaptiveChargingName,
+      flag_descriptions::kAdaptiveChargingDescription, kOsCrOS,
+      FEATURE_VALUE_TYPE(ash::features::kAdaptiveCharging)},
+diff --git a/chrome/browser/flag_descriptions.h b/chrome/browser/flag_descriptions.h
+index 345e349db5d3d..4336bafd049db 100644
+--- a/chrome/browser/flag_descriptions.h
++++ b/chrome/browser/flag_descriptions.h
+@@ -782,6 +782,12 @@ extern const char kEnableSearchEngineChoiceDescription[];
+ extern const char kEnableSuspiciousSiteDetectionRTLookupsName[];
+ extern const char kEnableSuspiciousSiteDetectionRTLookupsDescription[];
+ 
++extern const char kEnableExternalDisplayHdr10Name[];
++extern const char kEnableExternalDisplayHdr10Description[];
++
++extern const char kDoubleTapToZoomInTabletModeName[];
++extern const char kDoubleTapToZoomInTabletModeDescription[];
++
+ extern const char kEnableFencedFramesName[];
+ extern const char kEnableFencedFramesDescription[];
+ 
+diff --git a/ui/display/display_features.cc b/ui/display/display_features.cc
+index e1c707bbe519f..db29de952c1be 100644
+--- a/ui/display/display_features.cc
++++ b/ui/display/display_features.cc
+@@ -32,20 +32,18 @@ BASE_FEATURE(kUseHDRTransferFunction,
+              base::FEATURE_ENABLED_BY_DEFAULT
+ #endif
+ );
++#endif
+ 
+ // Enables using HDR10(PQ) mode if the monitor says it supports it.
+ BASE_FEATURE(kEnableExternalDisplayHDR10Mode,
+              "EnableExternalDisplayHDR10Mode",
+              base::FEATURE_DISABLED_BY_DEFAULT);
+-#endif
+ 
+-#if BUILDFLAG(IS_CHROMEOS)
+ // Feature to control if the CTM is dynamically set to the primary transform
+ // from plane color space to output color space.
+ BASE_FEATURE(kCtmColorManagement,
+              "CtmColorManagement",
+              base::FEATURE_ENABLED_BY_DEFAULT);
+-#endif
+ 
+ // This features allows listing all display modes of external displays in the
+ // display settings and setting any one of them exactly as requested, which can
+diff --git a/ui/display/display_features.h b/ui/display/display_features.h
+index 85df978bb3c34..4b0724606a925 100644
+--- a/ui/display/display_features.h
++++ b/ui/display/display_features.h
+@@ -16,18 +16,16 @@ namespace features {
+ COMPONENT_EXPORT(DISPLAY_FEATURES) BASE_DECLARE_FEATURE(kRoundedDisplay);
+ 
+ COMPONENT_EXPORT(DISPLAY_FEATURES) bool IsRoundedDisplayEnabled();
++#endif
+ 
+ COMPONENT_EXPORT(DISPLAY_FEATURES)
+ BASE_DECLARE_FEATURE(kUseHDRTransferFunction);
+ 
+ COMPONENT_EXPORT(DISPLAY_FEATURES)
+ BASE_DECLARE_FEATURE(kEnableExternalDisplayHDR10Mode);
+-#endif
+ 
+-#if BUILDFLAG(IS_CHROMEOS)
+ COMPONENT_EXPORT(DISPLAY_FEATURES)
+ BASE_DECLARE_FEATURE(kCtmColorManagement);
+-#endif
+ 
+ COMPONENT_EXPORT(DISPLAY_FEATURES) BASE_DECLARE_FEATURE(kListAllDisplayModes);
+ 
+diff --git a/ui/display/util/display_util.cc b/ui/display/util/display_util.cc
+index 0342ba5126955..f84c295d83f95 100644
+--- a/ui/display/util/display_util.cc
++++ b/ui/display/util/display_util.cc
+@@ -16,10 +16,7 @@
+ #include "ui/display/types/display_snapshot.h"
+ #include "ui/display/util/edid_parser.h"
+ #include "ui/gfx/icc_profile.h"
+-
+-#if BUILDFLAG(IS_CHROMEOS_ASH)
+ #include "ui/display/display_features.h"
+-#endif
+ 
+ namespace display {
+ 
+@@ -167,7 +164,6 @@ gfx::ColorSpace GetColorSpaceFromEdid(const display::EdidParser& edid_parser) {
+     if (base::Contains(edid_parser.supported_color_transfer_ids(),
+                        gfx::ColorSpace::TransferID::PQ)) {
+       transfer_id = gfx::ColorSpace::TransferID::PQ;
+-#if BUILDFLAG(IS_CHROMEOS_ASH)
+       if (base::FeatureList::IsEnabled(
+               display::features::kEnableExternalDisplayHDR10Mode) &&
+           edid_parser.is_external_display() &&
+@@ -177,7 +173,6 @@ gfx::ColorSpace GetColorSpaceFromEdid(const display::EdidParser& edid_parser) {
+                                             gfx::ColorSpace::MatrixID::RGB))) {
+         return gfx::ColorSpace::CreateHDR10();
+       }
+-#endif
+     } else if (base::Contains(edid_parser.supported_color_transfer_ids(),
+                               gfx::ColorSpace::TransferID::HLG)) {
+       transfer_id = gfx::ColorSpace::TransferID::HLG;
+@@ -283,7 +278,6 @@ bool HasForceDisplayColorProfile() {
+       /*switches::kForceDisplayColorProfile=*/"force-color-profile");
+ }
+ 
+-#if BUILDFLAG(IS_CHROMEOS)
+ // Constructs the raster DisplayColorSpaces out of |snapshot_color_space|,
+ // including the HDR ones if present and |allow_high_bit_depth| is set.
+ gfx::DisplayColorSpaces CreateDisplayColorSpaces(
+@@ -329,7 +323,6 @@ gfx::DisplayColorSpaces CreateDisplayColorSpaces(
+     display_color_spaces.SetHDRMaxLuminanceRelative(1.1f);
+   }
+ 
+-#if BUILDFLAG(IS_CHROMEOS_ASH)
+   if (allow_high_bit_depth &&
+       snapshot_color_space == gfx::ColorSpace::CreateHDR10() &&
+       base::FeatureList::IsEnabled(
+@@ -345,10 +338,8 @@ gfx::DisplayColorSpaces CreateDisplayColorSpaces(
+         hdr_static_metadata->max /
+         display_color_spaces.GetSDRMaxLuminanceNits());
+   }
+-#endif
+   return display_color_spaces;
+ }
+-#endif  // BUILDFLAG(IS_CHROMEOS)
+ 
+ int ConnectorIndex8(int device_index, int display_index) {
+   DCHECK_LT(device_index, 16);
+diff --git a/ui/ozone/platform/drm/gpu/drm_display.cc b/ui/ozone/platform/drm/gpu/drm_display.cc
+index 1cc3985bdb5e4..940f5891606c0 100644
+--- a/ui/ozone/platform/drm/gpu/drm_display.cc
++++ b/ui/ozone/platform/drm/gpu/drm_display.cc
+@@ -148,7 +148,6 @@ DrmDisplay::DrmDisplay(const scoped_refptr<DrmDevice>& drm,
+ 
+   SkColorSpacePrimaries output_primaries =
+       display_snapshot.color_info().edid_primaries;
+-#if BUILDFLAG(IS_CHROMEOS_ASH)
+   is_hdr_capable_ =
+       is_hdr_capable_ &&
+       base::FeatureList::IsEnabled(display::features::kUseHDRTransferFunction);
+@@ -164,7 +163,6 @@ DrmDisplay::DrmDisplay(const scoped_refptr<DrmDevice>& drm,
+     SetColorspaceProperty(gfx::ColorSpace::CreateSRGB());
+     ClearHdrOutputMetadata();
+   }
+-#endif
+   drm_->plane_manager()->SetOutputColorSpace(crtc_, output_primaries);
+ }
+ 
+diff --git a/ui/ozone/platform/wayland/host/wayland_screen.cc b/ui/ozone/platform/wayland/host/wayland_screen.cc
+index 03fc848a33640..a873a68346839 100644
+--- a/ui/ozone/platform/wayland/host/wayland_screen.cc
++++ b/ui/ozone/platform/wayland/host/wayland_screen.cc
+@@ -233,7 +233,6 @@ void WaylandScreen::AddOrUpdateDisplay(const WaylandOutput::Metrics& metrics) {
+   gfx::DisplayColorSpaces color_spaces;
+   color_spaces.SetOutputBufferFormats(image_format_no_alpha_.value(),
+                                       image_format_alpha_.value());
+-#if BUILDFLAG(IS_CHROMEOS_LACROS)
+   auto* wayland_output =
+       connection_->wayland_output_manager()->GetOutput(metrics.output_id);
+   auto* color_management_output =
+@@ -264,7 +263,6 @@ void WaylandScreen::AddOrUpdateDisplay(const WaylandOutput::Metrics& metrics) {
+     // CreateDisplayColorSpaces()
+     color_spaces.SetHDRMaxLuminanceRelative(10);
+   }
+-#endif
+ 
+   changed_display.SetColorSpaces(color_spaces);
+ 
+-- 
+2.45.2
+
