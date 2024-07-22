@@ -161,6 +161,7 @@ BDEPEND="
 	$(python_gen_any_dep "
 		>=dev-python/mako-0.8.0[\${PYTHON_USEDEP}]
 		dev-python/packaging[\${PYTHON_USEDEP}]
+		dev-python/pyyaml[\${PYTHON_USEDEP}]
 	")
 	video_cards_intel? (
 		~dev-util/intel_clc-${PV}
