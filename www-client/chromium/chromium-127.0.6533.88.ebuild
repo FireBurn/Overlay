@@ -50,7 +50,7 @@ inherit python-any-r1 qmake-utils readme.gentoo-r1 systemd toolchain-funcs virtu
 
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://www.chromium.org/"
-PATCHSET_PPC64="124.0.6367.207-1raptor0~deb12u1"
+PATCHSET_PPC64="127.0.6533.88-1raptor0~deb12u2"
 PATCH_V="${PV%%\.*}"
 SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}.tar.xz
 	system-toolchain? (
@@ -70,15 +70,14 @@ SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}
 
 LICENSE="BSD"
 SLOT="0/stable"
-KEYWORDS="~amd64 ~arm64"
+KEYWORDS="~amd64 ~arm64 ~ppc64"
 IUSE_SYSTEM_LIBS="+system-harfbuzz +system-icu +system-png +system-zstd"
-IUSE="+X ${IUSE_SYSTEM_LIBS} bindist cups debug ffmpeg-chromium gtk4 +hangouts headless kerberos +lto +official pax-kernel pgo +proprietary-codecs pulseaudio"
+IUSE="+X ${IUSE_SYSTEM_LIBS} bindist cups debug ffmpeg-chromium gtk4 +hangouts headless kerberos +official pax-kernel pgo +proprietary-codecs pulseaudio"
 IUSE+=" qt5 qt6 +screencast selinux +system-toolchain +vaapi +wayland +widevine"
 RESTRICT="!bindist? ( bindist )"
 
 REQUIRED_USE="
 	!headless? ( || ( X wayland ) )
-	official? ( lto )
 	pgo? ( X !wayland )
 	screencast? ( wayland )
 	ffmpeg-chromium? ( bindist proprietary-codecs )
@@ -275,11 +274,11 @@ pre_build_checks() {
 	# Check build requirements: bugs #471810, #541816, #914220
 	# We're going to start doing maths here on the size of an unpacked source tarball,
 	# this should make updates easier as chromium continues to balloon in size.
-	local BASE_DISK=22
+	local BASE_DISK=24
 	local EXTRA_DISK=1
 	local CHECKREQS_MEMORY="4G"
 	tc-is-cross-compiler && EXTRA_DISK=2
-	if use lto || use pgo; then
+	if tc-is-lto || use pgo; then
 		CHECKREQS_MEMORY="9G"
 		tc-is-cross-compiler && EXTRA_DISK=4
 		use pgo && EXTRA_DISK=8
@@ -364,6 +363,12 @@ pkg_setup() {
 			# to a sane value.
 			# This is effectively the 'force-clang' path if GCC support is re-added.
 			# TODO: check if the user has already selected a specific impl via make.conf and respect that.
+			if ! tc-is-lto && use official; then
+				einfo "USE=official selected and LTO not detected."
+				einfo "It is _highly_ recommended that LTO be enabled for performance reasons"
+				einfo "and to be consistent with the upstream \"official\" build optimisations."
+			fi
+
 			LLVM_SLOT=$(chromium_pick_llvm_slot)
 			export LLVM_SLOT # used in src_configure for rust-y business
 			AR=llvm-ar
@@ -452,6 +457,7 @@ src_prepare() {
 		"${FILESDIR}/chromium-126-oauth2-client-switches.patch"
 		"${FILESDIR}/chromium-127-browser-ui-deps.patch"
 		"${FILESDIR}/chromium-127-bindgen-custom-toolchain.patch"
+		"${FILESDIR}/chromium-127-updater-systemd.patch"
 		"${FILESDIR}/chromium-127-separate-qt56.patch"
 		"${FILESDIR}/chromium-127-angle-vulkan-wayland.patch"
 		"${FILESDIR}/chromium-127-vaapi-next-render.patch"
@@ -1073,7 +1079,6 @@ chromium_configure() {
 	# Enable ozone wayland and/or headless support
 	myconf_gn+=" use_ozone=true ozone_auto_platforms=false"
 	myconf_gn+=" ozone_platform_headless=true"
-	myconf_gn+=" skia_use_dawn=true"
 	if use headless; then
 		myconf_gn+=" ozone_platform=\"headless\""
 		myconf_gn+=" use_xkbcommon=false use_gtk=false use_qt=false"
@@ -1113,6 +1118,7 @@ chromium_configure() {
 		myconf_gn+=" ozone_platform_x11=$(usex X true false)"
 		myconf_gn+=" ozone_platform_wayland=$(usex wayland true false)"
 		myconf_gn+=" ozone_platform=$(usex wayland \"wayland\" \"x11\")"
+		myconf_gn+=" skia_use_dawn=true"
 		use wayland && myconf_gn+=" use_system_libffi=true"
 	fi
 
@@ -1121,15 +1127,25 @@ chromium_configure() {
 		myconf_gn+=" arm_control_flow_integrity=\"none\""
 	fi
 
+	# 936673: Updater (which we don't use) depends on libsystemd
+	# This _should_ always be disabled if we're not building a
+	# "Chrome" branded browser, but obviously this is not always sufficient.
+	myconf_gn+=" enable_updater=false"
+
+	local use_lto="false"
+	if tc-is-lto; then
+		use_lto="true"
+	fi
+	myconf_gn+=" use_thin_lto=${use_lto}"
+	myconf_gn+=" thin_lto_enable_optimizations=${use_lto}"
+
 	# Enable official builds
 	myconf_gn+=" is_official_build=$(usex official true false)"
-	myconf_gn+=" use_thin_lto=$(usex lto true false)"
-	myconf_gn+=" thin_lto_enable_optimizations=$(usex lto true false)"
 	if use official; then
 		# Allow building against system libraries in official builds
 		sed -i 's/OFFICIAL_BUILD/GOOGLE_CHROME_BUILD/' \
 			tools/generate_shim_headers/generate_shim_headers.py || die
-		# Req's LTO; handled by REQUIRED_USE - TODO: not compatible with -fno-split-lto-unit
+		# Req's LTO; TODO: not compatible with -fno-split-lto-unit
 		myconf_gn+=" is_cfi=false"
 		# Don't add symbols to build
 		myconf_gn+=" symbol_level=0"
