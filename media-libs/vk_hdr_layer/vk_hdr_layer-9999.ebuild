@@ -8,7 +8,7 @@ inherit meson git-r3
 EGIT_REPO_URI="https://github.com/Zamundaaa/VK_hdr_layer.git"
 EGIT_SUBMODULES=( '-*' )
 DESCRIPTION="Vulkan layer utilizing a small color management HDR protocol for experimentation"
-HOMEPAGE="https://github.com/Zamundaaa/VK_hdr_layer"
+HOMEPAGE="https://github.com/swick/VK_hdr_layer"
 
 RDEPEND="dev-libs/wayland
 		media-libs/vulkan-loader
