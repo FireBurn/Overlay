@@ -466,7 +466,7 @@ src_prepare() {
 		"${FILESDIR}/chromium-127-bindgen-custom-toolchain.patch"
 		"${FILESDIR}/chromium-127-updater-systemd.patch"
 		"${FILESDIR}/chromium-127-separate-qt56.patch"
-		"${FILESDIR}/chromium-127-angle-vulkan-wayland.patch"
+		"${FILESDIR}/chromium-128-angle-vulkan-wayland.patch"
 		"${FILESDIR}/chromium-127-vaapi-next-render.patch"
 	)
 
