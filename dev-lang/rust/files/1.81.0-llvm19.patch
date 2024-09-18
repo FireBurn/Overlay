@@ -1,0 +1,94 @@
+From 94502432847eae22151ce677ed900ba6cb3be7a0 Mon Sep 17 00:00:00 2001
+From: Krasimir Georgiev <krasimir@google.com>
+Date: Mon, 17 Jun 2024 09:35:38 +0000
+Subject: [PATCH] Disable MC/DC tests on LLVM 19
+
+Disable the tests and generate an error if MC/DC is used on LLVM 19.
+The support will be ported separately, as it is substantially
+different on LLVM 19, and there are no plans to support both
+versions.
+---
+ compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp | 2 +-
+ tests/coverage/mcdc/condition-limit.rs           | 1 +
+ tests/coverage/mcdc/if.rs                        | 1 +
+ tests/coverage/mcdc/inlined_expressions.rs       | 1 +
+ tests/coverage/mcdc/nested_if.rs                 | 1 +
+ tests/coverage/mcdc/non_control_flow.rs          | 1 +
+ 6 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp b/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp
+index 14757b27a37..493cfbcec2c 100644
+--- a/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp
++++ b/compiler/rustc_llvm/llvm-wrapper/RustWrapper.cpp
+@@ -1557,7 +1557,7 @@ LLVMRustGetInstrProfMCDCTVBitmapUpdateIntrinsic(LLVMModuleRef M) {
+ 
+ extern "C" LLVMValueRef
+ LLVMRustGetInstrProfMCDCCondBitmapIntrinsic(LLVMModuleRef M) {
+-#if LLVM_VERSION_GE(18, 0)
++#if LLVM_VERSION_GE(18, 0) && LLVM_VERSION_LT(19, 0)
+   return wrap(llvm::Intrinsic::getDeclaration(
+       unwrap(M), llvm::Intrinsic::instrprof_mcdc_condbitmap_update));
+ #else
+diff --git a/tests/coverage/mcdc/condition-limit.rs b/tests/coverage/mcdc/condition-limit.rs
+index 571c600ebd0..2ff46b11a16 100644
+--- a/tests/coverage/mcdc/condition-limit.rs
++++ b/tests/coverage/mcdc/condition-limit.rs
+@@ -1,6 +1,7 @@
+ #![feature(coverage_attribute)]
+ //@ edition: 2021
+ //@ min-llvm-version: 18
++//@ ignore-llvm-version: 19 - 99
+ //@ compile-flags: -Zcoverage-options=mcdc
+ //@ llvm-cov-flags: --show-branches=count --show-mcdc
+ 
+diff --git a/tests/coverage/mcdc/if.rs b/tests/coverage/mcdc/if.rs
+index d8e6b61a9d5..6f589659a3d 100644
+--- a/tests/coverage/mcdc/if.rs
++++ b/tests/coverage/mcdc/if.rs
+@@ -1,6 +1,7 @@
+ #![feature(coverage_attribute)]
+ //@ edition: 2021
+ //@ min-llvm-version: 18
++//@ ignore-llvm-version: 19 - 99
+ //@ compile-flags: -Zcoverage-options=mcdc
+ //@ llvm-cov-flags: --show-branches=count --show-mcdc
+ 
+diff --git a/tests/coverage/mcdc/inlined_expressions.rs b/tests/coverage/mcdc/inlined_expressions.rs
+index 65f7ee66f39..fc1e4dae37c 100644
+--- a/tests/coverage/mcdc/inlined_expressions.rs
++++ b/tests/coverage/mcdc/inlined_expressions.rs
+@@ -1,6 +1,7 @@
+ #![feature(coverage_attribute)]
+ //@ edition: 2021
+ //@ min-llvm-version: 18
++//@ ignore-llvm-version: 19 - 99
+ //@ compile-flags: -Zcoverage-options=mcdc -Copt-level=z -Cllvm-args=--inline-threshold=0
+ //@ llvm-cov-flags: --show-branches=count --show-mcdc
+ 
+diff --git a/tests/coverage/mcdc/nested_if.rs b/tests/coverage/mcdc/nested_if.rs
+index f5068b5dcc2..f9ce7a0bc25 100644
+--- a/tests/coverage/mcdc/nested_if.rs
++++ b/tests/coverage/mcdc/nested_if.rs
+@@ -1,6 +1,7 @@
+ #![feature(coverage_attribute)]
+ //@ edition: 2021
+ //@ min-llvm-version: 18
++//@ ignore-llvm-version: 19 - 99
+ //@ compile-flags: -Zcoverage-options=mcdc
+ //@ llvm-cov-flags: --show-branches=count --show-mcdc
+ 
+diff --git a/tests/coverage/mcdc/non_control_flow.rs b/tests/coverage/mcdc/non_control_flow.rs
+index 77e64e6625b..633d381a1aa 100644
+--- a/tests/coverage/mcdc/non_control_flow.rs
++++ b/tests/coverage/mcdc/non_control_flow.rs
+@@ -1,6 +1,7 @@
+ #![feature(coverage_attribute)]
+ //@ edition: 2021
+ //@ min-llvm-version: 18
++//@ ignore-llvm-version: 19 - 99
+ //@ compile-flags: -Zcoverage-options=mcdc
+ //@ llvm-cov-flags: --show-branches=count --show-mcdc
+ 
+-- 
+2.46.0
+
