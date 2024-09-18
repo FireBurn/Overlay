@@ -60,6 +60,10 @@ DEPEND="
 	)
 "
 
+PATCHES=(
+	"${FILESDIR}"/${P}-llvm19.patch
+)
+
 pkg_setup() {
 	use clang && llvm-r1_pkg_setup
 }
