@@ -1,4 +1,4 @@
-# Copyright 2022 Gentoo Authors
+# Copyright 2024 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -7,11 +7,13 @@ inherit cmake desktop xdg
 
 DESCRIPTION="Wii U emulator."
 HOMEPAGE="https://cemu.info/ https://github.com/cemu-project/Cemu"
-SHA="72aacbdcecc064ea7c3b158c433e4803496ac296"
+SHA="a05bdb172d198904a76b4b166b43fb31a94a0dd3"
 MY_PN="Cemu"
+GLSLANG_SHA="36d08c0d940cf307a23928299ef52c7970d8cee6"
 IMGUI_PV="1.88"
 SRC_URI="https://github.com/cemu-project/${MY_PN}/archive/${SHA}.tar.gz -> ${P}.tar.gz
-	https://github.com/ocornut/imgui/archive/refs/tags/v${IMGUI_PV}.tar.gz -> ${PN}-imgui-${IMGUI_PV}.tar.gz"
+	https://github.com/ocornut/imgui/archive/refs/tags/v${IMGUI_PV}.tar.gz -> ${PN}-imgui-${IMGUI_PV}.tar.gz
+	https://github.com/KhronosGroup/glslang/archive/${GLSLANG_SHA}.tar.gz -> glslang-${GLSLANG_SHA:0:7}.tar.gz"
 
 LICENSE="MPL-2.0 ISC"
 SLOT="0"
@@ -30,9 +32,8 @@ DEPEND="app-arch/zarchive
 	dev-libs/pugixml
 	dev-libs/rapidjson
 	dev-libs/wayland
-	dev-util/glslang
 	media-libs/libglvnd
-	media-libs/libsdl2[haptic,joystick,threads]
+	media-libs/libsdl2[haptic,joystick]
 	net-misc/curl
 	sys-libs/zlib
 	vulkan? ( dev-util/vulkan-headers )
@@ -40,7 +41,6 @@ DEPEND="app-arch/zarchive
 	x11-libs/libX11
 	x11-libs/wxGTK:3.2-gtk3[opengl]
 	virtual/libusb"
-
 RDEPEND="${DEPEND}"
 BDEPEND="media-libs/glm"
 
@@ -48,13 +48,14 @@ S="${WORKDIR}/${MY_PN}-${SHA}"
 
 PATCHES=(
 	"${FILESDIR}/${PN}-0002-remove-default-from-system-g.patch"
-	"${FILESDIR}/${PN}-cstdarg.patch"
 )
 
 src_prepare() {
 	sed -re \
 		's/^target_link_libraries\(CemuBin.*/target_link_libraries(CemuBin PRIVATE wayland-client/' \
 		-i src/CMakeLists.txt || die
+	mv "${WORKDIR}/glslang-${GLSLANG_SHA}" "${S}/glslang" || die
+	sed -re 's/find_package\(glslang.*/add_subdirectory(glslang)/' -i CMakeLists.txt || die
 	cmake_src_prepare
 	rmdir dependencies/imgui || die
 	mv "${WORKDIR}/imgui-${IMGUI_PV}" dependencies/imgui || die
@@ -73,6 +74,7 @@ src_configure() {
 		-DPORTABLE=OFF
 		"-DwxWidgets_CONFIG_EXECUTABLE=/usr/$(get_libdir)/wx/config/gtk3-unicode-3.2-gtk3"
 		-DCMAKE_DISABLE_PRECOMPILE_HEADERS=OFF
+		-DALLOW_EXTERNAL_SPIRV_TOOLS=ON
 		-Wno-dev
 	)
 	cmake_src_configure
@@ -83,7 +85,6 @@ src_install() {
 	insinto "/usr/share/${PN}/gameProfiles"
 	doins -r bin/gameProfiles/default/*
 	insinto "/usr/share/${PN}"
-	doins -r bin/resources bin/shaderCache
 	einstalldocs
 	newicon -s 128 src/resource/logo_icon.png "info.${PN}.${MY_PN}.png"
 	domenu "dist/linux/info.${PN}.${MY_PN}.desktop"
