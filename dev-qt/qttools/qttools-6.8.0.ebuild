@@ -16,13 +16,13 @@ inherit desktop llvm-r1 optfeature qt6-build
 DESCRIPTION="Qt Tools Collection"
 
 if [[ ${QT6_BUILD_TYPE} == release ]]; then
-	KEYWORDS="amd64 arm arm64 ~hppa ~loong ppc ppc64 ~riscv ~sparc x86"
+	KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~loong ~ppc ~ppc64 ~riscv ~sparc ~x86"
 fi
 
 IUSE="
-	+assistant clang designer distancefieldgenerator gles2-only
-	+linguist opengl pixeltool +qdbus qdoc qml qtattributionsscanner
-	qtdiag qtplugininfo vulkan +widgets zstd
+	+assistant clang designer distancefieldgenerator gles2-only +linguist
+	opengl pixeltool +qdbus qdoc qml qmlls qtattributionsscanner qtdiag
+	qtplugininfo vulkan +widgets zstd
 "
 # note that some tools do not *require* widgets but will skip a sub-tool
 # if not enabled (e.g. linguist gives lrelease but not the GUI linguist6)
@@ -33,11 +33,12 @@ REQUIRED_USE="
 	distancefieldgenerator? ( qml widgets )
 	pixeltool? ( widgets )
 	qdoc? ( clang qml )
+	qmlls? ( assistant qml )
 "
 
 RDEPEND="
-	~dev-qt/qtbase-${PV}:6[network,widgets?]
-	assistant? ( ~dev-qt/qtbase-${PV}:6[sql,sqlite] )
+	~dev-qt/qtbase-${PV}:6[widgets?]
+	assistant? ( ~dev-qt/qtbase-${PV}:6[network,sql,sqlite] )
 	clang? (
 		$(llvm_gen_dep '
 			sys-devel/clang:${LLVM_SLOT}=
@@ -45,12 +46,13 @@ RDEPEND="
 		')
 	)
 	designer? (
-		~dev-qt/qtbase-${PV}:6[xml,zstd=]
+		~dev-qt/qtbase-${PV}:6[network,xml,zstd=]
 		zstd? ( app-arch/zstd:= )
 	)
 	qdbus? ( ~dev-qt/qtbase-${PV}:6[dbus,xml] )
 	qml? ( ~dev-qt/qtdeclarative-${PV}:6[widgets?] )
-	qtdiag? ( ~dev-qt/qtbase-${PV}:6[gles2-only=,vulkan=] )
+	qmlls? ( ~dev-qt/qtdeclarative-${PV}:6[qmlls] )
+	qtdiag? ( ~dev-qt/qtbase-${PV}:6[network,gles2-only=,vulkan=] )
 	widgets? ( ~dev-qt/qtbase-${PV}:6[opengl=] )
 "
 DEPEND="
@@ -59,10 +61,6 @@ DEPEND="
 		vulkan? ( dev-util/vulkan-headers )
 	)
 "
-
-PATCHES=(
-	"${FILESDIR}"/${P}-llvm19.patch
-)
 
 pkg_setup() {
 	use clang && llvm-r1_pkg_setup
@@ -91,7 +89,10 @@ src_configure() {
 		# https://github.com/litehtml/litehtml/issues/266
 		$(usev assistant -DCMAKE_DISABLE_FIND_PACKAGE_litehtml=ON)
 
-		$(usev designer -DQT_UNITY_BUILD=OFF) # fails to build (QTBUG-122634)
+		# USE=qmlls' help plugin may be temporary, upstream has plans to split
+		# QtHelp into another package so that qtdeclarative can depend on it
+		# without a circular dependency with qttools
+		$(cmake_use_find_package qmlls Qt6QmlLSPrivate)
 	)
 
 	qt6-build_src_configure
