@@ -27,8 +27,8 @@ EAPI=8
 GN_MIN_VER=0.2165
 RUST_MIN_VER=1.78.0
 # chromium-tools/get-chromium-toolchain-strings.sh
-GOOGLE_CLANG_VER=llvmorg-20-init-1009-g7088a5ed-10
-GOOGLE_RUST_VER=595316b4006932405a63862d8fe65f71a6356293-5
+GOOGLE_CLANG_VER=llvmorg-20-init-3847-g69c43468-28
+GOOGLE_RUST_VER=009e73825af0e59ad4fc603562e038b3dbd6593a-2
 
 : ${CHROMIUM_FORCE_GOOGLE_TOOLCHAIN=no}
 
@@ -41,7 +41,7 @@ CHROMIUM_LANGS="af am ar bg bn ca cs da de el en-GB es es-419 et fa fi fil fr gu
 # While prerelease llvm is actually used in the google build, until we have a
 # sane way to select 'rust built with this llvm slot' that isn't stable and testing
 # subslots we will have to restrict LLVM_COMPAT to stable and testing keywords.
-LLVM_COMPAT=( {17..19} )
+LLVM_COMPAT=( 17 18 19 )
 PYTHON_COMPAT=( python3_{11..13} )
 PYTHON_REQ_USE="xml(+)"
 
@@ -69,8 +69,14 @@ SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}
 	pgo? ( https://github.com/elkablo/chromium-profiler/releases/download/v0.2/chromium-profiler-0.2.tar )"
 
 LICENSE="BSD"
-SLOT="0/stable"
-KEYWORDS="amd64 ~arm64"
+SLOT="0/beta"
+# Dev exists mostly to give devs some breathing room for beta/stable releases; it shouldn't be keyworded but adventurous users can select it.
+if [[ ${SLOT} == "0/dev" ]]; then
+	KEYWORDS=""
+else
+	KEYWORDS="~amd64 ~arm64"
+fi
+
 IUSE_SYSTEM_LIBS="+system-harfbuzz +system-icu +system-png +system-zstd"
 IUSE="+X ${IUSE_SYSTEM_LIBS} bindist cups debug ffmpeg-chromium gtk4 +hangouts headless kerberos +official pax-kernel pgo +proprietary-codecs pulseaudio"
 IUSE+=" qt5 qt6 +screencast selinux +system-toolchain +vaapi +wayland +widevine"
@@ -408,19 +414,20 @@ pkg_setup() {
 
 			local rustc_ver=$(chromium_extract_rust_version)
 			if ver_test "${rustc_ver}" -lt "${RUST_MIN_VER}"; then
-					eerror "Rust >=${RUST_MIN_VER} is required"
-					eerror "Please run 'eselect rust' and select the correct rust version"
-					die "Selected rust version is too old"
+					eerror "Rust >=${RUST_MIN_VER} is required to build Chromium"
+					eerror "The currently selected version is ${rustc_ver}"
+					eerror "Please run \`eselect rust\` and select an appropriate Rust."
+					die "Selected Rust version is too old"
 			else
-					einfo "Using rust ${rustc_ver} to build"
+					einfo "Using Rust ${rustc_ver} to build"
 			fi
 
 			# Chromium requires the Rust profiler library while setting up its build environment.
 			# Since a standard Rust comes with the profiler, instead of patching it out (build/rust/std/BUILD.gn#L103)
 			# we'll just do a sanity check on the selected slot.
+			# The -bin always contains profiler support, so we only need to check for the non-bin version.
 			if [[ "$(eselect --brief rust show 2>/dev/null)" != *"bin"* ]]; then
-				local arch=$(uname -m)
-				local rust_lib_path="${EPREFIX}/usr/lib/rust/${rustc_ver}/lib/rustlib/${arch}-unknown-linux-gnu/lib"
+				local rust_lib_path="${EPREFIX}$(rustc --print target-libdir)"
 				local profiler_lib=$(find "${rust_lib_path}" -name "libprofiler_builtins-*.rlib" -print -quit)
 				if [[ -z "${profiler_lib}" ]]; then
 					eerror "Rust ${rustc_ver} is missing the profiler library."
@@ -532,7 +539,6 @@ src_prepare() {
 		buildtools/third_party/libc++
 		buildtools/third_party/libc++abi
 		chrome/third_party/mozilla_security_manager
-		courgette/third_party
 		net/third_party/mozilla_security_manager
 		net/third_party/nss
 		net/third_party/quic
@@ -603,6 +609,7 @@ src_prepare() {
 		third_party/devtools-frontend/src/front_end/third_party/puppeteer/package/lib/esm/third_party/mitt
 		third_party/devtools-frontend/src/front_end/third_party/puppeteer/package/lib/esm/third_party/parsel-js
 		third_party/devtools-frontend/src/front_end/third_party/puppeteer/package/lib/esm/third_party/rxjs
+		third_party/devtools-frontend/src/front_end/third_party/third-party-web
 		third_party/devtools-frontend/src/front_end/third_party/vscode.web-custom-data
 		third_party/devtools-frontend/src/front_end/third_party/wasmparser
 		third_party/devtools-frontend/src/front_end/third_party/web-vitals
@@ -612,6 +619,7 @@ src_prepare() {
 		third_party/eigen3
 		third_party/emoji-segmenter
 		third_party/farmhash
+		third_party/fast_float
 		third_party/fdlibm
 		third_party/ffmpeg
 		third_party/fft2d
@@ -822,8 +830,34 @@ src_prepare() {
 		popd >/dev/null || die
 	fi
 
-	einfo "Unbundling third-party libraries ..."
+	# Sanity check keeplibs, on major version bumps it is often necessary to update this list
+	# and this enables us to hit them all at once.
+	# there are some entries that need to be whitelisted (TODO: Why? The file is understandable, the rest seem odd)
+	whitelist_libs=(
+		net/third_party/quic
+		third_party/devtools-frontend/src/front_end/third_party/additional_readme_paths.json
+		third_party/libjingle
+		third_party/mesa
+		third_party/skia/third_party/vulkan
+		third_party/vulkan
+	)
+	local not_found_libs=()
+	for lib in "${keeplibs[@]}"; do
+		if [[ ! -d "${lib}" ]] && ! has "${lib}" "${whitelist_libs[@]}"; then
+			not_found_libs+=( "${lib}" )
+		fi
+	done
+
+	if [[ ${#not_found_libs[@]} -gt 0 ]]; then
+		eerror "The following \`keeplibs\` directories were not found in the source tree:"
+		for lib in "${not_found_libs[@]}"; do
+			eerror "  ${lib}"
+		done
+		die "Please update the ebuild."
+	fi
+
 	# Remove most bundled libraries. Some are still needed.
+	einfo "Unbundling third-party libraries ..."
 	build/linux/unbundle/remove_bundled_libraries.py "${keeplibs[@]}" --do-remove || die
 
 	# bundled eu-strip is for amd64 only and we don't want to pre-stripped binaries
