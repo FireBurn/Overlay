@@ -110,8 +110,8 @@ RESTRICT="!test? ( test )"
 LICENSE="|| ( LGPL-3 MPL-1.1 )"
 SLOT="0"
 
-[[ ${MY_PV} == *9999* ]] || \
-KEYWORDS="amd64 ~arm arm64 ~loong ppc64 ~riscv ~x86 ~amd64-linux"
+#[[ ${MY_PV} == *9999* ]] || \
+#KEYWORDS="~amd64 ~arm ~arm64 ~loong ~ppc64 ~riscv ~x86 ~amd64-linux"
 
 COMMON_DEPEND="${PYTHON_DEPS}
 	app-arch/unzip
@@ -297,9 +297,6 @@ BDEPEND="
 			(	sys-devel/clang:16
 				sys-devel/llvm:16
 				=sys-devel/lld-16*	)
-			(	sys-devel/clang:15
-				sys-devel/llvm:15
-				=sys-devel/lld-15*	)
 		)
 	)
 	odk? ( >=app-text/doxygen-1.8.4 )
