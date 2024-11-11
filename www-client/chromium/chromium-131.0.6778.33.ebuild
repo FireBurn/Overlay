@@ -18,7 +18,7 @@ CHROMIUM_LANGS="af am ar bg bn ca cs da de el en-GB es es-419 et fa fi fil fr gu
 	hi hr hu id it ja kn ko lt lv ml mr ms nb nl pl pt-BR pt-PT ro ru sk sl sr
 	sv sw ta te th tr uk ur vi zh-CN zh-TW"
 
-LLVM_COMPAT=( {17..19} )
+LLVM_COMPAT=( 18 19 )
 PYTHON_COMPAT=( python3_{11..13} )
 PYTHON_REQ_USE="xml(+)"
 RUST_MIN_VER=1.78.0
@@ -28,22 +28,21 @@ inherit python-any-r1 qmake-utils readme.gentoo-r1 rust systemd toolchain-funcs 
 
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://www.chromium.org/"
-PATCHSET_PPC64="128.0.6613.84-1raptor0~deb12u1"
+PPC64_HASH="a85b64f07b489b8c6fdb13ecf79c16c56c560fc6"
 PATCH_V="${PV%%\.*}-1"
-SRC_URI="https://chromium-tarballs.distfiles.gentoo.org/${P}.tar.xz
+SRC_URI="https://chromium-tarballs.distfiles.gentoo.org/${P}.tar.xz -> ${P}-gentoo.tar.xz
 		https://gitlab.com/Matt.Jolly/chromium-patches/-/archive/${PATCH_V}/chromium-patches-${PATCH_V}.tar.bz2
 	test? (
-		https://chromium-tarballs.distfiles.gentoo.org/${P}-testdata.tar.xz
+		https://chromium-tarballs.distfiles.gentoo.org/${P}-testdata.tar.xz -> ${P}-testdata-gentoo.tar.xz
 		https://chromium-fonts.storage.googleapis.com/${TEST_FONT} -> chromium-testfonts-${TEST_FONT:0:10}.tar.gz
 	)
 	ppc64? (
-		https://quickbuild.io/~raptor-engineering-public/+archive/ubuntu/chromium/+files/chromium_${PATCHSET_PPC64}.debian.tar.xz
-		https://deps.gentoo.zip/chromium-ppc64le-gentoo-patches-1.tar.xz
+		https://gitlab.solidsilicon.io/public-development/open-source/chromium/openpower-patches/-/archive/${PPC64_HASH}/openpower-patches-${PPC64_HASH}.tar.bz2 -> chromium-openpower-${PPC64_HASH:0:10}.tar.bz2
 	)
 	pgo? ( https://github.com/elkablo/chromium-profiler/releases/download/v0.2/chromium-profiler-0.2.tar )"
 
 LICENSE="BSD"
-SLOT="0/beta"
+SLOT="0/stable"
 # Dev exists mostly to give devs some breathing room for beta/stable releases;
 # it shouldn't be keyworded but adventurous users can select it.
 if [[ ${SLOT} != "0/dev" ]]; then
@@ -174,11 +173,11 @@ BDEPEND="
 		qt5? ( dev-qt/qtcore:5 )
 		qt6? ( dev-qt/qtbase:6 )
 	)
-	$(llvm_gen_dep "
-		sys-devel/clang:\${LLVM_SLOT}
-		sys-devel/llvm:\${LLVM_SLOT}
-		sys-devel/lld:\${LLVM_SLOT}
-	")
+	$(llvm_gen_dep '
+		sys-devel/clang:${LLVM_SLOT}
+		sys-devel/llvm:${LLVM_SLOT}
+		sys-devel/lld:${LLVM_SLOT}
+	')
 	pgo? (
 		>=dev-python/selenium-3.141.0
 		>=dev-util/web_page_replay_go-20220314
@@ -339,7 +338,7 @@ pkg_setup() {
 }
 
 src_unpack() {
-	unpack ${P}.tar.xz
+	unpack ${P}-gentoo.tar.xz
 	unpack chromium-patches-${PATCH_V}.tar.bz2
 
 	use pgo && unpack chromium-profiler-0.2.tar
@@ -348,7 +347,7 @@ src_unpack() {
 		# A new testdata tarball is available for each release; but testfonts tend to remain stable
 		# for the duration of a release.
 		# This unpacks directly into/over ${WORKDIR}/${P} so we can just use `unpack`.
-		unpack ${P}-testdata.tar.xz
+		unpack ${P}-testdata-gentoo.tar.xz
 		# This just contains a bunch of font files that need to be unpacked (or moved) to the correct location.
 		local testfonts_dir="${WORKDIR}/${P}/third_party/test_fonts"
 		local testfonts_tar="${DISTDIR}/chromium-testfonts-${TEST_FONT:0:10}.tar.gz"
@@ -1242,6 +1241,34 @@ src_test() {
 		StringPieceTest.OutOfBoundsDeath
 		ThreadPoolEnvironmentConfig.CanUseBackgroundPriorityForWorker
 		ValuesUtilTest.FilePath
+		# Gentoo-specific
+		AlternateTestParams/PartitionAllocDeathTest.RepeatedAllocReturnNullDirect/0
+		AlternateTestParams/PartitionAllocDeathTest.RepeatedAllocReturnNullDirect/1
+		AlternateTestParams/PartitionAllocDeathTest.RepeatedAllocReturnNullDirect/2
+		AlternateTestParams/PartitionAllocDeathTest.RepeatedAllocReturnNullDirect/3
+		AlternateTestParams/PartitionAllocDeathTest.RepeatedReallocReturnNullDirect/0
+		AlternateTestParams/PartitionAllocDeathTest.RepeatedReallocReturnNullDirect/1
+		AlternateTestParams/PartitionAllocDeathTest.RepeatedReallocReturnNullDirect/2
+		AlternateTestParams/PartitionAllocDeathTest.RepeatedReallocReturnNullDirect/3
+		CharacterEncodingTest.GetCanonicalEncodingNameByAliasName
+		CheckExitCodeAfterSignalHandlerDeathTest.CheckSIGFPE
+		CheckExitCodeAfterSignalHandlerDeathTest.CheckSIGILL
+		CheckExitCodeAfterSignalHandlerDeathTest.CheckSIGSEGV
+		CheckExitCodeAfterSignalHandlerDeathTest.CheckSIGSEGVNonCanonicalAddress
+		FilePathTest.FromUTF8Unsafe_And_AsUTF8Unsafe
+		FileTest.GetInfoForCreationTime
+		ICUStringConversionsTest.ConvertToUtf8AndNormalize
+		NumberFormattingTest.FormatPercent
+		PathServiceTest.CheckedGetFailure
+		PlatformThreadTest.CanChangeThreadType
+		StackCanary.ChangingStackCanaryCrashesOnReturn
+		StackTraceDeathTest.StackDumpSignalHandlerIsMallocFree
+		SysStrings.SysNativeMBAndWide
+		SysStrings.SysNativeMBToWide
+		SysStrings.SysWideToNativeMB
+		TestLauncherTools.TruncateSnippetFocusedMatchesFatalMessagesTest
+		ToolsSanityTest.BadVirtualCallNull
+		ToolsSanityTest.BadVirtualCallWrongType
 	)
 	local test_filter="-$(IFS=:; printf '%s' "${skip_tests[*]}")"
 	# test-launcher-bot-mode enables parallelism and plain output
