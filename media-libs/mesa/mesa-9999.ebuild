@@ -20,6 +20,9 @@ CRATES="
 	paste@1.0.14
 "
 
+RUST_MIN_VER="1.74.1"
+RUST_OPTIONAL=1
+
 inherit cargo
 
 DESCRIPTION="OpenGL-like graphic library for Linux"
@@ -32,7 +35,7 @@ else
 	SRC_URI="
 		https://archive.mesa3d.org/${MY_P}.tar.xz
 	"
-	KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~x64-solaris"
+	KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~loong ~mips ~ppc ~ppc64 ~riscv ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~x64-solaris"
 fi
 
 # This should be {CARGO_CRATE_URIS//.crate/.tar.gz} to correspond to the wrap files,
@@ -50,7 +53,7 @@ SLOT="0"
 
 RADEON_CARDS="r300 r600 radeon radeonsi"
 VIDEO_CARDS="${RADEON_CARDS}
-	d3d12 freedreno intel lavapipe lima nouveau nvk panfrost v3d vc4 virgl
+	d3d12 freedreno intel lavapipe lima llvmpipe nouveau nvk panfrost softpipe v3d vc4 virgl
 	vivante vmware zink"
 for card in ${VIDEO_CARDS}; do
 	IUSE_VIDEO_CARDS+=" video_cards_${card}"
@@ -134,19 +137,14 @@ RDEPEND="
 	)
 	zstd? ( app-arch/zstd:=[${MULTILIB_USEDEP}] )
 "
-for card in ${RADEON_CARDS}; do
-	RDEPEND="${RDEPEND}
-		video_cards_${card}? ( ${LIBDRM_DEPSTRING}[video_cards_radeon] )
-	"
-done
 RDEPEND="${RDEPEND}
 	video_cards_radeonsi? ( ${LIBDRM_DEPSTRING}[video_cards_amdgpu] )
 "
 
 DEPEND="${RDEPEND}
-	video_cards_d3d12? ( >=dev-util/directx-headers-1.613.0[${MULTILIB_USEDEP}] )
+	video_cards_d3d12? ( >=dev-util/directx-headers-1.614.1[${MULTILIB_USEDEP}] )
 	valgrind? ( dev-debug/valgrind )
-	wayland? ( >=dev-libs/wayland-protocols-1.34 )
+	wayland? ( >=dev-libs/wayland-protocols-1.38 )
 	X? (
 		x11-libs/libXrandr[${MULTILIB_USEDEP}]
 		x11-base/xorg-proto
@@ -155,7 +153,7 @@ DEPEND="${RDEPEND}
 BDEPEND="
 	${PYTHON_DEPS}
 	opencl? (
-		>=virtual/rust-1.62.0
+		${RUST_DEPEND}
 		>=dev-util/bindgen-0.58.0
 	)
 	>=dev-build/meson-1.4.1
@@ -177,7 +175,7 @@ BDEPEND="
 		video_cards_nvk? (
 			>=dev-util/bindgen-0.68.1
 			>=dev-util/cbindgen-0.26.0
-			>=virtual/rust-1.74.1
+			${RUST_DEPEND}
 		)
 	)
 	wayland? ( dev-util/wayland-scanner )
@@ -294,6 +292,10 @@ pkg_setup() {
 
 	use llvm && llvm-r1_pkg_setup
 	python-any-r1_pkg_setup
+
+	if use opencl || (use vulkan && use video_cards_nvk); then
+		rust_pkg_setup
+	fi
 }
 
 src_prepare() {
@@ -302,11 +304,8 @@ src_prepare() {
 		bin/symbols-check.py || die # bug #830728
 }
 
-multilib_src_configure() {
+multilib_src_configure(){
 	local emesonargs=()
-
-	# bug #932591 and https://gitlab.freedesktop.org/mesa/mesa/-/issues/11140
-	tc-is-gcc && [[ $(gcc-major-version) -ge 14 ]] && filter-lto
 
 	local platforms
 	use X && platforms+="x11"
@@ -361,8 +360,8 @@ multilib_src_configure() {
 		emesonargs+=(-Dgallium-xa=disabled)
 	fi
 
-	gallium_enable !llvm softpipe
-	gallium_enable llvm llvmpipe
+	gallium_enable video_cards_softpipe softpipe
+	gallium_enable video_cards_llvmpipe llvmpipe
 	gallium_enable video_cards_d3d12 d3d12
 	gallium_enable video_cards_freedreno freedreno
 	gallium_enable video_cards_intel crocus i915 iris
