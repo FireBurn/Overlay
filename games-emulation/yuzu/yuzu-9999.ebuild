@@ -22,7 +22,7 @@ RDEPEND="
 	<net-libs/mbedtls-3.1[cmac]
 	>=app-arch/zstd-1.5
 	>=dev-libs/inih-52
-	>=dev-libs/libfmt-9:=
+	>=dev-libs/libfmt-11:=
 	>=dev-libs/openssl-1.1:=
 	>=media-video/ffmpeg-4.3:=
 	>=net-libs/enet-1.3
