@@ -5,17 +5,8 @@ EAPI=8
 
 # PACKAGING NOTES
 
-# Since m133 (and backported a bit...) we are using CI-generated tarballs from
-# https://github.com/chromium-linux-tarballs/chromium-tarballs/ (uploaded to S3
-# and made available via https://chromium-tarballs.distfiles.gentoo.org/).
-
-# We do this because upstream tarballs weigh in at about 3.5x the size of our
-# new "Distro tarballs" and include binaries (etc) that are not useful for
-# downstream consumers (like distributions).
-
-# It is probably still possible to download the google Rust and Clang toolchains
-# and use them to build this package, however we removed this when upstream CI
-# broke for m131 and haven't re-added it.
+# This uses a gentoo-created tarball due to Google CI Failures.
+# Use 133(?) as a base for new official tarballs.
 
 GN_MIN_VER=0.2165
 # chromium-tools/get-chromium-toolchain-strings.py
@@ -27,7 +18,7 @@ CHROMIUM_LANGS="af am ar bg bn ca cs da de el en-GB es es-419 et fa fi fil fr gu
 	hi hr hu id it ja kn ko lt lv ml mr ms nb nl pl pt-BR pt-PT ro ru sk sl sr
 	sv sw ta te th tr uk ur vi zh-CN zh-TW"
 
-LLVM_COMPAT=( 18 19 )
+LLVM_COMPAT=( 19 )
 PYTHON_COMPAT=( python3_{11..13} )
 PYTHON_REQ_USE="xml(+)"
 RUST_MIN_VER=1.78.0
@@ -39,7 +30,7 @@ inherit python-any-r1 qmake-utils readme.gentoo-r1 rust systemd toolchain-funcs 
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://www.chromium.org/"
 PPC64_HASH="a85b64f07b489b8c6fdb13ecf79c16c56c560fc6"
-PATCH_V="${PV%%\.*}-1"
+PATCH_V="${PV%%\.*}"
 SRC_URI="https://chromium-tarballs.distfiles.gentoo.org/${P}-linux.tar.xz
 		https://gitlab.com/Matt.Jolly/chromium-patches/-/archive/${PATCH_V}/chromium-patches-${PATCH_V}.tar.bz2
 	test? (
@@ -52,7 +43,7 @@ SRC_URI="https://chromium-tarballs.distfiles.gentoo.org/${P}-linux.tar.xz
 	pgo? ( https://github.com/elkablo/chromium-profiler/releases/download/v0.2/chromium-profiler-0.2.tar )"
 
 LICENSE="BSD"
-SLOT="0/dev"
+SLOT="0/beta"
 # Dev exists mostly to give devs some breathing room for beta/stable releases;
 # it shouldn't be keyworded but adventurous users can select it.
 if [[ ${SLOT} != "0/dev" ]]; then
@@ -61,7 +52,7 @@ fi
 
 IUSE_SYSTEM_LIBS="+system-harfbuzz +system-icu +system-png +system-zstd"
 IUSE="+X ${IUSE_SYSTEM_LIBS} bindist cups debug ffmpeg-chromium gtk4 +hangouts headless kerberos +official pax-kernel pgo +proprietary-codecs pulseaudio"
-IUSE+=" qt5 qt6 +screencast selinux test +vaapi +wayland +widevine cpu_flags_ppc_vsx3"
+IUSE+=" qt5 qt6 +screencast selinux test +vaapi +wayland +widevine"
 RESTRICT="
 	!bindist? ( bindist )
 	!test? ( test )
@@ -318,20 +309,20 @@ pkg_setup() {
 			die "Please switch to a different linker."
 		fi
 
-		# Forcing clang; user choice respected by llvm_slot_x USE
+		llvm-r1_pkg_setup
+		rust_pkg_setup
+
+		# Forcing clang; respect llvm_slot_x to enable selection of impl from LLVM_COMPAT
 		AR=llvm-ar
-		CPP="${CHOST}-clang++ -E"
+		CPP="${CHOST}-clang++-${LLVM_SLOT} -E"
 		NM=llvm-nm
-		CC=${CHOST}-clang
-		CXX=${CHOST}-clang++
+		CC="${CHOST}-clang-${LLVM_SLOT}"
+		CXX="${CHOST}-clang++-${LLVM_SLOT}"
 
 		if tc-is-cross-compiler; then
 			use pgo && die "The pgo USE flag cannot be used when cross-compiling"
-			CPP="${CBUILD}-clang++ -E"
+			CPP="${CBUILD}-clang++-${LLVM_SLOT} -E"
 		fi
-
-		llvm-r1_pkg_setup
-		rust_pkg_setup
 
 		# I hate doing this but upstream Rust have yet to come up with a better solution for
 		# us poor packagers. Required for Split LTO units, which are required for CFI.
@@ -381,49 +372,29 @@ src_prepare() {
 		"${FILESDIR}/chromium-cross-compile.patch"
 		"${FILESDIR}/chromium-109-system-zlib.patch"
 		"${FILESDIR}/chromium-111-InkDropHost-crash.patch"
+		"${FILESDIR}/chromium-127-separate-qt56.patch"
+		"${FILESDIR}/chromium-127-vaapi-next-render.patch"
 		"${FILESDIR}/chromium-131-unbundle-icu-target.patch"
 		"${FILESDIR}/chromium-131-oauth2-client-switches.patch"
 		"${FILESDIR}/chromium-132-bindgen-custom-toolchain.patch"
-		"${FILESDIR}/chromium-127-separate-qt56.patch"
-		"${FILESDIR}/chromium-127-vaapi-next-render.patch"
 	)
 
-	shopt -s globstar nullglob
-	# 130: moved the PPC64 patches into the chromium-patches repo
-	local patch
-	for patch in "${WORKDIR}/chromium-patches-${PATCH_V}"/**/*.patch; do
-		elog "Applying patch: ${patch}"
-		if [[ ${patch} == *"ppc64le"* ]]; then
-			use ppc64 && PATCHES+=( "${patch}" )
-		else
-			PATCHES+=( "${patch}" )
-		fi
-	done
-
-	shopt -u globstar nullglob
-
+	PATCHES+=( "${WORKDIR}/chromium-patches-${PATCH_V}" )
 	# We can't use the bundled compiler builtins with the system toolchain
 	# `grep` is a development convenience to ensure we fail early when google changes something.
 	local builtins_match="if (is_clang && !is_nacl && !is_cronet_build) {"
 	grep -q "${builtins_match}" build/config/compiler/BUILD.gn || die "Failed to disable bundled compiler builtins"
 	sed -i -e "/${builtins_match}/,+2d" build/config/compiler/BUILD.gn
 
-	if use ppc64; then
-		local patchset_dir="${WORKDIR}/openpower-patches-${PPC64_HASH}/patches"
-		# patch causes build errors on 4K page systems (https://bugs.gentoo.org/show_bug.cgi?id=940304)
-		local page_size_patch="ppc64le/third_party/use-sysconf-page-size-on-ppc64.patch"
-		# Apply the OpenPOWER patches (check for page size)
-		openpower_patches=( $(grep -E "^ppc64le|^upstream" "${patchset_dir}/series" | grep -v "${page_size_patch}" || die) )
-		for patch in "${openpower_patches[@]}"; do
-			PATCHES+=( "${patchset_dir}/${patch}" )
+	if use ppc64 ; then
+		local p
+		for p in $(grep -v "^#" "${WORKDIR}"/debian/patches/series | grep "^ppc64le" || die); do
+			if [[ ! $p =~ "fix-breakpad-compile.patch" ]]; then
+				eapply "${WORKDIR}/debian/patches/${p}"
+			fi
 		done
-		if [[ $(getconf PAGESIZE) == 65536 ]]; then
-			PATCHES+=( "${patchset_dir}/${page_size_patch}" )
-		fi
-		# We use vsx3 as a proxy for 'want isa3.0' (POWER9)
-		if use cpu_flags_ppc_vsx3 ; then
-			PATCHES+=( "${patchset_dir}/ppc64le/core/baseline-isa-3-0.patch" )
-		fi
+		PATCHES+=( "${WORKDIR}/ppc64le" )
+		PATCHES+=( "${WORKDIR}/debian/patches/fixes/rust-clanglib.patch" )
 	fi
 
 	# This is a nightly option that does not exist any current release

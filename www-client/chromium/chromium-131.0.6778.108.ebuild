@@ -31,10 +31,10 @@ DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://www.chromium.org/"
 PPC64_HASH="a85b64f07b489b8c6fdb13ecf79c16c56c560fc6"
 PATCH_V="${PV%%\.*}-1"
-SRC_URI="https://chromium-tarballs.distfiles.gentoo.org/${P}.tar.xz -> ${P}-gentoo.tar.xz
+SRC_URI="https://chromium-tarballs.distfiles.gentoo.org/${P}-linux.tar.xz
 		https://gitlab.com/Matt.Jolly/chromium-patches/-/archive/${PATCH_V}/chromium-patches-${PATCH_V}.tar.bz2
 	test? (
-		https://chromium-tarballs.distfiles.gentoo.org/${P}-testdata.tar.xz -> ${P}-testdata-gentoo.tar.xz
+		https://chromium-tarballs.distfiles.gentoo.org/${P}-linux-testdata.tar.xz
 		https://chromium-fonts.storage.googleapis.com/${TEST_FONT} -> chromium-testfonts-${TEST_FONT:0:10}.tar.gz
 	)
 	ppc64? (
@@ -47,7 +47,7 @@ SLOT="0/stable"
 # Dev exists mostly to give devs some breathing room for beta/stable releases;
 # it shouldn't be keyworded but adventurous users can select it.
 if [[ ${SLOT} != "0/dev" ]]; then
-	KEYWORDS="amd64 arm64"
+	KEYWORDS="~amd64 ~arm64"
 fi
 
 IUSE_SYSTEM_LIBS="+system-harfbuzz +system-icu +system-png +system-zstd"
@@ -310,20 +310,20 @@ pkg_setup() {
 			die "Please switch to a different linker."
 		fi
 
-		# Forcing clang; user choice respected by llvm_slot_x USE
+		llvm-r1_pkg_setup
+		rust_pkg_setup
+
+		# Forcing clang; respect llvm_slot_x to enable selection of impl from LLVM_COMPAT
 		AR=llvm-ar
-		CPP="${CHOST}-clang++ -E"
+		CPP="${CHOST}-clang++-${LLVM_SLOT} -E"
 		NM=llvm-nm
-		CC=${CHOST}-clang
-		CXX=${CHOST}-clang++
+		CC="${CHOST}-clang-${LLVM_SLOT}"
+		CXX="${CHOST}-clang++-${LLVM_SLOT}"
 
 		if tc-is-cross-compiler; then
 			use pgo && die "The pgo USE flag cannot be used when cross-compiling"
-			CPP="${CBUILD}-clang++ -E"
+			CPP="${CBUILD}-clang++-${LLVM_SLOT} -E"
 		fi
-
-		llvm-r1_pkg_setup
-		rust_pkg_setup
 
 		# I hate doing this but upstream Rust have yet to come up with a better solution for
 		# us poor packagers. Required for Split LTO units, which are required for CFI.
@@ -339,7 +339,7 @@ pkg_setup() {
 }
 
 src_unpack() {
-	unpack ${P}-gentoo.tar.xz
+	unpack ${P}-linux.tar.xz
 	unpack chromium-patches-${PATCH_V}.tar.bz2
 
 	use pgo && unpack chromium-profiler-0.2.tar
@@ -348,7 +348,7 @@ src_unpack() {
 		# A new testdata tarball is available for each release; but testfonts tend to remain stable
 		# for the duration of a release.
 		# This unpacks directly into/over ${WORKDIR}/${P} so we can just use `unpack`.
-		unpack ${P}-testdata-gentoo.tar.xz
+		unpack ${P}-linux-testdata.tar.xz
 		# This just contains a bunch of font files that need to be unpacked (or moved) to the correct location.
 		local testfonts_dir="${WORKDIR}/${P}/third_party/test_fonts"
 		local testfonts_tar="${DISTDIR}/chromium-testfonts-${TEST_FONT:0:10}.tar.gz"
@@ -356,8 +356,7 @@ src_unpack() {
 	fi
 
 	if use ppc64; then
-		unpack chromium_${PATCHSET_PPC64}.debian.tar.xz
-		unpack chromium-ppc64le-gentoo-patches-1.tar.xz
+		unpack chromium-openpower-${PPC64_HASH:0:10}.tar.bz2
 	fi
 }
 
@@ -375,11 +374,11 @@ src_prepare() {
 		"${FILESDIR}/chromium-109-system-zlib.patch"
 		"${FILESDIR}/chromium-111-InkDropHost-crash.patch"
 		"${FILESDIR}/chromium-127-bindgen-custom-toolchain.patch"
+		"${FILESDIR}/chromium-127-separate-qt56.patch"
+		"${FILESDIR}/chromium-127-vaapi-next-render.patch"
 		"${FILESDIR}/chromium-131-unbundle-icu-target.patch"
 		"${FILESDIR}/chromium-131-oauth2-client-switches.patch"
 		"${FILESDIR}/chromium-131-const-atomicstring-conversion.patch"
-		"${FILESDIR}/chromium-127-separate-qt56.patch"
-		"${FILESDIR}/chromium-127-vaapi-next-render.patch"
 	)
 
 	PATCHES+=( "${WORKDIR}/chromium-patches-${PATCH_V}" )
