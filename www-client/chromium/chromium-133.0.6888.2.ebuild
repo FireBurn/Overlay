@@ -5,8 +5,17 @@ EAPI=8
 
 # PACKAGING NOTES
 
-# This uses a gentoo-created tarball due to Google CI Failures.
-# Use 133(?) as a base for new official tarballs.
+# Since m133 (and backported a bit...) we are using CI-generated tarballs from
+# https://github.com/chromium-linux-tarballs/chromium-tarballs/ (uploaded to S3
+# and made available via https://chromium-tarballs.distfiles.gentoo.org/).
+
+# We do this because upstream tarballs weigh in at about 3.5x the size of our
+# new "Distro tarballs" and include binaries (etc) that are not useful for
+# downstream consumers (like distributions).
+
+# It is probably still possible to download the google Rust and Clang toolchains
+# and use them to build this package, however we removed this when upstream CI
+# broke for m131 and haven't re-added it.
 
 GN_MIN_VER=0.2165
 # chromium-tools/get-chromium-toolchain-strings.py
@@ -18,7 +27,7 @@ CHROMIUM_LANGS="af am ar bg bn ca cs da de el en-GB es es-419 et fa fi fil fr gu
 	hi hr hu id it ja kn ko lt lv ml mr ms nb nl pl pt-BR pt-PT ro ru sk sl sr
 	sv sw ta te th tr uk ur vi zh-CN zh-TW"
 
-LLVM_COMPAT=( 18 19 )
+LLVM_COMPAT=( 19 )
 PYTHON_COMPAT=( python3_{11..13} )
 PYTHON_REQ_USE="xml(+)"
 RUST_MIN_VER=1.78.0
@@ -43,7 +52,7 @@ SRC_URI="https://chromium-tarballs.distfiles.gentoo.org/${P}-linux.tar.xz
 	pgo? ( https://github.com/elkablo/chromium-profiler/releases/download/v0.2/chromium-profiler-0.2.tar )"
 
 LICENSE="BSD"
-SLOT="0/stable"
+SLOT="0/dev"
 # Dev exists mostly to give devs some breathing room for beta/stable releases;
 # it shouldn't be keyworded but adventurous users can select it.
 if [[ ${SLOT} != "0/dev" ]]; then
@@ -52,7 +61,7 @@ fi
 
 IUSE_SYSTEM_LIBS="+system-harfbuzz +system-icu +system-png +system-zstd"
 IUSE="+X ${IUSE_SYSTEM_LIBS} bindist cups debug ffmpeg-chromium gtk4 +hangouts headless kerberos +official pax-kernel pgo +proprietary-codecs pulseaudio"
-IUSE+=" qt5 qt6 +screencast selinux test +vaapi +wayland +widevine"
+IUSE+=" qt5 qt6 +screencast selinux test +vaapi +wayland +widevine cpu_flags_ppc_vsx3"
 RESTRICT="
 	!bindist? ( bindist )
 	!test? ( test )
@@ -93,7 +102,6 @@ COMMON_SNAPSHOT_DEPEND="
 	media-libs/mesa:=[gbm(+)]
 	>=media-libs/openh264-1.6.0:=
 	sys-libs/zlib:=
-	x11-libs/libdrm:=
 	!headless? (
 		dev-libs/glib:2
 		>=media-libs/alsa-lib-1.0.19:=
@@ -175,9 +183,9 @@ BDEPEND="
 		qt6? ( dev-qt/qtbase:6 )
 	)
 	$(llvm_gen_dep '
-		sys-devel/clang:${LLVM_SLOT}
-		sys-devel/llvm:${LLVM_SLOT}
-		sys-devel/lld:${LLVM_SLOT}
+		llvm-core/clang:${LLVM_SLOT}
+		llvm-core/llvm:${LLVM_SLOT}
+		llvm-core/lld:${LLVM_SLOT}
 	')
 	pgo? (
 		>=dev-python/selenium-3.141.0
@@ -364,39 +372,59 @@ src_prepare() {
 	# Calling this here supports resumption via FEATURES=keepwork
 	python_setup
 
-	# disable global media controls, crashes with libstdc++
-	sed -i -e \
-		"/\"GlobalMediaControlsCastStartStop\"/,+4{s/ENABLED/DISABLED/;}" \
-		"chrome/browser/media/router/media_router_feature.cc"
-
 	local PATCHES=(
 		"${FILESDIR}/chromium-cross-compile.patch"
 		"${FILESDIR}/chromium-109-system-zlib.patch"
 		"${FILESDIR}/chromium-111-InkDropHost-crash.patch"
-		"${FILESDIR}/chromium-127-bindgen-custom-toolchain.patch"
 		"${FILESDIR}/chromium-127-separate-qt56.patch"
 		"${FILESDIR}/chromium-127-vaapi-next-render.patch"
 		"${FILESDIR}/chromium-131-unbundle-icu-target.patch"
 		"${FILESDIR}/chromium-131-oauth2-client-switches.patch"
-		"${FILESDIR}/chromium-131-const-atomicstring-conversion.patch"
+		"${FILESDIR}/chromium-132-bindgen-custom-toolchain.patch"
 	)
 
-	PATCHES+=( "${WORKDIR}/chromium-patches-${PATCH_V}" )
+	shopt -s globstar nullglob
+	# 130: moved the PPC64 patches into the chromium-patches repo
+	local patch
+	for patch in "${WORKDIR}/chromium-patches-${PATCH_V}"/**/*.patch; do
+		if [[ ${patch} == *"ppc64le"* ]]; then
+			use ppc64 && PATCHES+=( "${patch}" )
+		else
+			PATCHES+=( "${patch}" )
+		fi
+	done
+
+	shopt -u globstar nullglob
+
 	# We can't use the bundled compiler builtins with the system toolchain
 	# `grep` is a development convenience to ensure we fail early when google changes something.
 	local builtins_match="if (is_clang && !is_nacl && !is_cronet_build) {"
 	grep -q "${builtins_match}" build/config/compiler/BUILD.gn || die "Failed to disable bundled compiler builtins"
 	sed -i -e "/${builtins_match}/,+2d" build/config/compiler/BUILD.gn
 
-	if use ppc64 ; then
-		local p
-		for p in $(grep -v "^#" "${WORKDIR}"/debian/patches/series | grep "^ppc64le" || die); do
-			if [[ ! $p =~ "fix-breakpad-compile.patch" ]]; then
-				eapply "${WORKDIR}/debian/patches/${p}"
-			fi
+	if use ppc64; then
+		local patchset_dir="${WORKDIR}/openpower-patches-${PPC64_HASH}/patches"
+		# patch causes build errors on 4K page systems (https://bugs.gentoo.org/show_bug.cgi?id=940304)
+		local page_size_patch="ppc64le/third_party/use-sysconf-page-size-on-ppc64.patch"
+		# Apply the OpenPOWER patches (check for page size)
+		openpower_patches=( $(grep -E "^ppc64le|^upstream" "${patchset_dir}/series" | grep -v "${page_size_patch}" || die) )
+		for patch in "${openpower_patches[@]}"; do
+			PATCHES+=( "${patchset_dir}/${patch}" )
 		done
-		PATCHES+=( "${WORKDIR}/ppc64le" )
-		PATCHES+=( "${WORKDIR}/debian/patches/fixes/rust-clanglib.patch" )
+		if [[ $(getconf PAGESIZE) == 65536 ]]; then
+			PATCHES+=( "${patchset_dir}/${page_size_patch}" )
+		fi
+		# We use vsx3 as a proxy for 'want isa3.0' (POWER9)
+		if use cpu_flags_ppc_vsx3 ; then
+			PATCHES+=( "${patchset_dir}/ppc64le/core/baseline-isa-3-0.patch" )
+		fi
+	fi
+
+	# This is a nightly option that does not exist any current release
+	# https://github.com/rust-lang/rust/commit/389a399a501a626ebf891ae0bb076c25e325ae64
+	if ver_test ${RUST_SLOT} -le "1.82.0"; then
+		sed '/rustflags = \[ "-Zdefault-visibility=hidden" \]/d' -i build/config/gcc/BUILD.gn ||
+			die "Failed to remove default visibility nightly option"
 	fi
 
 	default
@@ -544,6 +572,7 @@ src_prepare() {
 		third_party/libaom/source/libaom/third_party/x86inc
 		third_party/libavif
 		third_party/libc++
+		third_party/libdrm
 		third_party/libevent
 		third_party/libgav1
 		third_party/libjingle
@@ -551,6 +580,9 @@ src_prepare() {
 		third_party/libsecret
 		third_party/libsrtp
 		third_party/libsync
+		third_party/libtess2/libtess2
+		third_party/libtess2/src/Include
+		third_party/libtess2/src/Source
 		third_party/liburlpattern
 		third_party/libva_protected_content
 		third_party/libvpx
@@ -562,6 +594,8 @@ src_prepare() {
 		third_party/libyuv
 		third_party/libzip
 		third_party/lit
+		third_party/llvm-libc
+		third_party/llvm-libc/src/shared/
 		third_party/lottie
 		third_party/lss
 		third_party/lzma_sdk
@@ -615,6 +649,7 @@ src_prepare() {
 		third_party/sentencepiece
 		third_party/sentencepiece/src/third_party/darts_clone
 		third_party/shell-encryption
+		third_party/simdutf
 		third_party/simplejson
 		third_party/six
 		third_party/skia
@@ -682,6 +717,8 @@ src_prepare() {
 	if use test; then
 		# tar tvf /var/cache/distfiles/${P}-testdata.tar.xz | grep '^d' | grep 'third_party' | awk '{print $NF}'
 		keeplibs+=(
+			third_party/breakpad/breakpad/src/processor
+			third_party/fuzztest
 			third_party/google_benchmark/src/include/benchmark
 			third_party/google_benchmark/src/src
 			third_party/perfetto/protos/third_party/pprof
@@ -860,7 +897,6 @@ chromium_configure() {
 		freetype
 		# Need harfbuzz_from_pkgconfig target
 		#harfbuzz-ng
-		libdrm
 		libjpeg
 		libwebp
 		libxml
@@ -1044,7 +1080,6 @@ chromium_configure() {
 		myconf_gn+=" enable_print_preview=false"
 		myconf_gn+=" enable_remoting=false"
 	else
-		myconf_gn+=" use_system_libdrm=true"
 		myconf_gn+=" use_system_minigbm=true"
 		myconf_gn+=" use_xkbcommon=true"
 		if use qt5 || use qt6; then
@@ -1261,6 +1296,7 @@ src_test() {
 		NumberFormattingTest.FormatPercent
 		PathServiceTest.CheckedGetFailure
 		PlatformThreadTest.CanChangeThreadType
+		RustLogIntegrationTest.CheckAllSeverity
 		StackCanary.ChangingStackCanaryCrashesOnReturn
 		StackTraceDeathTest.StackDumpSignalHandlerIsMallocFree
 		SysStrings.SysNativeMBAndWide
@@ -1269,6 +1305,7 @@ src_test() {
 		TestLauncherTools.TruncateSnippetFocusedMatchesFatalMessagesTest
 		ToolsSanityTest.BadVirtualCallNull
 		ToolsSanityTest.BadVirtualCallWrongType
+		CancelableEventTest.BothCancelFailureAndSucceedOccurUnderContention #new m133: TODO investigate
 	)
 	local test_filter="-$(IFS=:; printf '%s' "${skip_tests[*]}")"
 	# test-launcher-bot-mode enables parallelism and plain output

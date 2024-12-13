@@ -30,7 +30,7 @@ inherit python-any-r1 qmake-utils readme.gentoo-r1 rust systemd toolchain-funcs 
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://www.chromium.org/"
 PPC64_HASH="a85b64f07b489b8c6fdb13ecf79c16c56c560fc6"
-PATCH_V="${PV%%\.*}"
+PATCH_V="${PV%%\.*}-1"
 SRC_URI="https://chromium-tarballs.distfiles.gentoo.org/${P}-linux.tar.xz
 		https://gitlab.com/Matt.Jolly/chromium-patches/-/archive/${PATCH_V}/chromium-patches-${PATCH_V}.tar.bz2
 	test? (
@@ -43,7 +43,7 @@ SRC_URI="https://chromium-tarballs.distfiles.gentoo.org/${P}-linux.tar.xz
 	pgo? ( https://github.com/elkablo/chromium-profiler/releases/download/v0.2/chromium-profiler-0.2.tar )"
 
 LICENSE="BSD"
-SLOT="0/beta"
+SLOT="0/stable"
 # Dev exists mostly to give devs some breathing room for beta/stable releases;
 # it shouldn't be keyworded but adventurous users can select it.
 if [[ ${SLOT} != "0/dev" ]]; then
@@ -93,6 +93,7 @@ COMMON_SNAPSHOT_DEPEND="
 	media-libs/mesa:=[gbm(+)]
 	>=media-libs/openh264-1.6.0:=
 	sys-libs/zlib:=
+	x11-libs/libdrm:=
 	!headless? (
 		dev-libs/glib:2
 		>=media-libs/alsa-lib-1.0.19:=
@@ -174,9 +175,9 @@ BDEPEND="
 		qt6? ( dev-qt/qtbase:6 )
 	)
 	$(llvm_gen_dep '
-		sys-devel/clang:${LLVM_SLOT}
-		sys-devel/llvm:${LLVM_SLOT}
-		sys-devel/lld:${LLVM_SLOT}
+		llvm-core/clang:${LLVM_SLOT}
+		llvm-core/llvm:${LLVM_SLOT}
+		llvm-core/lld:${LLVM_SLOT}
 	')
 	pgo? (
 		>=dev-python/selenium-3.141.0
@@ -372,11 +373,12 @@ src_prepare() {
 		"${FILESDIR}/chromium-cross-compile.patch"
 		"${FILESDIR}/chromium-109-system-zlib.patch"
 		"${FILESDIR}/chromium-111-InkDropHost-crash.patch"
+		"${FILESDIR}/chromium-127-bindgen-custom-toolchain.patch"
 		"${FILESDIR}/chromium-127-separate-qt56.patch"
 		"${FILESDIR}/chromium-127-vaapi-next-render.patch"
 		"${FILESDIR}/chromium-131-unbundle-icu-target.patch"
 		"${FILESDIR}/chromium-131-oauth2-client-switches.patch"
-		"${FILESDIR}/chromium-132-bindgen-custom-toolchain.patch"
+		"${FILESDIR}/chromium-131-const-atomicstring-conversion.patch"
 	)
 
 	PATCHES+=( "${WORKDIR}/chromium-patches-${PATCH_V}" )
@@ -395,13 +397,6 @@ src_prepare() {
 		done
 		PATCHES+=( "${WORKDIR}/ppc64le" )
 		PATCHES+=( "${WORKDIR}/debian/patches/fixes/rust-clanglib.patch" )
-	fi
-
-	# This is a nightly option that does not exist any current release
-	# https://github.com/rust-lang/rust/commit/389a399a501a626ebf891ae0bb076c25e325ae64
-	if ver_test ${RUST_SLOT} -le "1.82.0"; then
-		sed '/rustflags = \[ "-Zdefault-visibility=hidden" \]/d' -i build/config/gcc/BUILD.gn ||
-			die "Failed to remove default visibility nightly option"
 	fi
 
 	default
@@ -549,7 +544,6 @@ src_prepare() {
 		third_party/libaom/source/libaom/third_party/x86inc
 		third_party/libavif
 		third_party/libc++
-		third_party/libdrm
 		third_party/libevent
 		third_party/libgav1
 		third_party/libjingle
@@ -557,9 +551,6 @@ src_prepare() {
 		third_party/libsecret
 		third_party/libsrtp
 		third_party/libsync
-		third_party/libtess2/libtess2
-		third_party/libtess2/src/Include
-		third_party/libtess2/src/Source
 		third_party/liburlpattern
 		third_party/libva_protected_content
 		third_party/libvpx
@@ -571,8 +562,6 @@ src_prepare() {
 		third_party/libyuv
 		third_party/libzip
 		third_party/lit
-		third_party/llvm-libc
-		third_party/llvm-libc/src/shared/
 		third_party/lottie
 		third_party/lss
 		third_party/lzma_sdk
@@ -693,7 +682,6 @@ src_prepare() {
 	if use test; then
 		# tar tvf /var/cache/distfiles/${P}-testdata.tar.xz | grep '^d' | grep 'third_party' | awk '{print $NF}'
 		keeplibs+=(
-			third_party/breakpad/breakpad/src/processor
 			third_party/google_benchmark/src/include/benchmark
 			third_party/google_benchmark/src/src
 			third_party/perfetto/protos/third_party/pprof
@@ -872,6 +860,7 @@ chromium_configure() {
 		freetype
 		# Need harfbuzz_from_pkgconfig target
 		#harfbuzz-ng
+		libdrm
 		libjpeg
 		libwebp
 		libxml
@@ -1055,6 +1044,7 @@ chromium_configure() {
 		myconf_gn+=" enable_print_preview=false"
 		myconf_gn+=" enable_remoting=false"
 	else
+		myconf_gn+=" use_system_libdrm=true"
 		myconf_gn+=" use_system_minigbm=true"
 		myconf_gn+=" use_xkbcommon=true"
 		if use qt5 || use qt6; then
@@ -1271,7 +1261,6 @@ src_test() {
 		NumberFormattingTest.FormatPercent
 		PathServiceTest.CheckedGetFailure
 		PlatformThreadTest.CanChangeThreadType
-		RustLogIntegrationTest.CheckAllSeverity
 		StackCanary.ChangingStackCanaryCrashesOnReturn
 		StackTraceDeathTest.StackDumpSignalHandlerIsMallocFree
 		SysStrings.SysNativeMBAndWide
