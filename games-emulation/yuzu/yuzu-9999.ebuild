@@ -50,6 +50,7 @@ DEPEND="${RDEPEND}
 	dev-cpp/cpp-httplib
 	dev-cpp/cpp-jwt
 	system-vulkan? (
+		>=dev-util/spirv-tools-1.3.236
 		>=dev-util/vulkan-headers-1.3.236
 		>=dev-util/vulkan-utility-libraries-1.3.236
 	)
@@ -155,6 +156,7 @@ src_configure() {
 		-DYUZU_TESTS=$(usex test)
 		-DYUZU_USE_EXTERNAL_VULKAN_HEADERS=$(usex system-vulkan no yes)
 		-DYUZU_USE_EXTERNAL_VULKAN_UTILITY_LIBRARIES=$(usex system-vulkan no yes)
+		-DYUZU_USE_EXTERNAL_VULKAN_SPIRV_TOOLS=$(usex system-vulkan no yes)
 		-DYUZU_USE_EXTERNAL_SDL2=OFF
 		-DYUZU_USE_QT_WEB_ENGINE=$(usex webengine)
 	)
