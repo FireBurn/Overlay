@@ -158,6 +158,8 @@ src_configure() {
 		-DYUZU_USE_EXTERNAL_VULKAN_SPIRV_TOOLS=$(usex system-vulkan no yes)
 		-DYUZU_USE_EXTERNAL_SDL2=OFF
 		-DYUZU_USE_QT_WEB_ENGINE=$(usex webengine)
+		-DYUZU_CMD=OFF
+		-DYUZU_ROOM=OFF
 	)
 
 	cmake_src_configure
