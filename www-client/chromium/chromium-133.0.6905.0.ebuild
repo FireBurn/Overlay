@@ -5,6 +5,8 @@ EAPI=8
 
 # PACKAGING NOTES
 
+
+
 # Since m133 (and backported a bit...) we are using CI-generated tarballs from
 # https://github.com/chromium-linux-tarballs/chromium-tarballs/ (uploaded to S3
 # and made available via https://chromium-tarballs.distfiles.gentoo.org/).
@@ -560,7 +562,6 @@ src_prepare() {
 		third_party/ipcz
 		third_party/jinja2
 		third_party/jsoncpp
-		third_party/jstemplate
 		third_party/khronos
 		third_party/lens_server_proto
 		third_party/leveldatabase
@@ -573,7 +574,6 @@ src_prepare() {
 		third_party/libavif
 		third_party/libc++
 		third_party/libdrm
-		third_party/libevent
 		third_party/libgav1
 		third_party/libjingle
 		third_party/libphonenumber
@@ -701,9 +701,9 @@ src_prepare() {
 		third_party/zlib/google
 		third_party/zxcvbn-cpp
 		url/third_party/mozilla
-		v8/src/third_party/siphash
-		v8/src/third_party/utf8-decoder
-		v8/src/third_party/valgrind
+		v8/third_party/siphash
+		v8/third_party/utf8-decoder
+		v8/third_party/valgrind
 		v8/third_party/glibc
 		v8/third_party/inspector_protocol
 		v8/third_party/v8
