@@ -325,6 +325,7 @@ PATCHES=(
 
 	# 24.8 branch
 	"${FILESDIR}/${P}-no-std-basic_string-int.patch" # bug #923950
+	"${FILESDIR}/${P}-poppler-24.12.patch" # bug #943695
 
 	# git master
 	# bug #917618, thx to Debian:
