@@ -5,7 +5,16 @@ EAPI=8
 
 # PACKAGING NOTES
 
-# Since m133 (and backported a bit...) we are using CI-generated tarballs from
+# Upstream roll their bundled Clang every two weeks, and the bundled Rust
+# is rolled regularly and depends on that. While we do our best to build
+# with system Clang, we may eventually hit the point where we need to use
+# the bundled Clang due to the use of prerelease features.
+
+# USE=bundled-toolchain is intended for users who want to use the same toolchain
+# as the upstream releases. It's also a good fallback in case we fall behind
+# and need to get a release out quickly (less likely with `dev` in-tree).
+
+# Since m133 we are using CI-generated tarballs from
 # https://github.com/chromium-linux-tarballs/chromium-tarballs/ (uploaded to S3
 # and made available via https://chromium-tarballs.distfiles.gentoo.org/).
 
@@ -13,13 +22,11 @@ EAPI=8
 # new "Distro tarballs" and include binaries (etc) that are not useful for
 # downstream consumers (like distributions).
 
-# It is probably still possible to download the google Rust and Clang toolchains
-# and use them to build this package, however we removed this when upstream CI
-# broke for m131 and haven't re-added it.
-
-GN_MIN_VER=0.2165
+GN_MIN_VER=0.2207
 # chromium-tools/get-chromium-toolchain-strings.py
 TEST_FONT=f26f29c9d3bfae588207bbc9762de8d142e58935c62a86f67332819b15203b35
+BUNDLED_CLANG_VER=llvmorg-20-init-17108-g29ed6000-1
+BUNDLED_RUST_VER=ad211ced81509462cdfe4c29ed10f97279a0acae-1
 
 VIRTUALX_REQUIRED="pgo"
 
@@ -32,6 +39,7 @@ PYTHON_COMPAT=( python3_{11..13} )
 PYTHON_REQ_USE="xml(+)"
 RUST_MIN_VER=1.78.0
 RUST_NEEDS_LLVM="yes please"
+RUST_OPTIONAL="yes" # Not actually optional, but we don't need system Rust (or LLVM) with USE=bundled-toolchain
 
 inherit check-reqs chromium-2 desktop flag-o-matic llvm-r1 multiprocessing ninja-utils pax-utils
 inherit python-any-r1 qmake-utils readme.gentoo-r1 rust systemd toolchain-funcs virtualx xdg-utils
@@ -39,15 +47,23 @@ inherit python-any-r1 qmake-utils readme.gentoo-r1 rust systemd toolchain-funcs 
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://www.chromium.org/"
 PPC64_HASH="a85b64f07b489b8c6fdb13ecf79c16c56c560fc6"
-PATCH_V="${PV%%\.*}-1"
+PATCH_V="${PV%%\.*}"
 SRC_URI="https://chromium-tarballs.distfiles.gentoo.org/${P}-linux.tar.xz
+	!bundled-toolchain? (
 		https://gitlab.com/Matt.Jolly/chromium-patches/-/archive/${PATCH_V}/chromium-patches-${PATCH_V}.tar.bz2
+	)
+	bundled-toolchain? (
+		https://gsdview.appspot.com/chromium-browser-clang/Linux_x64/clang-${BUNDLED_CLANG_VER}.tar.xz
+			-> chromium-${PV%%\.*}-clang.tar.xz
+		https://commondatastorage.googleapis.com/chromium-browser-clang/Linux_x64/rust-toolchain-${BUNDLED_RUST_VER}-${BUNDLED_CLANG_VER%-*}.tar.xz
+			-> chromium-${PV%%\.*}-rust.tar.xz
+	)
 	test? (
 		https://chromium-tarballs.distfiles.gentoo.org/${P}-linux-testdata.tar.xz
 		https://chromium-fonts.storage.googleapis.com/${TEST_FONT} -> chromium-testfonts-${TEST_FONT:0:10}.tar.gz
 	)
 	ppc64? (
-		https://gitlab.solidsilicon.io/public-development/open-source/chromium/openpower-patches/-/archive/${PPC64_HASH}/openpower-patches-${PPC64_HASH}.tar.bz2 -> chromium-openpower-${PPC64_HASH:0:10}.tar.bz2
+		https://gitlab.raptorengineering.com/raptor-engineering-public/chromium/openpower-patches/-/archive/${PPC64_HASH}/openpower-patches-${PPC64_HASH}.tar.bz2 -> chromium-openpower-${PPC64_HASH:0:10}.tar.bz2
 	)
 	pgo? ( https://github.com/elkablo/chromium-profiler/releases/download/v0.2/chromium-profiler-0.2.tar )"
 
@@ -60,8 +76,8 @@ if [[ ${SLOT} != "0/dev" ]]; then
 fi
 
 IUSE_SYSTEM_LIBS="+system-harfbuzz +system-icu +system-png +system-zstd"
-IUSE="+X ${IUSE_SYSTEM_LIBS} bindist cups debug ffmpeg-chromium gtk4 +hangouts headless kerberos +official pax-kernel pgo +proprietary-codecs pulseaudio"
-IUSE+=" qt5 qt6 +screencast selinux test +vaapi +wayland +widevine cpu_flags_ppc_vsx3"
+IUSE="+X ${IUSE_SYSTEM_LIBS} bindist bundled-toolchain cups debug ffmpeg-chromium gtk4 +hangouts headless kerberos +official pax-kernel pgo"
+IUSE+=" +proprietary-codecs pulseaudio qt5 qt6 +screencast selinux test +vaapi +wayland +widevine cpu_flags_ppc_vsx3"
 RESTRICT="
 	!bindist? ( bindist )
 	!test? ( test )
@@ -182,11 +198,15 @@ BDEPEND="
 		qt5? ( dev-qt/qtcore:5 )
 		qt6? ( dev-qt/qtbase:6 )
 	)
-	$(llvm_gen_dep '
+	!bundled-toolchain? ( $(llvm_gen_dep '
 		llvm-core/clang:${LLVM_SLOT}
 		llvm-core/llvm:${LLVM_SLOT}
 		llvm-core/lld:${LLVM_SLOT}
-	')
+		official? (
+			!ppc64? ( llvm-runtimes/compiler-rt-sanitizers:${LLVM_SLOT}[cfi] )
+		) ')
+		${RUST_DEPEND}
+	)
 	pgo? (
 		>=dev-python/selenium-3.141.0
 		>=dev-util/web_page_replay_go-20220314
@@ -318,8 +338,10 @@ pkg_setup() {
 			die "Please switch to a different linker."
 		fi
 
-		llvm-r1_pkg_setup
-		rust_pkg_setup
+		if use !bundled-toolchain; then
+			llvm-r1_pkg_setup
+			rust_pkg_setup
+		fi
 
 		# Forcing clang; respect llvm_slot_x to enable selection of impl from LLVM_COMPAT
 		AR=llvm-ar
@@ -348,7 +370,8 @@ pkg_setup() {
 
 src_unpack() {
 	unpack ${P}-linux.tar.xz
-	unpack chromium-patches-${PATCH_V}.tar.bz2
+	# These should only be required when we're not using the official toolchain
+	use !bundled-toolchain && unpack chromium-patches-${PATCH_V}.tar.bz2
 
 	use pgo && unpack chromium-profiler-0.2.tar
 
@@ -361,6 +384,18 @@ src_unpack() {
 		local testfonts_dir="${WORKDIR}/${P}/third_party/test_fonts"
 		local testfonts_tar="${DISTDIR}/chromium-testfonts-${TEST_FONT:0:10}.tar.gz"
 		tar xf "${testfonts_tar}" -C "${testfonts_dir}" || die "Failed to unpack testfonts"
+	fi
+
+	# We need to manually unpack this since M126 else we'd unpack one toolchain over the other.
+	# Since we're doing that anyway let's unpack to sensible locations to make symlink creation easier.
+	if use bundled-toolchain; then
+		einfo "Unpacking bundled Clang ..."
+		mkdir -p "${WORKDIR}"/clang || die "Failed to create clang directory"
+		tar xf "${DISTDIR}/chromium-${PV%%\.*}-clang.tar.xz" -C "${WORKDIR}/clang" || die "Failed to unpack Clang"
+		einfo "Unpacking bundled Rust ..."
+		local rust_dir="${WORKDIR}/rust-toolchain"
+		mkdir -p ${rust_dir} || die "Failed to create rust toolchain directory"
+		tar xf "${DISTDIR}/chromium-${PV%%\.*}-rust.tar.xz" -C ${rust_dir} || die "Failed to unpack Rust"
 	fi
 
 	if use ppc64; then
@@ -379,52 +414,97 @@ src_prepare() {
 		"${FILESDIR}/chromium-127-separate-qt56.patch"
 		"${FILESDIR}/chromium-127-vaapi-next-render.patch"
 		"${FILESDIR}/chromium-131-unbundle-icu-target.patch"
-		"${FILESDIR}/chromium-131-oauth2-client-switches.patch"
-		"${FILESDIR}/chromium-132-bindgen-custom-toolchain.patch"
+		"${FILESDIR}/chromium-134-oauth2-client-switches.patch"
 	)
 
-	shopt -s globstar nullglob
-	# 130: moved the PPC64 patches into the chromium-patches repo
-	local patch
-	for patch in "${WORKDIR}/chromium-patches-${PATCH_V}"/**/*.patch; do
-		if [[ ${patch} == *"ppc64le"* ]]; then
-			use ppc64 && PATCHES+=( "${patch}" )
-		else
-			PATCHES+=( "${patch}" )
+	if use bundled-toolchain; then
+		# We need to symlink the toolchain into the expected location
+		einfo "Symlinking Clang toolchain to expected location ..."
+		mkdir -p third_party/llvm-build/ || die "Failed to create llvm-build directory"
+		# the 'Chromium Linux Tarballs' seem to already have 'Release+Asserts/{lib,bin}'; not sure if this is an
+		# upstream change - we're using the same scripts to build, theoretically. We'll still attempt to create
+		# llvm-build, but we'll rm Release+Asserts and symlink directly.
+		if [[ -d third_party/llvm-build/Release+Asserts ]]; then
+			rm -r third_party/llvm-build/Release+Asserts || die "Failed to remove third_party/llvm-build/Release+Asserts"
 		fi
-	done
-
-	shopt -u globstar nullglob
-
-	# We can't use the bundled compiler builtins with the system toolchain
-	# `grep` is a development convenience to ensure we fail early when google changes something.
-	local builtins_match="if (is_clang && !is_nacl && !is_cronet_build) {"
-	grep -q "${builtins_match}" build/config/compiler/BUILD.gn || die "Failed to disable bundled compiler builtins"
-	sed -i -e "/${builtins_match}/,+2d" build/config/compiler/BUILD.gn
-
-	if use ppc64; then
-		local patchset_dir="${WORKDIR}/openpower-patches-${PPC64_HASH}/patches"
-		# patch causes build errors on 4K page systems (https://bugs.gentoo.org/show_bug.cgi?id=940304)
-		local page_size_patch="ppc64le/third_party/use-sysconf-page-size-on-ppc64.patch"
-		# Apply the OpenPOWER patches (check for page size)
-		openpower_patches=( $(grep -E "^ppc64le|^upstream" "${patchset_dir}/series" | grep -v "${page_size_patch}" || die) )
-		for patch in "${openpower_patches[@]}"; do
-			PATCHES+=( "${patchset_dir}/${patch}" )
+		ln -s "${WORKDIR}"/clang third_party/llvm-build/Release+Asserts || die "Failed to bundle Clang"
+		einfo "Symlinking Rust toolchain to expected location ..."
+		# As above, so below
+		if [[ -d third_party/rust-toolchain ]]; then
+			rm -r third_party/rust-toolchain || die "Failed to remove third_party/rust-toolchain"
+		fi
+		ln -s "${WORKDIR}"/rust-toolchain third_party/rust-toolchain || die "Failed to bundle rust"
+		cp "${WORKDIR}"/rust-toolchain/VERSION \
+			"${WORKDIR}"/rust-toolchain/INSTALLED_VERSION || die "Failed to set rust version"
+	else
+		# This patch breaks bundled-toolchain builds as the required path_suffix clearly differs
+		# between the two. Probably just need to update the patch to gate updating this value on the 'unbundle'
+		# toolchain? Alternative: move to chromium-patches, but this is probably something that we
+		# can upstream, so let's try to do it properly. For now apply conditionally so that we have _a_ dev
+		# channel ebuild.
+		# Currently evaluates to:
+		# `-resource-dir', `'../../third_party/llvm-build/Release+Asserts/include'`
+		# This is correct if the first part of the concatenated variable points to /usr/lib/clang/<majver>
+		# Correct for bundled toolchain is:
+		# `-resource-dir', `'../../third_party/llvm-build/Release+Asserts/lib/clang/<majver>/include'`
+		# TODO: fix before this leaves dev.
+		PATCHES+=( "${FILESDIR}/chromium-132-bindgen-custom-toolchain.patch" )
+		# We don't need our toolchain patches if we're using the official toolchain
+		shopt -s globstar nullglob
+		# 130: moved the PPC64 patches into the chromium-patches repo
+		local patch
+		for patch in "${WORKDIR}/chromium-patches-${PATCH_V}"/**/*.patch; do
+			if [[ ${patch} == *"ppc64le"* ]]; then
+				use ppc64 && PATCHES+=( "${patch}" )
+			else
+				PATCHES+=( "${patch}" )
+			fi
 		done
-		if [[ $(getconf PAGESIZE) == 65536 ]]; then
-			PATCHES+=( "${patchset_dir}/${page_size_patch}" )
-		fi
-		# We use vsx3 as a proxy for 'want isa3.0' (POWER9)
-		if use cpu_flags_ppc_vsx3 ; then
-			PATCHES+=( "${patchset_dir}/ppc64le/core/baseline-isa-3-0.patch" )
-		fi
-	fi
 
-	# This is a nightly option that does not exist any current release
-	# https://github.com/rust-lang/rust/commit/389a399a501a626ebf891ae0bb076c25e325ae64
-	if ver_test ${RUST_SLOT} -le "1.82.0"; then
-		sed '/rustflags = \[ "-Zdefault-visibility=hidden" \]/d' -i build/config/gcc/BUILD.gn ||
-			die "Failed to remove default visibility nightly option"
+		shopt -u globstar nullglob
+
+		# We can't use the bundled compiler builtins with the system toolchain
+		# `grep` is a development convenience to ensure we fail early when google changes something.
+		local builtins_match="if (is_clang && !is_nacl && !is_cronet_build) {"
+		grep -q "${builtins_match}" build/config/compiler/BUILD.gn || die "Failed to disable bundled compiler builtins"
+		sed -i -e "/${builtins_match}/,+2d" build/config/compiler/BUILD.gn
+
+		# Strictly speaking this doesn't need to be gated (no bundled toolchain for ppc64); it keeps the logic together
+		if use ppc64; then
+			local patchset_dir="${WORKDIR}/openpower-patches-${PPC64_HASH}/patches"
+			# patch causes build errors on 4K page systems (https://bugs.gentoo.org/show_bug.cgi?id=940304)
+			local page_size_patch="ppc64le/third_party/use-sysconf-page-size-on-ppc64.patch"
+			local isa_3_patch="ppc64le/core/baseline-isa-3-0.patch"
+			# Apply the OpenPOWER patches (check for page size and isa 3.0)
+			openpower_patches=( $(grep -E "^ppc64le|^upstream" "${patchset_dir}/series" | grep -v "${page_size_patch}" |
+				grep -v "${isa_3_patch}" || die) )
+			for patch in "${openpower_patches[@]}"; do
+				PATCHES+=( "${patchset_dir}/${patch}" )
+			done
+			if [[ $(getconf PAGESIZE) == 65536 ]]; then
+				PATCHES+=( "${patchset_dir}/${page_size_patch}" )
+			fi
+			# We use vsx3 as a proxy for 'want isa3.0' (POWER9)
+			if use cpu_flags_ppc_vsx3 ; then
+				PATCHES+=( +"${patchset_dir}/${isa_3_patch}" )
+			fi
+		fi
+
+		# Oxidised hacks, let's keep 'em all in one place
+		# This is a nightly option that does not exist in older releases
+		# https://github.com/rust-lang/rust/commit/389a399a501a626ebf891ae0bb076c25e325ae64
+		if ver_test ${RUST_SLOT} -lt "1.83.0"; then
+			sed '/rustflags = \[ "-Zdefault-visibility=hidden" \]/d' -i build/config/gcc/BUILD.gn ||
+				die "Failed to remove default visibility nightly option"
+		fi
+
+		# Upstream Rust replaced adler with adler2, for older versions of Rust we still need
+		# to tell GN that we have the older lib when it tries to copy the Rust sysroot
+		# into the bulid directory.
+		if ver_test ${RUST_SLOT} -lt "1.85.0"; then
+			sed -i 's/adler2/adler/' build/rust/std/BUILD.gn ||
+				die "Failed to tell GN that we have adler and not adler2"
+		fi
 	fi
 
 	default
@@ -796,8 +876,6 @@ src_prepare() {
 	einfo "Unbundling third-party libraries ..."
 	build/linux/unbundle/remove_bundled_libraries.py "${keeplibs[@]}" --do-remove || die
 
-	# TODO: From 127 chromium includes a bunch of binaries? Unbundle them; they're not needed.
-
 	# bundled eu-strip is for amd64 only and we don't want to pre-stripped binaries
 	mkdir -p buildtools/third_party/eu-strip/bin || die
 	ln -s "${EPREFIX}"/bin/true buildtools/third_party/eu-strip/bin/eu-strip || die
@@ -809,63 +887,65 @@ chromium_configure() {
 
 	local myconf_gn=""
 
-	# We already forced the "correct" clang via pkg_setup
+	if use !bundled-toolchain; then
+		# We already forced the "correct" clang via pkg_setup
 
-	if tc-is-cross-compiler; then
-		CC="${CC} -target ${CHOST} --sysroot ${ESYSROOT}"
-		CXX="${CXX} -target ${CHOST} --sysroot ${ESYSROOT}"
-		BUILD_AR=${AR}
-		BUILD_CC=${CC}
-		BUILD_CXX=${CXX}
-		BUILD_NM=${NM}
-	fi
-
-	strip-unsupported-flags
-
-	myconf_gn+=" is_clang=true clang_use_chrome_plugins=false"
-	# https://bugs.gentoo.org/918897#c32
-	append-ldflags -Wl,--undefined-version
-	myconf_gn+=" use_lld=true"
-
-	# Make sure the build system will use the right tools, bug #340795.
-	tc-export AR CC CXX NM
-
-	myconf_gn+=" custom_toolchain=\"//build/toolchain/linux/unbundle:default\""
-
-	if tc-is-cross-compiler; then
-		tc-export BUILD_{AR,CC,CXX,NM}
-		myconf_gn+=" host_toolchain=\"//build/toolchain/linux/unbundle:host\""
-		myconf_gn+=" v8_snapshot_toolchain=\"//build/toolchain/linux/unbundle:host\""
-		myconf_gn+=" pkg_config=\"$(tc-getPKG_CONFIG)\""
-		myconf_gn+=" host_pkg_config=\"$(tc-getBUILD_PKG_CONFIG)\""
-
-		# setup cups-config, build system only uses --libs option
-		if use cups; then
-			mkdir "${T}/cups-config" || die
-			cp "${ESYSROOT}/usr/bin/${CHOST}-cups-config" "${T}/cups-config/cups-config" || die
-			export PATH="${PATH}:${T}/cups-config"
+		if tc-is-cross-compiler; then
+			CC="${CC} -target ${CHOST} --sysroot ${ESYSROOT}"
+			CXX="${CXX} -target ${CHOST} --sysroot ${ESYSROOT}"
+			BUILD_AR=${AR}
+			BUILD_CC=${CC}
+			BUILD_CXX=${CXX}
+			BUILD_NM=${NM}
 		fi
 
-		# Don't inherit PKG_CONFIG_PATH from environment
-		local -x PKG_CONFIG_PATH=
-	else
-		myconf_gn+=" host_toolchain=\"//build/toolchain/linux/unbundle:default\""
+		strip-unsupported-flags
+
+		myconf_gn+=" is_clang=true clang_use_chrome_plugins=false"
+		# https://bugs.gentoo.org/918897#c32
+		append-ldflags -Wl,--undefined-version
+		myconf_gn+=" use_lld=true"
+
+		# Make sure the build system will use the right tools, bug #340795.
+		tc-export AR CC CXX NM
+
+		myconf_gn+=" custom_toolchain=\"//build/toolchain/linux/unbundle:default\""
+
+		if tc-is-cross-compiler; then
+			tc-export BUILD_{AR,CC,CXX,NM}
+			myconf_gn+=" host_toolchain=\"//build/toolchain/linux/unbundle:host\""
+			myconf_gn+=" v8_snapshot_toolchain=\"//build/toolchain/linux/unbundle:host\""
+			myconf_gn+=" pkg_config=\"$(tc-getPKG_CONFIG)\""
+			myconf_gn+=" host_pkg_config=\"$(tc-getBUILD_PKG_CONFIG)\""
+
+			# setup cups-config, build system only uses --libs option
+			if use cups; then
+				mkdir "${T}/cups-config" || die
+				cp "${ESYSROOT}/usr/bin/${CHOST}-cups-config" "${T}/cups-config/cups-config" || die
+				export PATH="${PATH}:${T}/cups-config"
+			fi
+
+			# Don't inherit PKG_CONFIG_PATH from environment
+			local -x PKG_CONFIG_PATH=
+		else
+			myconf_gn+=" host_toolchain=\"//build/toolchain/linux/unbundle:default\""
+		fi
+
+		# bindgen settings
+		# From 127, to make bindgen work, we need to provide a location for libclang.
+		# We patch this in for gentoo - see chromium-*-bindgen-custom-toolchain.patch
+		# rust_bindgen_root = directory with `bin/bindgen` beneath it.
+		myconf_gn+=" rust_bindgen_root=\"${EPREFIX}/usr/\""
+
+		myconf_gn+=" bindgen_libclang_path=\"$(get_llvm_prefix)/$(get_libdir)\""
+		# We don't need to set 'clang_base_bath' for anything in our build
+		# and it defaults to the google toolchain location. Instead provide a location
+		# to where system clang lives sot that bindgen can find system headers (e.g. stddef.h)
+		myconf_gn+=" clang_base_path=\"${EPREFIX}/usr/lib/clang/${LLVM_SLOT}/\""
+
+		myconf_gn+=" rust_sysroot_absolute=\"$(get_rust_prefix)\""
+		myconf_gn+=" rustc_version=\"${RUST_SLOT}\""
 	fi
-
-	# bindgen settings
-	# From 127, to make bindgen work, we need to provide a location for libclang.
-	# We patch this in for gentoo - see chromium-*-bindgen-custom-toolchain.patch
-	# rust_bindgen_root = directory with `bin/bindgen` beneath it.
-	myconf_gn+=" rust_bindgen_root=\"${EPREFIX}/usr/\""
-
-	myconf_gn+=" bindgen_libclang_path=\"$(get_llvm_prefix)/$(get_libdir)\""
-	# We don't need to set 'clang_base_bath' for anything in our build
-	# and it defaults to the google toolchain location. Instead provide a location
-	# to where system clang lives sot that bindgen can find system headers (e.g. stddef.h)
-	myconf_gn+=" clang_base_path=\"${EPREFIX}/usr/lib/clang/${LLVM_SLOT}/\""
-
-	myconf_gn+=" rust_sysroot_absolute=\"$(get_rust_prefix)\""
-	myconf_gn+=" rustc_version=\"${RUST_SLOT}\""
 
 	# GN needs explicit config for Debug/Release as opposed to inferring it from build directory.
 	myconf_gn+=" is_debug=false"
@@ -1120,7 +1200,11 @@ chromium_configure() {
 		# Allow building against system libraries in official builds
 		sed -i 's/OFFICIAL_BUILD/GOOGLE_CHROME_BUILD/' \
 			tools/generate_shim_headers/generate_shim_headers.py || die
-		myconf_gn+=" is_cfi=${use_lto}"
+		if use ppc64; then
+			myconf_gn+=" is_cfi=no" # requires llvm-runtimes/compiler-rt-sanitizers[cfi]
+		else
+			myconf_gn+=" is_cfi=${use_lto}"
+		fi
 		# Don't add symbols to build
 		myconf_gn+=" symbol_level=0"
 	fi
@@ -1181,6 +1265,24 @@ chromium_compile() {
 
 	pax-mark m out/Release/chrome
 
+	# This codepath does minimal patching, so we're at the mercy of upstream
+	# CFLAGS. This is fine - we're not intending to force this on users
+	# and we do a lot of flag 'management' anyway.
+	if use bundled-toolchain; then
+		QA_FLAGS_IGNORED="
+			usr/lib64/chromium-browser/chrome
+			usr/lib64/chromium-browser/chrome-sandbox
+			usr/lib64/chromium-browser/chromedriver
+			usr/lib64/chromium-browser/chrome_crashpad_handler
+			usr/lib64/chromium-browser/libEGL.so
+			usr/lib64/chromium-browser/libGLESv2.so
+			usr/lib64/chromium-browser/libVkICD_mock_icd.so
+			usr/lib64/chromium-browser/libVkLayer_khronos_validation.so
+			usr/lib64/chromium-browser/libqt5_shim.so
+			usr/lib64/chromium-browser/libvk_swiftshader.so
+			usr/lib64/chromium-browser/libvulkan.so.1
+		"
+	fi
 }
 
 # This function is called from virtx, and must always return so that Xvfb

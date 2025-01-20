@@ -38,16 +38,16 @@ SRC_URI="https://chromium-tarballs.distfiles.gentoo.org/${P}-linux.tar.xz
 		https://chromium-fonts.storage.googleapis.com/${TEST_FONT} -> chromium-testfonts-${TEST_FONT:0:10}.tar.gz
 	)
 	ppc64? (
-		https://gitlab.solidsilicon.io/public-development/open-source/chromium/openpower-patches/-/archive/${PPC64_HASH}/openpower-patches-${PPC64_HASH}.tar.bz2 -> chromium-openpower-${PPC64_HASH:0:10}.tar.bz2
+		https://gitlab.raptorengineering.com/raptor-engineering-public/chromium/openpower-patches/-/archive/${PPC64_HASH}/openpower-patches-${PPC64_HASH}.tar.bz2 -> chromium-openpower-${PPC64_HASH:0:10}.tar.bz2
 	)
 	pgo? ( https://github.com/elkablo/chromium-profiler/releases/download/v0.2/chromium-profiler-0.2.tar )"
 
 LICENSE="BSD"
-SLOT="0/stable"
+SLOT="0/beta"
 # Dev exists mostly to give devs some breathing room for beta/stable releases;
 # it shouldn't be keyworded but adventurous users can select it.
 if [[ ${SLOT} != "0/dev" ]]; then
-	KEYWORDS="amd64 ~arm64"
+	KEYWORDS="~amd64 ~arm64"
 fi
 
 IUSE_SYSTEM_LIBS="+system-harfbuzz +system-icu +system-png +system-zstd"
@@ -93,7 +93,6 @@ COMMON_SNAPSHOT_DEPEND="
 	media-libs/mesa:=[gbm(+)]
 	>=media-libs/openh264-1.6.0:=
 	sys-libs/zlib:=
-	x11-libs/libdrm:=
 	!headless? (
 		dev-libs/glib:2
 		>=media-libs/alsa-lib-1.0.19:=
@@ -178,6 +177,9 @@ BDEPEND="
 		llvm-core/clang:${LLVM_SLOT}
 		llvm-core/llvm:${LLVM_SLOT}
 		llvm-core/lld:${LLVM_SLOT}
+		official? (
+			!ppc64? ( llvm-runtimes/compiler-rt-sanitizers:${LLVM_SLOT}[cfi] )
+		)
 	')
 	pgo? (
 		>=dev-python/selenium-3.141.0
@@ -364,39 +366,60 @@ src_prepare() {
 	# Calling this here supports resumption via FEATURES=keepwork
 	python_setup
 
-	# disable global media controls, crashes with libstdc++
-	sed -i -e \
-		"/\"GlobalMediaControlsCastStartStop\"/,+4{s/ENABLED/DISABLED/;}" \
-		"chrome/browser/media/router/media_router_feature.cc"
-
 	local PATCHES=(
 		"${FILESDIR}/chromium-cross-compile.patch"
 		"${FILESDIR}/chromium-109-system-zlib.patch"
 		"${FILESDIR}/chromium-111-InkDropHost-crash.patch"
-		"${FILESDIR}/chromium-127-bindgen-custom-toolchain.patch"
 		"${FILESDIR}/chromium-127-separate-qt56.patch"
 		"${FILESDIR}/chromium-127-vaapi-next-render.patch"
 		"${FILESDIR}/chromium-131-unbundle-icu-target.patch"
 		"${FILESDIR}/chromium-131-oauth2-client-switches.patch"
-		"${FILESDIR}/chromium-131-const-atomicstring-conversion.patch"
+		"${FILESDIR}/chromium-132-bindgen-custom-toolchain.patch"
 	)
 
-	PATCHES+=( "${WORKDIR}/chromium-patches-${PATCH_V}" )
+	shopt -s globstar nullglob
+	# 130: moved the PPC64 patches into the chromium-patches repo
+	local patch
+	for patch in "${WORKDIR}/chromium-patches-${PATCH_V}"/**/*.patch; do
+		if [[ ${patch} == *"ppc64le"* ]]; then
+			use ppc64 && PATCHES+=( "${patch}" )
+		else
+			PATCHES+=( "${patch}" )
+		fi
+	done
+
+	shopt -u globstar nullglob
 	# We can't use the bundled compiler builtins with the system toolchain
 	# `grep` is a development convenience to ensure we fail early when google changes something.
 	local builtins_match="if (is_clang && !is_nacl && !is_cronet_build) {"
 	grep -q "${builtins_match}" build/config/compiler/BUILD.gn || die "Failed to disable bundled compiler builtins"
 	sed -i -e "/${builtins_match}/,+2d" build/config/compiler/BUILD.gn
 
-	if use ppc64 ; then
-		local p
-		for p in $(grep -v "^#" "${WORKDIR}"/debian/patches/series | grep "^ppc64le" || die); do
-			if [[ ! $p =~ "fix-breakpad-compile.patch" ]]; then
-				eapply "${WORKDIR}/debian/patches/${p}"
-			fi
+	if use ppc64; then
+		local patchset_dir="${WORKDIR}/openpower-patches-${PPC64_HASH}/patches"
+		# patch causes build errors on 4K page systems (https://bugs.gentoo.org/show_bug.cgi?id=940304)
+		local page_size_patch="ppc64le/third_party/use-sysconf-page-size-on-ppc64.patch"
+		local isa_3_patch="ppc64le/core/baseline-isa-3-0.patch"
+		# Apply the OpenPOWER patches (check for page size and isa 3.0)
+		openpower_patches=( $(grep -E "^ppc64le|^upstream" "${patchset_dir}/series" | grep -v "${page_size_patch}" |
+			grep -v "${isa_3_patch}" || die) )
+		for patch in "${openpower_patches[@]}"; do
+			PATCHES+=( "${patchset_dir}/${patch}" )
 		done
-		PATCHES+=( "${WORKDIR}/ppc64le" )
-		PATCHES+=( "${WORKDIR}/debian/patches/fixes/rust-clanglib.patch" )
+		if [[ $(getconf PAGESIZE) == 65536 ]]; then
+			PATCHES+=( "${patchset_dir}/${page_size_patch}" )
+		fi
+		# We use vsx3 as a proxy for 'want isa3.0' (POWER9)
+		if use cpu_flags_ppc_vsx3 ; then
+			PATCHES+=( +"${patchset_dir}/${isa_3_patch}" )
+		fi
+	fi
+
+	# This is a nightly option that does not exist any current release
+	# https://github.com/rust-lang/rust/commit/389a399a501a626ebf891ae0bb076c25e325ae64
+	if ver_test ${RUST_SLOT} -le "1.82.0"; then
+		sed '/rustflags = \[ "-Zdefault-visibility=hidden" \]/d' -i build/config/gcc/BUILD.gn ||
+			die "Failed to remove default visibility nightly option"
 	fi
 
 	default
@@ -508,6 +531,7 @@ src_prepare() {
 		third_party/fp16
 		third_party/freetype
 		third_party/fusejs
+		third_party/fuzztest
 		third_party/fxdiv
 		third_party/gemmlowp
 		third_party/google_input_tools
@@ -532,7 +556,6 @@ src_prepare() {
 		third_party/ipcz
 		third_party/jinja2
 		third_party/jsoncpp
-		third_party/jstemplate
 		third_party/khronos
 		third_party/lens_server_proto
 		third_party/leveldatabase
@@ -544,13 +567,16 @@ src_prepare() {
 		third_party/libaom/source/libaom/third_party/x86inc
 		third_party/libavif
 		third_party/libc++
-		third_party/libevent
+		third_party/libdrm
 		third_party/libgav1
 		third_party/libjingle
 		third_party/libphonenumber
 		third_party/libsecret
 		third_party/libsrtp
 		third_party/libsync
+		third_party/libtess2/libtess2
+		third_party/libtess2/src/Include
+		third_party/libtess2/src/Source
 		third_party/liburlpattern
 		third_party/libva_protected_content
 		third_party/libvpx
@@ -562,6 +588,8 @@ src_prepare() {
 		third_party/libyuv
 		third_party/libzip
 		third_party/lit
+		third_party/llvm-libc
+		third_party/llvm-libc/src/shared/
 		third_party/lottie
 		third_party/lss
 		third_party/lzma_sdk
@@ -603,7 +631,6 @@ src_prepare() {
 		third_party/puffin
 		third_party/pyjson5
 		third_party/pyyaml
-		third_party/qcms
 		third_party/rapidhash
 		third_party/re2
 		third_party/rnnoise
@@ -615,6 +642,7 @@ src_prepare() {
 		third_party/sentencepiece
 		third_party/sentencepiece/src/third_party/darts_clone
 		third_party/shell-encryption
+		third_party/simdutf
 		third_party/simplejson
 		third_party/six
 		third_party/skia
@@ -646,6 +674,7 @@ src_prepare() {
 		third_party/unrar
 		third_party/utf
 		third_party/vulkan
+		third_party/wasm_tts_engine
 		third_party/wayland
 		third_party/webdriver
 		third_party/webgpu-cts
@@ -666,12 +695,12 @@ src_prepare() {
 		third_party/zlib/google
 		third_party/zxcvbn-cpp
 		url/third_party/mozilla
-		v8/src/third_party/siphash
-		v8/src/third_party/utf8-decoder
-		v8/src/third_party/valgrind
 		v8/third_party/glibc
 		v8/third_party/inspector_protocol
+		v8/third_party/siphash
+		v8/third_party/utf8-decoder
 		v8/third_party/v8
+		v8/third_party/valgrind
 
 		# gyp -> gn leftovers
 		third_party/speech-dispatcher
@@ -680,8 +709,9 @@ src_prepare() {
 	)
 
 	if use test; then
-		# tar tvf /var/cache/distfiles/${P}-testdata.tar.xz | grep '^d' | grep 'third_party' | awk '{print $NF}'
+		# tar tvf /var/cache/distfiles/${P}-linux-testdata.tar.xz | grep '^d' | grep 'third_party' | awk '{print $NF}'
 		keeplibs+=(
+			third_party/breakpad/breakpad/src/processor
 			third_party/google_benchmark/src/include/benchmark
 			third_party/google_benchmark/src/src
 			third_party/perfetto/protos/third_party/pprof
@@ -860,7 +890,6 @@ chromium_configure() {
 		freetype
 		# Need harfbuzz_from_pkgconfig target
 		#harfbuzz-ng
-		libdrm
 		libjpeg
 		libwebp
 		libxml
@@ -1044,7 +1073,6 @@ chromium_configure() {
 		myconf_gn+=" enable_print_preview=false"
 		myconf_gn+=" enable_remoting=false"
 	else
-		myconf_gn+=" use_system_libdrm=true"
 		myconf_gn+=" use_system_minigbm=true"
 		myconf_gn+=" use_xkbcommon=true"
 		if use qt5 || use qt6; then
@@ -1087,7 +1115,11 @@ chromium_configure() {
 		# Allow building against system libraries in official builds
 		sed -i 's/OFFICIAL_BUILD/GOOGLE_CHROME_BUILD/' \
 			tools/generate_shim_headers/generate_shim_headers.py || die
-		myconf_gn+=" is_cfi=${use_lto}"
+		if use ppc64; then
+			myconf_gn+=" is_cfi=no" # requires llvm-runtimes/compiler-rt-sanitizers[cfi]
+		else
+			myconf_gn+=" is_cfi=${use_lto}"
+		fi
 		# Don't add symbols to build
 		myconf_gn+=" symbol_level=0"
 	fi
@@ -1261,6 +1293,7 @@ src_test() {
 		NumberFormattingTest.FormatPercent
 		PathServiceTest.CheckedGetFailure
 		PlatformThreadTest.CanChangeThreadType
+		RustLogIntegrationTest.CheckAllSeverity
 		StackCanary.ChangingStackCanaryCrashesOnReturn
 		StackTraceDeathTest.StackDumpSignalHandlerIsMallocFree
 		SysStrings.SysNativeMBAndWide
@@ -1269,6 +1302,7 @@ src_test() {
 		TestLauncherTools.TruncateSnippetFocusedMatchesFatalMessagesTest
 		ToolsSanityTest.BadVirtualCallNull
 		ToolsSanityTest.BadVirtualCallWrongType
+		CancelableEventTest.BothCancelFailureAndSucceedOccurUnderContention #new m133: TODO investigate
 	)
 	local test_filter="-$(IFS=:; printf '%s' "${skip_tests[*]}")"
 	# test-launcher-bot-mode enables parallelism and plain output
