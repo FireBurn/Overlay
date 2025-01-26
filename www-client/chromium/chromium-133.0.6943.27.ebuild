@@ -411,7 +411,7 @@ src_prepare() {
 		fi
 		# We use vsx3 as a proxy for 'want isa3.0' (POWER9)
 		if use cpu_flags_ppc_vsx3 ; then
-			PATCHES+=( +"${patchset_dir}/${isa_3_patch}" )
+			PATCHES+=( "${patchset_dir}/${isa_3_patch}" )
 		fi
 	fi
 
@@ -1116,7 +1116,7 @@ chromium_configure() {
 		sed -i 's/OFFICIAL_BUILD/GOOGLE_CHROME_BUILD/' \
 			tools/generate_shim_headers/generate_shim_headers.py || die
 		if use ppc64; then
-			myconf_gn+=" is_cfi=no" # requires llvm-runtimes/compiler-rt-sanitizers[cfi]
+			myconf_gn+=" is_cfi=false" # requires llvm-runtimes/compiler-rt-sanitizers[cfi]
 		else
 			myconf_gn+=" is_cfi=${use_lto}"
 		fi
