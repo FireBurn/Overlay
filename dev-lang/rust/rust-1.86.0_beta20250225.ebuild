@@ -8,13 +8,13 @@ PYTHON_COMPAT=( python3_{10..13} )
 
 RUST_MAX_VER=${PV%%_*}
 if [[ ${PV} == *9999* ]]; then
-	RUST_MIN_VER="1.85.0" # Update this as new `beta` releases come out.
+	RUST_MIN_VER="1.86.0" # Update this as new `beta` releases come out.
 elif [[ ${PV} == *beta* ]]; then
 	# Enforce that `beta` is built from `stable`.
 	# While uncommon it is possible for feature changes within `beta` to result
 	# in an older snapshot being unable to build a newer one without modifying the sources.
 	# 'stable' releases should always be able to build a beta snapshot so just use those.
-	RUST_MAX_VER="$(ver_cut 1).$(($(ver_cut 2) - 1)).1"
+	RUST_MAX_VER="$(ver_cut 1).$(($(ver_cut 2) - 1)).0"
 	RUST_MIN_VER="$(ver_cut 1).$(($(ver_cut 2) - 1)).0"
 else
 	RUST_MIN_VER="$(ver_cut 1).$(($(ver_cut 2) - 1)).0"
@@ -39,8 +39,10 @@ elif [[ ${PV} == *beta* ]]; then
 	SRC_URI="https://static.rust-lang.org/dist/${BETA_SNAPSHOT}/rustc-beta-src.tar.xz -> rustc-${PV}-src.tar.xz
 		verify-sig? ( https://static.rust-lang.org/dist/${BETA_SNAPSHOT}/rustc-beta-src.tar.xz.asc
 			-> rustc-${PV}-src.tar.xz.asc )
+		https://github.com/rust-lang/rust/pull/137020.patch -> ${P}-vendor-in-install-phase.patch
 	"
 	S="${WORKDIR}/${MY_P}-src"
+	KEYWORDS="~amd64 ~arm ~arm64 ~loong ~mips ~ppc ~ppc64 ~riscv ~sparc ~x86"
 else
 	MY_P="rustc-${PV}"
 	SRC_URI="https://static.rust-lang.org/dist/${MY_P}-src.tar.xz
@@ -70,7 +72,7 @@ done
 LICENSE="|| ( MIT Apache-2.0 ) BSD BSD-1 BSD-2 BSD-4"
 SLOT="${PV%%_*}" # Beta releases get to share the same SLOT as the eventual stable
 
-IUSE="big-endian clippy cpu_flags_x86_sse2 debug dist doc llvm-libunwind lto rustfmt rust-analyzer rust-src system-llvm test wasm ${ALL_LLVM_TARGETS[*]}"
+IUSE="big-endian clippy cpu_flags_x86_sse2 debug dist doc llvm-libunwind lto rustfmt rust-analyzer rust-src +system-llvm test wasm ${ALL_LLVM_TARGETS[*]}"
 
 if [[ ${PV} = *9999* ]]; then
 	# These USE flags require nightly rust
@@ -165,6 +167,7 @@ RESTRICT="test"
 VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/rust.asc
 
 PATCHES=(
+	"${DISTDIR}"/${P}-vendor-in-install-phase.patch
 	"${FILESDIR}"/1.85.0-cross-compile-libz.patch
 	"${FILESDIR}"/1.85.0-musl-dynamic-linking.patch
 	"${FILESDIR}"/1.67.0-doc-wasm.patch
@@ -216,7 +219,12 @@ src_unpack() {
 			directory = "vendor"
 		_EOF_
 	else
-		verify-sig_src_unpack
+		# Until upstream merge this patch we can't use the default verify-sig_src_unpack
+		if use verify-sig; then
+			verify-sig_verify_detached "${DISTDIR}/rustc-${PV}-src.tar.xz" \
+				"${DISTDIR}/rustc-${PV}-src.tar.xz.asc"
+		fi
+		default_src_unpack
 	fi
 }
 
