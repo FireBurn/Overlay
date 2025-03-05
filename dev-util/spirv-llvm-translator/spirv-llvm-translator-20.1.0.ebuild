@@ -36,6 +36,7 @@ BDEPEND="
 "
 
 PATCHES=(
+	"${FILESDIR}/remove-new-headers.patch"
 )
 
 src_prepare() {
