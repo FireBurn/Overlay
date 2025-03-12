@@ -3,7 +3,7 @@
 
 EAPI=8
 
-FIREFOX_PATCHSET="firefox-136-patches-01.tar.xz"
+FIREFOX_PATCHSET="firefox-136-patches-03.tar.xz"
 FIREFOX_LOONG_PATCHSET="firefox-136-loong-patches-01.tar.xz"
 
 LLVM_COMPAT=( 17 18 19 20 )
@@ -52,7 +52,7 @@ MOZ_P="${MOZ_PN}-${MOZ_PV}"
 MOZ_PV_DISTFILES="${MOZ_PV}${MOZ_PV_SUFFIX}"
 MOZ_P_DISTFILES="${MOZ_PN}-${MOZ_PV_DISTFILES}"
 
-inherit check-reqs desktop flag-o-matic gnome2-utils linux-info llvm-r1 multiprocessing \
+inherit autotools check-reqs desktop flag-o-matic gnome2-utils linux-info llvm-r1 multiprocessing \
 	optfeature pax-utils python-any-r1 readme.gentoo-r1 rust toolchain-funcs virtualx xdg
 
 MOZ_SRC_BASE_URI="https://archive.mozilla.org/pub/${MOZ_PN}/releases/${MOZ_PV}"
@@ -458,12 +458,6 @@ virtwl() {
 
 pkg_pretend() {
 	if [[ ${MERGE_TYPE} != binary ]] ; then
-		if use pgo ; then
-			if ! has usersandbox $FEATURES ; then
-				die "You must enable usersandbox as X server can not run as root!"
-			fi
-		fi
-
 		# Ensure we have enough disk space to compile
 		if use pgo || use debug ; then
 			CHECKREQS_DISK_BUILD="14300M"
@@ -888,7 +882,6 @@ src_configure() {
 	fi
 
 	mozconfig_use_with system-av1
-	use system-av1 && append-ldflags "-laom"
 	mozconfig_use_with system-harfbuzz
 	mozconfig_use_with system-icu
 	mozconfig_use_with system-jpeg
