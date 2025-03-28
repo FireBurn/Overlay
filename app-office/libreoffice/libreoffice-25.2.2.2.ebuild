@@ -224,7 +224,10 @@ COMMON_DEPEND="${PYTHON_DEPS}
 	!mariadb? ( dev-db/mysql-connector-c:= )
 	pdfimport? ( >=app-text/poppler-22.06:=[cxx] )
 	postgres? ( >=dev-db/postgresql-9.0:*[kerberos] )
-	qt6? ( dev-qt/qtbase:6[gui,opengl,widgets] )
+	qt6? (
+		dev-qt/qtbase:6[gui,opengl,widgets]
+		dev-qt/qtmultimedia:6
+	)
 "
 # FIXME: cppunit should be moved to test conditional
 #        after everything upstream is under gbuild
@@ -263,16 +266,16 @@ RDEPEND="${COMMON_DEPEND}
 	kde? ( kde-frameworks/breeze-icons:* )
 "
 BDEPEND="
+	app-alternatives/lex
+	app-alternatives/yacc
 	dev-util/intltool
 	sys-apps/which
-	app-alternatives/yacc
-	app-alternatives/lex
 	sys-devel/gettext
 	virtual/pkgconfig
 	clang? ( || (
-		(   llvm-core/clang:20
+		(	llvm-core/clang:20
 			llvm-core/llvm:20
-			=llvm-core/lld-20*  )
+			=llvm-core/lld-20*	)
 		(	llvm-core/clang:19
 			llvm-core/llvm:19
 			=llvm-core/lld-19*	)
@@ -309,12 +312,10 @@ PATCHES=(
 
 	# TODO: upstream
 	"${FILESDIR}/${PN}-25.2-unused-qt6network.patch"
+
 	# add qt6 backend as possible fallback for gtk-based desktop environments:
 	# https://bugs.gentoo.org/950170
 	"${FILESDIR}/${PN}-25.2-vcl-backend-fallback.patch"
-
-	# backport
-	"${FILESDIR}/${PN}-25.2.1.2-poppler.patch"
 )
 
 _check_reqs() {
@@ -532,7 +533,6 @@ src_configure() {
 	# --without-system-sane: just sane.h header that is used for scan in writer,
 	#   not linked or anything else, worthless to depend on
 	# --disable-pdfium: not yet packaged
-	# --disable-qt6-multimedia: TODO
 	# --disable-cpdb: not yet packaged
 	local myeconfargs=(
 		--with-system-dicts
@@ -562,7 +562,6 @@ src_configure() {
 		--disable-openssl
 		--disable-pdfium
 		--disable-qt5
-		--disable-qt6-multimedia
 		# Don't try to call coredumpctl in the testsuite
 		--without-coredumpctl
 		--without-dotnet
@@ -607,6 +606,7 @@ src_configure() {
 		$(use_enable pdfimport)
 		$(use_enable postgres postgresql-sdbc)
 		$(use_enable qt6)
+		$(use_enable qt6 qt6-multimedia)
 		$(use_enable vulkan skia)
 		$(use_with accessibility lxml)
 		$(use_with coinmp system-coinmp)
