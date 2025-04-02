@@ -6,20 +6,6 @@ EAPI=8
 LLVM_COMPAT=( 20 )
 PYTHON_COMPAT=( python3_{10..13} )
 
-RUST_MAX_VER=${PV%%_*}
-if [[ ${PV} == *9999* ]]; then
-	RUST_MIN_VER="1.86.0" # Update this as new `beta` releases come out.
-elif [[ ${PV} == *beta* ]]; then
-	# Enforce that `beta` is built from `stable`.
-	# While uncommon it is possible for feature changes within `beta` to result
-	# in an older snapshot being unable to build a newer one without modifying the sources.
-	# 'stable' releases should always be able to build a beta snapshot so just use those.
-	# RUST_MAX_VER="$(ver_cut 1).$(($(ver_cut 2) - 1)).0"
-	RUST_MIN_VER="$(ver_cut 1).$(($(ver_cut 2) - 1)).0"
-else
-	RUST_MIN_VER="$(ver_cut 1).$(($(ver_cut 2) - 1)).0"
-fi
-
 inherit check-reqs estack flag-o-matic llvm-r1 multiprocessing optfeature \
 	multilib multilib-build python-any-r1 rust rust-toolchain toolchain-funcs verify-sig
 
@@ -39,7 +25,6 @@ elif [[ ${PV} == *beta* ]]; then
 	SRC_URI="https://static.rust-lang.org/dist/${BETA_SNAPSHOT}/rustc-beta-src.tar.xz -> rustc-${PV}-src.tar.xz
 		verify-sig? ( https://static.rust-lang.org/dist/${BETA_SNAPSHOT}/rustc-beta-src.tar.xz.asc
 			-> rustc-${PV}-src.tar.xz.asc )
-		https://github.com/rust-lang/rust/pull/137020.patch -> ${P}-vendor-in-install-phase.patch
 	"
 	S="${WORKDIR}/${MY_P}-src"
 	KEYWORDS="~amd64 ~arm ~arm64 ~loong ~mips ~ppc ~ppc64 ~riscv ~sparc ~x86"
@@ -96,6 +81,7 @@ BDEPEND="${PYTHON_DEPS}
 		>=sys-devel/gcc-4.7[cxx]
 		>=llvm-core/clang-3.5
 	)
+	lto? ( $(llvm_gen_dep 'llvm-core/lld:${LLVM_SLOT}') )
 	!system-llvm? (
 		>=dev-build/cmake-3.13.4
 		app-alternatives/ninja
@@ -167,7 +153,6 @@ RESTRICT="test"
 VERIFY_SIG_OPENPGP_KEY_PATH=/usr/share/openpgp-keys/rust.asc
 
 PATCHES=(
-	"${DISTDIR}"/${P}-vendor-in-install-phase.patch
 	"${FILESDIR}"/1.85.0-cross-compile-libz.patch
 	"${FILESDIR}"/1.85.0-musl-dynamic-linking.patch
 	"${FILESDIR}"/1.67.0-doc-wasm.patch
@@ -219,12 +204,7 @@ src_unpack() {
 			directory = "vendor"
 		_EOF_
 	else
-		# Until upstream merge this patch we can't use the default verify-sig_src_unpack
-		if use verify-sig; then
-			verify-sig_verify_detached "${DISTDIR}/rustc-${PV}-src.tar.xz" \
-				"${DISTDIR}/rustc-${PV}-src.tar.xz.asc"
-		fi
-		default_src_unpack
+		verify-sig_src_unpack
 	fi
 }
 
@@ -312,6 +292,10 @@ src_prepare() {
 			eapply "${FILESDIR}/1.82.0-i586-baseline.patch"
 			#grep -rl cmd.args.push\(\"-march=i686\" . | xargs sed  -i 's/march=i686/-march=i586/g' || die
 		fi
+	fi
+
+	if use lto && tc-is-clang && ! tc-ld-is-lld; then
+		export RUSTFLAGS+=" -C link-arg=-fuse-ld=lld"
 	fi
 
 	default
@@ -470,7 +454,7 @@ src_configure() {
 		backtrace = true
 		incremental = false
 		$(if ! tc-is-cross-compiler; then
-			echo "default-linker = \"$(tc-getCC)\""
+			echo "default-linker = \"${CHOST}-cc\""
 		fi)
 		channel = "${build_channel}"
 		description = "gentoo"
@@ -481,6 +465,9 @@ src_configure() {
 		dist-src = false
 		remap-debuginfo = true
 		lld = $(usex system-llvm false $(toml_usex wasm))
+		$(if use lto && tc-is-clang ; then
+			echo "use-lld = true"
+		fi)
 		# only deny warnings if doc+wasm are NOT requested, documenting stage0 wasm std fails without it
 		# https://github.com/rust-lang/rust/issues/74976
 		# https://github.com/rust-lang/rust/issues/76526
