@@ -6,6 +6,20 @@ EAPI=8
 LLVM_COMPAT=( 20 )
 PYTHON_COMPAT=( python3_{10..13} )
 
+RUST_MAX_VER=${PV%%_*}
+if [[ ${PV} == *9999* ]]; then
+	RUST_MIN_VER="1.85.0" # Update this as new `beta` releases come out.
+elif [[ ${PV} == *beta* ]]; then
+	# Enforce that `beta` is built from `stable`.
+	# While uncommon it is possible for feature changes within `beta` to result
+	# in an older snapshot being unable to build a newer one without modifying the sources.
+	# 'stable' releases should always be able to build a beta snapshot so just use those.
+	RUST_MAX_VER="$(ver_cut 1).$(($(ver_cut 2) - 1)).1"
+	RUST_MIN_VER="$(ver_cut 1).$(($(ver_cut 2) - 1)).0"
+else
+	RUST_MIN_VER="$(ver_cut 1).$(($(ver_cut 2) - 1)).0"
+fi
+
 inherit check-reqs estack flag-o-matic llvm-r1 multiprocessing optfeature \
 	multilib multilib-build python-any-r1 rust rust-toolchain toolchain-funcs verify-sig
 
@@ -27,7 +41,6 @@ elif [[ ${PV} == *beta* ]]; then
 			-> rustc-${PV}-src.tar.xz.asc )
 	"
 	S="${WORKDIR}/${MY_P}-src"
-	KEYWORDS="~amd64 ~arm ~arm64 ~loong ~mips ~ppc ~ppc64 ~riscv ~sparc ~x86"
 else
 	MY_P="rustc-${PV}"
 	SRC_URI="https://static.rust-lang.org/dist/${MY_P}-src.tar.xz
@@ -55,7 +68,7 @@ for _x in "${_ALL_RUST_EXPERIMENTAL_TARGETS[@]}"; do
 done
 
 LICENSE="|| ( MIT Apache-2.0 ) BSD BSD-1 BSD-2 BSD-4"
-SLOT="${PV%%_*}" # Beta releases get to share the same SLOT as the eventual stable
+SLOT="$(ver_cut 1-2)"
 
 IUSE="big-endian clippy cpu_flags_x86_sse2 debug dist doc llvm-libunwind lto rustfmt rust-analyzer rust-src +system-llvm test wasm ${ALL_LLVM_TARGETS[*]}"
 
@@ -706,7 +719,7 @@ src_install() {
 		# we need realpath on /usr/bin/* symlink return version-appended binary path.
 		# so /usr/bin/rustc should point to /usr/lib/rust/<ver>/bin/rustc-<ver>
 		# need to fix eselect-rust to remove this hack.
-		local ver_i="${i}-${PV%%_*}"
+		local ver_i="${i}-${SLOT}"
 		if [[ -f "${ED}/usr/lib/${PN}/${SLOT}/bin/${i}" ]]; then
 			einfo "Installing ${i} symlink"
 			ln -v "${ED}/usr/lib/${PN}/${SLOT}/bin/${i}" "${ED}/usr/lib/${PN}/${SLOT}/bin/${ver_i}" || die
@@ -715,6 +728,7 @@ src_install() {
 			ewarn "please report this"
 		fi
 		dosym "../lib/${PN}/${SLOT}/bin/${ver_i}" "/usr/bin/${ver_i}"
+		dosym "../lib/${PN}/${SLOT}/bin/${ver_i}" "/usr/bin/${i}-${PV%%_*}"
 	done
 
 	# symlinks to switch components to active rust in eselect
