@@ -219,7 +219,7 @@ COMMON_DEPEND="${PYTHON_DEPS}
 	)
 	ldap? ( net-nds/openldap:= )
 	libreoffice_extensions_scripting-beanshell? ( dev-java/bsh )
-	libreoffice_extensions_scripting-javascript? ( >=dev-java/rhino-1.7.14:1.6 )
+	libreoffice_extensions_scripting-javascript? ( >=dev-java/rhino-1.8.0:0 )
 	mariadb? ( dev-db/mariadb-connector-c:= )
 	!mariadb? ( dev-db/mysql-connector-c:= )
 	pdfimport? ( >=app-text/poppler-22.06:=[cxx] )
@@ -245,7 +245,10 @@ DEPEND="${COMMON_DEPEND}
 	x11-libs/libXtst
 	java? (
 		dev-java/ant:0
-		>=virtual/jdk-17
+		|| (
+		   virtual/jdk:17
+		   virtual/jdk:21
+		)
 	)
 	test? (
 		app-crypt/gnupg
@@ -350,7 +353,7 @@ src_unpack() {
 
 	if [[ ${MY_PV} = *9999* ]]; then
 		local base_uri branch mypv
-		base_uri="https://anongit.freedesktop.org/git"
+		base_uri="https://git.libreoffice.org"
 		branch="master"
 		mypv=${MY_PV/.9999}
 		[[ ${mypv} != ${MY_PV} ]] && branch="${PN}-${mypv/./-}"
@@ -645,7 +648,7 @@ src_configure() {
 			myeconfargs+=( --with-beanshell-jar=$(java-pkg_getjar bsh bsh.jar) )
 
 		use libreoffice_extensions_scripting-javascript && \
-			myeconfargs+=( --with-rhino-jar=$(java-pkg_getjar rhino-1.6 rhino.jar) )
+			myeconfargs+=( --with-rhino-jar=$(java-pkg_getjars rhino) )
 	fi
 
 	tc-is-lto && myeconfargs+=( --enable-lto )
