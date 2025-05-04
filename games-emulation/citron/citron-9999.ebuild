@@ -65,10 +65,6 @@ BDEPEND="
 REQUIRED_USE="|| ( qt5 qt6 sdl ) discord? ( webservice )"
 RESTRICT="!test? ( test )"
 
-PATCHES=(
-	"${FILESDIR}/boost-fix.patch"
-)
-
 pkg_setup() {
 	if tc-is-gcc; then
 		[[ "$(gcc-major-version)" -lt 11 ]] && \
@@ -138,7 +134,7 @@ src_prepare() {
 	sed -i 's/lz4::lz4/lz4/' src/common/CMakeLists.txt || die
 
 	# Allow compiling using older glslang
-	sed -i -e '/Vulkan/s/307/304/' CMakeLists.txt || die
+	sed -i -e '/Vulkan/s/313/309/' CMakeLists.txt || die
 
 	cmake_src_prepare
 }
