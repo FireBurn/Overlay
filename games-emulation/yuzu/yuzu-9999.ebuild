@@ -134,7 +134,7 @@ src_prepare() {
 	sed -i 's/lz4::lz4/lz4/' src/common/CMakeLists.txt || die
 
 	# Allow compiling using older glslang
-	sed -i -e '/Vulkan/s/274/275/' CMakeLists.txt || die
+	sed -i -e '/Vulkan/s/313/309/' CMakeLists.txt || die
 
 	cmake_src_prepare
 }
