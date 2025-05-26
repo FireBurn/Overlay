@@ -12,7 +12,7 @@ if [[ ${PV} == 9999 ]]; then
 	inherit git-r3
 else
 	inherit vcs-snapshot
-	GIT_COMMIT="9fbec45aa73aead72b00eb3ba3f9373220183256"
+	GIT_COMMIT="152becbbb21c2ffb51494659429bb3eeef291017"
 	SRC_URI="https://github.com/crosire/${PN}/archive/${GIT_COMMIT}.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="~alpha ~amd64 ~arm ~arm64 ~hppa ~ia64 ~mips ~ppc ~ppc64 ~s390 ~sparc ~x86 ~amd64-linux ~x86-linux ~sparc-solaris ~x64-solaris ~x86-solaris"
 fi
