@@ -1,0 +1,22 @@
+diff --git a/src/CMakeLists.txt b/src/CMakeLists.txt
+index 398297bd..45149b7a 100644
+--- a/src/CMakeLists.txt
++++ b/src/CMakeLists.txt
+@@ -668,7 +668,7 @@ IF(CONFIG_LINUX_PACKAGING_SUPPORT)
+     IF(TARGET client)
+         INSTALL(TARGETS client DESTINATION share/quake2rtx/bin COMPONENT shareware)
+     ENDIF()
+-    INSTALL(TARGETS server DESTINATION games COMPONENT shareware)
++    INSTALL(TARGETS server DESTINATION bin COMPONENT shareware)
+ 
+     IF(NOT CONFIG_LINUX_PACKAGING_SKIP_PKZ)
+ 	    # Compress NVIDIA custom content
+@@ -719,7 +719,7 @@ IF(CONFIG_LINUX_PACKAGING_SUPPORT)
+     # Install Client Wrapper
+     INSTALL(FILES
+         "${CMAKE_SOURCE_DIR}/setup/q2rtx.sh"
+-        DESTINATION games/
++        DESTINATION bin/
+         PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE
+         COMPONENT shareware
+ 	RENAME q2rtx)
