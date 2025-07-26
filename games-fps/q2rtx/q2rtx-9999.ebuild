@@ -22,23 +22,24 @@ SLOT="0"
 KEYWORDS="~amd64"
 
 DEPEND="
+	app-arch/p7zip
+	dev-util/glslang
+	dev-util/vulkan-headers
 	media-libs/libsdl2
+	media-libs/openal
 	media-libs/sdl2-image
 	media-libs/sdl2-mixer
-	media-libs/openal
-	sys-libs/zlib
 	net-misc/curl
-	dev-util/vulkan-headers
-	dev-util/glslang
+	sys-libs/zlib
 "
 
 RDEPEND="
 	media-libs/libsdl2
+	media-libs/openal
 	media-libs/sdl2-image
 	media-libs/sdl2-mixer
-	media-libs/openal
-	sys-libs/zlib
 	net-misc/curl
+	sys-libs/zlib
 "
 
 PATCHES="${FILESDIR}/install-to-bin.patch"
