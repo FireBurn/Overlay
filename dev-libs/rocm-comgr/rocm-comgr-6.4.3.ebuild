@@ -30,6 +30,7 @@ PATCHES=(
 	"${FILESDIR}/${PN}-6.1.0-dont-add-nogpulib.patch"
 	"${FILESDIR}/${PN}-6.4.1-bypass-device-libs-copy.patch"
 	"${FILESDIR}/${PN}-6.4.1-llvm-20-compat.patch"
+	"${FILESDIR}/${PN}-llvm21.patch"
 )
 
 RDEPEND="

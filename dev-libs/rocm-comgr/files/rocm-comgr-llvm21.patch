@@ -1,0 +1,140 @@
+From aa3810fb4e7dfcdfc7bdf2041fff6bfba2798f4f Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Wed, 27 Aug 2025 17:43:05 +0100
+Subject: [PATCH] Fix
+
+---
+ src/comgr-compiler.cpp     |  23 ++--
+ src/comgr-isa-metadata.def |   2 -
+ src/comgr-metadata.cpp     |  15 +--
+ 5 files changed, 20 insertions(+), 190 deletions(-)
+
+diff --git a/src/comgr-compiler.cpp b/src/comgr-compiler.cpp
+index a0b7ae5..97700ef 100644
+--- a/src/comgr-compiler.cpp
++++ b/src/comgr-compiler.cpp
+@@ -78,6 +78,7 @@
+ #include "llvm/MC/MCSubtargetInfo.h"
+ #include "llvm/MC/MCTargetOptions.h"
+ #include "llvm/MC/TargetRegistry.h"
++#include "llvm/MC/MCInstPrinter.h"
+ #include "llvm/Object/Archive.h"
+ #include "llvm/Support/Error.h"
+ #include "llvm/Support/FileSystem.h"
+@@ -470,8 +471,9 @@ bool executeAssemblerImpl(AssemblerInvocation &Opts, DiagnosticsEngine &Diags,
+       MAB.reset(TheTarget->createMCAsmBackend(*STI, *MRI, Options));
+     }
+     auto FOut = std::make_unique<formatted_raw_ostream>(*Out);
+-    Str.reset(TheTarget->createAsmStreamer(Ctx, std::move(FOut), IP,
+-                                           std::move(MCE), std::move(MAB)));
++    Str.reset(TheTarget->createAsmStreamer(
++        Ctx, std::move(FOut), std::unique_ptr<MCInstPrinter>(IP),
++        std::move(MCE), std::move(MAB)));
+   } else if (Opts.OutputType == AssemblerInvocation::FT_Null) {
+     Str.reset(createNullStreamer(Ctx));
+   } else {
+@@ -645,9 +647,9 @@ void logArgv(raw_ostream &OS, StringRef ProgramName,
+ 
+ amd_comgr_status_t executeCommand(const Command &Job, raw_ostream &LogS,
+                                   DiagnosticOptions &DiagOpts) {
+-  TextDiagnosticPrinter DiagClient(LogS, &DiagOpts);
++  TextDiagnosticPrinter DiagClient(LogS, DiagOpts);
+   IntrusiveRefCntPtr<DiagnosticIDs> DiagID(new DiagnosticIDs);
+-  DiagnosticsEngine Diags(DiagID, &DiagOpts, &DiagClient, false);
++  DiagnosticsEngine Diags(DiagID, DiagOpts, &DiagClient, false);
+ 
+   auto Arguments = Job.getArguments();
+   SmallVector<const char *, 128> Argv;
+@@ -740,20 +742,19 @@ AMDGPUCompiler::executeInProcessDriver(ArrayRef<const char *> Args) {
+   // here is mostly copy-and-pasted from driver.cpp/cc1_main.cpp/various Clang
+   // tests to try to approximate the same behavior as running the `clang`
+   // executable.
+-  IntrusiveRefCntPtr<DiagnosticOptions> DiagOpts(new DiagnosticOptions);
++  DiagnosticOptions DiagOpts;
+   unsigned MissingArgIndex, MissingArgCount;
+   InputArgList ArgList = getDriverOptTable().ParseArgs(
+       Args.slice(1), MissingArgIndex, MissingArgCount);
+   // We ignore MissingArgCount and the return value of ParseDiagnosticArgs. Any
+   // errors that would be diagnosed here will also be diagnosed later, when the
+   // DiagnosticsEngine actually exists.
+-  (void)ParseDiagnosticArgs(*DiagOpts, ArgList);
+-  TextDiagnosticPrinter *DiagClient =
+-      new TextDiagnosticPrinter(LogS, &*DiagOpts);
++  (void)ParseDiagnosticArgs(DiagOpts, ArgList);
++  TextDiagnosticPrinter *DiagClient = new TextDiagnosticPrinter(LogS, DiagOpts);
+   IntrusiveRefCntPtr<DiagnosticIDs> DiagID(new DiagnosticIDs);
+-  DiagnosticsEngine Diags(DiagID, &*DiagOpts, DiagClient);
++  DiagnosticsEngine Diags(DiagID, DiagOpts, DiagClient);
+ 
+-  ProcessWarningOptions(Diags, *DiagOpts, *llvm::vfs::getRealFileSystem(), /*ReportDiags=*/false);
++  ProcessWarningOptions(Diags, DiagOpts, *llvm::vfs::getRealFileSystem(), /*ReportDiags=*/false);
+ 
+   Driver TheDriver((Twine(env::getLLVMPath()) + "/bin/clang").str(),
+                    llvm::sys::getDefaultTargetTriple(), Diags);
+@@ -779,7 +780,7 @@ AMDGPUCompiler::executeInProcessDriver(ArrayRef<const char *> Args) {
+ 
+   auto Cache = CommandCache::get(LogS);
+   for (auto &Job : C->getJobs()) {
+-    CachedCommand C(Job, *DiagOpts, executeCommand);
++    CachedCommand C(Job, DiagOpts, executeCommand);
+     if (Cache) {
+       if (auto Status = Cache->execute(C, LogS)) {
+         return Status;
+diff --git a/src/comgr-isa-metadata.def b/src/comgr-isa-metadata.def
+index 0f7354f..3193c52 100644
+--- a/src/comgr-isa-metadata.def
++++ b/src/comgr-isa-metadata.def
+@@ -69,8 +69,6 @@ HANDLE_ISA("amdgcn-amd-amdhsa-", "gfx908",            true,  true, EF_AMDGPU_MAC
+ HANDLE_ISA("amdgcn-amd-amdhsa-", "gfx909",           false,  true, EF_AMDGPU_MACH_AMDGCN_GFX909,          true, 65536,  32,  4,   40, 1024,   16, 800, 102,    4, 256, 256)
+ HANDLE_ISA("amdgcn-amd-amdhsa-", "gfx90a",            true,  true, EF_AMDGPU_MACH_AMDGCN_GFX90A,          true, 65536,  32,  4,   40, 1024,   16, 800, 102,    4, 256, 256)
+ HANDLE_ISA("amdgcn-amd-amdhsa-", "gfx90c",           false,  true, EF_AMDGPU_MACH_AMDGCN_GFX90C,          true, 65536,  32,  4,   40, 1024,   16, 800, 102,    4, 256, 256)
+-HANDLE_ISA("amdgcn-amd-amdhsa-", "gfx940",            true,  true, EF_AMDGPU_MACH_AMDGCN_GFX940,          true, 65536,  32,  4,   40, 1024,   16, 800, 102,    4, 256, 256)
+-HANDLE_ISA("amdgcn-amd-amdhsa-", "gfx941",            true,  true, EF_AMDGPU_MACH_AMDGCN_GFX941,          true, 65536,  32,  4,   40, 1024,   16, 800, 102,    4, 256, 256)
+ HANDLE_ISA("amdgcn-amd-amdhsa-", "gfx942",            true,  true, EF_AMDGPU_MACH_AMDGCN_GFX942,          true, 65536,  32,  4,   40, 1024,   16, 800, 102,    4, 256, 256)
+ HANDLE_ISA("amdgcn-amd-amdhsa-", "gfx950",            true,  true, EF_AMDGPU_MACH_AMDGCN_GFX950,          true, 65536,  32,  4,   40, 1024,   16, 800, 102,    4, 256, 256)
+ HANDLE_ISA("amdgcn-amd-amdhsa-", "gfx1010",          false,  true, EF_AMDGPU_MACH_AMDGCN_GFX1010,         true, 65536,  32,  4,   40, 1024,  106, 800, 106,    8, 256, 256)
+diff --git a/src/comgr-metadata.cpp b/src/comgr-metadata.cpp
+index d5b5991..e726bf7 100644
+--- a/src/comgr-metadata.cpp
++++ b/src/comgr-metadata.cpp
+@@ -396,7 +396,7 @@ struct IsaInfo {
+ };
+ 
+ size_t getIsaCount() {
+-  return std::distance(std::begin(IsaInfos), std::end(IsaInfos));
++  return sizeof(IsaInfos) / sizeof(IsaInfos[0]);
+ }
+ 
+ // NOLINTNEXTLINE(readability-identifier-naming)
+@@ -427,10 +427,10 @@ typedef struct amdgpu_hsa_note_isa_s {
+ namespace {
+ bool getMachInfo(unsigned Mach, std::string &Processor, bool &SrameccSupported,
+                  bool &XnackSupported) {
+-  auto *IsaIterator = std::find_if(
+-      std::begin(IsaInfos), std::end(IsaInfos),
++  auto IsaInfosEnd = IsaInfos + getIsaCount();
++  auto *IsaIterator = std::find_if(IsaInfos, IsaInfosEnd,
+       [Mach](const IsaInfo &IsaInfo) { return Mach == IsaInfo.ElfMachine; });
+-  if (IsaIterator == std::end(IsaInfos)) {
++  if (IsaIterator == IsaInfosEnd) {
+     return false;
+   }
+ 
+@@ -798,13 +798,14 @@ amd_comgr_status_t getElfIsaName(DataObject *DataP, std::string &IsaName) {
+ 
+ amd_comgr_status_t getIsaIndex(StringRef IsaString, size_t &Index) {
+   auto IsaName = IsaString.take_until([](char C) { return C == ':'; });
++  auto IsaInfosEnd = IsaInfos + getIsaCount();
+   auto *IsaIterator = std::find_if(
+-      std::begin(IsaInfos), std::end(IsaInfos),
++      IsaInfos, IsaInfosEnd,
+       [&](const IsaInfo &IsaInfo) { return IsaName == IsaInfo.IsaName; });
+-  if (IsaIterator == std::end(IsaInfos)) {
++  if (IsaIterator == IsaInfosEnd) {
+     return AMD_COMGR_STATUS_ERROR_INVALID_ARGUMENT;
+   }
+-  Index = std::distance(std::begin(IsaInfos), IsaIterator);
++  Index = std::distance(IsaInfos, IsaIterator);
+ 
+   return AMD_COMGR_STATUS_SUCCESS;
+ }
