@@ -1,0 +1,82 @@
+From 4ea69b5dcf1b1b046c71e833ee252aa8065603a5 Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Wed, 27 Aug 2025 16:40:53 +0100
+Subject: [PATCH] Fix
+
+---
+ src/linguist/lupdate/clangtoolastreader.cpp | 24 ++++++++++++++++-----
+ src/linguist/lupdate/cpp_clang.h            | 19 ++++++++++++----
+ 2 files changed, 34 insertions(+), 9 deletions(-)
+
+diff --git a/src/linguist/lupdate/clangtoolastreader.cpp b/src/linguist/lupdate/clangtoolastreader.cpp
+index 3db9e0d..2e66606 100644
+--- a/src/linguist/lupdate/clangtoolastreader.cpp
++++ b/src/linguist/lupdate/clangtoolastreader.cpp
+@@ -734,11 +734,25 @@ void LupdateVisitor::processPreprocessorCalls()
+                 || fileNameRealPath.str() == m_inputFile)
+             continue;
+ 
+-        auto sourceFile = sourceMgr.getFileManager()
+-            .getFile(fileNameRealPath);
+-        auto sourceLocation = sourceMgr.translateFileLineCol(sourceFile.get(), 1, 1);
+-        const clang::FileID fileId = sourceMgr.getDecomposedLoc(sourceLocation).first;
+-        processIsolatedComments(fileId);
++#if (LUPDATE_CLANG_VERSION >= LUPDATE_CLANG_VERSION_CHECK(21,0,0))
++        auto sourceFile = sourceMgr.getFileManager().getOptionalFileRef(fileNameRealPath);
++        if (sourceFile) {
++            auto sourceLocation = sourceMgr.translateFileLineCol(*sourceFile, 1, 1);
++            const clang::FileID fileId = sourceMgr.getDecomposedLoc(sourceLocation).first;
++            processIsolatedComments(fileId);
++        }
++#else
++        auto sourceFile = sourceMgr.getFileManager().getFile(fileNameRealPath);
++        if (sourceFile) {
++#if (LUPDATE_CLANG_VERSION >= LUPDATE_CLANG_VERSION_CHECK(10,0,0))
++            auto sourceLocation = sourceMgr.translateFileLineCol(sourceFile.get(), 1, 1);
++#else
++            auto sourceLocation = sourceMgr.translateFileLineCol(sourceFile, 1, 1);
++#endif
++            const clang::FileID fileId = sourceMgr.getDecomposedLoc(sourceLocation).first;
++            processIsolatedComments(fileId);
++        }
++#endif
+     }
+ #endif
+ 
+diff --git a/src/linguist/lupdate/cpp_clang.h b/src/linguist/lupdate/cpp_clang.h
+index 12c6611..70fdc4f 100644
+--- a/src/linguist/lupdate/cpp_clang.h
++++ b/src/linguist/lupdate/cpp_clang.h
+@@ -150,14 +150,25 @@ struct TranslationRelatedStore
+     clang::SourceLocation callLocation(const clang::SourceManager &sourceManager)
+     {
+         if (sourceLocation.isInvalid()) {
++#if (LUPDATE_CLANG_VERSION >= LUPDATE_CLANG_VERSION_CHECK(21,0,0))
++            auto sourceFile = sourceManager.getFileManager()
++                .getOptionalFileRef(lupdateLocationFile.toStdString());
++            if (sourceFile) {
++                sourceLocation = sourceManager.translateFileLineCol(*sourceFile,
++                    lupdateLocationLine, locationCol);
++        }
++#else
+             auto sourceFile = sourceManager.getFileManager()
+                 .getFile(lupdateLocationFile.toStdString());
++            if (sourceFile) {
+ #if (LUPDATE_CLANG_VERSION >= LUPDATE_CLANG_VERSION_CHECK(10,0,0))
+-            sourceLocation = sourceManager.translateFileLineCol(sourceFile.get(),
+-                lupdateLocationLine, locationCol);
++                sourceLocation = sourceManager.translateFileLineCol(sourceFile.get(),
++                    lupdateLocationLine, locationCol);
+ #else
+-            sourceLocation = sourceManager.translateFileLineCol(sourceFile, lupdateLocationLine,
+-                locationCol);
++                sourceLocation = sourceManager.translateFileLineCol(sourceFile,
++                    lupdateLocationLine, locationCol);
++#endif
++            }
+ #endif
+         }
+         return sourceLocation;
+-- 
+2.51.0
+

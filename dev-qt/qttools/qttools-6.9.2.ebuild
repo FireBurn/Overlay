@@ -62,6 +62,8 @@ DEPEND="
 	)
 "
 
+PATCHES=( "${FILESDIR}/${PN}-llvm21.patch" )
+
 src_prepare() {
 	qt6-build_src_prepare
 
