@@ -40,6 +40,7 @@ BDEPEND="app-editors/vim-core"
 
 PATCHES=(
 	"${FILESDIR}/${PN}-6.3.0-use-system-hsakmt.patch"
+	"${FILESDIR}/${PN}-disable-gfx940-941.patch"
 )
 
 # skip false positive detection in samples, bug #958188
