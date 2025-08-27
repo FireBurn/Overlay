@@ -25,7 +25,7 @@ RDEPEND="
 	llvm-core/llvm:${SLOT}=[${MULTILIB_USEDEP}]
 "
 DEPEND="${RDEPEND}
-	>=dev-util/spirv-headers-1.4.313.0
+	>=dev-util/spirv-headers-1.4.321.0-r1
 "
 BDEPEND="
 	virtual/pkgconfig
