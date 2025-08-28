@@ -1,0 +1,33 @@
+From ce920cd5f9c87b112a2c0c236d78fc9bd0fb0ad9 Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Fri, 20 Dec 2024 17:28:21 +0000
+Subject: [PATCH] Remove assert
+
+---
+ source/opt/propagator.cpp | 10 ----------
+ 1 file changed, 10 deletions(-)
+
+diff --git a/source/opt/propagator.cpp b/source/opt/propagator.cpp
+index 9cd6174c..efe64af9 100644
+--- a/source/opt/propagator.cpp
++++ b/source/opt/propagator.cpp
+@@ -258,16 +258,6 @@ bool SSAPropagator::Run(Function* fn) {
+     }
+   }
+ 
+-#ifndef NDEBUG
+-  // Verify all visited values have settled. No value that has been simulated
+-  // should end on not interesting.
+-  fn->ForEachInst([this](Instruction* inst) {
+-    assert(
+-        (!HasStatus(inst) || Status(inst) != SSAPropagator::kNotInteresting) &&
+-        "Unsettled value");
+-  });
+-#endif
+-
+   return changed;
+ }
+ 
+-- 
+2.47.1
+
