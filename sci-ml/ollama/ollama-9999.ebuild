@@ -40,7 +40,7 @@ X86_CPU_FLAGS=(
 	avx_vnni
 )
 CPU_FLAGS=( "${X86_CPU_FLAGS[@]/#/cpu_flags_x86_}" )
-IUSE="${CPU_FLAGS[*]} cuda blas mkl rocm"
+IUSE="${CPU_FLAGS[*]} blas cuda mkl rocm +unroll"
 # IUSE+=" opencl vulkan"
 
 RESTRICT="test"
@@ -203,6 +203,9 @@ src_prepare() {
 		# Use nuclear option to fix this.
 		# Disable -Werror's from go modules.
 		find "${S}" -name ".go" -exec sed -i "s/ -Werror / /g" {} + || die
+	fi
+	if ! use unroll; then
+		sed -i '/#pragma unroll/d' ml/backend/ggml/ggml/src/ggml-cuda/fattn-vec-f32.cuh
 	fi
 }
 
