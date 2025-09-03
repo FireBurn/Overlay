@@ -24,7 +24,7 @@ EAPI=8
 GN_MIN_VER=0.2235
 # chromium-tools/get-chromium-toolchain-strings.py
 TEST_FONT=a28b222b79851716f8358d2800157d9ffe117b3545031ae51f69b7e1e1b9a969
-BUNDLED_CLANG_VER=llvmorg-21-init-16348-gbd809ffb-13
+BUNDLED_CLANG_VER=llvmorg-21-init-16348-gbd809ffb-15
 BUNDLED_RUST_VER=22be76b7e259f27bf3e55eb931f354cd8b69d55f-3
 RUST_SHORT_HASH=${BUNDLED_RUST_VER:0:10}-${BUNDLED_RUST_VER##*-}
 NODE_VER=22.11.0
@@ -35,10 +35,9 @@ CHROMIUM_LANGS="af am ar bg bn ca cs da de el en-GB es es-419 et fa fi fil fr gu
 	hi hr hu id it ja kn ko lt lv ml mr ms nb nl pl pt-BR pt-PT ro ru sk sl sr
 	sv sw ta te th tr uk ur vi zh-CN zh-TW"
 
-LLVM_COMPAT=( 19 20 21 )
+LLVM_COMPAT=( 20 21 )
 PYTHON_COMPAT=( python3_{11..13} )
 PYTHON_REQ_USE="xml(+)"
-RUST_MAX_VER=1.89.0 # M140 fails to build with 1.89+
 RUST_MIN_VER=1.78.0
 RUST_NEEDS_LLVM="yes please"
 RUST_OPTIONAL="yes" # Not actually optional, but we don't need system Rust (or LLVM) with USE=bundled-toolchain
@@ -75,7 +74,7 @@ LICENSE+=" FFT2D FTL IJG ISC LGPL-2 LGPL-2.1 libpng libpng2 MIT MPL-1.1 MPL-2.0 
 LICENSE+=" SGI-B-2.0 SSLeay SunSoft Unicode-3.0 Unicode-DFS-2015 Unlicense UoI-NCSA X11-Lucent"
 LICENSE+=" rar? ( unRAR )"
 
-SLOT="0/dev"
+SLOT="0/stable"
 # Dev exists mostly to give devs some breathing room for beta/stable releases;
 # it shouldn't be keyworded but adventurous users can select it.
 if [[ ${SLOT} != "0/dev" ]]; then
@@ -416,7 +415,6 @@ remove_compiler_builtins() {
 	local pattern='    configs += [ "//build/config/clang:compiler_builtins" ]'
 	local target='build/config/compiler/BUILD.gn'
 
-	# Create a secure temporary file to store the output.
 	local tmpfile
 	tmpfile=$(mktemp) || die "Failed to create temporary file."
 
@@ -475,8 +473,13 @@ src_prepare() {
 		"${FILESDIR}/chromium-135-oauth2-client-switches.patch"
 		"${FILESDIR}/chromium-135-map_droppable-glibc.patch"
 		"${FILESDIR}/chromium-138-nodejs-version-check.patch"
-		"${FILESDIR}/chromium-140-system-harfbuzz.patch"
 	)
+
+	# https://issues.chromium.org/issues/442698344
+	# Unreleased fontconfig changed magic numbers and google have rolled to this version
+	if has_version "<=media-libs/fontconfig-2.17.1"; then
+		PATCHES+=( "${FILESDIR}/chromium-140-work-with-old-fontconfig.patch" )
+	fi
 
 	if use bundled-toolchain; then
 		# We need to symlink the toolchain into the expected location
@@ -549,6 +552,11 @@ src_prepare() {
 		if ver_test ${RUST_SLOT} -lt "1.86.0"; then
 			sed -i 's/adler2/adler/' build/rust/std/BUILD.gn ||
 				die "Failed to tell GN that we have adler and not adler2"
+		fi
+
+		if ver_test ${RUST_SLOT} -lt "1.89.0"; then
+			# The rust allocator was changed in 1.89.0, so we need to patch sources for older versions
+			PATCHES+=( "${FILESDIR}/chromium-140-__rust_no_alloc_shim_is_unstable.patch" )
 		fi
 	fi
 
@@ -1060,8 +1068,8 @@ chromium_configure() {
 			myconf_gn+=(
 				'host_toolchain="//build/toolchain/linux/unbundle:host"'
 				'v8_snapshot_toolchain="//build/toolchain/linux/unbundle:host"'
-				"host_pkg_config=$(tc-getBUILD_PKG_CONFIG)"
-				"pkg_config=$(tc-getPKG_CONFIG)"
+				"host_pkg_config=\"$(tc-getBUILD_PKG_CONFIG)\""
+				"pkg_config=\"$(tc-getPKG_CONFIG)\""
 			)
 
 			# setup cups-config, build system only uses --libs option
