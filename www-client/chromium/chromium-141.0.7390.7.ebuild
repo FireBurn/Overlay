@@ -471,7 +471,6 @@ src_prepare() {
 		"${FILESDIR}/chromium-131-unbundle-icu-target.patch"
 		"${FILESDIR}/chromium-134-bindgen-custom-toolchain.patch"
 		"${FILESDIR}/chromium-135-oauth2-client-switches.patch"
-		"${FILESDIR}/chromium-135-map_droppable-glibc.patch"
 		"${FILESDIR}/chromium-138-nodejs-version-check.patch"
 	)
 
@@ -680,6 +679,7 @@ src_prepare() {
 		third_party/farmhash
 		third_party/fast_float
 		third_party/fdlibm
+		third_party/federated_compute
 		third_party/ffmpeg
 		third_party/fft2d
 		third_party/flatbuffers
@@ -756,6 +756,7 @@ src_prepare() {
 		third_party/nearby
 		third_party/neon_2_sse
 		third_party/node
+		third_party/oak
 		third_party/omnibox_proto
 		third_party/one_euro_filter
 		third_party/openscreen
