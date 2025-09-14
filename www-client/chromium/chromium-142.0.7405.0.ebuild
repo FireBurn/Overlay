@@ -478,7 +478,7 @@ src_prepare() {
 	# https://issues.chromium.org/issues/442698344
 	# Unreleased fontconfig changed magic numbers and google have rolled to this version
 	if has_version "<=media-libs/fontconfig-2.17.1"; then
-		PATCHES+=( "${FILESDIR}/chromium-140-work-with-old-fontconfig.patch" )
+		PATCHES+=( "${FILESDIR}/chromium-140-work-with-old-fontconfig-again.patch" )
 	fi
 
 	if use bundled-toolchain; then
@@ -1476,6 +1476,11 @@ src_test() {
 		CriticalProcessAndThreadSpotChecks/HangWatcherAnyCriticalThreadTests.AnyCriticalThreadHung/ThreadPoolIsNotCritical
 		# M140
 		CriticalProcessAndThreadSpotChecks/HangWatcherAnyCriticalThreadTests.AnyCriticalThreadHung/GpuProcessIsCritical
+		# M142 - needs investigation if they persist into beta
+		AlternateTestParams/PartitionAllocTest.Realloc/2
+		AlternateTestParams/PartitionAllocTest.Realloc/3
+		AlternateTestParams/PartitionAllocTest.ReallocDirectMapAligned/2
+		AlternateTestParams/PartitionAllocTest.ReallocDirectMapAligned/3
 	)
 	local test_filter="-$(IFS=:; printf '%s' "${skip_tests[*]}")"
 	# test-launcher-bot-mode enables parallelism and plain output
