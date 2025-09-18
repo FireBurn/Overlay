@@ -1,0 +1,63 @@
+From 88148a9960e22aef865fc7ece6e1c96512df382a Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Thu, 18 Sep 2025 01:16:13 +0100
+Subject: [PATCH] fmt: Replace removed locale-based format overloads for fmt >=
+ 12
+
+`fmt::format(std::locale, ...)` was removed in fmt 12, causing link errors
+when building with newer versions. Update `Movie.cpp` and `State.cpp` to
+conditionally use `std::ostringstream` + `std::put_time` when building
+against fmt >= 12, while keeping the existing locale-aware fmt calls for
+fmt 11.
+
+This ensures Dolphin builds cleanly with both fmt 11 and 12 while
+retaining localized time output.
+---
+ Source/Core/Core/Movie.cpp | 9 ++++++++-
+ Source/Core/Core/State.cpp | 8 +++++++-
+ 2 files changed, 15 insertions(+), 2 deletions(-)
+
+diff --git a/Source/Core/Core/Movie.cpp b/Source/Core/Core/Movie.cpp
+index aee5e4707a..30e419560a 100644
+--- a/Source/Core/Core/Movie.cpp
++++ b/Source/Core/Core/Movie.cpp
+@@ -159,8 +159,15 @@ std::string MovieManager::GetRTCDisplay() const
+   const time_t current_time = CEXIIPL::GetEmulatedTime(m_system, CEXIIPL::UNIX_EPOCH);
+   const tm gm_time = fmt::gmtime(current_time);
+ 
+-  // Use current locale for formatting time, as fmt is locale-agnostic by default.
++#if FMT_VERSION < 120000  // fmt < 12 still supports locale overload
+   return fmt::format(std::locale{""}, "Date/Time: {:%c}", gm_time);
++#else
++  // fmt >= 12: no locale overload, fall back to standard library
++  std::ostringstream oss;
++  oss.imbue(std::locale(""));
++  oss << "Date/Time: " << std::put_time(&gm_time, "%c");
++  return oss.str();
++#endif
+ }
+ 
+ // NOTE: GPU Thread
+diff --git a/Source/Core/Core/State.cpp b/Source/Core/Core/State.cpp
+index ffd811bd6c..0bcbac1fc9 100644
+--- a/Source/Core/Core/State.cpp
++++ b/Source/Core/Core/State.cpp
+@@ -285,8 +285,14 @@ static std::string SystemTimeAsDoubleToString(double time)
+   if (!local_time)
+     return "";
+ 
+-  // fmt is locale agnostic by default, so explicitly use current locale.
++#if FMT_VERSION < 120000  // fmt < 12 still supports locale overload
+   return fmt::format(std::locale{""}, "{:%x %X}", *local_time);
++#else
++  std::ostringstream oss;
++  oss.imbue(std::locale(""));
++  oss << std::put_time(&*local_time, "%x %X");
++  return oss.str();
++#endif
+ }
+ 
+ static std::string MakeStateFilename(int number);
+-- 
+2.51.0
+
