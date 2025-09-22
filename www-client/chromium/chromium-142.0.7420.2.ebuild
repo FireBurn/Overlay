@@ -74,7 +74,7 @@ LICENSE+=" FFT2D FTL IJG ISC LGPL-2 LGPL-2.1 libpng libpng2 MIT MPL-1.1 MPL-2.0 
 LICENSE+=" SGI-B-2.0 SSLeay SunSoft Unicode-3.0 Unicode-DFS-2015 Unlicense UoI-NCSA X11-Lucent"
 LICENSE+=" rar? ( unRAR )"
 
-SLOT="0/beta"
+SLOT="0/dev"
 # Dev exists mostly to give devs some breathing room for beta/stable releases;
 # it shouldn't be keyworded but adventurous users can select it.
 if [[ ${SLOT} != "0/dev" ]]; then
@@ -467,18 +467,19 @@ src_prepare() {
 	local PATCHES=(
 		"${FILESDIR}/${PN}-cross-compile.patch"
 		"${FILESDIR}/${PN}-109-system-zlib.patch"
-		"${FILESDIR}/${PN}-111-InkDropHost-crash.patch"
 		"${FILESDIR}/${PN}-131-unbundle-icu-target.patch"
 		"${FILESDIR}/${PN}-134-bindgen-custom-toolchain.patch"
 		"${FILESDIR}/${PN}-135-oauth2-client-switches.patch"
 		"${FILESDIR}/${PN}-138-nodejs-version-check.patch"
-		"${FILESDIR}/${PN}-141-cssstylesheet-iwyu.patch"
+		"${FILESDIR}/${PN}-142-system-harfbuzz.patch"
+		"${FILESDIR}/${PN}-142-iwyu-field-form-data.patch"
+		"${FILESDIR}/${PN}-142-cssstylesheet.patch"
 	)
 
 	# https://issues.chromium.org/issues/442698344
 	# Unreleased fontconfig changed magic numbers and google have rolled to this version
 	if has_version "<=media-libs/fontconfig-2.17.1"; then
-		PATCHES+=( "${FILESDIR}/chromium-140-work-with-old-fontconfig.patch" )
+		PATCHES+=( "${FILESDIR}/chromium-142-work-with-old-fontconfig.patch" )
 	fi
 
 	if use bundled-toolchain; then
@@ -680,6 +681,7 @@ src_prepare() {
 		third_party/farmhash
 		third_party/fast_float
 		third_party/fdlibm
+		third_party/federated_compute/chromium/fcp/confidentialcompute
 		third_party/federated_compute/src/fcp/base
 		third_party/federated_compute/src/fcp/confidentialcompute
 		third_party/federated_compute/src/fcp/protos/confidentialcompute
@@ -726,6 +728,7 @@ src_prepare() {
 		third_party/libdrm
 		third_party/libgav1
 		third_party/libjingle
+		third_party/libpfm4
 		third_party/libphonenumber
 		third_party/libsecret
 		third_party/libsrtp
@@ -1475,6 +1478,11 @@ src_test() {
 		CriticalProcessAndThreadSpotChecks/HangWatcherAnyCriticalThreadTests.AnyCriticalThreadHung/ThreadPoolIsNotCritical
 		# M140
 		CriticalProcessAndThreadSpotChecks/HangWatcherAnyCriticalThreadTests.AnyCriticalThreadHung/GpuProcessIsCritical
+		# M142 - needs investigation if they persist into beta
+		AlternateTestParams/PartitionAllocTest.Realloc/2
+		AlternateTestParams/PartitionAllocTest.Realloc/3
+		AlternateTestParams/PartitionAllocTest.ReallocDirectMapAligned/2
+		AlternateTestParams/PartitionAllocTest.ReallocDirectMapAligned/3
 	)
 	local test_filter="-$(IFS=:; printf '%s' "${skip_tests[*]}")"
 	# test-launcher-bot-mode enables parallelism and plain output

@@ -74,7 +74,7 @@ LICENSE+=" FFT2D FTL IJG ISC LGPL-2 LGPL-2.1 libpng libpng2 MIT MPL-1.1 MPL-2.0 
 LICENSE+=" SGI-B-2.0 SSLeay SunSoft Unicode-3.0 Unicode-DFS-2015 Unlicense UoI-NCSA X11-Lucent"
 LICENSE+=" rar? ( unRAR )"
 
-SLOT="0/dev"
+SLOT="0/beta"
 # Dev exists mostly to give devs some breathing room for beta/stable releases;
 # it shouldn't be keyworded but adventurous users can select it.
 if [[ ${SLOT} != "0/dev" ]]; then
@@ -680,7 +680,6 @@ src_prepare() {
 		third_party/farmhash
 		third_party/fast_float
 		third_party/fdlibm
-		third_party/federated_compute/chromium/fcp/confidentialcompute
 		third_party/federated_compute/src/fcp/base
 		third_party/federated_compute/src/fcp/confidentialcompute
 		third_party/federated_compute/src/fcp/protos/confidentialcompute
@@ -1476,11 +1475,6 @@ src_test() {
 		CriticalProcessAndThreadSpotChecks/HangWatcherAnyCriticalThreadTests.AnyCriticalThreadHung/ThreadPoolIsNotCritical
 		# M140
 		CriticalProcessAndThreadSpotChecks/HangWatcherAnyCriticalThreadTests.AnyCriticalThreadHung/GpuProcessIsCritical
-		# M142 - needs investigation if they persist into beta
-		AlternateTestParams/PartitionAllocTest.Realloc/2
-		AlternateTestParams/PartitionAllocTest.Realloc/3
-		AlternateTestParams/PartitionAllocTest.ReallocDirectMapAligned/2
-		AlternateTestParams/PartitionAllocTest.ReallocDirectMapAligned/3
 	)
 	local test_filter="-$(IFS=:; printf '%s' "${skip_tests[*]}")"
 	# test-launcher-bot-mode enables parallelism and plain output
