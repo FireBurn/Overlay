@@ -1,0 +1,733 @@
+From 2cfd88fe64b279b64e44a89fc15ce16e45d33a52 Mon Sep 17 00:00:00 2001
+From: Fraser Cormack <fraser@codeplay.com>
+Date: Wed, 30 Jul 2025 12:28:30 +0100
+Subject: [PATCH] [SPIRV] Support G_IS_FPCLASS (#148637)
+
+This commit adds custom legalization for G_IS_FPCLASS, corresponding to
+the @llvm.is.fpclass intrinsic.
+
+The lowering strategy is essentially copied and adjusted from the
+target-agnostic LegalizeHelper::lowerISFPCLASS legalization. The reason
+we can't just use that directly is that the series of instruction it
+expands to aren't logged in the SPIR-V backend's register/type
+book-keeping, leading to issues later on in the compilation process.
+
+As such the code introduced here was copied from the aforementioned
+helper method, with some notable changes:
+
+* Each new instruction's destination register must have a SPIR-V type
+registered to it.
+* Instead of a COPY from the floating-point type to integer, we issue a
+SPIR-V OpBitcast directly. The backend doesn't currently appear to
+handle bitcast-like COPYs.
+
+Fixes #72862
+---
+ llvm/lib/Target/SPIRV/SPIRVLegalizerInfo.cpp  | 245 ++++++++++-
+ llvm/lib/Target/SPIRV/SPIRVLegalizerInfo.h    |   4 +
+ .../SPIRV/llvm-intrinsics/is_fpclass.ll       | 408 ++++++++++++++++++
+ 3 files changed, 654 insertions(+), 3 deletions(-)
+ create mode 100644 llvm/test/CodeGen/SPIRV/llvm-intrinsics/is_fpclass.ll
+
+diff --git a/llvm/lib/Target/SPIRV/SPIRVLegalizerInfo.cpp b/llvm/lib/Target/SPIRV/SPIRVLegalizerInfo.cpp
+index 721f64a329d3..1995e0f88cbe 100644
+--- a/llvm/lib/Target/SPIRV/SPIRVLegalizerInfo.cpp
++++ b/llvm/lib/Target/SPIRV/SPIRVLegalizerInfo.cpp
+@@ -335,6 +335,8 @@ SPIRVLegalizerInfo::SPIRVLegalizerInfo(const SPIRVSubtarget &ST) {
+     getActionDefinitionsBuilder({G_SMULH, G_UMULH}).alwaysLegal();
+   }
+ 
++  getActionDefinitionsBuilder(G_IS_FPCLASS).custom();
++
+   getLegacyLegalizerInfo().computeTables();
+   verify(*ST.getInstrInfo());
+ }
+@@ -355,9 +357,14 @@ static Register convertPtrToInt(Register Reg, LLT ConvTy, SPIRVType *SpvType,
+ bool SPIRVLegalizerInfo::legalizeCustom(
+     LegalizerHelper &Helper, MachineInstr &MI,
+     LostDebugLocObserver &LocObserver) const {
+-  auto Opc = MI.getOpcode();
+   MachineRegisterInfo &MRI = MI.getMF()->getRegInfo();
+-  if (Opc == TargetOpcode::G_ICMP) {
++  switch (MI.getOpcode()) {
++  default:
++    // TODO: implement legalization for other opcodes.
++    return true;
++  case TargetOpcode::G_IS_FPCLASS:
++    return legalizeIsFPClass(Helper, MI, LocObserver);
++  case TargetOpcode::G_ICMP: {
+     assert(GR->getSPIRVTypeForVReg(MI.getOperand(0).getReg()));
+     auto &Op0 = MI.getOperand(2);
+     auto &Op1 = MI.getOperand(3);
+@@ -378,6 +385,238 @@ bool SPIRVLegalizerInfo::legalizeCustom(
+     }
+     return true;
+   }
+-  // TODO: implement legalization for other opcodes.
++  }
++}
++
++// Note this code was copied from LegalizerHelper::lowerISFPCLASS and adjusted
++// to ensure that all instructions created during the lowering have SPIR-V types
++// assigned to them.
++bool SPIRVLegalizerInfo::legalizeIsFPClass(
++    LegalizerHelper &Helper, MachineInstr &MI,
++    LostDebugLocObserver &LocObserver) const {
++  auto [DstReg, DstTy, SrcReg, SrcTy] = MI.getFirst2RegLLTs();
++  FPClassTest Mask = static_cast<FPClassTest>(MI.getOperand(2).getImm());
++
++  auto &MIRBuilder = Helper.MIRBuilder;
++  auto &MF = MIRBuilder.getMF();
++  MachineRegisterInfo &MRI = MF.getRegInfo();
++
++  Type *LLVMDstTy =
++      IntegerType::get(MIRBuilder.getContext(), DstTy.getScalarSizeInBits());
++  if (DstTy.isVector())
++    LLVMDstTy = VectorType::get(LLVMDstTy, DstTy.getElementCount());
++  SPIRVType *SPIRVDstTy = GR->getOrCreateSPIRVType(
++      LLVMDstTy, MIRBuilder, SPIRV::AccessQualifier::ReadWrite,
++      /*EmitIR*/ true);
++
++  unsigned BitSize = SrcTy.getScalarSizeInBits();
++  const fltSemantics &Semantics = getFltSemanticForLLT(SrcTy.getScalarType());
++
++  LLT IntTy = LLT::scalar(BitSize);
++  Type *LLVMIntTy = IntegerType::get(MIRBuilder.getContext(), BitSize);
++  if (SrcTy.isVector()) {
++    IntTy = LLT::vector(SrcTy.getElementCount(), IntTy);
++    LLVMIntTy = VectorType::get(LLVMIntTy, SrcTy.getElementCount());
++  }
++  SPIRVType *SPIRVIntTy = GR->getOrCreateSPIRVType(
++      LLVMIntTy, MIRBuilder, SPIRV::AccessQualifier::ReadWrite,
++      /*EmitIR*/ true);
++
++  // Clang doesn't support capture of structured bindings:
++  LLT DstTyCopy = DstTy;
++  const auto assignSPIRVTy = [&](MachineInstrBuilder &&MI) {
++    // Assign this MI's (assumed only) destination to one of the two types we
++    // expect: either the G_IS_FPCLASS's destination type, or the integer type
++    // bitcast from the source type.
++    LLT MITy = MRI.getType(MI.getReg(0));
++    assert((MITy == IntTy || MITy == DstTyCopy) &&
++           "Unexpected LLT type while lowering G_IS_FPCLASS");
++    auto *SPVTy = MITy == IntTy ? SPIRVIntTy : SPIRVDstTy;
++    GR->assignSPIRVTypeToVReg(SPVTy, MI.getReg(0), MF);
++    return MI;
++  };
++
++  // Helper to build and assign a constant in one go
++  const auto buildSPIRVConstant = [&](LLT Ty, auto &&C) -> MachineInstrBuilder {
++    if (!Ty.isFixedVector())
++      return assignSPIRVTy(MIRBuilder.buildConstant(Ty, C));
++    auto ScalarC = MIRBuilder.buildConstant(Ty.getScalarType(), C);
++    assert((Ty == IntTy || Ty == DstTyCopy) &&
++           "Unexpected LLT type while lowering constant for G_IS_FPCLASS");
++    SPIRVType *VecEltTy = GR->getOrCreateSPIRVType(
++        (Ty == IntTy ? LLVMIntTy : LLVMDstTy)->getScalarType(), MIRBuilder,
++        SPIRV::AccessQualifier::ReadWrite,
++        /*EmitIR*/ true);
++    GR->assignSPIRVTypeToVReg(VecEltTy, ScalarC.getReg(0), MF);
++    return assignSPIRVTy(MIRBuilder.buildSplatBuildVector(Ty, ScalarC));
++  };
++
++  if (Mask == fcNone) {
++    MIRBuilder.buildCopy(DstReg, buildSPIRVConstant(DstTy, 0));
++    MI.eraseFromParent();
++    return true;
++  }
++  if (Mask == fcAllFlags) {
++    MIRBuilder.buildCopy(DstReg, buildSPIRVConstant(DstTy, 1));
++    MI.eraseFromParent();
++    return true;
++  }
++
++  // Note that rather than creating a COPY here (between a floating-point and
++  // integer type of the same size) we create a SPIR-V bitcast immediately. We
++  // can't create a G_BITCAST because the LLTs are the same, and we can't seem
++  // to correctly lower COPYs to SPIR-V bitcasts at this moment.
++  Register ResVReg = MRI.createGenericVirtualRegister(IntTy);
++  MRI.setRegClass(ResVReg, GR->getRegClass(SPIRVIntTy));
++  GR->assignSPIRVTypeToVReg(SPIRVIntTy, ResVReg, Helper.MIRBuilder.getMF());
++  auto AsInt = MIRBuilder.buildInstr(SPIRV::OpBitcast)
++                   .addDef(ResVReg)
++                   .addUse(GR->getSPIRVTypeID(SPIRVIntTy))
++                   .addUse(SrcReg);
++  AsInt = assignSPIRVTy(std::move(AsInt));
++
++  // Various masks.
++  APInt SignBit = APInt::getSignMask(BitSize);
++  APInt ValueMask = APInt::getSignedMaxValue(BitSize);     // All bits but sign.
++  APInt Inf = APFloat::getInf(Semantics).bitcastToAPInt(); // Exp and int bit.
++  APInt ExpMask = Inf;
++  APInt AllOneMantissa = APFloat::getLargest(Semantics).bitcastToAPInt() & ~Inf;
++  APInt QNaNBitMask =
++      APInt::getOneBitSet(BitSize, AllOneMantissa.getActiveBits() - 1);
++  APInt InversionMask = APInt::getAllOnes(DstTy.getScalarSizeInBits());
++
++  auto SignBitC = buildSPIRVConstant(IntTy, SignBit);
++  auto ValueMaskC = buildSPIRVConstant(IntTy, ValueMask);
++  auto InfC = buildSPIRVConstant(IntTy, Inf);
++  auto ExpMaskC = buildSPIRVConstant(IntTy, ExpMask);
++  auto ZeroC = buildSPIRVConstant(IntTy, 0);
++
++  auto Abs = assignSPIRVTy(MIRBuilder.buildAnd(IntTy, AsInt, ValueMaskC));
++  auto Sign = assignSPIRVTy(
++      MIRBuilder.buildICmp(CmpInst::Predicate::ICMP_NE, DstTy, AsInt, Abs));
++
++  auto Res = buildSPIRVConstant(DstTy, 0);
++
++  const auto appendToRes = [&](MachineInstrBuilder &&ToAppend) {
++    Res = assignSPIRVTy(
++        MIRBuilder.buildOr(DstTyCopy, Res, assignSPIRVTy(std::move(ToAppend))));
++  };
++
++  // Tests that involve more than one class should be processed first.
++  if ((Mask & fcFinite) == fcFinite) {
++    // finite(V) ==> abs(V) u< exp_mask
++    appendToRes(MIRBuilder.buildICmp(CmpInst::Predicate::ICMP_ULT, DstTy, Abs,
++                                     ExpMaskC));
++    Mask &= ~fcFinite;
++  } else if ((Mask & fcFinite) == fcPosFinite) {
++    // finite(V) && V > 0 ==> V u< exp_mask
++    appendToRes(MIRBuilder.buildICmp(CmpInst::Predicate::ICMP_ULT, DstTy, AsInt,
++                                     ExpMaskC));
++    Mask &= ~fcPosFinite;
++  } else if ((Mask & fcFinite) == fcNegFinite) {
++    // finite(V) && V < 0 ==> abs(V) u< exp_mask && signbit == 1
++    auto Cmp = assignSPIRVTy(MIRBuilder.buildICmp(CmpInst::Predicate::ICMP_ULT,
++                                                  DstTy, Abs, ExpMaskC));
++    appendToRes(MIRBuilder.buildAnd(DstTy, Cmp, Sign));
++    Mask &= ~fcNegFinite;
++  }
++
++  if (FPClassTest PartialCheck = Mask & (fcZero | fcSubnormal)) {
++    // fcZero | fcSubnormal => test all exponent bits are 0
++    // TODO: Handle sign bit specific cases
++    // TODO: Handle inverted case
++    if (PartialCheck == (fcZero | fcSubnormal)) {
++      auto ExpBits = assignSPIRVTy(MIRBuilder.buildAnd(IntTy, AsInt, ExpMaskC));
++      appendToRes(MIRBuilder.buildICmp(CmpInst::Predicate::ICMP_EQ, DstTy,
++                                       ExpBits, ZeroC));
++      Mask &= ~PartialCheck;
++    }
++  }
++
++  // Check for individual classes.
++  if (FPClassTest PartialCheck = Mask & fcZero) {
++    if (PartialCheck == fcPosZero)
++      appendToRes(MIRBuilder.buildICmp(CmpInst::Predicate::ICMP_EQ, DstTy,
++                                       AsInt, ZeroC));
++    else if (PartialCheck == fcZero)
++      appendToRes(
++          MIRBuilder.buildICmp(CmpInst::Predicate::ICMP_EQ, DstTy, Abs, ZeroC));
++    else // fcNegZero
++      appendToRes(MIRBuilder.buildICmp(CmpInst::Predicate::ICMP_EQ, DstTy,
++                                       AsInt, SignBitC));
++  }
++
++  if (FPClassTest PartialCheck = Mask & fcSubnormal) {
++    // issubnormal(V) ==> unsigned(abs(V) - 1) u< (all mantissa bits set)
++    // issubnormal(V) && V>0 ==> unsigned(V - 1) u< (all mantissa bits set)
++    auto V = (PartialCheck == fcPosSubnormal) ? AsInt : Abs;
++    auto OneC = buildSPIRVConstant(IntTy, 1);
++    auto VMinusOne = MIRBuilder.buildSub(IntTy, V, OneC);
++    auto SubnormalRes = assignSPIRVTy(
++        MIRBuilder.buildICmp(CmpInst::Predicate::ICMP_ULT, DstTy, VMinusOne,
++                             buildSPIRVConstant(IntTy, AllOneMantissa)));
++    if (PartialCheck == fcNegSubnormal)
++      SubnormalRes = MIRBuilder.buildAnd(DstTy, SubnormalRes, Sign);
++    appendToRes(std::move(SubnormalRes));
++  }
++
++  if (FPClassTest PartialCheck = Mask & fcInf) {
++    if (PartialCheck == fcPosInf)
++      appendToRes(MIRBuilder.buildICmp(CmpInst::Predicate::ICMP_EQ, DstTy,
++                                       AsInt, InfC));
++    else if (PartialCheck == fcInf)
++      appendToRes(
++          MIRBuilder.buildICmp(CmpInst::Predicate::ICMP_EQ, DstTy, Abs, InfC));
++    else { // fcNegInf
++      APInt NegInf = APFloat::getInf(Semantics, true).bitcastToAPInt();
++      auto NegInfC = buildSPIRVConstant(IntTy, NegInf);
++      appendToRes(MIRBuilder.buildICmp(CmpInst::Predicate::ICMP_EQ, DstTy,
++                                       AsInt, NegInfC));
++    }
++  }
++
++  if (FPClassTest PartialCheck = Mask & fcNan) {
++    auto InfWithQnanBitC = buildSPIRVConstant(IntTy, Inf | QNaNBitMask);
++    if (PartialCheck == fcNan) {
++      // isnan(V) ==> abs(V) u> int(inf)
++      appendToRes(
++          MIRBuilder.buildICmp(CmpInst::Predicate::ICMP_UGT, DstTy, Abs, InfC));
++    } else if (PartialCheck == fcQNan) {
++      // isquiet(V) ==> abs(V) u>= (unsigned(Inf) | quiet_bit)
++      appendToRes(MIRBuilder.buildICmp(CmpInst::Predicate::ICMP_UGE, DstTy, Abs,
++                                       InfWithQnanBitC));
++    } else { // fcSNan
++      // issignaling(V) ==> abs(V) u> unsigned(Inf) &&
++      //                    abs(V) u< (unsigned(Inf) | quiet_bit)
++      auto IsNan = assignSPIRVTy(
++          MIRBuilder.buildICmp(CmpInst::Predicate::ICMP_UGT, DstTy, Abs, InfC));
++      auto IsNotQnan = assignSPIRVTy(MIRBuilder.buildICmp(
++          CmpInst::Predicate::ICMP_ULT, DstTy, Abs, InfWithQnanBitC));
++      appendToRes(MIRBuilder.buildAnd(DstTy, IsNan, IsNotQnan));
++    }
++  }
++
++  if (FPClassTest PartialCheck = Mask & fcNormal) {
++    // isnormal(V) ==> (0 u< exp u< max_exp) ==> (unsigned(exp-1) u<
++    // (max_exp-1))
++    APInt ExpLSB = ExpMask & ~(ExpMask.shl(1));
++    auto ExpMinusOne = assignSPIRVTy(
++        MIRBuilder.buildSub(IntTy, Abs, buildSPIRVConstant(IntTy, ExpLSB)));
++    APInt MaxExpMinusOne = ExpMask - ExpLSB;
++    auto NormalRes = assignSPIRVTy(
++        MIRBuilder.buildICmp(CmpInst::Predicate::ICMP_ULT, DstTy, ExpMinusOne,
++                             buildSPIRVConstant(IntTy, MaxExpMinusOne)));
++    if (PartialCheck == fcNegNormal)
++      NormalRes = MIRBuilder.buildAnd(DstTy, NormalRes, Sign);
++    else if (PartialCheck == fcPosNormal) {
++      auto PosSign = assignSPIRVTy(MIRBuilder.buildXor(
++          DstTy, Sign, buildSPIRVConstant(DstTy, InversionMask)));
++      NormalRes = MIRBuilder.buildAnd(DstTy, NormalRes, PosSign);
++    }
++    appendToRes(std::move(NormalRes));
++  }
++
++  MIRBuilder.buildCopy(DstReg, Res);
++  MI.eraseFromParent();
+   return true;
+ }
+diff --git a/llvm/lib/Target/SPIRV/SPIRVLegalizerInfo.h b/llvm/lib/Target/SPIRV/SPIRVLegalizerInfo.h
+index 6335f211e198..eeefa4239c77 100644
+--- a/llvm/lib/Target/SPIRV/SPIRVLegalizerInfo.h
++++ b/llvm/lib/Target/SPIRV/SPIRVLegalizerInfo.h
+@@ -30,6 +30,10 @@ public:
+   bool legalizeCustom(LegalizerHelper &Helper, MachineInstr &MI,
+                       LostDebugLocObserver &LocObserver) const override;
+   SPIRVLegalizerInfo(const SPIRVSubtarget &ST);
++
++private:
++  bool legalizeIsFPClass(LegalizerHelper &Helper, MachineInstr &MI,
++                         LostDebugLocObserver &LocObserver) const;
+ };
+ } // namespace llvm
+ #endif // LLVM_LIB_TARGET_SPIRV_SPIRVMACHINELEGALIZER_H
+diff --git a/llvm/test/CodeGen/SPIRV/llvm-intrinsics/is_fpclass.ll b/llvm/test/CodeGen/SPIRV/llvm-intrinsics/is_fpclass.ll
+new file mode 100644
+index 000000000000..ec8330c16c8f
+--- /dev/null
++++ b/llvm/test/CodeGen/SPIRV/llvm-intrinsics/is_fpclass.ll
+@@ -0,0 +1,408 @@
++; RUN: llc -verify-machineinstrs -O0 -mtriple=spirv64-unknown-unknown %s -o - | FileCheck %s
++; RUN: %if spirv-tools %{ llc -O0 -mtriple=spirv64-unknown-unknown %s -o - -filetype=obj | spirv-val %}
++
++; RUN: llc -verify-machineinstrs -O0 -mtriple=spirv32-unknown-unknown %s -o - | FileCheck %s
++; RUN: %if spirv-tools %{ llc -O0 -mtriple=spirv32-unknown-unknown %s -o - -filetype=obj | spirv-val %}
++
++; CHECK-DAG: %[[#BoolTy:]] = OpTypeBool
++; CHECK-DAG: %[[#FP32Ty:]] = OpTypeFloat 32
++; CHECK-DAG: %[[#FP64Ty:]] = OpTypeFloat 64
++; CHECK-DAG: %[[#FP16Ty:]] = OpTypeFloat 16
++; CHECK-DAG: %[[#I32Ty:]] = OpTypeInt 32 0
++; CHECK-DAG: %[[#I64Ty:]] = OpTypeInt 64 0
++; CHECK-DAG: %[[#I16Ty:]] = OpTypeInt 16 0
++
++; CHECK-DAG: %[[#V4I32Ty:]] = OpTypeVector %[[#I32Ty]] 4
++; CHECK-DAG: %[[#V4FP32Ty:]] = OpTypeVector %[[#FP32Ty]] 4
++; CHECK-DAG: %[[#V4BoolTy:]] = OpTypeVector %[[#BoolTy]] 4
++
++; CHECK-DAG: %[[#MaxExpMinus1:]] = OpConstant %[[#I32Ty]] 2130706432
++; CHECK-DAG: %[[#ExpLSB:]] = OpConstant %[[#I32Ty]] 8388608
++; CHECK-DAG: %[[#True:]] = OpConstantTrue %[[#BoolTy]]
++; CHECK-DAG: %[[#False:]] = OpConstantFalse %[[#BoolTy]]
++; CHECK-DAG: %[[#ValueMask:]] = OpConstant %[[#I32Ty]] 2147483647
++; CHECK-DAG: %[[#InfWithQnanBit:]] = OpConstant %[[#I32Ty]] 2143289344
++; CHECK-DAG: %[[#Inf:]] = OpConstant %[[#I32Ty]] 2139095040
++; CHECK-DAG: %[[#NegInf:]] = OpConstant %[[#I32Ty]] 4286578688
++; CHECK-DAG: %[[#One:]] = OpConstant %[[#I32Ty]] 1
++; CHECK-DAG: %[[#Zero:]] = OpConstantNull %[[#I32Ty]]
++; CHECK-DAG: %[[#AllOneMantissa:]] = OpConstant %[[#I32Ty]] 8388607
++; CHECK-DAG: %[[#SignBit:]] = OpConstant %[[#I32Ty]] 2147483648
++
++; CHECK-DAG: %[[#ValueMaskFP64:]] = OpConstant %[[#I64Ty]] 9223372036854775807
++; CHECK-DAG: %[[#InfFP64:]] = OpConstant %[[#I64Ty]] 9218868437227405312
++; CHECK-DAG: %[[#NegInfFP64:]] = OpConstant %[[#I64Ty]] 18442240474082181120
++
++; CHECK-DAG: %[[#FalseV4:]] = OpConstantComposite %[[#V4BoolTy]] %[[#False]] %[[#False]] %[[#False]] %[[#False]]
++; CHECK-DAG: %[[#ValueMaskV4:]] = OpConstantComposite %[[#V4I32Ty]] %[[#ValueMask]] %[[#ValueMask]] %[[#ValueMask]] %[[#ValueMask]]
++; CHECK-DAG: %[[#InfV4:]] = OpConstantComposite %[[#V4I32Ty]] %[[#Inf]] %[[#Inf]] %[[#Inf]] %[[#Inf]]
++; CHECK-DAG: %[[#InfWithQnanBitV4:]] = OpConstantComposite %[[#V4I32Ty]] %[[#InfWithQnanBit]] %[[#InfWithQnanBit]] %[[#InfWithQnanBit]] %[[#InfWithQnanBit]]
++; CHECK-DAG: %[[#ValueMaskFP16:]] = OpConstant %[[#I16Ty]] 32767
++; CHECK-DAG: %[[#InfFP16:]] = OpConstant %[[#I16Ty]] 31744
++; CHECK-DAG: %[[#NegInfFP16:]] = OpConstant %[[#I16Ty]] 64512
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: OpReturnValue %[[#False]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_0_none(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 0)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpBitwiseAnd %[[#I32Ty]] %[[#T0]] %[[#ValueMask]]
++; CHECK: %[[#T2:]] = OpUGreaterThan %[[#BoolTy]] %[[#T1]] %[[#Inf]]
++; CHECK: %[[#T3:]] = OpULessThan %[[#BoolTy]] %[[#T1]] %[[#InfWithQnanBit]]
++; CHECK: %[[#T4:]] = OpLogicalAnd %[[#BoolTy]] %[[#T2]] %[[#T3]]
++; CHECK: %[[#T5:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T4]]
++; CHECK: OpReturnValue %[[#T5]]
++; CHECK: OpFunctionEnd
++
++define i1 @isfpclass_1_issnan(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 1)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#V4BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#V4FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#V4I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpBitwiseAnd %[[#V4I32Ty]] %[[#T0]] %[[#ValueMaskV4]]
++; CHECK: %[[#T2:]] = OpUGreaterThan %[[#V4BoolTy]] %[[#T1]] %[[#InfV4]]
++; CHECK: %[[#T3:]] = OpULessThan %[[#V4BoolTy]] %[[#T1]] %[[#InfWithQnanBitV4]]
++; CHECK: %[[#T4:]] = OpLogicalAnd %[[#V4BoolTy]] %[[#T2]] %[[#T3]]
++; CHECK: %[[#T5:]] = OpLogicalOr %[[#V4BoolTy]] %[[#FalseV4]] %[[#T4]]
++; CHECK: OpReturnValue %[[#T5]]
++; CHECK: OpFunctionEnd
++
++define <4 x i1> @isfpclass_1_issnan_v4f32(<4 x float> %a) {
++  %v = call <4 x i1> @llvm.is.fpclass.v4f32(<4 x float> %a, i32 1)
++  ret <4 x i1> %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpBitwiseAnd %[[#I32Ty]] %[[#T0]] %[[#ValueMask]]
++; CHECK: %[[#T2:]] = OpUGreaterThanEqual %[[#BoolTy]] %[[#T1]] %[[#InfWithQnanBit]]
++; CHECK: %[[#T3:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T2]]
++; CHECK: OpReturnValue %[[#T3]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_1_isqnan(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 2)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpBitwiseAnd %[[#I32Ty]] %[[#T0]] %[[#ValueMask]]
++; CHECK: %[[#T2:]] = OpUGreaterThan %[[#BoolTy]] %[[#T1]] %[[#Inf]]
++; CHECK: %[[#T3:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T2]]
++; CHECK: OpReturnValue %[[#T3]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_1_isnan(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 3)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpIEqual %[[#BoolTy]] %[[#T0]] %[[#Inf]]
++; CHECK: %[[#T2:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T1]]
++; CHECK: OpReturnValue %[[#T2]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_1_ispinf(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 512)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpIEqual %[[#BoolTy]] %[[#T0]] %[[#NegInf]]
++; CHECK: %[[#T2:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T1]]
++; CHECK: OpReturnValue %[[#T2]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_1_isninf(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 4)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpBitwiseAnd %[[#I32Ty]] %[[#T0]] %[[#ValueMask]]
++; CHECK: %[[#T2:]] = OpIEqual %[[#BoolTy]] %[[#T1]] %[[#Inf]]
++; CHECK: %[[#T3:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T2]]
++; CHECK: OpReturnValue %[[#T3]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_1_isinf(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 516)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpBitwiseAnd %[[#I32Ty]] %[[#T0]] %[[#ValueMask]]
++; CHECK: %[[#T2:]] = OpINotEqual %[[#BoolTy]] %[[#T0]] %[[#T1]]
++; CHECK: %[[#T3:]] = OpISub %[[#I32Ty]] %[[#T1]] %[[#ExpLSB]]
++; CHECK: %[[#T4:]] = OpULessThan %[[#BoolTy]] %[[#T3]] %[[#MaxExpMinus1]]
++; CHECK: %[[#T5:]] = OpLogicalNotEqual %[[#BoolTy]] %[[#T2]] %[[#True]]
++; CHECK: %[[#T6:]] = OpLogicalAnd %[[#BoolTy]] %[[#T4]] %[[#T5]]
++; CHECK: %[[#T7:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T6]]
++; CHECK: OpReturnValue %[[#T7]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_isposnormal(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 256)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpBitwiseAnd %[[#I32Ty]] %[[#T0]] %[[#ValueMask]]
++; CHECK: %[[#T2:]] = OpINotEqual %[[#BoolTy]] %[[#T0]] %[[#T1]]
++; CHECK: %[[#T3:]] = OpISub %[[#I32Ty]] %[[#T1]] %[[#ExpLSB]]
++; CHECK: %[[#T4:]] = OpULessThan %[[#BoolTy]] %[[#T3]] %[[#MaxExpMinus1]]
++; CHECK: %[[#T5:]] = OpLogicalAnd %[[#BoolTy]] %[[#T4]] %[[#T2]]
++; CHECK: %[[#T6:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T5]]
++; CHECK: OpReturnValue %[[#T6]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_isnegnormal(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 8)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpBitwiseAnd %[[#I32Ty]] %[[#T0]] %[[#ValueMask]]
++; CHECK: %[[#T2:]] = OpISub %[[#I32Ty]] %[[#T1]] %[[#ExpLSB]]
++; CHECK: %[[#T3:]] = OpULessThan %[[#BoolTy]] %[[#T2]] %[[#MaxExpMinus1]]
++; CHECK: %[[#T4:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T3]]
++; CHECK: OpReturnValue %[[#T4]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_isnormal(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 264)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpBitwiseAnd %[[#I32Ty]] %[[#T0]] %[[#ValueMask]]
++; CHECK: %[[#T2:]] = OpUGreaterThan %[[#BoolTy]] %[[#T1]] %[[#Inf]]
++; CHECK: %[[#T3:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T2]]
++; CHECK: %[[#T4:]] = OpISub %[[#I32Ty]] %[[#T1]] %[[#ExpLSB]]
++; CHECK: %[[#T5:]] = OpULessThan %[[#BoolTy]] %[[#T4]] %[[#MaxExpMinus1]]
++; CHECK: %[[#T6:]] = OpLogicalOr %[[#BoolTy]] %[[#T3]] %[[#T5]]
++; CHECK: OpReturnValue %[[#T6]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_1_isnan_or_normal(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 267)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpISub %[[#I32Ty]] %[[#T0]] %[[#One]]
++; CHECK: %[[#T2:]] = OpULessThan %[[#BoolTy]] %[[#T1]] %[[#AllOneMantissa]]
++; CHECK: %[[#T3:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T2]]
++; CHECK: OpReturnValue %[[#T3]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_ispsubnormal(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 128)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpBitwiseAnd %[[#I32Ty]] %[[#T0]] %[[#ValueMask]]
++; CHECK: %[[#T2:]] = OpINotEqual %[[#BoolTy]] %[[#T0]] %[[#T1]]
++; CHECK: %[[#T3:]] = OpISub %[[#I32Ty]] %[[#T1]] %[[#One]]
++; CHECK: %[[#T4:]] = OpULessThan %[[#BoolTy]] %[[#T3]] %[[#AllOneMantissa]]
++; CHECK: %[[#T5:]] = OpLogicalAnd %[[#BoolTy]] %[[#T4]] %[[#T2]]
++; CHECK: %[[#T6:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T5]]
++; CHECK: OpReturnValue %[[#T6]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_isnsubnormal(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 16)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpBitwiseAnd %[[#I32Ty]] %[[#T0]] %[[#ValueMask]]
++; CHECK: %[[#T2:]] = OpISub %[[#I32Ty]] %[[#T1]] %[[#One]]
++; CHECK: %[[#T3:]] = OpULessThan %[[#BoolTy]] %[[#T2]] %[[#AllOneMantissa]]
++; CHECK: %[[#T4:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T3]]
++; CHECK: OpReturnValue %[[#T4]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_issubnormal(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 144)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpIEqual %[[#BoolTy]] %[[#T0]] %[[#Zero]]
++; CHECK: %[[#T2:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T1]]
++; CHECK: OpReturnValue %[[#T2]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_ispzero(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 64)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpIEqual %[[#BoolTy]] %[[#T0]] %[[#SignBit]]
++; CHECK: %[[#T2:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T1]]
++; CHECK: OpReturnValue %[[#T2]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_isnzero(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 32)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpBitwiseAnd %[[#I32Ty]] %[[#T0]] %[[#ValueMask]]
++; CHECK: %[[#T2:]] = OpIEqual %[[#BoolTy]] %[[#T1]] %[[#Zero]]
++; CHECK: %[[#T3:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T2]]
++; CHECK: OpReturnValue %[[#T3]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_iszero(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 96)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpULessThan %[[#BoolTy]] %[[#T0]] %[[#Inf]]
++; CHECK: %[[#T2:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T1]]
++; CHECK: OpReturnValue %[[#T2]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_ispfinite(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 448)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpBitwiseAnd %[[#I32Ty]] %[[#T0]] %[[#ValueMask]]
++; CHECK: %[[#T2:]] = OpINotEqual %[[#BoolTy]] %[[#T0]] %[[#T1]]
++; CHECK: %[[#T3:]] = OpULessThan %[[#BoolTy]] %[[#T1]] %[[#Inf]]
++; CHECK: %[[#T4:]] = OpLogicalAnd %[[#BoolTy]] %[[#T3]] %[[#T2]]
++; CHECK: %[[#T5:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T4]]
++; CHECK: OpReturnValue %[[#T5]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_isnfinite(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 56)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpBitwiseAnd %[[#I32Ty]] %[[#T0]] %[[#ValueMask]]
++; CHECK: %[[#T2:]] = OpULessThan %[[#BoolTy]] %[[#T1]] %[[#Inf]]
++; CHECK: %[[#T3:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T2]]
++; CHECK: OpReturnValue %[[#T3]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_isfinite(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 504)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpULessThan %[[#BoolTy]] %[[#T0]] %[[#Inf]]
++; CHECK: %[[#T2:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T1]]
++; CHECK: %[[#T3:]] = OpIEqual %[[#BoolTy]] %[[#T0]] %[[#Inf]]
++; CHECK: %[[#T4:]] = OpLogicalOr %[[#BoolTy]] %[[#T2]] %[[#T3]]
++; CHECK: OpReturnValue %[[#T4]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_ispositive(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 960)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I32Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpBitwiseAnd %[[#I32Ty]] %[[#T0]] %[[#ValueMask]]
++; CHECK: %[[#T2:]] = OpINotEqual %[[#BoolTy]] %[[#T0]] %[[#T1]]
++; CHECK: %[[#T3:]] = OpULessThan %[[#BoolTy]] %[[#T1]] %[[#Inf]]
++; CHECK: %[[#T4:]] = OpLogicalAnd %[[#BoolTy]] %[[#T3]] %[[#T2]]
++; CHECK: %[[#T5:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T4]]
++; CHECK: %[[#T6:]] = OpIEqual %[[#BoolTy]] %[[#T0]] %[[#NegInf]]
++; CHECK: %[[#T7:]] = OpLogicalOr %[[#BoolTy]] %[[#T5]] %[[#T6]]
++; CHECK: OpReturnValue %[[#T7]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_isnegative(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 60)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP32Ty]]
++; CHECK: OpReturnValue %[[#True]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_all(float %a) {
++  %v = call i1 @llvm.is.fpclass.f32(float %a, i32 1023)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP64Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I64Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpBitwiseAnd %[[#I64Ty]] %[[#T0]] %[[#ValueMaskFP64]]
++; CHECK: %[[#T2:]] = OpINotEqual %[[#BoolTy]] %[[#T0]] %[[#T1]]
++; CHECK: %[[#T3:]] = OpULessThan %[[#BoolTy]] %[[#T1]] %[[#InfFP64]]
++; CHECK: %[[#T4:]] = OpLogicalAnd %[[#BoolTy]] %[[#T3]] %[[#T2]]
++; CHECK: %[[#T5:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T4]]
++; CHECK: %[[#T6:]] = OpIEqual %[[#BoolTy]] %[[#T0]] %[[#NegInfFP64]]
++; CHECK: %[[#T7:]] = OpLogicalOr %[[#BoolTy]] %[[#T5]] %[[#T6]]
++; CHECK: OpReturnValue %[[#T7]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_f64_isnegative(double %a) {
++  %v = call i1 @llvm.is.fpclass.f64(double %a, i32 60)
++  ret i1 %v
++}
++
++; CHECK: OpFunction %[[#BoolTy]]
++; CHECK: %[[#A:]] = OpFunctionParameter %[[#FP16Ty]]
++; CHECK: %[[#T0:]] = OpBitcast %[[#I16Ty]] %[[#A]]
++; CHECK: %[[#T1:]] = OpBitwiseAnd %[[#I16Ty]] %[[#T0]] %[[#ValueMaskFP16]]
++; CHECK: %[[#T2:]] = OpINotEqual %[[#BoolTy]] %[[#T0]] %[[#T1]]
++; CHECK: %[[#T3:]] = OpULessThan %[[#BoolTy]] %[[#T1]] %[[#InfFP16]]
++; CHECK: %[[#T4:]] = OpLogicalAnd %[[#BoolTy]] %[[#T3]] %[[#T2]]
++; CHECK: %[[#T5:]] = OpLogicalOr %[[#BoolTy]] %[[#False]] %[[#T4]]
++; CHECK: %[[#T6:]] = OpIEqual %[[#BoolTy]] %[[#T0]] %[[#NegInfFP16]]
++; CHECK: %[[#T7:]] = OpLogicalOr %[[#BoolTy]] %[[#T5]] %[[#T6]]
++; CHECK: OpReturnValue %[[#T7]]
++; CHECK: OpFunctionEnd
++define i1 @isfpclass_f16_isnegative(half %a) {
++  %v = call i1 @llvm.is.fpclass.f16(half %a, i32 60)
++  ret i1 %v
++}
++
++declare i1 @llvm.is.fpclass.f32(float, i32)
++declare <4 x i1> @llvm.is.fpclass.v4f32(<4 x float>, i32)
++declare i1 @llvm.is.fpclass.f64(double, i32)
++declare i1 @llvm.is.fpclass.f16(half, i32)
+-- 
+2.51.0
+
