@@ -78,7 +78,7 @@ BDEPEND+="
 "
 [[ -n ${LLVM_MANPAGE_DIST} ]] && BDEPEND+=" ) "
 
-PATCHES=( "${FILESDIR}/pclass.patch" )
+PATCHES=( "${FILESDIR}/fpclass.patch" )
 
 python_check_deps() {
 	llvm_are_manpages_built || return 0
