@@ -87,8 +87,7 @@ RDEPEND="
 		$(llvm_gen_dep "
 			llvm-core/llvm:\${LLVM_SLOT}[llvm_targets_AMDGPU(+),${MULTILIB_USEDEP}]
 			opencl? (
-				dev-util/spirv-llvm-translator:\${LLVM_SLOT}
-				llvm-core/clang:\${LLVM_SLOT}[llvm_targets_AMDGPU(+),${MULTILIB_USEDEP}]
+				llvm-core/clang:\${LLVM_SLOT}[llvm_targets_AMDGPU(+),llvm_targets_SPIRV(+),${MULTILIB_USEDEP}]
 				=llvm-core/libclc-\${LLVM_SLOT}*[spirv(-)]
 			)
 		")
@@ -178,6 +177,10 @@ x86? (
 	usr/lib/libgallium-*.so
 	usr/lib/libGLX_mesa.so.0.0.0
 )"
+
+PATCHES=(
+		"${FILESDIR}/spirv-target.patch"
+	)
 
 src_unpack() {
 	if [[ ${PV} == 9999 ]]; then

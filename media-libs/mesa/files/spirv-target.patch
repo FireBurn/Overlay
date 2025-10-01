@@ -1,0 +1,321 @@
+From ebc2290579305df3d3b5a35fe0057d8769c0dfd6 Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Tue, 30 Sep 2025 16:12:14 +0100
+Subject: [PATCH] Use llvm spirv backend
+
+---
+ meson.build                                   |  21 ---
+ src/compiler/clc/clc_helpers.cpp              | 125 ++++--------------
+ src/compiler/clc/meson.build                  |   2 +-
+ src/gallium/frontends/rusticl/core/program.rs |   6 +-
+ .../rusticl/mesa/compiler/clc/spirv.rs        |   2 +-
+ src/gallium/frontends/rusticl/meson.build     |  20 ++-
+ .../rusticl/rusticl_llvm_bindings.hpp         |   8 +-
+ 7 files changed, 45 insertions(+), 139 deletions(-)
+
+diff --git a/meson.build b/meson.build
+index dab44ad8057..a83de03e8d7 100644
+--- a/meson.build
++++ b/meson.build
+@@ -1827,27 +1827,6 @@ pre_args += '-DDRAW_LLVM_AVAILABLE=@0@'.format(draw_with_llvm.to_int())
+ pre_args += '-DAMD_LLVM_AVAILABLE=@0@'.format(amd_with_llvm.to_int())
+ pre_args += '-DGALLIVM_USE_ORCJIT=@0@'.format((dep_llvm.found() and llvm_with_orcjit).to_int())
+ 
+-if with_clc
+-  chosen_llvm_version_array = dep_llvm.version().split('.')
+-  chosen_llvm_version_major = chosen_llvm_version_array[0].to_int()
+-  chosen_llvm_version_minor = chosen_llvm_version_array[1].to_int()
+-
+-  # Require an SPIRV-LLVM-Translator version compatible with the chosen LLVM
+-  # one.
+-
+-  _llvmspirvlib_min_version = '>= 15.0.0.0'
+-
+-  _llvmspirvlib_version = [
+-    _llvmspirvlib_min_version,
+-    '>= @0@.@1@'.format(chosen_llvm_version_major, chosen_llvm_version_minor),
+-    '< @0@.@1@'.format(chosen_llvm_version_major, chosen_llvm_version_minor + 1) ]
+-
+-  # LLVMSPIRVLib is available at https://github.com/KhronosGroup/SPIRV-LLVM-Translator
+-  dep_llvmspirvlib = dependency('LLVMSPIRVLib', required : true, version : _llvmspirvlib_version)
+-else
+-  dep_llvmspirvlib = null_dep
+-endif
+-
+ with_spirv_tools = get_option('spirv-tools') \
+     .enable_if(with_clc, error_message : 'CLC requires SPIRV-Tools')
+ 
+diff --git a/src/compiler/clc/clc_helpers.cpp b/src/compiler/clc/clc_helpers.cpp
+index 7e23effca39..81dda5b4f6b 100644
+--- a/src/compiler/clc/clc_helpers.cpp
++++ b/src/compiler/clc/clc_helpers.cpp
+@@ -43,7 +43,6 @@
+ #include <llvm/Bitcode/BitcodeReader.h>
+ #include <llvm-c/Core.h>
+ #include <llvm-c/Target.h>
+-#include <LLVMSPIRVLib/LLVMSPIRVLib.h>
+ 
+ #include <clang/Config/config.h>
+ #include <clang/Driver/Driver.h>
+@@ -90,8 +89,6 @@ namespace fs = std::filesystem;
+ /* Use the highest version of SPIRV supported by SPIRV-Tools. */
+ constexpr spv_target_env spirv_target = SPV_ENV_UNIVERSAL_1_6;
+ 
+-constexpr SPIRV::VersionNumber invalid_spirv_trans_version = static_cast<SPIRV::VersionNumber>(0);
+-
+ using ::llvm::Function;
+ using ::llvm::legacy::PassManager;
+ using ::llvm::LLVMContext;
+@@ -1093,20 +1090,6 @@ clc_compile_to_llvm_module(LLVMContext &llvm_ctx,
+    return mod;
+ }
+ 
+-static SPIRV::VersionNumber
+-spirv_version_to_llvm_spirv_translator_version(enum clc_spirv_version version)
+-{
+-   switch (version) {
+-   case CLC_SPIRV_VERSION_MAX: return SPIRV::VersionNumber::MaximumVersion;
+-   case CLC_SPIRV_VERSION_1_0: return SPIRV::VersionNumber::SPIRV_1_0;
+-   case CLC_SPIRV_VERSION_1_1: return SPIRV::VersionNumber::SPIRV_1_1;
+-   case CLC_SPIRV_VERSION_1_2: return SPIRV::VersionNumber::SPIRV_1_2;
+-   case CLC_SPIRV_VERSION_1_3: return SPIRV::VersionNumber::SPIRV_1_3;
+-   case CLC_SPIRV_VERSION_1_4: return SPIRV::VersionNumber::SPIRV_1_4;
+-   default:      return invalid_spirv_trans_version;
+-   }
+-}
+-
+ static int
+ llvm_mod_to_spirv(std::unique_ptr<::llvm::Module> mod,
+                   LLVMContext &context,
+@@ -1114,98 +1097,48 @@ llvm_mod_to_spirv(std::unique_ptr<::llvm::Module> mod,
+                   const struct clc_logger *logger,
+                   struct clc_binary *out_spirv)
+ {
+-   std::string log;
+-
+-   SPIRV::VersionNumber version =
+-      spirv_version_to_llvm_spirv_translator_version(args->spirv_version);
+-   if (version == invalid_spirv_trans_version) {
+-      clc_error(logger, "Invalid/unsupported SPIRV specified.\n");
+-      return -1;
+-   }
+-
+-   const char *const *extensions = args->allowed_spirv_extensions;
+-   if (!extensions) {
+-      /* The SPIR-V parser doesn't handle all extensions */
+-      static const char *default_extensions[] = {
+-         "SPV_EXT_shader_atomic_float_add",
+-         "SPV_EXT_shader_atomic_float_min_max",
+-         "SPV_KHR_float_controls",
+-         NULL,
+-      };
+-      extensions = default_extensions;
+-   }
+-
+-   SPIRV::TranslatorOpts::ExtensionsStatusMap ext_map;
+-   for (int i = 0; extensions[i]; i++) {
+-#define EXT(X) \
+-      if (strcmp(#X, extensions[i]) == 0) \
+-         ext_map.insert(std::make_pair(SPIRV::ExtensionID::X, true));
+-#include "LLVMSPIRVLib/LLVMSPIRVExtensions.inc"
+-#undef EXT
+-   }
+-   SPIRV::TranslatorOpts spirv_opts = SPIRV::TranslatorOpts(version, ext_map);
+-
+-   /* This was the default in 12.0 and older, but currently we'll fail to parse without this */
+-   spirv_opts.setPreserveOCLKernelArgTypeMetadataThroughString(true);
+-
+-#if LLVM_VERSION_MAJOR >= 17
+-   if (args->use_llvm_spirv_target) {
+-      const char *triple = args->address_bits == 32 ? "spirv-unknown-unknown" : "spirv64-unknown-unknown";
+-      std::string error_msg("");
+-      auto target = TargetRegistry::lookupTarget(triple, error_msg);
+-      if (target) {
+-         auto TM = target->createTargetMachine(
++   unsigned address_bits = args ? args->address_bits
++                                : mod->getDataLayout().getPointerSizeInBits();
++   const char *triple = address_bits == 32 ? "spirv-unknown-unknown" : "spirv64-unknown-unknown";
++   std::string error_msg("");
++   auto target = TargetRegistry::lookupTarget(triple, error_msg);
++   if (target) {
++      auto TM = target->createTargetMachine(
+ #if LLVM_VERSION_MAJOR >= 21
+-            llvm::Triple(triple),
++         llvm::Triple(triple),
+ #else
+-            triple,
++         triple,
+ #endif
+-            "", "", {}, std::nullopt, std::nullopt,
++         "", "", {}, std::nullopt, std::nullopt,
+ #if LLVM_VERSION_MAJOR >= 18
+-            ::llvm::CodeGenOptLevel::None
++         ::llvm::CodeGenOptLevel::None
+ #else
+-            ::llvm::CodeGenOpt::None
++         ::llvm::CodeGenOpt::None
+ #endif
+-         );
++      );
+ 
+-         auto PM = PassManager();
+-         ::llvm::SmallVector<char> buf;
+-         auto OS = ::llvm::raw_svector_ostream(buf);
+-         TM->addPassesToEmitFile(
+-            PM, OS, nullptr,
++      auto PM = PassManager();
++      ::llvm::SmallVector<char> buf;
++      auto OS = ::llvm::raw_svector_ostream(buf);
++      TM->addPassesToEmitFile(
++         PM, OS, nullptr,
+ #if LLVM_VERSION_MAJOR >= 18
+-            ::llvm::CodeGenFileType::ObjectFile
++         ::llvm::CodeGenFileType::ObjectFile
+ #else
+-            ::llvm::CGFT_ObjectFile
++         ::llvm::CGFT_ObjectFile
+ #endif
+-         );
++      );
+ 
+-         PM.run(*mod);
+-
+-         out_spirv->size = buf.size_in_bytes();
+-         out_spirv->data = malloc(out_spirv->size);
+-         memcpy(out_spirv->data, buf.data(), out_spirv->size);
+-         return 0;
+-      } else {
+-         clc_error(logger, "LLVM SPIR-V target not found.\n");
+-         return -1;
+-      }
+-   }
+-#endif
++      PM.run(*mod);
+ 
+-   std::ostringstream spv_stream;
+-   if (!::llvm::writeSpirv(mod.get(), spirv_opts, spv_stream, log)) {
+-      clc_error(logger, "%sTranslation from LLVM IR to SPIR-V failed.\n",
+-                log.c_str());
++      out_spirv->size = buf.size_in_bytes();
++      out_spirv->data = malloc(out_spirv->size);
++      memcpy(out_spirv->data, buf.data(), out_spirv->size);
++      return 0;
++   } else {
++      clc_error(logger, "LLVM SPIR-V target not found.\n");
+       return -1;
+    }
+-
+-   const std::string spv_out = spv_stream.str();
+-   out_spirv->size = spv_out.size();
+-   out_spirv->data = malloc(out_spirv->size);
+-   memcpy(out_spirv->data, spv_out.data(), out_spirv->size);
+-
+-   return 0;
+ }
+ 
+ int
+@@ -1483,4 +1416,4 @@ clc_initialize_llvm(void)
+ {
+    std::call_once(initialize_llvm_once_flag,
+                   []() { initialize_llvm_once(); });
+-}
++}
+\ No newline at end of file
+diff --git a/src/compiler/clc/meson.build b/src/compiler/clc/meson.build
+index 9ff61440f0d..a702954742d 100644
+--- a/src/compiler/clc/meson.build
++++ b/src/compiler/clc/meson.build
+@@ -106,7 +106,7 @@ _libmesaclc = static_library(
+   include_directories : [inc_include, inc_src, inc_spirv],
+   c_args : _libmesaclc_c_args,
+   cpp_args : [_libmesaclc_cpp_args, _libmesaclc_c_args],
+-  dependencies: [idep_nir, dep_clang, dep_llvm, dep_llvmspirvlib,
++  dependencies: [idep_nir, dep_clang, dep_llvm,
+                  idep_mesautil, dep_spirv_tools, idep_vtn, dep_version]
+ )
+ 
+diff --git a/src/gallium/frontends/rusticl/core/program.rs b/src/gallium/frontends/rusticl/core/program.rs
+index f884e0f0671..4c4b19e1952 100644
+--- a/src/gallium/frontends/rusticl/core/program.rs
++++ b/src/gallium/frontends/rusticl/core/program.rs
+@@ -55,11 +55,7 @@ fn get_disk_cache() -> &'static Option<DiskCache> {
+         // ourselves
+         get_disk_cache as _,
+         // LLVM
+-        llvm_LLVMContext_LLVMContext as _,
+-        // clang
+-        clang_getClangFullVersion as _,
+-        // SPIRV-LLVM-Translator
+-        llvm_writeSpirv1 as _,
++        LLVMContextDispose as _,
+     ];
+     unsafe {
+         DISK_CACHE_ONCE.call_once(|| {
+diff --git a/src/gallium/frontends/rusticl/mesa/compiler/clc/spirv.rs b/src/gallium/frontends/rusticl/mesa/compiler/clc/spirv.rs
+index 3482bb045e3..a6d319abf95 100644
+--- a/src/gallium/frontends/rusticl/mesa/compiler/clc/spirv.rs
++++ b/src/gallium/frontends/rusticl/mesa/compiler/clc/spirv.rs
+@@ -152,7 +152,7 @@ impl SPIRVBin {
+             num_args: c_args.len() as u32,
+             spirv_version: clc_spirv_version::CLC_SPIRV_VERSION_MAX,
+             features: features,
+-            use_llvm_spirv_target: false,
++            use_llvm_spirv_target: true,
+             allowed_spirv_extensions: spirv_extensions.as_ptr(),
+             c_compatible: false,
+             address_bits: address_bits,
+diff --git a/src/gallium/frontends/rusticl/meson.build b/src/gallium/frontends/rusticl/meson.build
+index f42ebac43cc..0299861356b 100644
+--- a/src/gallium/frontends/rusticl/meson.build
++++ b/src/gallium/frontends/rusticl/meson.build
+@@ -189,22 +189,20 @@ rusticl_llvm_bindings_rs = rust.bindgen(
+     pre_args,
+   ],
+   dependencies : [
+-    dep_clang,
+     dep_llvm,
+-    dep_llvmspirvlib,
+   ],
+   args : [
+     bindgen_output_args,
+-    # we want to limit what to generate bindings for
+     '--generate', 'constructors,functions,types,vars',
+-    # and all types will be opaque
+-    '--opaque-type', '.*',
+-    # LLVM/Clang/Translator stuff, only used for build-id
+-    # also only use functions from very basic header files, otherwise bindgen might crash :')
+-    '--allowlist-function', 'clang::getClangFullVersion',
+-    '--allowlist-function', 'llvm::LLVMContext::LLVMContext',
+-    '--allowlist-function', 'llvm::writeSpirv',
+-    '--allowlist-var', 'LLVM_VERSION_.*'
++    # Correct allowlist with only LLVM C-API functions
++    '--allowlist-function', 'LLVMContextDispose',
++    '--allowlist-function', 'LLVMInitializeAllAsmParsers',
++    '--allowlist-function', 'LLVMInitializeAllAsmPrinters',
++    '--allowlist-function', 'LLVMInitializeAllTargetInfos',
++    '--allowlist-function', 'LLVMInitializeAllTargetMCs',
++    '--allowlist-function', 'LLVMInitializeAllTargets',
++    '--allowlist-var', 'LLVM_VERSION_MAJOR',
++    '--allowlist-var', 'LLVM_VERSION_MINOR',
+   ],
+ )
+ 
+diff --git a/src/gallium/frontends/rusticl/rusticl_llvm_bindings.hpp b/src/gallium/frontends/rusticl/rusticl_llvm_bindings.hpp
+index d9ba1979f9f..9ced8a7d85b 100644
+--- a/src/gallium/frontends/rusticl/rusticl_llvm_bindings.hpp
++++ b/src/gallium/frontends/rusticl/rusticl_llvm_bindings.hpp
+@@ -4,7 +4,7 @@
+  * SPDX-License-Identifier: MIT
+  */
+ 
+-#include <clang/Basic/Version.h>
+-#include <llvm/Config/llvm-config.h>
+-#include <llvm/IR/LLVMContext.h>
+-#include <LLVMSPIRVLib/LLVMSPIRVLib.h>
++#pragma once
++
++#include <llvm-c/Core.h>
++#include <llvm-c/Target.h>
+-- 
+2.51.0
+
