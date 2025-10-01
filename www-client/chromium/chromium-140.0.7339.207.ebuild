@@ -217,7 +217,7 @@ BDEPEND="
 	dev-lang/perl
 	>=dev-util/gperf-3.2
 	dev-vcs/git
-	>=net-libs/nodejs-${NODE_VER}[inspector]
+	>=net-libs/nodejs-${NODE_VER}:0/${NODE_VER%%.*}[inspector]
 	>=sys-devel/bison-2.4.3
 	sys-devel/flex
 	virtual/pkgconfig
