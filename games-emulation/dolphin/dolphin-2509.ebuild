@@ -161,8 +161,9 @@ declare -A KEEP_BUNDLED=(
 )
 
 PATCHES=(
-	"${FILESDIR}"/dolphin-2407-minizip.patch
-	"${FILESDIR}"/dolphin-2509-fmt12.patch
+	"${FILESDIR}/dolphin-2407-minizip.patch"
+	"${FILESDIR}/dolphin-2509-fmt12.patch"
+	"${FILESDIR}/14008.patch"
 )
 
 add_bundled_licenses() {
