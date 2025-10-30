@@ -27,7 +27,6 @@ RDEPEND="
 	sys-libs/ncurses
 "
 DEPEND="${RDEPEND}
-	dev-util/cmake
 	dev-libs/protobuf
 "
 
