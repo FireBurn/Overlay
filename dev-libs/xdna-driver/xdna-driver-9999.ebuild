@@ -21,8 +21,8 @@ RESTRICT="strip"
 # Dependencies discovered from the root CMakeLists.txt
 RDEPEND="
 	dev-libs/boost
-	dev-libs/fmt
 	dev-libs/json-c
+	dev-libs/libfmt
 	x11-libs/libdrm
 	sys-libs/ncurses
 "
