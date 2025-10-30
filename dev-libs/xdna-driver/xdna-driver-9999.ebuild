@@ -66,7 +66,6 @@ src_configure() {
 		# The build script sets XDNA_DRIVER_BUILD_KMOD based on the -kmod/-nokmod flag.
 		# We tie this directly to the 'kmod' USE flag.
 		-DSKIP_KMOD=ON
-		-DCMAKE_INSTALL_PREFIX=/usr
     )
 	cmake_src_configure
 }
