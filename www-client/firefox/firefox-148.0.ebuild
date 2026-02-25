@@ -1,17 +1,17 @@
-# Copyright 1999-2025 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
-FIREFOX_PATCHSET="firefox-143-patches-02.tar.xz"
+FIREFOX_PATCHSET="firefox-147-patches-02.tar.xz"
 
-LLVM_COMPAT=( 19 20 21 )
+LLVM_COMPAT=( 20 21 22 )
 
 # This will also filter rust versions that don't match LLVM_COMPAT in the non-clang path; this is fine.
 RUST_NEEDS_LLVM=1
 
 # If not building with clang we need at least rust 1.76
-RUST_MIN_VER=1.82.0
+RUST_MIN_VER=1.87.0
 
 PYTHON_COMPAT=( python3_{11..14} )
 PYTHON_REQ_USE="ncurses,sqlite,ssl"
@@ -20,8 +20,8 @@ VIRTUALX_REQUIRED="manual"
 
 # Information about the bundled wasi toolchain from
 # https://github.com/WebAssembly/wasi-sdk/
-WASI_SDK_VER=27.0
-WASI_SDK_LLVM_VER=20
+WASI_SDK_VER=30.0
+WASI_SDK_LLVM_VER=21
 
 MOZ_ESR=
 
@@ -107,7 +107,7 @@ BDEPEND="${PYTHON_DEPS}
 	app-alternatives/awk
 	app-arch/unzip
 	app-arch/zip
-	>=dev-util/cbindgen-0.27.0
+	>=dev-util/cbindgen-0.29.1
 	net-libs/nodejs
 	virtual/pkgconfig
 	amd64? ( >=dev-lang/nasm-2.14 )
@@ -125,17 +125,16 @@ BDEPEND="${PYTHON_DEPS}
 	)"
 COMMON_DEPEND="${FF_ONLY_DEPEND}
 	>=app-accessibility/at-spi2-core-2.46.0:2
-	dev-libs/expat
 	dev-libs/glib:2
 	dev-libs/libffi:=
-	>=dev-libs/nss-3.115.1
-	>=dev-libs/nspr-4.35
+	>=dev-libs/nss-3.120.1
+	>=dev-libs/nspr-4.38
 	media-libs/alsa-lib
 	media-libs/fontconfig
 	media-libs/freetype
 	media-libs/mesa
 	media-video/ffmpeg
-	sys-libs/zlib
+	virtual/zlib:=
 	virtual/freedesktop-icon-theme
 	x11-libs/cairo
 	x11-libs/gdk-pixbuf:2
@@ -163,7 +162,7 @@ COMMON_DEPEND="${FF_ONLY_DEPEND}
 		>=media-libs/harfbuzz-2.8.1:0=
 		!wasm-sandbox? ( >=media-gfx/graphite2-1.3.13 )
 	)
-	system-icu? ( >=dev-libs/icu-76.1:= )
+	system-icu? ( >=dev-libs/icu-78.1:= )
 	system-jpeg? ( >=media-libs/libjpeg-turbo-1.2.1:= )
 	system-libevent? ( >=dev-libs/libevent-2.1.12:0=[threads(+)] )
 	system-libvpx? ( >=media-libs/libvpx-1.8.2:0=[postproc] )
@@ -453,8 +452,40 @@ pkg_pretend() {
 		# Ensure we have enough disk space to compile
 		if use pgo || use debug ; then
 			CHECKREQS_DISK_BUILD="14300M"
+
+			if ! use clang ; then
+				if tc-is-gcc && ver_test "$(gcc-major-version)" -eq 15 && has_version -b "<sys-devel/gcc-15.2.1_p20251108-r1:15"; then
+					eerror "<gcc-15.2.1_p20251108-r1:15 and pgo detected. Firefox-145.0 can not be compiled"
+					eerror "with this GCC, when also enabling pgo."
+					eerror "See bug https://gcc.gnu.org/PR122620"
+					eerror ""
+					eerror "Your options are:"
+					eerror " 1) upgrade GCC to >=15.2.1_p20251108-r1 - note that even with the 16.0"
+					eerror "    releases, make sure the patch set is equal or newer than 16.0.0_p20251109-r1,"
+					eerror "    or use the \"trunk\" version,"
+					eerror " 2) compile Firefox with Clang by enabling the \"clang\" USE flag, or"
+					eerror " 3) disable pgo when compiling with GCC for now."
+					die "Firefox-${PV} with gcc+pgo cannot be compiled with the detected gcc version: $(gcc-fullversion)"
+				fi
+			fi
 		elif tc-is-lto ; then
 			CHECKREQS_DISK_BUILD="10600M"
+
+			if ! use clang ; then
+				if tc-is-gcc && ver_test "$(gcc-major-version)" -eq 15 && has_version -b "<sys-devel/gcc-15.2.1_p20251108-r1:15"; then
+					eerror "<gcc-15.2.1_p20251108-r1:15 and lto detected. Firefox-145.0 can not be compiled"
+					eerror "with this GCC, when also enabling lto."
+					eerror "See bug https://gcc.gnu.org/PR122620"
+					eerror ""
+					eerror "Your options are:"
+					eerror " 1) upgrade GCC to >=15.2.1_p20251108-r1 - note that even with the 16.0"
+					eerror "    releases, make sure the patch set is equal or newer than 16.0.0_p20251109-r1,"
+					eerror "    or use the \"trunk\" version,"
+					eerror " 2) compile Firefox with Clang by enabling the \"clang\" USE flag, or"
+					eerror " 3) disable lto when compiling with GCC for now."
+					die "Firefox-${PV} with gcc+lto cannot be compiled with the detected gcc version: $(gcc-fullversion)"
+				fi
+			fi
 		else
 			CHECKREQS_DISK_BUILD="7400M"
 		fi
@@ -474,11 +505,43 @@ pkg_setup() {
 			use_lto=yes
 			# LTO is handled via configure
 			filter-lto
+
+			if ! use clang ; then
+				if tc-is-gcc && ver_test "$(gcc-major-version)" -eq 15 && has_version -b "<sys-devel/gcc-15.2.1_p20251108-r1:15"; then
+					eerror "<gcc-15.2.1_p20251108-r1:15 and pgo detected. Firefox-145.0 can not be compiled"
+					eerror "with this GCC, when also enabling lto."
+					eerror "See bug https://gcc.gnu.org/PR122620"
+					eerror ""
+					eerror "Your options are:"
+					eerror " 1) upgrade GCC to >=15.2.1_p20251108-r1 - note that even with the 16.0"
+					eerror "    releases, make sure the patch set is equal or newer than 16.0.0_p20251109-r1,"
+					eerror "    or use the \"trunk\" version,"
+					eerror " 2) compile Firefox with Clang by enabling the \"clang\" USE flag, or"
+					eerror " 3) disable lto when compiling with GCC for now."
+					die "Firefox-${PV} with gcc+lto cannot be compiled with the detected gcc version: $(gcc-fullversion)"
+				fi
+			fi
 		fi
 
 		if use pgo ; then
 			if ! has userpriv ${FEATURES} ; then
 				eerror "Building ${PN} with USE=pgo and FEATURES=-userpriv is not supported!"
+			fi
+
+			if ! use clang ; then
+				if tc-is-gcc && ver_test "$(gcc-major-version)" -eq 15 && has_version -b "<sys-devel/gcc-15.2.1_p20251108-r1:15"; then
+					eerror "<gcc-15.2.1_p20251108-r1:15 and lto detected. Firefox-145.0 can not be compiled"
+					eerror "with this GCC, when also enabling pgo."
+					eerror "See bug https://gcc.gnu.org/PR122620"
+					eerror ""
+					eerror "Your options are:"
+					eerror " 1) upgrade GCC to >=15.2.1_p20251108-r1 - note that even with the 16.0"
+					eerror "    releases, make sure the patch set is equal or newer than 16.0.0_p20251109-r1,"
+					eerror "    or use the \"trunk\" version,"
+					eerror " 2) compile Firefox with Clang by enabling the \"clang\" USE flag, or"
+					eerror " 3) disable pgo when compiling with GCC for now."
+					die "Firefox-${PV} with gcc+pgo cannot be compiled with the detected gcc version: $(gcc-fullversion)"
+				fi
 			fi
 		fi
 
@@ -583,9 +646,11 @@ src_prepare() {
 		rm -v "${WORKDIR}"/firefox-patches/*-LTO-Only-enable-LTO-*.patch || die
 	fi
 
-	# Workaround for bgo#915651 on musl
+	# Workaround for bgo#915651 and bmo#1988166 on musl
 	if use elibc_glibc ; then
 		rm -v "${WORKDIR}"/firefox-patches/*bgo-748849-RUST_TARGET_override.patch || die
+		rm -v "${WORKDIR}"/firefox-patches/*bmo-1988166-musl-remove-nonexisting-system-header-req.patch || die
+		rm -v "${WORKDIR}"/firefox-patches/*bgo-967694-musl-prctrl-exception-on-musl.patch || die
 	fi
 
 	eapply "${WORKDIR}/firefox-patches"
@@ -664,6 +729,8 @@ src_prepare() {
 
 	# Clear checksums from cargo crates we've manually patched.
 	# moz_clear_vendor_checksums xyz
+	# glslopt: bgo#969412
+	moz_clear_vendor_checksums glslopt
 
 	# Respect choice for "jumbo-build"
 	# Changing the value for FILES_PER_UNIFIED_FILE may not work, see #905431
@@ -891,6 +958,7 @@ src_configure() {
 
 	if use hardened ; then
 		mozconfig_add_options_ac "+hardened" --enable-hardening
+		mozconfig_add_options_ac "+hardened stl" --enable-stl-hardening
 		append-ldflags "-Wl,-z,relro -Wl,-z,now"
 
 		# Increase the FORTIFY_SOURCE value, #910071.
@@ -979,6 +1047,9 @@ src_configure() {
 		if use clang ; then
 			# Used in build/pgo/profileserver.py
 			export LLVM_PROFDATA="llvm-profdata"
+		else
+			# Attempt to fix pgo hanging with gcc, bgo#966309.
+			export MOZ_REMOTE_SETTINGS_DEVTOOLS=1
 		fi
 	fi
 
