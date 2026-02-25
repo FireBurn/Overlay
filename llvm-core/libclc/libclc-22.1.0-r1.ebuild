@@ -3,7 +3,7 @@
 
 EAPI=8
 
-LLVM_COMPAT=( 21 )
+LLVM_COMPAT=( 22 )
 PYTHON_COMPAT=( python3_{11..14} )
 inherit cmake llvm.org llvm-r1 python-any-r1
 
@@ -26,9 +26,7 @@ BDEPEND="
 LLVM_COMPONENTS=( libclc )
 llvm.org_set_globals
 
-PATCHES=(
-		"${FILESDIR}/spirv-target.patch"
-	)
+PATCHES=( "${FILESDIR}/make-static.patch" )
 
 pkg_setup() {
 	llvm-r1_pkg_setup
@@ -57,7 +55,7 @@ src_configure() {
 	use video_cards_radeonsi && libclc_targets+=(
 		"amdgcn--"
 		"amdgcn-mesa-mesa3d"
-		"amdgcn--amdhsa"
+		"amdgcn-amd-amdhsa"
 	)
 
 	libclc_targets=${libclc_targets[*]}
@@ -66,4 +64,9 @@ src_configure() {
 		-DLIBCLC_USE_SPIRV_BACKEND=true
 	)
 	cmake_src_configure
+}
+
+src_compile() {
+	# Force single job build to prevent parallel build failures
+	cmake_src_compile -j1
 }

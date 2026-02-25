@@ -1,0 +1,25 @@
+From c63c7976a2cdc0a76f6cf96772937c6125250308 Mon Sep 17 00:00:00 2001
+From: Romaric Jodin <rjodin@google.com>
+Date: Wed, 11 Feb 2026 12:47:14 +0100
+Subject: [PATCH] [libclc] Use static for clc_flush_denormal_if_not_supported
+
+---
+ libclc/clc/include/clc/math/math.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libclc/clc/include/clc/math/math.h b/libclc/clc/include/clc/math/math.h
+index c2647f66b400..b6a2c864d522 100644
+--- a/libclc/clc/include/clc/math/math.h
++++ b/libclc/clc/include/clc/math/math.h
+@@ -65,7 +65,7 @@ bool __attribute__((noinline)) __clc_runtime_has_hw_fma32(void);
+ 
+ #define LOG_MAGIC_NUM_SP32 (1 + NUMEXPBITS_SP32 - EXPBIAS_SP32)
+ 
+-_CLC_OVERLOAD _CLC_INLINE float __clc_flush_denormal_if_not_supported(float x) {
++_CLC_OVERLOAD static _CLC_INLINE float __clc_flush_denormal_if_not_supported(float x) {
+   int ix = __clc_as_int(x);
+   if (!__clc_fp32_subnormals_supported() && ((ix & EXPBITS_SP32) == 0) &&
+       ((ix & MANTBITS_SP32) != 0)) {
+-- 
+2.53.0
+
