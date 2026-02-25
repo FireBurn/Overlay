@@ -19,15 +19,23 @@ if [[ ${PV} == *9999 ]]; then
 		Externals/VulkanMemoryAllocator
 		Externals/zlib-ng/zlib-ng
 		Externals/minizip-ng/minizip-ng
+		Externals/watcher/watcher
+		Externals/cpp-ipc/cpp-ipc
+		Externals/cpp-optparse/cpp-optparse
+		Externals/imgui/imgui
 	)
 else
-	MGBA_COMMIT=8739b22fbc90fdf0b4f6612ef9c0520f0ba44a51
-	IMPLOT_COMMIT=18c72431f8265e2b0b5378a3a73d8a883b2175ff
+	MGBA_COMMIT=0b40863f64d0940f333fa1c638e75f86f8a26a33
+	IMPLOT_COMMIT=3da8bd34299965d3b0ab124df743fe3e076fa222
 	TINYGLTF_COMMIT=c5641f2c22d117da7971504591a8f6a41ece488b
 	VULKAN_HEADERS_COMMIT=39f924b810e561fd86b2558b6711ca68d4363f68
 	VULKANMEMORYALLOCATOR_COMMIT=3bab6924988e5f19bf36586a496156cf72f70d9f
 	ZLIB_NG_COMMIT=ce01b1e41da298334f8214389cc9369540a7560f
 	MINIZIP_NG_COMMIT=55db144e03027b43263e5ebcb599bf0878ba58de
+	WATCHER_COMMIT=b03bdcfc11549df595b77239cefe2643943a3e2f
+	CPP_IPC_COMMIT=a0c7725a1441d18bc768d748a93e512a0fa7ab52
+	CPP_OPTPARSE_COMMIT=2265d647232249a53a03b411099863ceca35f0d3
+	IMGUI_COMMIT=45acd5e0e82f4c954432533ae9985ff0e1aad6d5
 	SRC_URI="
 		https://github.com/dolphin-emu/dolphin/archive/${PV}.tar.gz
 			-> ${P}.tar.gz
@@ -43,12 +51,20 @@ else
 			-> zlib-ng-${ZLIB_NG_COMMIT}.tar.gz
 		https://github.com/zlib-ng/minizip-ng/archive/${MINIZIP_NG_COMMIT}.tar.gz
 			-> minizip-ng-${MINIZIP_NG_COMMIT}.tar.gz
+		https://github.com/e-dant/watcher/archive/${WATCHER_COMMIT}.tar.gz
+			-> watcher-${WATCHER_COMMIT}.tar.gz
+		https://github.com/mutouyun/cpp-ipc/archive/${CPP_IPC_COMMIT}.tar.gz
+			-> cpp-ipc-${CPP_IPC_COMMIT}.tar.gz
+		https://github.com/weisslj/cpp-optparse/archive/${CPP_OPTPARSE_COMMIT}.tar.gz
+			-> cpp-optparse-${CPP_OPTPARSE_COMMIT}.tar.gz
+		https://github.com/ocornut/imgui/archive/${IMGUI_COMMIT}.tar.gz
+			-> imgui-${IMGUI_COMMIT}.tar.gz
 		mgba? (
 			https://github.com/mgba-emu/mgba/archive/${MGBA_COMMIT}.tar.gz
 				-> mgba-${MGBA_COMMIT}.tar.gz
 		)
 	"
-	KEYWORDS="~amd64 ~arm64"
+	KEYWORDS="amd64 ~arm64"
 fi
 
 DESCRIPTION="Gamecube and Wii game emulator"
@@ -151,12 +167,17 @@ declare -A KEEP_BUNDLED=(
 	[expr]=MIT
 	[rangeset]=ZLIB
 	[FatFs]=FatFs
+	[watcher]=MIT
 	[Vulkan-Headers]="|| ( Apache-2.0 MIT )"
 	[VulkanMemoryAllocator]=MIT
+	[cpp-ipc]=MIT
+	[cpp-optparse]=MIT
+	[imgui]=MIT
 )
 
 PATCHES=(
-	"${FILESDIR}"/dolphin-2407-minizip.patch
+	"${FILESDIR}/dolphin-2407-minizip.patch"
+	"${FILESDIR}/dolphin-2509-fmt12.patch"
 )
 
 add_bundled_licenses() {
@@ -178,6 +199,10 @@ src_prepare() {
 		mv -T "${WORKDIR}/VulkanMemoryAllocator-${VULKANMEMORYALLOCATOR_COMMIT}" Externals/VulkanMemoryAllocator || die
 		mv -T "${WORKDIR}/zlib-ng-${ZLIB_NG_COMMIT}" Externals/zlib-ng/zlib-ng || die
 		mv -T "${WORKDIR}/minizip-ng-${MINIZIP_NG_COMMIT}" Externals/minizip-ng/minizip-ng || die
+		mv -T "${WORKDIR}/watcher-${WATCHER_COMMIT}" Externals/watcher/watcher || die
+		mv -T "${WORKDIR}/cpp-ipc-${CPP_IPC_COMMIT}" Externals/cpp-ipc/cpp-ipc || die
+		mv -T "${WORKDIR}/cpp-optparse-${CPP_OPTPARSE_COMMIT}" Externals/cpp-optparse/cpp-optparse || die
+		mv -T "${WORKDIR}/imgui-${IMGUI_COMMIT}" Externals/imgui/imgui || die
 		if use mgba; then
 			mv -T "${WORKDIR}/mgba-${MGBA_COMMIT}" Externals/mGBA/mgba || die
 		fi
