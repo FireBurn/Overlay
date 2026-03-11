@@ -27,10 +27,10 @@ GN_MIN_VER=0.2318
 # chromium-tools/get-chromium-toolchain-strings.py (or just use Chromicler)
 # Node for M145+ should be 24.12.0 but that's not packaged in Gentoo yet. See #969145
 TEST_FONT="a28b222b79851716f8358d2800157d9ffe117b3545031ae51f69b7e1e1b9a969"
-BUNDLED_CLANG_VER="llvmorg-22-init-17020-gbd1bd178-2"
-BUNDLED_RUST_VER="a4cfac7093a1c1c7fbdb6bc75d6b6dc4d385fc69-2"
+BUNDLED_CLANG_VER="llvmorg-23-init-2224-g5bd8dadb-3"
+BUNDLED_RUST_VER="7d8ebe3128fc87f3da1ad64240e63ccf07b8f0bd-3"
 RUST_SHORT_HASH=${BUNDLED_RUST_VER:0:10}-${BUNDLED_RUST_VER##*-}
-NODE_VER="24.11.1"
+NODE_VER="24.12.0"
 ESBUILD_VER="0.25.1"
 ROLLUP_VER="4.57.1" # currently manual.
 VIRTUALX_REQUIRED="pgo"
@@ -52,7 +52,7 @@ inherit python-any-r1 readme.gentoo-r1 rust systemd toolchain-funcs virtualx xdg
 
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://www.chromium.org/"
-PPC64_HASH="a85b64f07b489b8c6fdb13ecf79c16c56c560fc6"
+PPC64_HASH="6e839bd94774ccf59b4c0db697fcf15c7bc1f22e"
 PATCH_V="${PV%%\.*}-1"
 COPIUM_COMMIT="fe1caafa06f27542c18a881348f78e984e2d9fe2"
 SRC_URI="https://github.com/chromium-linux-tarballs/chromium-tarballs/releases/download/${PV}/chromium-${PV}-linux.tar.xz
@@ -71,25 +71,30 @@ SRC_URI="https://github.com/chromium-linux-tarballs/chromium-tarballs/releases/d
 	test? (
 		https://chromium-fonts.storage.googleapis.com/${TEST_FONT} -> chromium-testfonts-${TEST_FONT:0:10}.tar.gz
 	)
+	ppc64? (
+		https://gitlab.raptorengineering.com/raptor-engineering-public/chromium/openpower-patches/-/archive/${PPC64_HASH}/openpower-patches-${PPC64_HASH}.tar.bz2 -> chromium-openpower-${PPC64_HASH:0:10}.tar.bz2
+	)
 	pgo? ( https://github.com/elkablo/chromium-profiler/releases/download/v0.2/chromium-profiler-0.2.tar )"
 
-# https://gitweb.gentoo.org/proj/chromium-tools.git/tree/get-chromium-licences.py
-LICENSE="BSD Apache-2.0 Apache-2.0-with-LLVM-exceptions BSD-2 Base64 Boost-1.0 CC-BY-3.0 CC-BY-4.0 Clear-BSD"
-LICENSE+=" FFT2D FTL IJG ISC LGPL-2 LGPL-2.1 libpng libpng2 MIT MPL-1.1 MPL-2.0 Ms-PL openssl PSF-2"
-LICENSE+=" SGI-B-2.0 SSLeay SunSoft Unicode-3.0 Unicode-DFS-2015 Unlicense UoI-NCSA X11-Lucent"
+# https://gitweb.gentoo.org/proj/chromium-tools.git/tree/get-chromium-licences.py @ 145.0.7632.76
+LICENSE="Apache-2.0 Apache-2.0-with-LLVM-exceptions BSD BSD-2 Base64 Boost-1.0 CC-BY-3.0 CC-BY-4.0 Clear-BSD FFT2D FTL"
+LICENSE+=" IJG ISC LGPL-2 LGPL-2.1 MIT MPL-1.1 MPL-2.0 Ms-PL PSF-2 SGI-B-2.0 SSLeay SunSoft Unicode-3.0"
+LICENSE+=" Unicode-DFS-2015 Unlicense UoI-NCSA ZLIB libtiff openssl"
 LICENSE+=" rar? ( unRAR )"
 
-SLOT="0/stable"
-# Dev exists mostly to give devs some breathing room for beta/stable releases;
-# it shouldn't be keyworded but adventurous users can select it.
-KEYWORDS="amd64 ~arm64"
+SLOT="stable"
+# Unstable in gentoo exists mostly to give devs some breathing room for beta/stable releases.
+# It shouldn't be keyworded but adventurous users are encouraged to select it;
+# there's official dev channel Google Chrome after all.
+KEYWORDS="~amd64 ~arm64"
 
 IUSE_SYSTEM_LIBS="+system-harfbuzz +system-icu +system-zstd"
 IUSE="+X ${IUSE_SYSTEM_LIBS} bindist bundled-toolchain cups debug ffmpeg-chromium gtk4 +hangouts headless kerberos +official pax-kernel pgo"
 IUSE+=" +proprietary-codecs pulseaudio qt6 +rar +screencast selinux test +vaapi +wayland +widevine cpu_flags_ppc_vsx3"
 RESTRICT="
 	!bindist? ( bindist )
-	!test? ( test )"
+	!test? ( test )
+	arm64? ( test )" # Tests require CFI, which requires LTO, which is broken on arm64 with LLVM 21.
 
 REQUIRED_USE="
 	!headless? ( || ( X wayland ) )
@@ -170,6 +175,8 @@ COMMON_DEPEND="
 	)
 "
 RDEPEND="${COMMON_DEPEND}
+	!www-client/chromium:0
+	>=www-client/chromium-common-2
 	!headless? (
 		|| (
 			x11-libs/gtk+:3[X?,wayland?]
@@ -314,26 +321,47 @@ pkg_setup() {
 		# The pre_build_checks are all about compilation resources, no need to run it for a binpkg
 		pre_build_checks
 
+		# We haven't massaged any CFLAGS yet, so we want to do this before we force CC/CXX to prevent warnings.
+		local want_lto="false"
+		tc-is-lto && want_lto="true"
+
 		# The linux:unbundle toolchain in GN grabs CC, CXX, CPP (etc) from the environment
 		# We'll set these to clang here then use llvm-utils functions to very explicitly set these
 		# to a sane value.
 		# This is effectively the 'force-clang' path if GCC support is re-added.
-		# TODO: check if the user has already selected a specific impl via make.conf and respect that.
+		if use !bundled-toolchain; then
+			llvm-r1_pkg_setup
+			rust_pkg_setup
+
+			# Forcing clang; respect llvm_slot_x to enable selection of impl via LLVM_COMPAT
+			AR=llvm-ar
+			CPP="${CHOST}-clang++-${LLVM_SLOT} -E"
+			NM=llvm-nm
+			CC="${CHOST}-clang-${LLVM_SLOT}"
+			CXX="${CHOST}-clang++-${LLVM_SLOT}"
+		fi
+
 		use_lto="false"
-		if tc-is-lto; then
-			use_lto="true"
-			# We can rely on GN to do this for us; anecdotally without this builds
-			# take significantly longer with LTO enabled and it doesn't hurt anything.
+		local lto_usable="true"
+		if [[ "$want_lto" == "true" ]]; then
+			if use arm64 && [[ "${LLVM_SLOT}" -lt 22 ]]; then
+				einfo "LTO is broken with LLVM 21 on arm64, ignoring CFLAGS."
+				lto_usable="false"
+			else
+				use_lto="true"
+			fi
+			# We can rely on GN to do this for us; without this builds
+			# take significantly longer with LTO enabled.
 			filter-lto
 		fi
 
-		if [ "$use_lto" = "false" ] && use official; then
+		if [[ "$use_lto" == "false" ]] && use official && [[ "$lto_usable" == "true" ]]; then
 			einfo "USE=official selected and LTO not detected."
 			einfo "It is _highly_ recommended that LTO be enabled for performance reasons"
 			einfo "and to be consistent with the upstream \"official\" build optimisations."
 		fi
 
-		if [ "$use_lto" = "false" ] && use test; then
+		if [[ "$use_lto" == "false" ]] && use test; then
 			die "Tests require CFI which requires LTO"
 		fi
 
@@ -346,25 +374,6 @@ pkg_setup() {
 			die "Please switch to a different linker."
 		fi
 
-		if use !bundled-toolchain; then
-			llvm-r1_pkg_setup
-			rust_pkg_setup
-		fi
-
-		# Forcing clang; respect llvm_slot_x to enable selection of impl from LLVM_COMPAT
-		AR=llvm-ar
-		CPP="${CHOST}-clang++-${LLVM_SLOT} -E"
-		NM=llvm-nm
-		CC="${CHOST}-clang-${LLVM_SLOT}"
-		CXX="${CHOST}-clang++-${LLVM_SLOT}"
-
-		# Sanity check our linker here; sometimes when adding a new LLVM slot devs (me) forget
-		# to install an appropriate lld version. llvm-r1_pkg_setup prefixed PATH for us, so it should be there.
-		local lld_ver=$(ld.lld --version | awk '{split($2,a,"."); print a[1]}' || die "Failed to check lld version")
-		if [[ ${lld_ver} -lt ${LLVM_SLOT} ]]; then
-			die "Your lld version (${lld_ver}) is too old for the selected LLVM slot (${LLVM_SLOT}). Please install a newer lld or select an older LLVM slot."
-		fi
-
 		if tc-is-cross-compiler; then
 			use pgo && die "The pgo USE flag cannot be used when cross-compiling"
 			CPP="${CBUILD}-clang++-${LLVM_SLOT} -E"
@@ -374,9 +383,15 @@ pkg_setup() {
 		# us poor packagers. Required for Split LTO units, which are required for CFI.
 		export RUSTC_BOOTSTRAP=1
 
-		# Users should never hit this, it's purely a development convenience
+		# Sanity checks for development convenience
 		if ver_test $(gn --version || die) -lt ${GN_MIN_VER}; then
 			die "dev-build/gn >= ${GN_MIN_VER} is required to build this Chromium"
+		fi
+
+		# Sometimes, when adding a new LLVM slot, devs (me) forget to install an appropriate lld.
+		local lld_ver=$(ld.lld --version | awk '{split($2,a,"."); print a[1]}' || die "Failed to check lld version")
+		if [[ ${lld_ver} -lt ${LLVM_SLOT} ]]; then
+			die "Your lld version (${lld_ver}) is too old for the selected LLVM slot (${LLVM_SLOT}). Please install a newer lld or select an older LLVM slot."
 		fi
 	fi
 
@@ -385,20 +400,15 @@ pkg_setup() {
 
 src_unpack() {
 	unpack ${P}-linux.tar.xz
+	unpack chromium-patches-${PATCH_V}.tar.bz2
 	# These should only be required when we're not using the official toolchain
 	if use !bundled-toolchain; then
-		unpack chromium-patches-${PATCH_V}.tar.bz2
 		unpack chromium-patches-copium-${COPIUM_COMMIT:0:10}.tar.gz
 	fi
 
 	use pgo && unpack chromium-profiler-0.2.tar
 
 	if use test; then
-		# A new testdata tarball is available for each release; but testfonts tend to remain stable
-		# for the duration of a release.
-		# This unpacks directly into/over ${WORKDIR}/${P} so we can just use `unpack`.
-		# Not generated by chromium-linux-tarballs. Apparently not required to run unit tests either, we'll see!
-		# unpack ${P}-linux-testdata.tar.xz
 		# This just contains a bunch of font files that need to be unpacked (or moved) to the correct location.
 		local testfonts_dir="${WORKDIR}/${P}/third_party/test_fonts/test_fonts"
 		local testfonts_tar="${DISTDIR}/chromium-testfonts-${TEST_FONT:0:10}.tar.gz"
@@ -485,6 +495,124 @@ src_prepare() {
 	# Calling this here supports resumption via FEATURES=keepwork
 	python_setup
 
+	# We'll fill this in as we go. Patches go in chromium-patches.
+	local PATCHES=()
+
+	PATCHES+=( "${WORKDIR}/chromium-patches-${PATCH_V}/common/" )
+
+	# https://issues.chromium.org/issues/442698344
+	# Unreleased fontconfig changed magic numbers and google have rolled to this version
+	if has_version "<=media-libs/fontconfig-2.17.1"; then
+		PATCHES+=( "${FILESDIR}/chromium-142-work-with-old-fontconfig.patch" )
+	fi
+
+	if use bundled-toolchain; then
+		# We need to symlink the toolchain into the expected location
+		einfo "Symlinking Clang toolchain to expected location ..."
+		mkdir -p third_party/llvm-build/ || die "Failed to create llvm-build directory"
+		# the 'Chromium Linux Tarballs' seem to already have 'Release+Asserts/{lib,bin}'; not sure if this is an
+		# upstream change - we're using the same scripts to build, theoretically. We'll still attempt to create
+		# llvm-build, but we'll rm Release+Asserts and symlink directly.
+		if [[ -d third_party/llvm-build/Release+Asserts ]]; then
+			rm -r third_party/llvm-build/Release+Asserts || die "Failed to remove third_party/llvm-build/Release+Asserts"
+		fi
+		ln -s "${WORKDIR}"/clang third_party/llvm-build/Release+Asserts || die "Failed to bundle Clang"
+		einfo "Symlinking Rust toolchain to expected location ..."
+		# As above, so below
+		if [[ -d third_party/rust-toolchain ]]; then
+			rm -r third_party/rust-toolchain || die "Failed to remove third_party/rust-toolchain"
+		fi
+		ln -s "${WORKDIR}"/rust-toolchain third_party/rust-toolchain || die "Failed to bundle rust"
+		cp "${WORKDIR}"/rust-toolchain/VERSION \
+			"${WORKDIR}"/rust-toolchain/INSTALLED_VERSION || die "Failed to set rust version"
+	else
+		# We don't need our toolchain patches if we're using the official toolchain
+
+		# Copium patches go here.
+		PATCHES+=(
+			"${WORKDIR}/copium/cr143-libsync-__BEGIN_DECLS.patch"
+		)
+
+		# Automate conditional application of chromium-patches
+		# The directory structure is expected to be something like:
+		# chromium-patches-145/
+		# ├── toolchain/
+		# │   ├── cr123-foo.patch
+		# │   └── cr135-bar.patch
+		# ├── llvm/
+		# │   ├── cr144-baz.patch
+		# │   └── lt-23/
+		# │       └── cr145-bleeding-edge-llvm-feature.patch
+		# Where `lt-23` means "apply this patch if the LLVM version is less than 23".
+		# Only categories in `slot_map` will be checked for version constraints.
+		shopt -s nullglob
+		local -A slot_map=( [llvm]="${LLVM_SLOT}" [rust]="${RUST_SLOT}" )
+
+		for category in "${WORKDIR}/chromium-patches-${PATCH_V}"/*/; do
+			local category_name="${category%/}"
+			category_name="${category_name##*/}"
+
+			# Skip arch-specific categories
+			if [[ "${category_name}" == "ppc64le" ]]; then
+				use ppc64 || continue
+			fi
+
+			# We applied common patches above, no need to apply them again here
+			[[ "${category_name}" == "common" ]] && continue
+
+			# Unconditional patches for this category
+			PATCHES+=( "${category}"*.patch )
+
+			# Version-constrained subdirectories (e.g., llvm/lt-23/)
+			for constraint_dir in "${category}"*/; do
+				local dir_name="${constraint_dir%/}"
+				dir_name="${dir_name##*/}"
+				if [[ "${dir_name}" =~ ^lt-(.*)$ && -v slot_map[${category_name}] ]]; then
+					ver_test "${slot_map[${category_name}]}" -lt "${BASH_REMATCH[1]}" &&
+						PATCHES+=( "${constraint_dir}"*.patch )
+				fi
+			done
+		done
+
+		shopt -u nullglob
+
+		# Strictly speaking this doesn't need to be gated (no bundled toolchain for ppc64); it keeps the logic together
+		if use ppc64; then
+			local patchset_dir="${WORKDIR}/openpower-patches-${PPC64_HASH}/patches"
+			# patch causes build errors on 4K page systems (https://bugs.gentoo.org/show_bug.cgi?id=940304)
+			local page_size_patch="ppc64le/third_party/use-sysconf-page-size-on-ppc64.patch"
+			local isa_3_patch="ppc64le/core/baseline-isa-3-0.patch"
+			# Apply the OpenPOWER patches (check for page size and isa 3.0)
+			openpower_patches=( $(grep -E "^ppc64le|^upstream" "${patchset_dir}/series" | grep -v "${page_size_patch}" |
+				grep -v "${isa_3_patch}" || die) )
+			for patch in "${openpower_patches[@]}"; do
+				PATCHES+=( "${patchset_dir}/${patch}" )
+			done
+			if [[ $(getconf PAGESIZE) == 65536 ]]; then
+				PATCHES+=( "${patchset_dir}/${page_size_patch}" )
+			fi
+			# We use vsx3 as a proxy for 'want isa3.0' (POWER9)
+			if use cpu_flags_ppc_vsx3 ; then
+				PATCHES+=( "${patchset_dir}/${isa_3_patch}" )
+			fi
+		fi
+
+		remove_compiler_builtins
+
+		# We can't rely on the eselect'd Rust to actually include rustfmt, so we'll point to the selected slot specifically.
+		local suffix=""
+		if [[ "${RUST_TYPE}" == "binary" ]]; then
+			suffix="-bin-${RUST_SLOT}"
+		else
+			suffix="-${RUST_SLOT}"
+		fi
+		sed -i "s|/bin/rustfmt|/bin/rustfmt${suffix}|g" build/rust/rust_bindgen_generator.gni ||
+			die "Failed to update rustfmt path"
+
+	fi
+
+	default
+
 	# Sanity check esbuild version before we start removing files.
 	# We _could_ patch the version check out - in theory esbuild upstream are being super conservative after
 	# arch(AUR) packaged an `esbuild` binary and set ESBUILD_BINARY_PATH=/usr/bin/esbuild, causing much breakage,
@@ -523,132 +651,12 @@ src_prepare() {
 	done
 
 	# Until we can just symlink in a system rollup, we'll `mv` the wasm version and modify some files.
+	# Do this after removing bundled bins in case we decide to strip wasm binaries in the future.
 	einfo "Moving rollup wasm-node package into place ..."
 	mkdir -p third_party/devtools-frontend/src/node_modules/@rollup/wasm-node ||
 		die "Failed to create node_modules/@rollup/wasm-node"
 	mv "${WORKDIR}"/package/* third_party/devtools-frontend/src/node_modules/@rollup/wasm-node ||
 		die "Failed to move rollup package"
-
-	# To know which patches are safe to drop from files/ after tidying up old ebuilds:
-	# comm -13 \
-	# 	<(grep 'FILESDIR' *.ebuild | grep patch | grep -o '\${FILESDIR}/[^") ]*' \
-	#		| sed 's|\${FILESDIR}/|files/|; s|\${PN}|chromium|' | sort -u) \
-	# 	<(find files/ -name "*.patch" | sort)
-
-	local PATCHES=(
-		"${FILESDIR}/${PN}-cross-compile.patch"
-		"${FILESDIR}/${PN}-109-system-zlib.patch"
-		"${FILESDIR}/${PN}-131-unbundle-icu-target.patch"
-		"${FILESDIR}/${PN}-138-nodejs-version-check.patch"
-		"${FILESDIR}/cr144-glibc-2.43.patch"
-		"${FILESDIR}/cr145-oauth2-client-switches.patch"
-		"${FILESDIR}/cr145-revert-to-rollup-wasm.patch"
-		"${FILESDIR}/cr145-fix-no-unrar.patch"
-		"${FILESDIR}/cr145-fix-no-unrar-2-include-harder.patch"
-	)
-	# No copium patches here: they should only need to apply to unbundled toolchain builds
-	# and don't get fetched or unpacked.
-
-	# https://issues.chromium.org/issues/442698344
-	# Unreleased fontconfig changed magic numbers and google have rolled to this version
-	if has_version "<=media-libs/fontconfig-2.17.1"; then
-		PATCHES+=( "${FILESDIR}/chromium-142-work-with-old-fontconfig.patch" )
-	fi
-
-	if use bundled-toolchain; then
-		# We need to symlink the toolchain into the expected location
-		einfo "Symlinking Clang toolchain to expected location ..."
-		mkdir -p third_party/llvm-build/ || die "Failed to create llvm-build directory"
-		# the 'Chromium Linux Tarballs' seem to already have 'Release+Asserts/{lib,bin}'; not sure if this is an
-		# upstream change - we're using the same scripts to build, theoretically. We'll still attempt to create
-		# llvm-build, but we'll rm Release+Asserts and symlink directly.
-		if [[ -d third_party/llvm-build/Release+Asserts ]]; then
-			rm -r third_party/llvm-build/Release+Asserts || die "Failed to remove third_party/llvm-build/Release+Asserts"
-		fi
-		ln -s "${WORKDIR}"/clang third_party/llvm-build/Release+Asserts || die "Failed to bundle Clang"
-		einfo "Symlinking Rust toolchain to expected location ..."
-		# As above, so below
-		if [[ -d third_party/rust-toolchain ]]; then
-			rm -r third_party/rust-toolchain || die "Failed to remove third_party/rust-toolchain"
-		fi
-		ln -s "${WORKDIR}"/rust-toolchain third_party/rust-toolchain || die "Failed to bundle rust"
-		cp "${WORKDIR}"/rust-toolchain/VERSION \
-			"${WORKDIR}"/rust-toolchain/INSTALLED_VERSION || die "Failed to set rust version"
-	else
-		# We don't need our toolchain patches if we're using the official toolchain
-
-		# Copium patches go here.
-		PATCHES+=(
-			"${WORKDIR}/copium/cr143-libsync-__BEGIN_DECLS.patch"
-			"${WORKDIR}/copium/cr145-rustc_nightly_capability.patch"
-		)
-
-		# Automate conditional application of chromium-patches
-		# The directory structure is expected to be something like:
-		# chromium-patches-145/
-		# ├── common/
-		# │   ├── cr123-foo.patch
-		# │   └── cr135-bar.patch
-		# ├── llvm/
-		# │   ├── cr144-baz.patch
-		# │   └── lt-23/
-		# │       └── cr145-bleeding-edge-llvm-feature.patch
-		# Where `lt-23` means "apply this patch if the LLVM version is less than 23".
-		# Only categories in `slot_map` will be checked for version constraints.
-		shopt -s nullglob
-		local -A slot_map=( [llvm]="${LLVM_SLOT}" [rust]="${RUST_SLOT}" )
-
-		for category in "${WORKDIR}/chromium-patches-${PATCH_V}"/*/; do
-			local category_name="${category%/}"
-			category_name="${category_name##*/}"
-
-			# Skip arch-specific categories if they don't match our arch
-			if [[ "${category_name}" == "ppc64le" ]]; then
-				use ppc64 || continue
-			fi
-
-			# Unconditional patches for this category
-			PATCHES+=( "${category}"*.patch )
-
-			# Version-constrained subdirectories (e.g., llvm/lt-23/)
-			for constraint_dir in "${category}"*/; do
-				local dir_name="${constraint_dir%/}"
-				dir_name="${dir_name##*/}"
-				if [[ "${dir_name}" =~ ^lt-(.*)$ && -v slot_map[${category_name}] ]]; then
-					ver_test "${slot_map[${category_name}]}" -lt "${BASH_REMATCH[1]}" &&
-						PATCHES+=( "${constraint_dir}"*.patch )
-				fi
-			done
-		done
-
-		shopt -u nullglob
-
-		remove_compiler_builtins
-
-		# Strictly speaking this doesn't need to be gated (no bundled toolchain for ppc64); it keeps the logic together
-		if use ppc64; then
-			local patchset_dir="${WORKDIR}/openpower-patches-${PPC64_HASH}/patches"
-			# patch causes build errors on 4K page systems (https://bugs.gentoo.org/show_bug.cgi?id=940304)
-			local page_size_patch="ppc64le/third_party/use-sysconf-page-size-on-ppc64.patch"
-			local isa_3_patch="ppc64le/core/baseline-isa-3-0.patch"
-			# Apply the OpenPOWER patches (check for page size and isa 3.0)
-			openpower_patches=( $(grep -E "^ppc64le|^upstream" "${patchset_dir}/series" | grep -v "${page_size_patch}" |
-				grep -v "${isa_3_patch}" || die) )
-			for patch in "${openpower_patches[@]}"; do
-				PATCHES+=( "${patchset_dir}/${patch}" )
-			done
-			if [[ $(getconf PAGESIZE) == 65536 ]]; then
-				PATCHES+=( "${patchset_dir}/${page_size_patch}" )
-			fi
-			# We use vsx3 as a proxy for 'want isa3.0' (POWER9)
-			if use cpu_flags_ppc_vsx3 ; then
-				PATCHES+=( "${patchset_dir}/${isa_3_patch}" )
-			fi
-		fi
-
-	fi
-
-	default
 
 	# adjust python interpreter version
 	sed -i -e "s|\(^script_executable = \).*|\1\"${EPYTHON}\"|g" .gn || die
@@ -695,6 +703,7 @@ src_prepare() {
 		third_party/catapult/third_party/html5lib-1.1
 		third_party/catapult/third_party/polymer
 		third_party/catapult/third_party/six
+		third_party/catapult/third_party/typ
 		third_party/catapult/tracing/third_party/d3
 		third_party/catapult/tracing/third_party/gl-matrix
 		third_party/catapult/tracing/third_party/jpeg-js
@@ -887,7 +896,6 @@ src_prepare() {
 		third_party/six
 		third_party/skia
 		third_party/skia/include/third_party/vulkan
-		third_party/skia/third_party/vulkan
 		third_party/smhasher
 		third_party/snappy
 		third_party/spirv-headers
@@ -957,6 +965,7 @@ src_prepare() {
 			third_party/google_benchmark/src/src
 			third_party/test_fonts
 			third_party/test_fonts/fontconfig
+			third_party/test_fonts/test_fonts
 		)
 	fi
 
@@ -1088,6 +1097,10 @@ chromium_configure() {
 		# Debug info section overflows without component build
 		# Prevent linker from running out of address space, bug #471810 .
 		filter-flags "-g*"
+		# 949123: Several multimedia components explicitly build with specific CFLAGS and
+		# use runtime detection to enable optimisations; unfortunately any of our CFLAGS are suffixed
+		# to the end of the command line, which causes build failures.
+		use arm64 && filter-flags "-march*" "-mtune*" "-mcpu*"
 	fi
 
 	# We don't use the same clang version as upstream, and with -Werror
@@ -1193,6 +1206,9 @@ chromium_configure() {
 		"dcheck_is_configurable=$(usex debug true false)"
 		# Chromium builds provided by Linux distros should disable the testing config
 		"disable_fieldtrial_testing_config=true"
+		# Custom patch: Enable building Chromium as individual channels (e.g. stable, beta, dev) that
+		# use different profile directories, desktop entries, etc. This enables slotting the ebuild.
+		"enable_channel_branding=true"
 		# 131 began laying the groundwork for replacing freetype with
 		# "Rust-based Fontations set of libraries plus Skia path rendering"
 		# We now need to opt-in
@@ -1352,6 +1368,9 @@ chromium_configure() {
 		myconf_gn+=( "v8_enable_external_code_space=false" )
 	fi
 
+	# Since we build from tarballs, we need to set the channel here so that it can be used in the build.
+	export CHROME_VERSION_EXTRA="${SLOT}"
+
 	einfo "Configuring Chromium ..."
 	set -- gn gen --args="${myconf_gn[*]}${EXTRA_GN:+ ${EXTRA_GN}}" out/Release
 	echo "$@"
@@ -1470,11 +1489,17 @@ src_compile() {
 	rm -f out/Release/locales/*.pak.info || die
 
 	# Generate support files (desktop file, manpage, etc.) See: #684550 #706786 #968958
-	python3 "${FILESDIR}/generate-support-files.py" --installdir "/usr/$(get_libdir)/chromium-browser" ||
-		die "Failed to generate support files"
+	${EPYTHON} "${FILESDIR}/generate-support-files.py" \
+		--installdir "/usr/$(get_libdir)/chromium-browser" \
+		--channel "${SLOT}" ||
+			die "Failed to generate support files"
 }
 
 src_test() {
+	# Tests may be flaky with usersandbox, and the test runner executes significantly faster without.
+	# If you seem to be excluding too many tests for a particular milestone: comment them out, reboot, and
+	# run the tests again. If that doesn't help, try FEATURES="-usersandbox" and send it because obviously the
+	# chromium gods are not smiling upon you today. Do some runtime testing, obvs.
 	local skip_tests=(
 		# Wildcard exclusions (if all tests in a test suite are broken)
 		'AlternateTestParams/PartitionAllocDeathTest.RepeatedAllocReturnNullDirect/*'
@@ -1482,10 +1507,10 @@ src_test() {
 		'AlternateTestParams/PartitionAllocTest.*' # 200+ tests, >= 1 crashes entire test runner with usersandbox.
 		'CheckExitCodeAfterSignalHandlerDeathTest.*'
 		'CriticalProcessAndThreadSpotChecks/HangWatcherAnyCriticalThreadTests.*'
-		'PostJobTest.*' # M145
+		'PostJobTest.*' # M145 - fixed in 146?
 		'LazyThreadPoolTaskRunnerEnvironmentTest.*' # M142
-		'LazyThreadPoolTaskRunnerTest.*' # M145
-		'SequenceManager*'
+		'LazyThreadPoolTaskRunnerTest.*'
+		'SequenceManager*' # Crashes test runner
 		'ToolsSanityTest.BadVirtualCall*'
 		# requires en-us locale
 		SysStrings.SysNativeMBAndWide
@@ -1500,7 +1525,6 @@ src_test() {
 		RawPtrTest.SetLookupUsesGetForComparison # M146 ; also broken for alpine in M144.
 		RustLogIntegrationTest.CheckAllSeverity
 		StackCanary.ChangingStackCanaryCrashesOnReturn
-		SequenceManagerWithTaskRunnerTest.DeleteSequenceManagerInsideATask # crashes test runner
 		StackTraceDeathTest.StackDumpSignalHandlerIsMallocFree
 		TestLauncherTools.TruncateSnippetFocusedMatchesFatalMessagesTest
 		ThreadPoolEnvironmentConfig.CanUseBackgroundPriorityForWorker
@@ -1514,7 +1538,13 @@ src_test() {
 }
 
 src_install() {
-	local CHROMIUM_HOME="/usr/$(get_libdir)/chromium-browser"
+	local browser_suffix
+	if [[ "${SLOT}" != "stable" ]]; then
+		browser_suffix="-${SLOT}"
+	else
+		browser_suffix=""
+	fi
+	local CHROMIUM_HOME="/usr/$(get_libdir)/chromium-browser${browser_suffix}"
 	exeinto "${CHROMIUM_HOME}"
 	doexe out/Release/chrome
 
@@ -1527,24 +1557,28 @@ src_install() {
 	ozone_auto_session () {
 		use X && use wayland && ! use headless && echo true || echo false
 	}
-	local sedargs=( -e
-			"s:/usr/lib/:/usr/$(get_libdir)/:g;
-			s:@@OZONE_AUTO_SESSION@@:$(ozone_auto_session):g"
-	)
-	sed "${sedargs[@]}" "${FILESDIR}/chromium-launcher-r7.sh" > chromium-launcher.sh || die
-	doexe chromium-launcher.sh
+
+	cat <<- EOF > "${D}${CHROMIUM_HOME}/chromium-launcher.sh" || die
+		#!/bin/bash
+		# Wrapper to launch slotted Chromium via the chromium-common launcher script.
+		export CHROME_DESKTOP="chromium-browser${browser_suffix}.desktop"
+		export CHROME_EXEC_NAME="chromium-browser${browser_suffix}"
+		export CHROME_VERSION_EXTRA="${SLOT}"
+		export CHROME_WRAPPER="\$(readlink -f "\$0")"
+		export OZONE_AUTO_SESSION=$(ozone_auto_session)
+
+		exec /usr/libexec/chromium/chromium-launcher.sh "\$@"
+	EOF
+
+	chmod 755 "${D}${CHROMIUM_HOME}/chromium-launcher.sh" || die
 
 	# It is important that we name the target "chromium-browser",
 	# xdg-utils expect it; bug #355517.
-	dosym "${CHROMIUM_HOME}/chromium-launcher.sh" /usr/bin/chromium-browser
+	dosym "${CHROMIUM_HOME}/chromium-launcher.sh" /usr/bin/chromium-browser${browser_suffix}
 	# keep the old symlink around for consistency
-	dosym "${CHROMIUM_HOME}/chromium-launcher.sh" /usr/bin/chromium
+	dosym "${CHROMIUM_HOME}/chromium-launcher.sh" /usr/bin/chromium${browser_suffix}
 
-	dosym "${CHROMIUM_HOME}/chromedriver" /usr/bin/chromedriver
-
-	# Allow users to override command-line options, bug #357629.
-	insinto /etc/chromium
-	newins "${FILESDIR}/chromium.default" "default"
+	dosym "${CHROMIUM_HOME}/chromedriver" /usr/bin/chromedriver${browser_suffix}
 
 	pushd out/Release/locales > /dev/null || die
 	chromium_remove_language_paks
@@ -1598,23 +1632,23 @@ src_install() {
 				*) branding="chrome/app/theme/chromium" ;;
 		esac
 		newicon -s ${size} "${branding}/product_logo_${size}.png" \
-			chromium-browser.png
+			chromium-browser${browser_suffix}.png
 	done
 
 	# Install desktop entry
-	domenu out/Release/chromium-browser-chromium.desktop
+	domenu out/Release/chromium-browser${browser_suffix}.desktop
 
 	# Install GNOME default application entry (bug #303100).
 	insinto /usr/share/gnome-control-center/default-apps
-	doins out/Release/chromium-browser.xml
+	doins out/Release/chromium-browser${browser_suffix}.xml
 
 	# Install AppStream metadata
 	insinto /usr/share/appdata
-	doins out/Release/chromium-browser.appdata.xml
+	doins out/Release/chromium-browser${browser_suffix}.appdata.xml
 
 	# Install manpage; bug #684550
-	doman out/Release/chromium-browser.1
-	dosym chromium-browser.1 /usr/share/man/man1/chromium.1
+	doman out/Release/chromium-browser${browser_suffix}.1
+	dosym chromium-browser${browser_suffix}.1 /usr/share/man/man1/chromium${browser_suffix}.1
 
 	readme.gentoo_create_doc
 }
@@ -1629,7 +1663,7 @@ pkg_postinst() {
 	xdg_desktop_database_update
 	readme.gentoo_print_elog
 
-	if ! use headless; then
+	if use !headless && [[ -z "${REPLACING_VERSIONS}" ]]; then
 		if use vaapi; then
 			elog "Hardware-accelerated video decoding configuration:"
 			elog
@@ -1684,5 +1718,27 @@ pkg_postinst() {
 		ewarn ""
 		ewarn "Chromium is known to behave unpredictably with this system configuration;"
 		ewarn "please complete the configuration of this system before logging any bugs."
+	fi
+
+	if [[ -n "${REPLACING_VERSIONS}" ]]; then
+		local replacing_non_slotted=false
+		# there could be more than one PVR
+		for version in ${REPLACING_VERSIONS}; do
+			if ver_test "${version}" -le "145.0.7632.116"; then
+				replacing_non_slotted=true
+				break
+			fi
+		done
+		if ${replacing_non_slotted}; then
+			ewarn "This version of Chromium has replaced a non-slotted ebuild."
+			if [[ ${SLOT} != "stable" ]]; then
+				ewarn "This channel has its own profile directory, so your existing profile will not be used."
+				ewarn "To use your existing profile, either copy or move it to the new location."
+				ewarn "See https://wiki.gentoo.org/wiki/Chromium#Profile_Directories for more information."
+				ewarn ""
+			fi
+			ewarn "Any existing Progressive Web Apps (PWAs) will need to be reinstalled,"
+			ewarn "or have the path in the desktop files updated to point to the new wrapper script."
+		fi
 	fi
 }
