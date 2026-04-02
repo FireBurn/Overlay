@@ -28,7 +28,7 @@ GN_MIN_VER=0.2318
 # Node for M145+ should be 24.12.0 but that's not packaged in Gentoo yet. See #969145
 TEST_FONT="a28b222b79851716f8358d2800157d9ffe117b3545031ae51f69b7e1e1b9a969"
 BUNDLED_CLANG_VER="llvmorg-23-init-5669-g8a0be0bc-1"
-BUNDLED_RUST_VER="6f54d591c3116ee7f8ce9321ddeca286810cc142-2"
+BUNDLED_RUST_VER="6f54d591c3116ee7f8ce9321ddeca286810cc142-7"
 RUST_SHORT_HASH=${BUNDLED_RUST_VER:0:10}-${BUNDLED_RUST_VER##*-}
 NODE_VER="24.12.0"
 ESBUILD_VER="0.25.1"
@@ -53,12 +53,12 @@ inherit python-any-r1 readme.gentoo-r1 rust systemd toolchain-funcs virtualx xdg
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://www.chromium.org/"
 PPC64_HASH="a85b64f07b489b8c6fdb13ecf79c16c56c560fc6"
-PATCH_V="${PV%%\.*}-4"
+PATCH_V="${PV%%\.*}-1"
 COPIUM_COMMIT="fe1caafa06f27542c18a881348f78e984e2d9fe2"
 SRC_URI="https://github.com/chromium-linux-tarballs/chromium-tarballs/releases/download/${PV}/chromium-${PV}-linux.tar.xz
 	https://deps.gentoo.zip/www-client/chromium/rollup-wasm-node-${ROLLUP_VER}.tgz
+	https://gitlab.com/Matt.Jolly/chromium-patches/-/archive/${PATCH_V}/chromium-patches-${PATCH_V}.tar.bz2
 	!bundled-toolchain? (
-		https://gitlab.com/Matt.Jolly/chromium-patches/-/archive/${PATCH_V}/chromium-patches-${PATCH_V}.tar.bz2
 		https://codeberg.org/selfisekai/copium/archive/${COPIUM_COMMIT}.tar.gz
 			-> chromium-patches-copium-${COPIUM_COMMIT:0:10}.tar.gz
 	)
@@ -82,7 +82,7 @@ LICENSE+=" IJG ISC LGPL-2 LGPL-2.1 MIT MPL-1.1 MPL-2.0 Ms-PL PSF-2 SGI-B-2.0 SSL
 LICENSE+=" Unicode-DFS-2015 Unlicense UoI-NCSA ZLIB libtiff openssl"
 LICENSE+=" rar? ( unRAR )"
 
-SLOT="beta"
+SLOT="unstable"
 # Unstable in gentoo exists mostly to give devs some breathing room for beta/stable releases.
 # It shouldn't be keyworded but adventurous users are encouraged to select it;
 # there's official dev channel Google Chrome after all.
@@ -233,6 +233,7 @@ BDEPEND="
 	>=sys-devel/bison-2.4.3
 	sys-devel/flex
 	virtual/pkgconfig
+	x11-misc/xdg-utils
 "
 
 if ! has chromium_pkg_die ${EBUILD_DEATH_HOOKS}; then
@@ -611,6 +612,13 @@ src_prepare() {
 
 	fi
 
+	# Do this before we apply patches since (e.g.) ppc64 needs to patch rollup and it's easier in ${S}
+	einfo "Moving rollup wasm-node package into place ..."
+	mkdir -p third_party/devtools-frontend/src/node_modules/@rollup/wasm-node ||
+		die "Failed to create node_modules/@rollup/wasm-node"
+	mv "${WORKDIR}"/package/* third_party/devtools-frontend/src/node_modules/@rollup/wasm-node ||
+		die "Failed to move rollup package"
+
 	default
 
 	# Sanity check esbuild version before we start removing files.
@@ -635,6 +643,7 @@ src_prepare() {
 	local esbuild_path="${S}/third_party/devtools-frontend/src/third_party/esbuild"
 	local -A restore_list=(
 		["/usr/bin/esbuild-${ESBUILD_VER}"]="${esbuild_path}/esbuild"
+		["/usr/bin/gperf"]="${S}/third_party/gperf/cipd/bin/gperf"
 		["/usr/bin/node"]="${S}/third_party/node/linux/node-linux-x64/bin/node"
 	)
 
@@ -645,18 +654,13 @@ src_prepare() {
 			# Make sure the parent dir exists; some tarballs don't include (e.g.) node's bindir
 			mkdir -p "$(dirname "${dst}")" || die "Failed to create directory for ${dst}"
 			ln -s "${src}" "${dst}" || die "Failed to symlink ${dst} from ${src}"
+			if [[ ! -L "${dst}" || "$(readlink -f "${dst}")" != "${src}" ]]; then
+				die "Symlink verification failed for ${dst} -> ${src}"
+			fi
 		else
 			die "Expected to find ${src} to restore ${dst}, but it does not exist."
 		fi
 	done
-
-	# Until we can just symlink in a system rollup, we'll `mv` the wasm version and modify some files.
-	# Do this after removing bundled bins in case we decide to strip wasm binaries in the future.
-	einfo "Moving rollup wasm-node package into place ..."
-	mkdir -p third_party/devtools-frontend/src/node_modules/@rollup/wasm-node ||
-		die "Failed to create node_modules/@rollup/wasm-node"
-	mv "${WORKDIR}"/package/* third_party/devtools-frontend/src/node_modules/@rollup/wasm-node ||
-		die "Failed to move rollup package"
 
 	# adjust python interpreter version
 	sed -i -e "s|\(^script_executable = \).*|\1\"${EPYTHON}\"|g" .gn || die
@@ -781,6 +785,7 @@ src_prepare() {
 		third_party/google_input_tools/third_party/closure_library
 		third_party/google_input_tools/third_party/closure_library/third_party/closure
 		third_party/googletest
+		third_party/gperf # We symlink system gperf, but this will purge the symlink since we tidy up afterwards.
 		third_party/highway
 		third_party/hunspell
 		third_party/ink_stroke_modeler/src/ink_stroke_modeler
@@ -951,7 +956,6 @@ src_prepare() {
 		# gyp -> gn leftovers
 		third_party/speech-dispatcher
 		third_party/usb_ids
-		third_party/xdg-utils
 	)
 
 	if use rar; then
@@ -1531,7 +1535,7 @@ src_test() {
 	# test-launcher-bot-mode enables parallelism and plain output
 	# Check individual tests with --gtest_filter=<test you want> --single-process-tests
 	./out/Release/base_unittests --test-launcher-bot-mode \
-		--test-launcher-jobs="$(makeopts_jobs)" \
+		--test-launcher-jobs="$(get_makeopts_jobs)" \
 		--gtest_filter="${test_filter}" || die "Tests failed!"
 }
 
@@ -1603,9 +1607,6 @@ src_install() {
 		local files=(out/Release/*.so out/Release/*.so.[0-9])
 		[[ ${#files[@]} -gt 0 ]] && doins "${files[@]}"
 	)
-
-	# Install bundled xdg-utils, avoids installing X11 libraries with USE="-X wayland"
-	doins out/Release/xdg-{settings,mime}
 
 	if ! use system-icu && ! use headless; then
 		doins out/Release/icudtl.dat

@@ -53,12 +53,12 @@ inherit python-any-r1 readme.gentoo-r1 rust systemd toolchain-funcs virtualx xdg
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://www.chromium.org/"
 PPC64_HASH="a85b64f07b489b8c6fdb13ecf79c16c56c560fc6"
-PATCH_V="${PV%%\.*}"
+PATCH_V="${PV%%\.*}-4"
 COPIUM_COMMIT="fe1caafa06f27542c18a881348f78e984e2d9fe2"
 SRC_URI="https://github.com/chromium-linux-tarballs/chromium-tarballs/releases/download/${PV}/chromium-${PV}-linux.tar.xz
 	https://deps.gentoo.zip/www-client/chromium/rollup-wasm-node-${ROLLUP_VER}.tgz
+	https://gitlab.com/Matt.Jolly/chromium-patches/-/archive/${PATCH_V}/chromium-patches-${PATCH_V}.tar.bz2
 	!bundled-toolchain? (
-		https://gitlab.com/Matt.Jolly/chromium-patches/-/archive/${PATCH_V}/chromium-patches-${PATCH_V}.tar.bz2
 		https://codeberg.org/selfisekai/copium/archive/${COPIUM_COMMIT}.tar.gz
 			-> chromium-patches-copium-${COPIUM_COMMIT:0:10}.tar.gz
 	)
@@ -82,7 +82,7 @@ LICENSE+=" IJG ISC LGPL-2 LGPL-2.1 MIT MPL-1.1 MPL-2.0 Ms-PL PSF-2 SGI-B-2.0 SSL
 LICENSE+=" Unicode-DFS-2015 Unlicense UoI-NCSA ZLIB libtiff openssl"
 LICENSE+=" rar? ( unRAR )"
 
-SLOT="unstable"
+SLOT="beta"
 # Unstable in gentoo exists mostly to give devs some breathing room for beta/stable releases.
 # It shouldn't be keyworded but adventurous users are encouraged to select it;
 # there's official dev channel Google Chrome after all.
