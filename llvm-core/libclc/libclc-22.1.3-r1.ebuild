@@ -1,4 +1,4 @@
-# Copyright 1999-2025 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -12,7 +12,7 @@ HOMEPAGE="https://libclc.llvm.org/"
 
 LICENSE="Apache-2.0-with-LLVM-exceptions || ( MIT BSD )"
 SLOT="0"
-KEYWORDS="~amd64 ~arm64 ~loong ~riscv ~x86"
+KEYWORDS="~amd64 ~arm ~arm64 ~loong ~riscv ~x86"
 IUSE="+spirv video_cards_nvidia video_cards_r600 video_cards_radeonsi"
 
 BDEPEND="
@@ -20,7 +20,9 @@ BDEPEND="
 	$(llvm_gen_dep '
 		llvm-core/clang:${LLVM_SLOT}
 	')
-	spirv? ( llvm-core/llvm[llvm_targets_SPIRV(+)] )
+	spirv? (
+		llvm-core/llvm[llvm_targets_SPIRV(+)]
+	)
 "
 
 LLVM_COMPONENTS=( libclc )
@@ -44,18 +46,17 @@ src_configure() {
 		"spirv64-mesa3d-"
 	)
 	use video_cards_nvidia && libclc_targets+=(
-		"nvptx--"
 		"nvptx64--"
-		"nvptx--nvidiacl"
 		"nvptx64--nvidiacl"
+		"nvptx64-nvidia-cuda"
 	)
 	use video_cards_r600 && libclc_targets+=(
 		"r600--"
 	)
 	use video_cards_radeonsi && libclc_targets+=(
 		"amdgcn--"
-		"amdgcn-mesa-mesa3d"
 		"amdgcn-amd-amdhsa"
+		"amdgcn-mesa-mesa3d"
 	)
 
 	libclc_targets=${libclc_targets[*]}
