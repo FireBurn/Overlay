@@ -26,9 +26,9 @@ EAPI=8
 GN_MIN_VER=0.2354
 # chromium-tools/get-chromium-toolchain-strings.py (or just use Chromicler)
 # Node for M145+ should be 24.12.0 but that's not packaged in Gentoo yet. See #969145
-TEST_FONT="6d9e23dd7a3485066f41662d7b1e08886e2006c3"
-BUNDLED_CLANG_VER="llvmorg-23-init-5669-g8a0be0bc-4"
-BUNDLED_RUST_VER="6f54d591c3116ee7f8ce9321ddeca286810cc142-7"
+TEST_FONT="9c07d19d9c5ee1ff94f717e6fb17e0c8c354e6f9"
+BUNDLED_CLANG_VER="llvmorg-23-init-10931-g20b6ec66-1"
+BUNDLED_RUST_VER="4c4205163abcbd08948b3efab796c543ba1ea687-1"
 RUST_SHORT_HASH=${BUNDLED_RUST_VER:0:10}-${BUNDLED_RUST_VER##*-}
 NODE_VER="24.12.0"
 ESBUILD_VER="0.25.1"
@@ -53,7 +53,7 @@ inherit python-any-r1 readme.gentoo-r1 rust systemd toolchain-funcs virtualx xdg
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://www.chromium.org/"
 PPC64_HASH="a85b64f07b489b8c6fdb13ecf79c16c56c560fc6"
-PATCH_V="${PV%%\.*}"
+PATCH_V="${PV%%\.*}-1"
 COPIUM_COMMIT="fe1caafa06f27542c18a881348f78e984e2d9fe2"
 SRC_URI="https://github.com/chromium-linux-tarballs/chromium-tarballs/releases/download/${PV}/chromium-${PV}-linux.tar.xz
 	https://deps.gentoo.zip/www-client/chromium/rollup-wasm-node-${ROLLUP_VER}.tgz
@@ -562,7 +562,8 @@ src_prepare() {
 			[[ "${category_name}" == "common" ]] && continue
 
 			# Unconditional patches for this category
-			PATCHES+=( "${category}"*.patch )
+			local category_patches=( "${category}"*.patch )
+			[[ ${#category_patches[@]} -gt 0 ]] && PATCHES+=( "${category}" )
 
 			# Version-constrained subdirectories (e.g., llvm/lt-23/)
 			for constraint_dir in "${category}"*/; do
@@ -570,7 +571,7 @@ src_prepare() {
 				dir_name="${dir_name##*/}"
 				if [[ "${dir_name}" =~ ^lt-(.*)$ && -v slot_map[${category_name}] ]]; then
 					ver_test "${slot_map[${category_name}]}" -lt "${BASH_REMATCH[1]}" &&
-						PATCHES+=( "${constraint_dir}"*.patch )
+						PATCHES+=( "${constraint_dir}" )
 				fi
 			done
 		done
@@ -1154,6 +1155,11 @@ chromium_configure() {
 			"rust_sysroot_absolute=\"$(get_rust_prefix)\""
 			"rustc_version=\"${RUST_SLOT}\""
 		)
+
+		if [[ ${LLVM_SLOT} -lt 23 ]]; then
+			# Workaround for -fsanitize-ignore-for-ubsan-feature (added in LLVM 23)
+			myconf_gn+=( 'clang_has_ubsan_feature_ignore=false' )
+		fi
 
 		if ! tc-is-cross-compiler; then
 			myconf_gn+=( 'host_toolchain="//build/toolchain/linux/unbundle:default"' )
