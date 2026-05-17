@@ -1,4 +1,4 @@
-# Copyright 2025 Gentoo Authors
+# Copyright 2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -7,19 +7,33 @@ ROCM_VERSION="6.3"
 
 inherit cmake cuda rocm linux-info
 
+DESCRIPTION="Port of Facebook's LLaMA model in C/C++"
+HOMEPAGE="https://github.com/ggml-org/llama.cpp"
+
 if [[ "${PV}" != "9999" ]]; then
 	KEYWORDS="~amd64"
 	MY_PV="b${PV#0_pre}"
+	LLAMA_UI_VERSION="${MY_PV}"
 	S="${WORKDIR}/llama.cpp-${MY_PV}"
 	SRC_URI="https://github.com/ggml-org/llama.cpp/archive/refs/tags/${MY_PV}.tar.gz -> ${P}.tar.gz"
 else
 	inherit git-r3
 	KEYWORDS="~amd64"
 	EGIT_REPO_URI="https://github.com/ggml-org/llama.cpp.git"
+
+	# Manually update this to a known-good recently published UI version
+	# to avoid 404s on bleeding-edge commits and to keep Manifest hashes stable.
+	LLAMA_UI_VERSION="b9190"
 fi
 
-DESCRIPTION="Port of Facebook's LLaMA model in C/C++"
-HOMEPAGE="https://github.com/ggml-org/llama.cpp"
+# Fetch prebuilt UI assets via standard Portage SRC_URI
+HF_UI_URI="https://huggingface.co/buckets/ggml-org/llama-ui/resolve/${LLAMA_UI_VERSION}"
+SRC_URI+="
+	${HF_UI_URI}/index.html -> llama-ui-${LLAMA_UI_VERSION}-index.html
+	${HF_UI_URI}/bundle.js -> llama-ui-${LLAMA_UI_VERSION}-bundle.js
+	${HF_UI_URI}/bundle.css -> llama-ui-${LLAMA_UI_VERSION}-bundle.css
+	${HF_UI_URI}/loading.html -> llama-ui-${LLAMA_UI_VERSION}-loading.html
+"
 
 LICENSE="MIT"
 SLOT="0"
@@ -27,8 +41,6 @@ CPU_FLAGS_X86=( avx avx2 f16c )
 IUSE="curl openblas +openmp blis hip cuda opencl vulkan"
 REQUIRED_USE="?? ( openblas blis )"
 
-# curl is needed for pulling models from huggingface
-# numpy is used by convert_hf_to_gguf.py
 CDEPEND="
 	curl? ( net-misc/curl:= )
 	openblas? ( sci-libs/openblas:= )
@@ -57,11 +69,39 @@ pkg_setup() {
 				ewarn "To use ROCm/HIP, you need to have HSA_AMD_SVM option enabled in your kernel."
 			fi
 		fi
-
 	fi
 }
 
 src_prepare() {
+	if [[ "${PV}" == "9999" ]]; then
+		# Check if our pinned UI version is lagging behind the live repo
+		local current_tag=$(git describe --tags --match 'b*' --abbrev=0 2>/dev/null)
+		if [[ -n "${current_tag}" ]]; then
+			local current_num=${current_tag#b}
+			local used_num=${LLAMA_UI_VERSION#b}
+			if [[ "${current_num}" -gt 0 && "${used_num}" -gt 0 ]]; then
+				local diff=$(( current_num - used_num ))
+				if [[ ${diff} -gt 2 ]]; then
+					ewarn "======================================================================"
+					ewarn "WARNING: llama.cpp upstream is at ${current_tag}, but this ebuild is"
+					ewarn "using UI assets from ${LLAMA_UI_VERSION}."
+					ewarn ""
+					ewarn "Please update LLAMA_UI_VERSION='${current_tag}' in the ebuild"
+					ewarn "and run 'ebuild llama-cpp-9999.ebuild manifest' to refresh the UI."
+					ewarn "======================================================================"
+				fi
+			fi
+		fi
+	fi
+
+	# Copy the UI assets downloaded by Portage into the location CMake expects (Priority 1: local)
+	local ui_dir="${S}/build/tools/ui/dist"
+	mkdir -p "${ui_dir}" || die
+	cp "${DISTDIR}/llama-ui-${LLAMA_UI_VERSION}-index.html" "${ui_dir}/index.html" || die
+	cp "${DISTDIR}/llama-ui-${LLAMA_UI_VERSION}-bundle.js" "${ui_dir}/bundle.js" || die
+	cp "${DISTDIR}/llama-ui-${LLAMA_UI_VERSION}-bundle.css" "${ui_dir}/bundle.css" || die
+	cp "${DISTDIR}/llama-ui-${LLAMA_UI_VERSION}-loading.html" "${ui_dir}/loading.html" || die
+
 	use cuda && cuda_src_prepare
 
 	cmake_src_prepare
@@ -71,12 +111,12 @@ src_configure() {
 	local mycmakeargs=(
 		-DLLAMA_BUILD_TESTS=OFF
 		-DLLAMA_BUILD_SERVER=ON
-		-DCMAKE_SKIP_BUILD_RPATH=ON
+		-DLLAMA_BUILD_UI=ON
+		-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
 		-DGGML_NATIVE=0	# don't set march
 		-DGGML_RPC=ON
 		-DLLAMA_CURL=$(usex curl ON OFF)
 		-DBUILD_NUMBER="1"
-		-DGENTOO_REMOVE_CMAKE_BLAS_HACK=ON
 		-DGGML_CUDA=$(usex cuda ON OFF)
 		-DGGML_OPENCL=$(usex opencl ON OFF)
 		-DGGML_OPENMP=$(usex openmp ON OFF)
