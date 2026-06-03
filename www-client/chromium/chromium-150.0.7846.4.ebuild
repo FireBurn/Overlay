@@ -90,7 +90,7 @@ KEYWORDS="~amd64 ~arm64"
 
 IUSE_SYSTEM_LIBS="+system-harfbuzz +system-icu +system-zstd"
 IUSE="+X ${IUSE_SYSTEM_LIBS} bindist bundled-toolchain cups debug ffmpeg-chromium gtk4 +hangouts headless kerberos +official pax-kernel pgo"
-IUSE+=" +proprietary-codecs pulseaudio qt6 +rar +screencast selinux test +vaapi +wayland +widevine cpu_flags_ppc_vsx3"
+IUSE+=" +proprietary-codecs pulseaudio qt6 +rar +screencast selinux test +vaapi +wayland +widevine cpu_flags_ppc_vsx3 cpu_flags_x86_avx512f"
 RESTRICT="
 	!bindist? ( bindist )
 	!test? ( test )
@@ -1208,6 +1208,11 @@ chromium_configure() {
 			use !custom-cflags && filter-flags -mno-mmx -mno-sse2 -mno-ssse3 -mno-sse4.1 \
 										-mno-avx -mno-avx2 -mno-fma -mno-fma4 -mno-xop -mno-sse4a
 			myconf_gn+=( 'target_cpu="x64"' )
+			if use cpu_flags_x86_avx512f; then
+				mygnargs+=( allow_avx512=true )
+			else
+				mygnargs+=( allow_avx512=false )
+			fi
 			;;
 		arm64)
 			myconf_gn+=( 'target_cpu="arm64"' )
