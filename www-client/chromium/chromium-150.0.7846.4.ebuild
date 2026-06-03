@@ -1209,9 +1209,9 @@ chromium_configure() {
 										-mno-avx -mno-avx2 -mno-fma -mno-fma4 -mno-xop -mno-sse4a
 			myconf_gn+=( 'target_cpu="x64"' )
 			if use cpu_flags_x86_avx512f; then
-				mygnargs+=( allow_avx512=true )
+				myconf_gn+=( 'allow_avx512=true' )
 			else
-				mygnargs+=( allow_avx512=false )
+				myconf_gn+=( 'allow_avx512=false' )
 			fi
 			;;
 		arm64)
