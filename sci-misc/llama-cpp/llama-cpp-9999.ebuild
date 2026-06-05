@@ -23,7 +23,7 @@ else
 
 	# Manually update this to a known-good recently published UI version
 	# to avoid 404s on bleeding-edge commits and to keep Manifest hashes stable.
-	LLAMA_UI_VERSION="b9190"
+	LLAMA_UI_VERSION="b9518"
 fi
 
 # Fetch prebuilt UI assets via standard Portage SRC_URI
