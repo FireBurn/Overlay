@@ -5,7 +5,7 @@ EAPI=8
 
 ROCM_VERSION="6.3"
 
-inherit cmake cuda rocm linux-info
+inherit cmake cuda rocm linux-info flag-o-matic
 
 DESCRIPTION="Port of Facebook's LLaMA model in C/C++"
 HOMEPAGE="https://github.com/ggml-org/llama.cpp"
@@ -94,8 +94,11 @@ src_prepare() {
 		fi
 	fi
 
-	# Copy the UI assets downloaded by Portage into the location CMake expects (Priority 1: local)
-	local ui_dir="${S}/build/tools/ui/dist"
+	# Copy the UI assets downloaded by Portage into the location CMake expects.
+	# Upstream's ui-assets.cmake checks for these files in ${UI_SOURCE_DIR}/dist
+	# (which resolves to tools/ui/dist in the source tree). By placing them here,
+	# we circumvent the network-based Hugging Face download attempt during the build.
+	local ui_dir="${S}/tools/ui/dist"
 	mkdir -p "${ui_dir}" || die
 	cp "${DISTDIR}/llama-ui-${LLAMA_UI_VERSION}-index.html" "${ui_dir}/index.html" || die
 	cp "${DISTDIR}/llama-ui-${LLAMA_UI_VERSION}-bundle.js" "${ui_dir}/bundle.js" || die
@@ -108,6 +111,11 @@ src_prepare() {
 }
 
 src_configure() {
+	# Force enable the Web UI macro for the server, as upstream's recent CMake
+	# refactoring (e.g. PR #23511, #22937) fails to propagate this definition
+	# to the shared server implementation library on Linux, resulting in a 404.
+	append-cppflags -DLLAMA_BUILD_UI=1 -DLLAMA_BUILD_WEBUI=1
+
 	local mycmakeargs=(
 		-DLLAMA_BUILD_TESTS=OFF
 		-DLLAMA_BUILD_SERVER=ON
