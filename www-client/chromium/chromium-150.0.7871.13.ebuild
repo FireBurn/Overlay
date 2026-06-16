@@ -28,7 +28,7 @@ GN_MIN_VER=0.2374
 # Node for M145+ should be 24.12.0 but that's not packaged in Gentoo yet. See #969145
 TEST_FONT="9c07d19d9c5ee1ff94f717e6fb17e0c8c354e6f9"
 BUNDLED_CLANG_VER="llvmorg-23-init-10931-g20b6ec66-11"
-BUNDLED_RUST_VER="4c4205163abcbd08948b3efab796c543ba1ea687-3"
+BUNDLED_RUST_VER="4c4205163abcbd08948b3efab796c543ba1ea687-5"
 RUST_SHORT_HASH=${BUNDLED_RUST_VER:0:10}-${BUNDLED_RUST_VER##*-}
 NODE_VER="24.12.0"
 ESBUILD_VER="0.25.1"
@@ -53,7 +53,7 @@ inherit python-any-r1 readme.gentoo-r1 rust systemd toolchain-funcs virtualx xdg
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://www.chromium.org/"
 PPC64_HASH="a85b64f07b489b8c6fdb13ecf79c16c56c560fc6"
-PATCH_V="150"
+PATCH_V="${PV%%\.*}-1"
 COPIUM_COMMIT="b00f26bb5e0781020da5f830981472a142c6baf1"
 SRC_URI="https://github.com/chromium-linux-tarballs/chromium-tarballs/releases/download/${PV}/chromium-${PV}-linux.tar.xz
 	https://deps.gentoo.zip/www-client/chromium/rollup-wasm-node-${ROLLUP_VER}.tgz
@@ -82,7 +82,7 @@ LICENSE+=" IJG ISC LGPL-2 LGPL-2.1 MIT MPL-1.1 MPL-2.0 Ms-PL PSF-2 SGI-B-2.0 SSL
 LICENSE+=" Unicode-DFS-2015 Unlicense UoI-NCSA ZLIB libtiff openssl"
 LICENSE+=" rar? ( unRAR )"
 
-SLOT="unstable"
+SLOT="beta"
 # Unstable in gentoo exists mostly to give devs some breathing room for beta/stable releases.
 # It shouldn't be keyworded but adventurous users are encouraged to select it;
 # there's official dev channel Google Chrome after all.
@@ -135,6 +135,7 @@ COMMON_SNAPSHOT_DEPEND="
 	!headless? (
 		dev-libs/glib:2
 		>=media-libs/alsa-lib-1.0.19:=
+		media-video/pipewire:=
 		pulseaudio? ( media-libs/libpulse:= )
 		sys-apps/pciutils:=
 		kerberos? ( virtual/krb5 )
@@ -147,9 +148,9 @@ COMMON_SNAPSHOT_DEPEND="
 		)
 		x11-libs/libxkbcommon:=
 		wayland? (
+			screencast? ( media-video/pipewire:= )
 			dev-libs/libffi:=
 			dev-libs/wayland:=
-			screencast? ( media-video/pipewire:= )
 		)
 	)
 "
@@ -191,8 +192,10 @@ RDEPEND="${COMMON_DEPEND}
 		ffmpeg-chromium? ( media-video/ffmpeg-chromium:${PV%%\.*} )
 	)
 "
+# For M149+ pipewire is a mandatory build-time dependency, but it's optional at runtime for most configurations.
 DEPEND="${COMMON_DEPEND}
 	!headless? (
+		media-video/pipewire
 		gtk4? ( gui-libs/gtk:4[X?,wayland?] )
 		!gtk4? ( x11-libs/gtk+:3[X?,wayland?] )
 	)
@@ -1084,6 +1087,7 @@ chromium_configure() {
 		openh264
 		zlib
 	)
+
 	if use system-icu; then
 		gn_system_libraries+=( icu )
 	fi
@@ -1331,6 +1335,8 @@ chromium_configure() {
 			"ozone_platform_x11=$(usex X true false)"
 			"ozone_platform=\"$(usex wayland wayland x11)\""
 			"rtc_use_pipewire=$(usex screencast true false)"
+			# As above - link directly instead of dlopening
+			"rtc_link_pipewire=$(usex screencast true false)"
 			"use_cups=$(usex cups true false)"
 			"use_kerberos=$(usex kerberos true false)"
 			"use_pulseaudio=$(usex pulseaudio true false)"

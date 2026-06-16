@@ -82,11 +82,11 @@ LICENSE+=" IJG ISC LGPL-2 LGPL-2.1 MIT MPL-1.1 MPL-2.0 Ms-PL PSF-2 SGI-B-2.0 SSL
 LICENSE+=" Unicode-DFS-2015 Unlicense UoI-NCSA ZLIB libtiff openssl"
 LICENSE+=" rar? ( unRAR )"
 
-SLOT="beta"
+SLOT="stable"
 # Unstable in gentoo exists mostly to give devs some breathing room for beta/stable releases.
 # It shouldn't be keyworded but adventurous users are encouraged to select it;
 # there's official dev channel Google Chrome after all.
-KEYWORDS="~amd64 ~arm64"
+KEYWORDS="amd64 arm64"
 
 IUSE_SYSTEM_LIBS="+system-harfbuzz +system-icu +system-zstd"
 IUSE="+X ${IUSE_SYSTEM_LIBS} bindist bundled-toolchain cups debug ffmpeg-chromium gtk4 +hangouts headless kerberos +official pax-kernel pgo"
@@ -149,7 +149,6 @@ COMMON_SNAPSHOT_DEPEND="
 		wayland? (
 			dev-libs/libffi:=
 			dev-libs/wayland:=
-			screencast? ( media-video/pipewire:= )
 		)
 	)
 "
@@ -172,6 +171,7 @@ COMMON_DEPEND="
 		cups? ( >=net-print/cups-1.3.11:= )
 		qt6? ( dev-qt/qtbase:6[gui,widgets] )
 		X? ( ${COMMON_X_DEPEND} )
+		wayland? ( screencast? ( media-video/pipewire:= ) )
 	)
 "
 RDEPEND="${COMMON_DEPEND}
@@ -191,8 +191,10 @@ RDEPEND="${COMMON_DEPEND}
 		ffmpeg-chromium? ( media-video/ffmpeg-chromium:${PV%%\.*} )
 	)
 "
+# For M149+ pipewire is a mandatory build-time dependency, but it's optional at runtime for most configurations.
 DEPEND="${COMMON_DEPEND}
 	!headless? (
+		media-video/pipewire
 		gtk4? ( gui-libs/gtk:4[X?,wayland?] )
 		!gtk4? ( x11-libs/gtk+:3[X?,wayland?] )
 	)
@@ -1311,6 +1313,8 @@ chromium_configure() {
 			"ozone_platform_x11=$(usex X true false)"
 			"ozone_platform=\"$(usex wayland wayland x11)\""
 			"rtc_use_pipewire=$(usex screencast true false)"
+			# As above - link directly instead of dlopening
+			"rtc_link_pipewire=$(usex screencast true false)"
 			"use_cups=$(usex cups true false)"
 			"use_kerberos=$(usex kerberos true false)"
 			"use_pulseaudio=$(usex pulseaudio true false)"
