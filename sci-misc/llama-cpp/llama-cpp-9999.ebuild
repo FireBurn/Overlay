@@ -132,8 +132,5 @@ src_compile() {
 
 src_install() {
 	cmake_src_install
-	dobin "${BUILD_DIR}/bin/rpc-server"
-
-	# avoid clashing with whisper.cpp
-	rm -rf "${ED}/usr/include"
+	dobin "${BUILD_DIR}/bin/ggml-rpc-server"
 }
