@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<!-- Replace with your name and email -->
+		<email>mike@fireburn.co.uk</email>
+		<name>Mike Lothian</name>
+	</maintainer>
+	<longdescription>
+		Antigravity CLI (agy) is a lightweight Terminal User Interface (TUI) that allows developers to invoke, monitor, and interact with Google Antigravity AI agents directly from the command line. It is the official Go-based successor to Gemini CLI, providing multi-step reasoning, tool calling, and sub-agents optimized for keyboard-driven workflows and remote SSH sessions.
+	</longdescription>
+	<upstream>
+		<bugs-to>https://github.com/google-antigravity/antigravity-cli/issues</bugs-to>
+	</upstream>
+</pkgmetadata>
