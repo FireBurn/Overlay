@@ -7,8 +7,8 @@ DESCRIPTION="Google's agentic development platform (CLI companion)"
 HOMEPAGE="https://antigravity.google/ https://github.com/google-antigravity/antigravity-cli"
 
 SRC_URI="
-	amd64? ( https://github.com/google-antigravity/antigravity-cli/releases/download/${PV}/agy_cli_linux_x64.tar.gz )
-	arm64? ( https://github.com/google-antigravity/antigravity-cli/releases/download/${PV}/agy_cli_linux_arm64.tar.gz )
+	amd64? ( https://github.com/google-antigravity/antigravity-cli/releases/download/${PV}/agy_cli_linux_x64.tar.gz -> antigravity-x64-${PV}.tar.gz )
+	arm64? ( https://github.com/google-antigravity/antigravity-cli/releases/download/${PV}/agy_cli_linux_arm64.tar.gz -> antigravity-arm64-${PV}.tar.gz )
 "
 
 # Tarball unpacks the bare files without a root directory
