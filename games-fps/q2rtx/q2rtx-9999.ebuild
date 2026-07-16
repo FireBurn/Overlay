@@ -5,7 +5,7 @@ EAPI=8
 
 inherit cmake
 
-EGIT_REPO_URI="https://github.com/NVIDIA/Q2RTX.git"
+EGIT_REPO_URI="https://github.com/FireBurn/Q2RTX.git"
 EGIT_SUBMODULES=( '-*' 'extern/stb' 'extern/tinyobjloader-c' )
 inherit git-r3
 
@@ -22,7 +22,7 @@ SLOT="0"
 KEYWORDS="~amd64"
 
 DEPEND="
-	app-arch/p7zip
+	app-arch/7zip
 	dev-util/glslang
 	dev-util/vulkan-headers
 	media-libs/libsdl2
