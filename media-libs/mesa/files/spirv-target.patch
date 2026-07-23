@@ -129,8 +129,8 @@ index e5c3d158b29..ce2b4fa62b6 100644
 -   if (args->use_llvm_spirv_target) {
 -      const char *triple = args->address_bits == 32 ? "spirv-unknown-unknown" : "spirv64-unknown-unknown";
 -      std::string error_msg("");
-+   unsigned address_bits = args ? args->address_bits
-+                                : mod->getDataLayout().getPointerSizeInBits();
++   unsigned address_bits = (args && args->address_bits) ? args->address_bits
++                                                        : mod->getDataLayout().getPointerSizeInBits();
 +   const char *triple = address_bits == 32 ? "spirv-unknown-unknown" : "spirv64-unknown-unknown";
 +   std::string error_msg("");
  #if LLVM_VERSION_MAJOR >= 21
@@ -225,6 +225,33 @@ index 9ff61440f0d..a702954742d 100644
                   idep_mesautil, dep_spirv_tools, idep_vtn, dep_version]
  )
  
+diff --git a/src/gallium/frontends/rusticl/builtin_kernels/meson.build b/src/gallium/frontends/rusticl/builtin_kernels/meson.build
+index 1000000..2000000 100644
+--- a/src/gallium/frontends/rusticl/builtin_kernels/meson.build
++++ b/src/gallium/frontends/rusticl/builtin_kernels/meson.build
+@@ -70,7 +70,5 @@ rusticl_kernels_spv = static_library(
+       'gen/' : [
+         rusticl_kernels_spv64_rs,
+         rusticl_kernels_spv64_ulong_rs,
+-        rusticl_kernels_spv32_rs,
+-        rusticl_kernels_spv32_ulong_rs
+       ],
+     },
+   ),
+
+diff --git a/src/gallium/frontends/rusticl/builtin_kernels/lib.rs b/src/gallium/frontends/rusticl/builtin_kernels/lib.rs
+index 1000000..2000000 100644
+--- a/src/gallium/frontends/rusticl/builtin_kernels/lib.rs
++++ b/src/gallium/frontends/rusticl/builtin_kernels/lib.rs
+@@ -4,6 +4,6 @@ pub const RUSTICL_BUILTIN_KERNELS_SPV64_ULONG: &'static [u8] =
+     include_bytes!("gen/rusticl_kernels_ulong.spv64").as_slice();
+ pub const RUSTICL_BUILTIN_KERNELS_SPV32: &'static [u8] =
+-    include_bytes!("gen/rusticl_kernels.spv32").as_slice();
++    &[];
+ pub const RUSTICL_BUILTIN_KERNELS_SPV32_ULONG: &'static [u8] =
+-    include_bytes!("gen/rusticl_kernels_ulong.spv32").as_slice();
++    &[];
+
 diff --git a/src/gallium/frontends/rusticl/core/program.rs b/src/gallium/frontends/rusticl/core/program.rs
 index 02111596751..e4088cb6555 100644
 --- a/src/gallium/frontends/rusticl/core/program.rs
