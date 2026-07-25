@@ -63,6 +63,8 @@ def main():
         # Use a distinct scheme handler for slotted installs to avoid conflicts
         "URI_SCHEME": f"x-scheme-handler/chromium{channel_suffix}",
         "USR_BIN_SYMLINK_NAME": f"chromium-browser{channel_suffix}",
+        # StartupWMClass for .desktop file - added in M152
+        "startup_wm_class": f"chromium-browser{channel_suffix}",
     }
 
     # upstream is currently (M145) converting from upper to lower case
