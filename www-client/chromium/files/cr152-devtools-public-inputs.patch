@@ -1,0 +1,46 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Gentoo Overlay <gentoo@localhost>
+Date: Fri, 24 Jul 2026 17:00:00 +0000
+Subject: [PATCH] devtools: mark public_inputs as not_needed in action targets
+
+--- a/third_party/devtools-frontend/src/scripts/build/ninja/copy.gni
++++ b/third_party/devtools-frontend/src/scripts/build/ninja/copy.gni
+@@ -27,6 +27,7 @@ template("copy_to_gen") {
+
+     # Expose ts files to dependent targets.
+     public_inputs = filter_include(sources, [ "*.ts" ])
++    not_needed([ "public_inputs" ])
+
+     outputs = []
+     foreach(_input, sources) {
+--- a/third_party/devtools-frontend/src/scripts/build/ninja/devtools_pre_built.gni
++++ b/third_party/devtools-frontend/src/scripts/build/ninja/devtools_pre_built.gni
+@@ -19,6 +19,7 @@ template("devtools_pre_built") {
+
+     # Expose ts files to dependent targets.
+     public_inputs = filter_include(sources, [ "*.ts" ])
++    not_needed([ "public_inputs" ])
+
+     _copy_src = rebase_path(get_path_info(target_name, "dir"), root_build_dir)
+     _copy_dest = rebase_path(target_gen_dir, root_build_dir)
+--- a/third_party/devtools-frontend/src/scripts/build/typescript/typescript.gni
++++ b/third_party/devtools-frontend/src/scripts/build/typescript/typescript.gni
+@@ -224,6 +224,7 @@ template("ts_library") {
+                            "*SupportedCSSProperties.js",
+                          ])
+
++      not_needed([ "public_inputs" ])
+       args += [ "--sources" ] + rebase_path(sources, root_build_dir)
+
+       foreach(src, sources) {
+--- a/third_party/devtools-frontend/src/scripts/build/ninja/devtools_entrypoint.gni
++++ b/third_party/devtools-frontend/src/scripts/build/ninja/devtools_entrypoint.gni
+@@ -199,6 +199,7 @@ template("devtools_entrypoint") {
+
+     # Expose ts files to dependent targets.
+     public_inputs = [ invoker.entrypoint ]
++    not_needed([ "public_inputs" ])
+
+     args = [
+              rebase_path(_generated_tsconfig_location, root_build_dir),
+-- 

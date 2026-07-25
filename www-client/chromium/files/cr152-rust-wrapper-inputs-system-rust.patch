@@ -1,0 +1,88 @@
+diff --git a/build/config/rust.gni b/build/config/rust.gni
+index 87b5ae8..eef7e7b 100644
+--- a/build/config/rust.gni
++++ b/build/config/rust.gni
+@@ -62,6 +62,7 @@ declare_args() {
+   # Directory under which to find `bin/bindgen` (a `bin` directory containing
+   # the bindgen exectuable).
+   rust_bindgen_root = "//third_party/rust-toolchain"
++  bindgen_libclang_path = ""
+ 
+   # If you're using a Rust toolchain as specified by rust_sysroot_absolute,
+   # set this to the output of `rustc -V`. Changing this string will cause all
+@@ -433,5 +434,5 @@ rustc_wrapper_inputs = [
+ if (host_os == "win") {
+   rustc_wrapper_inputs += [ "//third_party/rust-toolchain/bin/rustc.exe" ]
+ } else {
+-  rustc_wrapper_inputs += [ "//third_party/rust-toolchain/bin/rustc" ]
++  rustc_wrapper_inputs += [ "${rust_sysroot}/bin/rustc" ]
+ }
+diff --git a/build/rust/cargo_crate.gni b/build/rust/cargo_crate.gni
+index 5ba5f98..ef72c33 100644
+--- a/build/rust/cargo_crate.gni
++++ b/build/rust/cargo_crate.gni
+@@ -471,7 +471,7 @@ template("cargo_crate") {
+       if (host_os == "win") {
+         inputs += [ "//third_party/rust-toolchain/bin/rustc.exe" ]
+       } else {
+-        inputs += [ "//third_party/rust-toolchain/bin/rustc" ]
++        inputs += [ "${rust_sysroot}/bin/rustc" ]
+       }
+ 
+       build_script_target = ":${_build_script_name}($rust_macro_toolchain)"
+diff --git a/build/rust/rust_bindgen_generator.gni b/build/rust/rust_bindgen_generator.gni
+index bcc113e..b5e8768 100644
+--- a/build/rust/rust_bindgen_generator.gni
++++ b/build/rust/rust_bindgen_generator.gni
+@@ -17,7 +17,9 @@ if (host_os == "win") {
+ }
+ 
+ _rustfmt_path = "${rust_bindgen_root}/bin/rustfmt-1.97.1"
+-if (!use_chromium_rust_toolchain &&
++if (bindgen_libclang_path != "") {
++  _libclang_path = bindgen_libclang_path
++} else if (!use_chromium_rust_toolchain &&
+     (host_cpu == "ppc64" || host_cpu == "s390x")) {
+   _rustfmt_path = rust_sysroot_absolute + "/bin/rustfmt-1.97.1"
+ } else if (host_os == "win") {
+@@ -27,7 +29,9 @@ if (!use_chromium_rust_toolchain &&
+ # On Windows, the libclang.dll is beside the bindgen.exe, otherwise it is in
+ # ../lib.
+ _libclang_path = rust_bindgen_root
+-if (!use_chromium_rust_toolchain &&
++if (bindgen_libclang_path != "") {
++  _libclang_path = bindgen_libclang_path
++} else if (!use_chromium_rust_toolchain &&
+     (host_cpu == "ppc64" || host_cpu == "s390x")) {
+   _libclang_path = rust_sysroot_absolute + "/lib64"
+ } else if (host_os == "win") {
+@@ -233,9 +237,13 @@ template("rust_bindgen_generator") {
+     # says the wrong thing. We point it to our clang's resource dir which will
+     # make it behave consistently with our other command line flags and allows
+     # system headers to be found.
+-    clang_resource_dir =
+-        rebase_path(clang_base_path + "/lib/clang/" + clang_version,
+-                    root_build_dir)
++    if (!use_chromium_rust_toolchain) {
++      clang_resource_dir = rebase_path(clang_base_path, root_build_dir)
++    } else {
++      clang_resource_dir =
++          rebase_path(clang_base_path + "/lib/clang/" + clang_version,
++                      root_build_dir)
++    }
+     args += [
+       "-resource-dir",
+       clang_resource_dir,
+diff --git a/build/rust/std/BUILD.gn b/build/rust/std/BUILD.gn
+index 105a1d5..c1295eb 100644
+--- a/build/rust/std/BUILD.gn
++++ b/build/rust/std/BUILD.gn
+@@ -271,7 +271,7 @@ if (toolchain_has_rust) {
+       if (host_os == "win") {
+         inputs = [ "//third_party/rust-toolchain/bin/rustc.exe" ]
+       } else {
+-        inputs = [ "//third_party/rust-toolchain/bin/rustc" ]
++        inputs = [ "${rust_sysroot}/bin/rustc" ]
+       }
+ 
+       # For the rustc sysroot we must include even the rlibs we don't pass to
