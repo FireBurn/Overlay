@@ -27,8 +27,8 @@ GN_MIN_VER=0.2374
 # chromium-tools/get-chromium-toolchain-strings.py (or just use Chromicler)
 # Node for M145+ should be 24.12.0 but that's not packaged in Gentoo yet. See #969145
 TEST_FONT="9c07d19d9c5ee1ff94f717e6fb17e0c8c354e6f9"
-BUNDLED_CLANG_VER="llvmorg-23-init-19482-g53d18800-1"
-BUNDLED_RUST_VER="b998449636a48e2c4a362809085b600a0174e1f2-5"
+BUNDLED_CLANG_VER="llvmorg-23-init-10931-g20b6ec66-11"
+BUNDLED_RUST_VER="4c4205163abcbd08948b3efab796c543ba1ea687-5"
 RUST_SHORT_HASH=${BUNDLED_RUST_VER:0:10}-${BUNDLED_RUST_VER##*-}
 NODE_VER="24.12.0"
 ESBUILD_VER="0.25.1"
@@ -57,6 +57,7 @@ PATCH_V="${PV%%\.*}"
 COPIUM_COMMIT="b00f26bb5e0781020da5f830981472a142c6baf1"
 SRC_URI="https://github.com/chromium-linux-tarballs/chromium-tarballs/releases/download/${PV}/chromium-${PV}-linux.tar.xz
 	https://deps.gentoo.zip/www-client/chromium/rollup-wasm-node-${ROLLUP_VER}.tgz
+	https://gitlab.com/Matt.Jolly/chromium-patches/-/archive/${PATCH_V}/chromium-patches-${PATCH_V}.tar.bz2
 	!bundled-toolchain? (
 		https://codeberg.org/selfisekai/copium/archive/${COPIUM_COMMIT}.tar.gz
 			-> chromium-patches-copium-${COPIUM_COMMIT:0:10}.tar.gz
@@ -81,7 +82,7 @@ LICENSE+=" IJG ISC LGPL-2 LGPL-2.1 MIT MPL-1.1 MPL-2.0 Ms-PL PSF-2 SGI-B-2.0 SSL
 LICENSE+=" Unicode-DFS-2015 Unlicense UoI-NCSA ZLIB libtiff openssl"
 LICENSE+=" rar? ( unRAR )"
 
-SLOT="unstable"
+SLOT="stable"
 # Unstable in gentoo exists mostly to give devs some breathing room for beta/stable releases.
 # It shouldn't be keyworded but adventurous users are encouraged to select it;
 # there's official dev channel Google Chrome after all.
@@ -403,6 +404,7 @@ pkg_setup() {
 
 src_unpack() {
 	unpack ${P}-linux.tar.xz
+	unpack chromium-patches-${PATCH_V}.tar.bz2
 	# These should only be required when we're not using the official toolchain
 	if use !bundled-toolchain; then
 		unpack chromium-patches-copium-${COPIUM_COMMIT:0:10}.tar.gz
@@ -489,7 +491,7 @@ remove_compiler_builtins() {
 	else
 		# AWK FAILED (exit code 1): The pattern was not found.
 		rm -f "${tmpfile}"
-		einfo "Pattern not found in ${target}, skipping remove_compiler_builtins."
+		die "Awk patch failed: Pattern not found in ${target}."
 	fi
 }
 
@@ -501,20 +503,7 @@ src_prepare() {
 	local PATCHES=()
 
 	PATCHES+=(
-		"${FILESDIR}/cr109-system-zlib.patch"
-		"${FILESDIR}/cr131-unbundle-icu-target.patch"
-		"${FILESDIR}/cr138-nodejs-version-check.patch"
-		"${FILESDIR}/cr144-glibc-2.43.patch"
-		"${FILESDIR}/cr145-oauth2-client-switches.patch"
-		"${FILESDIR}/cr145-revert-to-rollup-wasm.patch"
-		"${FILESDIR}/cr148-v8-fix-cfi-sanitizer-set-death-callback.patch"
-		"${FILESDIR}/cr149-channel-aware-build.patch"
-		"${FILESDIR}/cr152-cbor-crubit-enable-cpp-api-from-rust.patch"
-		"${FILESDIR}/cr152-devtools-public-inputs.patch"
-		"${FILESDIR}/cr152-rust-wrapper-inputs-system-rust.patch"
-		"${FILESDIR}/cr152-dawn-disable-lifetime-safety-flags.patch"
-		"${FILESDIR}/cr152-dawn-system-go.patch"
-		"${FILESDIR}/cross-compile.patch"
+		"${WORKDIR}/chromium-patches-${PATCH_V}/common/"
 	)
 
 	# https://issues.chromium.org/issues/442698344
@@ -548,16 +537,52 @@ src_prepare() {
 		# Copium patches go here.
 		PATCHES+=(
 			"${WORKDIR}/copium/cr143-libsync-__BEGIN_DECLS.patch"
-			"${FILESDIR}/cr152-unbundle-minizip-undo-unicode.patch"
+			"${WORKDIR}/copium/cr149-unbundle-minizip-undo-unicode.patch"
 		)
 
-		if [[ ${LLVM_SLOT} -lt 23 ]]; then
-			PATCHES+=(
-				"${FILESDIR}/cr147-disable-fno-lifetime-dse.patch"
-				"${FILESDIR}/cr149-fdiagnostics-show-inlining-chain.patch"
-				"${FILESDIR}/cr149-ubsan-feature.patch"
-			)
-		fi
+		# Automate conditional application of chromium-patches
+		# The directory structure is expected to be something like:
+		# chromium-patches-145/
+		# ├── toolchain/
+		# │   ├── cr123-foo.patch
+		# │   └── cr135-bar.patch
+		# ├── llvm/
+		# │   ├── cr144-baz.patch
+		# │   └── lt-23/
+		# │       └── cr145-bleeding-edge-llvm-feature.patch
+		# Where `lt-23` means "apply this patch if the LLVM version is less than 23".
+		# Only categories in `slot_map` will be checked for version constraints.
+		shopt -s nullglob
+		local -A slot_map=( [llvm]="${LLVM_SLOT}" [rust]="${RUST_SLOT}" )
+
+		for category in "${WORKDIR}/chromium-patches-${PATCH_V}"/*/; do
+			local category_name="${category%/}"
+			category_name="${category_name##*/}"
+
+			# Skip arch-specific categories
+			if [[ "${category_name}" == "ppc64le" ]]; then
+				use ppc64 || continue
+			fi
+
+			# We applied common patches above, no need to apply them again here
+			[[ "${category_name}" == "common" ]] && continue
+
+			# Unconditional patches for this category
+			local category_patches=( "${category}"*.patch )
+			[[ ${#category_patches[@]} -gt 0 ]] && PATCHES+=( "${category}" )
+
+			# Version-constrained subdirectories (e.g., llvm/lt-23/)
+			for constraint_dir in "${category}"*/; do
+				local dir_name="${constraint_dir%/}"
+				dir_name="${dir_name##*/}"
+				if [[ "${dir_name}" =~ ^lt-(.*)$ && -v slot_map[${category_name}] ]]; then
+					ver_test "${slot_map[${category_name}]}" -lt "${BASH_REMATCH[1]}" &&
+						PATCHES+=( "${constraint_dir}" )
+				fi
+			done
+		done
+
+		shopt -u nullglob
 
 		# Strictly speaking this doesn't need to be gated (no bundled toolchain for ppc64); it keeps the logic together
 		if use ppc64; then
@@ -704,7 +729,6 @@ src_prepare() {
 		third_party/content_analysis_sdk
 		third_party/cpuinfo
 		third_party/crabbyavif
-		third_party/crubit
 		third_party/crashpad
 		third_party/crashpad/crashpad/third_party/lss
 		third_party/crashpad/crashpad/third_party/zlib
@@ -752,10 +776,11 @@ src_prepare() {
 		third_party/farmhash
 		third_party/fast_float
 		third_party/fdlibm
-		third_party/federated_compute
-		third_party/federated_compute/third_party/googleapis
-		third_party/federated_compute/third_party/protodatastore-cpp
-		third_party/federated_compute/third_party/tensorflow-federated
+		third_party/federated_compute/chromium/fcp/confidentialcompute
+		third_party/federated_compute/src/fcp/base
+		third_party/federated_compute/src/fcp/confidentialcompute
+		third_party/federated_compute/src/fcp/protos/confidentialcompute
+		third_party/federated_compute/src/fcp/protos/federatedcompute
 		third_party/ffmpeg
 		third_party/fft2d
 		third_party/flatbuffers
@@ -926,6 +951,7 @@ src_prepare() {
 		third_party/zlib/google
 		third_party/zxcvbn-cpp
 		url/third_party/mozilla
+		v8/third_party/glibc
 		v8/third_party/inspector_protocol
 		v8/third_party/rapidhash-v8
 		v8/third_party/siphash
