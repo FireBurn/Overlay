@@ -1,4 +1,4 @@
-# Copyright 2022-2025 Gentoo Authors
+# Copyright 2022-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -12,8 +12,8 @@ if [[ ${PV} == 9999 ]]; then
 	inherit git-r3
 	EGIT_REPO_URI="https://github.com/doitsujin/dxvk.git"
 	EGIT_SUBMODULES=(
-		# picky about headers and is cross-compiled making -I/usr/include troublesome
-		include/{spirv,vulkan}
+		include/spirv
+		include/vulkan
 		subprojects/dxbc-spirv
 		subprojects/dxbc-spirv/submodules/spirv_headers
 		subprojects/libdisplay-info
@@ -21,6 +21,8 @@ if [[ ${PV} == 9999 ]]; then
 else
 	HASH_SPIRV=
 	HASH_VULKAN=
+	HASH_DXBCSPIRV=
+	HASH_DXBCSPIRV_SPIRV=
 	HASH_DISPLAYINFO=
 	SRC_URI="
 		https://github.com/doitsujin/dxvk/archive/refs/tags/v${PV}.tar.gz
@@ -29,6 +31,10 @@ else
 			-> spirv-headers-${HASH_SPIRV}.tar.gz
 		https://github.com/KhronosGroup/Vulkan-Headers/archive/${HASH_VULKAN}.tar.gz
 			-> vulkan-headers-${HASH_VULKAN}.tar.gz
+		https://github.com/doitsujin/dxbc-spirv/archive/${HASH_DXBCSPIRV}.tar.gz
+			-> dxbc-spirv-${HASH_DXBCSPIRV}.tar.gz
+		https://github.com/KhronosGroup/SPIRV-Headers/archive/${HASH_DXBCSPIRV_SPIRV}.tar.gz
+			-> spirv-headers-${HASH_DXBCSPIRV_SPIRV}.tar.gz
 		https://gitlab.freedesktop.org/JoshuaAshton/libdisplay-info/-/archive/${HASH_DISPLAYINFO}/libdisplay-info-${HASH_DISPLAYINFO}.tar.bz2
 	"
 	KEYWORDS="-* ~amd64 ~x86"
@@ -37,7 +43,6 @@ fi
 DESCRIPTION="Vulkan-based implementation of D3D9, D3D10 and D3D11 for Linux / Wine"
 HOMEPAGE="https://github.com/doitsujin/dxvk/"
 
-# setup_dxvk.sh is no longer provided, fetch old until a better solution
 SRC_URI+=" https://raw.githubusercontent.com/doitsujin/dxvk/cd21cd7fa3b0df3e0819e21ca700b7627a838d69/setup_dxvk.sh"
 
 LICENSE="ZLIB Apache-2.0 MIT"
@@ -53,6 +58,8 @@ REQUIRED_USE="
 BDEPEND="
 	${PYTHON_DEPS}
 	dev-util/glslang
+	llvm-core/clang
+	llvm-core/lld
 	!crossdev-mingw? ( dev-util/mingw64-toolchain[${MULTILIB_USEDEP}] )
 "
 
@@ -65,7 +72,7 @@ pkg_pretend() {
 	[[ ${MERGE_TYPE} == binary ]] && return
 
 	if use crossdev-mingw && [[ ! -v MINGW_BYPASS ]]; then
-		local tool=-w64-mingw32-g++
+		local tool=-w64-mingw32-windres
 		for tool in $(usev abi_x86_64 x86_64${tool}) $(usev abi_x86_32 i686${tool}); do
 			if ! type -P ${tool} >/dev/null; then
 				eerror "With USE=crossdev-mingw, it is necessary to setup the mingw toolchain."
@@ -73,10 +80,6 @@ pkg_pretend() {
 				use abi_x86_32 && use abi_x86_64 &&
 					eerror "Also, with USE=abi_x86_32, will need both i686 and x86_64 toolchains."
 				die "USE=crossdev-mingw is set but ${tool} was not found"
-			elif [[ ! $(LC_ALL=C ${tool} -v 2>&1) =~ "Thread model: posix" ]]; then
-				eerror "${PN} requires GCC to be built with --enable-threads=posix"
-				eerror "Please see: https://wiki.gentoo.org/wiki/Mingw#POSIX_threads_for_Windows"
-				die "USE=crossdev-mingw is set but ${tool} does not use POSIX threads"
 			fi
 		done
 	fi
@@ -84,10 +87,20 @@ pkg_pretend() {
 
 src_prepare() {
 	if [[ ${PV} != 9999 ]]; then
-		rmdir include/{spirv,vulkan} subprojects/libdisplay-info || die
+		rmdir include/{spirv,vulkan} subprojects/{dxbc-spirv,libdisplay-info} || die
 		mv ../SPIRV-Headers-${HASH_SPIRV} include/spirv || die
 		mv ../Vulkan-Headers-${HASH_VULKAN} include/vulkan || die
+		mv ../dxbc-spirv-${HASH_DXBCSPIRV} subprojects/dxbc-spirv || die
 		mv ../libdisplay-info-${HASH_DISPLAYINFO} subprojects/libdisplay-info || die
+
+		rmdir subprojects/dxbc-spirv/submodules/spirv_headers || die
+		if [[ ${HASH_SPIRV} == ${HASH_DXBCSPIRV_SPIRV} ]]; then
+			ln -s ../../../include/spirv \
+				subprojects/dxbc-spirv/submodules/spirv_headers || die
+		else
+			mv ../SPIRV-Headers-${HASH_DXBCSPIRV_SPIRV} \
+				subprojects/dxbc-spirv/submodules/spirv_headers || die
+		fi
 	fi
 	cp -- "${DISTDIR}"/setup_dxvk.sh . || die
 
@@ -99,25 +112,17 @@ src_prepare() {
 src_configure() {
 	use crossdev-mingw || PATH=${BROOT}/usr/lib/mingw64-toolchain/bin:${PATH}
 
-	# random segfaults been reported with LTO in some games, filter as
-	# a safety (note that optimizing this further won't really help
-	# performance, GPU does the actual work)
 	filter-lto
-
-	# -mavx and mingw-gcc do not mix safely here
-	# https://github.com/doitsujin/dxvk/issues/4746#issuecomment-2708869202
-	append-flags -mno-avx
 
 	if [[ ${CHOST} != *-mingw* ]]; then
 		if [[ ! -v MINGW_BYPASS ]]; then
 			unset AR CC CXX RC STRIP
 			filter-flags '-fuse-ld=*'
-			filter-flags '-mfunction-return=thunk*' #878849
-
-			# some bashrc-mv users tend to do CFLAGS="${LDFLAGS}" and then
-			# strip-unsupported-flags miss these during compile-only tests
-			# (primarily done for 23.0 profiles' -z, not full coverage)
-			filter-flags '-Wl,-z,*' #928038
+			filter-flags '-mfunction-return=thunk*'
+			
+			# Strip Linux/ELF specific linker flags that break LLVM's PE/COFF lld-link
+			filter-flags '-Wl,-z,*' '-Wl,--undefined-version' '-Wl,--hash-style=*' '-Wl,--pack-dyn-relocs=*'
+			filter-ldflags '-Wl,-z,*' '-Wl,--undefined-version' '-Wl,--hash-style=*' '-Wl,--pack-dyn-relocs=*'
 		fi
 
 		CHOST_amd64=x86_64-w64-mingw32
@@ -131,20 +136,37 @@ src_configure() {
 }
 
 multilib_src_configure() {
-	# multilib's ${CHOST_amd64}-gcc -m32 is unusable with crossdev,
-	# unset again so meson eclass will set ${CHOST}-gcc + others
 	use crossdev-mingw && [[ ! -v MINGW_BYPASS ]] && unset AR CC CXX RC STRIP
+
+	local arch=$([[ ${ABI} == x86 ]] && echo i686 || echo x86_64)
+	local chost="${arch}-w64-mingw32"
+
+	# Use crossdev's Clang wrapper if it exists, otherwise fallback to system clang + sysroot
+	if type -P "${chost}-clang" >/dev/null; then
+		export CC="${chost}-clang"
+		export CXX="${chost}-clang++"
+	else
+		local sysroot=$(usex crossdev-mingw "/usr/${chost}" "${BROOT}/usr/lib/mingw64-toolchain/${chost}")
+		export CC="clang --target=${chost} --sysroot=${sysroot}"
+		export CXX="clang++ --target=${chost} --sysroot=${sysroot}"
+	fi
+
+	export AR="llvm-ar"
+	export STRIP="llvm-strip"
+	export WINDRES="${chost}-windres"
+	export LDFLAGS="${LDFLAGS} -fuse-ld=lld"
+	export CHOST="${chost}"
 
 	local emesonargs=(
 		--prefix="${EPREFIX}"/usr/lib/${PN}
 		--{bin,lib}dir=x${MULTILIB_ABI_FLAG: -2}
-		--force-fallback-for=libdisplay-info # system's is ELF (unusable)
+		--force-fallback-for=libdisplay-info
 		$(meson_use {,enable_}d3d8)
 		$(meson_use {,enable_}d3d9)
 		$(meson_use {,enable_}d3d10)
 		$(meson_use {,enable_}d3d11)
 		$(meson_use {,enable_}dxgi)
-		$(usev strip --strip) # portage won't strip .dll, so allow it here
+		$(usev strip --strip)
 	)
 
 	meson_src_configure
