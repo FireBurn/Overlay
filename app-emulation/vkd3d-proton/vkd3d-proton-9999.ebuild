@@ -1,4 +1,4 @@
-# Copyright 2022-2025 Gentoo Authors
+# Copyright 2022-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -10,33 +10,8 @@ inherit eapi9-ver flag-o-matic meson-multilib toolchain-funcs
 if [[ ${PV} == 9999 ]]; then
 	inherit git-r3
 	EGIT_REPO_URI="https://github.com/HansKristian-Work/vkd3d-proton.git"
-	EGIT_SUBMODULES=(
-		# uses hacks / recent features and easily breaks, keep bundled headers
-		# (also cross-compiled and -I/usr/include is troublesome)
-		khronos/{SPIRV,Vulkan}-Headers
-		subprojects/dxil-spirv
-		subprojects/dxil-spirv/third_party/dxbc-spirv
-		subprojects/dxil-spirv/subprojects/dxbc-spirv/submodules/spirv_headers
-		subprojects/dxil-spirv/third_party/spirv-headers # skip cross/tools
-	)
 else
-	HASH_VKD3D= # match tag on bumps
-	HASH_DXIL=
-	HASH_SPIRV=
-	HASH_SPIRV_DXIL=
-	HASH_VULKAN=
-	SRC_URI="
-		https://github.com/HansKristian-Work/vkd3d-proton/archive/refs/tags/v${PV}.tar.gz
-			-> ${P}.tar.gz
-		https://github.com/HansKristian-Work/dxil-spirv/archive/${HASH_DXIL}.tar.gz
-			-> dxil-spirv-${HASH_DXIL}.tar.gz
-		https://github.com/KhronosGroup/SPIRV-Headers/archive/${HASH_SPIRV}.tar.gz
-			-> spirv-headers-${HASH_SPIRV}.tar.gz
-		https://github.com/KhronosGroup/SPIRV-Headers/archive/${HASH_SPIRV_DXIL}.tar.gz
-			-> spirv-headers-${HASH_SPIRV_DXIL}.tar.gz
-		https://github.com/KhronosGroup/Vulkan-Headers/archive/${HASH_VULKAN}.tar.gz
-			-> vulkan-headers-${HASH_VULKAN}.tar.gz
-	"
+	SRC_URI="https://distfiles.gentoo.org/pub/dev/ionen@gentoo.org/${P}.tar.xz"
 	KEYWORDS="-* ~amd64 ~x86"
 fi
 
@@ -49,6 +24,8 @@ IUSE="+abi_x86_32 crossdev-mingw debug extras +strip"
 
 BDEPEND="
 	dev-util/glslang
+	llvm-core/clang
+	llvm-core/lld
 	!crossdev-mingw? ( dev-util/mingw64-toolchain[${MULTILIB_USEDEP}] )"
 
 PATCHES=(
@@ -59,7 +36,7 @@ pkg_pretend() {
 	[[ ${MERGE_TYPE} == binary ]] && return
 
 	if use crossdev-mingw && [[ ! -v MINGW_BYPASS ]]; then
-		local tool=-w64-mingw32-g++
+		local tool=-w64-mingw32-windres
 		for tool in $(usev abi_x86_64 x86_64${tool}) $(usev abi_x86_32 i686${tool}); do
 			if ! type -P ${tool} >/dev/null; then
 				eerror "With USE=crossdev-mingw, it is necessary to setup the mingw toolchain."
@@ -67,10 +44,6 @@ pkg_pretend() {
 				use abi_x86_32 && use abi_x86_64 &&
 					eerror "Also, with USE=abi_x86_32, will need both i686 and x86_64 toolchains."
 				die "USE=crossdev-mingw is enabled, but ${tool} was not found"
-			elif [[ ! $(LC_ALL=C ${tool} -v 2>&1) =~ "Thread model: posix" ]]; then
-				eerror "${PN} requires GCC to be built with --enable-threads=posix"
-				eerror "Please see: https://wiki.gentoo.org/wiki/Mingw#POSIX_threads_for_Windows"
-				die "USE=crossdev-mingw is enabled, but ${tool} does not use POSIX threads"
 			fi
 		done
 		tool=-w64-mingw32-widl
@@ -85,56 +58,34 @@ pkg_pretend() {
 }
 
 src_prepare() {
-	if [[ ${PV} != 9999 ]]; then
-		rmdir khronos/{SPIRV,Vulkan}-Headers subprojects/dxil-spirv || die
-		mv ../dxil-spirv-${HASH_DXIL} subprojects/dxil-spirv || die
-		mv ../SPIRV-Headers-${HASH_SPIRV} khronos/SPIRV-Headers || die
-		mv ../Vulkan-Headers-${HASH_VULKAN} khronos/Vulkan-Headers || die
-
-		rmdir subprojects/dxil-spirv/third_party/spirv-headers || die
-		# dxil and vkd3d's spirv headers sometime mismatch and are incompatible
-		if [[ ${HASH_SPIRV} == "${HASH_SPIRV_DXIL}" ]]; then
-			ln -s ../../../khronos/SPIRV-Headers \
-				subprojects/dxil-spirv/third_party/spirv-headers || die
-		else
-			mv ../SPIRV-Headers-${HASH_SPIRV_DXIL} \
-				subprojects/dxil-spirv/third_party/spirv-headers || die
-		fi
-	fi
-
 	default
 
 	sed -i "/^basedir=/s|=.*|=${EPREFIX}/usr/lib/${PN}|" setup_vkd3d_proton.sh || die
 
 	if [[ ${PV} != 9999 ]]; then
-		# without .git, meson sets vkd3d_build as 0x${PV} leading to failure
-		sed -i "s/@VCS_TAG@/${HASH_VKD3D::15}/" vkd3d_build.h.in || die
-		sed -i "s/@VCS_TAG@/${HASH_VKD3D::7}/" vkd3d_version.h.in || die
+		local tag_ver=
+		local tag_hash=
+		[[ ${PV} == ${tag_ver} ]] || die "hash has not been updated"
+
+		sed -i "s/@VCS_TAG@/${tag_hash::15}/" vkd3d_build.h.in || die
+		sed -i "s/@VCS_TAG@/${tag_hash::7}/" vkd3d_version.h.in || die
 	fi
 }
 
 src_configure() {
 	use crossdev-mingw || PATH=${BROOT}/usr/lib/mingw64-toolchain/bin:${PATH}
 
-	# random segfaults been reported with LTO in some games, filter as
-	# a safety (note that optimizing this further won't really help
-	# performance, GPU does the actual work)
 	filter-lto
-
-	# -mavx and mingw-gcc do not mix safely here
-	# https://github.com/doitsujin/dxvk/issues/4746#issuecomment-2708869202
-	append-flags -mno-avx
 
 	if [[ ${CHOST} != *-mingw* ]]; then
 		if [[ ! -v MINGW_BYPASS ]]; then
 			unset AR CC CXX RC STRIP WIDL
 			filter-flags '-fuse-ld=*'
-			filter-flags '-mfunction-return=thunk*' #878849
-
-			# some bashrc-mv users tend to do CFLAGS="${LDFLAGS}" and then
-			# strip-unsupported-flags miss these during compile-only tests
-			# (primarily done for 23.0 profiles' -z, not full coverage)
-			filter-flags '-Wl,-z,*' #928038
+			filter-flags '-mfunction-return=thunk*'
+			
+			# Strip Linux/ELF specific linker flags that break LLVM's PE/COFF lld-link
+			filter-flags '-Wl,-z,*' '-Wl,--undefined-version' '-Wl,--hash-style=*' '-Wl,--pack-dyn-relocs=*'
+			filter-ldflags '-Wl,-z,*' '-Wl,--undefined-version' '-Wl,--hash-style=*' '-Wl,--pack-dyn-relocs=*'
 		fi
 
 		CHOST_amd64=x86_64-w64-mingw32
@@ -148,12 +99,27 @@ src_configure() {
 }
 
 multilib_src_configure() {
-	# multilib's ${CHOST_amd64}-gcc -m32 is unusable with crossdev,
-	# unset again so meson eclass will set ${CHOST}-gcc + others
 	use crossdev-mingw && [[ ! -v MINGW_BYPASS ]] && unset AR CC CXX STRIP WIDL
 
-	# prefer ${CHOST}'s widl (mingw) over wine's as used by upstream if
-	# possible, but eclasses don't handle that so setup machine files
+	local arch=$([[ ${ABI} == x86 ]] && echo i686 || echo x86_64)
+	local chost="${arch}-w64-mingw32"
+
+	# Use crossdev's Clang wrapper if it exists, otherwise fallback to system clang + sysroot
+	if type -P "${chost}-clang" >/dev/null; then
+		export CC="${chost}-clang"
+		export CXX="${chost}-clang++"
+	else
+		local sysroot=$(usex crossdev-mingw "/usr/${chost}" "${BROOT}/usr/lib/mingw64-toolchain/${chost}")
+		export CC="clang --target=${chost} --sysroot=${sysroot}"
+		export CXX="clang++ --target=${chost} --sysroot=${sysroot}"
+	fi
+
+	export AR="llvm-ar"
+	export STRIP="llvm-strip"
+	export WINDRES="${chost}-windres"
+	export LDFLAGS="${LDFLAGS} -fuse-ld=lld"
+	export CHOST="${chost}"
+
 	local widl=$(tc-getPROG WIDL widl)
 	use amd64 && [[ ${widl} == widl && ${ABI} == x86 ]] && widl="widl','-m32"
 	printf "[binaries]\nwidl = ['${widl}']\n" > "${T}"/widl.${ABI}.ini || die
@@ -164,8 +130,8 @@ multilib_src_configure() {
 		--{cross,native}-file="${T}"/widl.${ABI}.ini
 		$(meson_use {,enable_}extras)
 		$(meson_use debug enable_trace)
-		$(usev strip --strip) # portage won't strip .dll, so allow it here
-		-Denable_tests=false # needs wine/vulkan and is intended for manual use
+		$(usev strip --strip)
+		-Denable_tests=false
 	)
 
 	meson_src_configure
