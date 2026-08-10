@@ -46,7 +46,7 @@ Signed-off-by: Matt Jolly <kangie@gentoo.org>
 +++ b/third_party/devtools-frontend/src/front_end/third_party/codemirror.next/rebuild.sh
 @@ -1,6 +1,6 @@
  npm install
- ../../../node_modules/.bin/tsc -d -t esnext -m esnext --moduleResolution node bundle.ts
+ ../../../node_modules/.bin/tsc -d -t esnext -m esnext --moduleResolution bundler --ignoreConfig bundle.ts
 -../../../node_modules/rollup/dist/bin/rollup -c
 +../../../node_modules/@rollup/wasm-node/dist/bin/rollup -c
  rm -rf node_modules bundle.js bundle.d.ts

@@ -512,7 +512,6 @@ src_prepare() {
 		"${FILESDIR}/cr152-cbor-crubit-enable-cpp-api-from-rust.patch"
 		"${FILESDIR}/cr152-devtools-public-inputs.patch"
 		"${FILESDIR}/cr152-rust-wrapper-inputs-system-rust.patch"
-		"${FILESDIR}/cr152-dawn-disable-lifetime-safety-flags.patch"
 		"${FILESDIR}/cr152-dawn-system-go.patch"
 		"${FILESDIR}/cross-compile.patch"
 	)
@@ -1367,6 +1366,8 @@ chromium_configure() {
 	fi
 
 	# Odds and ends
+
+	myconf_gn+=( "devtools_use_typescript_go=false" )
 
 	# skipping typecheck is only supported on amd64, bug #876157
 	if ! use amd64; then
