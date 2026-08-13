@@ -29,8 +29,8 @@ declare -A GIT_CRATES=(
 	[merman-core]='https://github.com/zed-industries/merman;9acc3960f04a7deeb08079d60fa8183f15e8bde1;merman-%commit%/crates/merman-core'
 	[merman-render]='https://github.com/zed-industries/merman;9acc3960f04a7deeb08079d60fa8183f15e8bde1;merman-%commit%/crates/merman-render'
 	[merman]='https://github.com/zed-industries/merman;9acc3960f04a7deeb08079d60fa8183f15e8bde1;merman-%commit%/crates/merman'
-	[notify-types]='https://github.com/zed-industries/notify;faecbc33db4f59313e5225ef766bfd9e54a54cfd;notify-%commit%/notify-types'
-	[notify]='https://github.com/zed-industries/notify;faecbc33db4f59313e5225ef766bfd9e54a54cfd;notify-%commit%/notify'
+	[notify-types]='https://github.com/zed-industries/notify;0890bbb8ca40a4b5d1f67031698dd7918b37d991;notify-%commit%/notify-types'
+	[notify]='https://github.com/zed-industries/notify;0890bbb8ca40a4b5d1f67031698dd7918b37d991;notify-%commit%/notify'
 	[nvim-rs]='https://github.com/KillTheMule/nvim-rs;764dd270c642f77f10f3e19d05cc178a6cbe69f3;nvim-rs-%commit%'
 	[pet-conda]='https://github.com/microsoft/python-environment-tools;9e61a22af989fe54937bf07c9f9cff1bc53d9056;python-environment-tools-%commit%/crates/pet-conda'
 	[pet-core]='https://github.com/microsoft/python-environment-tools;9e61a22af989fe54937bf07c9f9cff1bc53d9056;python-environment-tools-%commit%/crates/pet-core'
@@ -62,7 +62,7 @@ declare -A GIT_CRATES=(
 	[proptest]='https://github.com/proptest-rs/proptest;3dca198a8fef1b32e3a66f1e1897c955b4dc5b5b;proptest-%commit%/proptest'
 	[rodio]='https://github.com/RustAudio/rodio;e50e726ddd0292f6ef9de0dda6b90af4ed1fb66a;rodio-%commit%'
 	[roughr-merman]='https://github.com/zed-industries/merman;9acc3960f04a7deeb08079d60fa8183f15e8bde1;merman-%commit%/crates/roughr'
-	[trash]='https://github.com/zed-industries/trash-rs;47761739192828a66b11a94ba5420b82d63c03c5;trash-rs-%commit%'
+	[trash]='https://github.com/zed-industries/trash-rs;41c6c800d884a89351f3b8856d12894cccee261d;trash-rs-%commit%'
 	[tree-sitter-cpp]='https://github.com/tree-sitter/tree-sitter-cpp;5cb9b693cfd7bfacab1d9ff4acac1a4150700609;tree-sitter-cpp-%commit%'
 	[tree-sitter-gitcommit]='https://github.com/zed-industries/tree-sitter-git-commit;88309716a69dd13ab83443721ba6e0b491d37ee9;tree-sitter-git-commit-%commit%'
 	[tree-sitter-gomod]='https://github.com/camdencheek/tree-sitter-go-mod;2e886870578eeba1927a2dc4bd2e2b3f598c5f9a;tree-sitter-go-mod-%commit%'
@@ -81,6 +81,8 @@ declare -A GIT_CRATES=(
 	[zed-reqwest]='https://github.com/zed-industries/reqwest;c15662463bda39148ba154100dd44d3fba5873a4;reqwest-%commit%'
 	[zed-scap]='https://github.com/zed-industries/scap;4afea48c3b002197176fb19cd0f9b180dd36eaac;scap-%commit%'
 	[zed-xim]='https://github.com/zed-industries/xim-rs;16f35a2c881b815a2b6cdfd6687988e84f8447d8;xim-rs-%commit%'
+	[wasm_thread]='https://github.com/zed-industries/wasm_thread;0cf96c7708dfb97ccf3da50347e25edcf75d6937;wasm_thread-%commit%'
+	[yawc]='https://github.com/zed-industries/yawc;71a452f551cac178367eaac5d7418a09afa1f3a2;yawc-%commit%'
 )
 
 LLVM_COMPAT=( 22 )
@@ -212,7 +214,7 @@ src_prepare() {
 	local WEBRTC_SYS_GIT="webrtc-sys = { git = \"https://github.com/zed-industries/livekit-rust-sdks\", rev = \"${LIVEKIT_COMMIT}\""
 	local WEBRTC_SYS_PATH="webrtc-sys = \\{ path = \"${WORKDIR}/livekit-rust-sdks-${LIVEKIT_COMMIT}/webrtc-sys\""
 
-	local NOTIFY_COMMIT="faecbc33db4f59313e5225ef766bfd9e54a54cfd"
+	local NOTIFY_COMMIT="0890bbb8ca40a4b5d1f67031698dd7918b37d991"
 	local NOTIFY_GIT="notify = { git = \"https://github.com/zed-industries/notify\", rev = \"${NOTIFY_COMMIT}\""
 	local NOTIFY_PATH="notify = \\{ path = \"${WORKDIR}/notify-${NOTIFY_COMMIT}/notify\""
 	local NOTIFY_TYPES_GIT="notify-types = { git = \"https://github.com/zed-industries/notify\", rev = \"${NOTIFY_COMMIT}\""
