@@ -56,8 +56,11 @@ src_prepare() {
 	[[ -f ${release_base}/pak0.pak ]] || die "missing shareware pak0.pak"
 	[[ -d ${release_base}/players ]] || die "missing shareware player models"
 	for fsr4_model in native quality balanced performance ultraperf drs; do
-		[[ -f ${S}/baseq2/fsr4_shaders/fsr4_model_v07_i8_${fsr4_model}_initializers.bin ]] || die "missing FSR4 v07 ${fsr4_model} initializer"
-		[[ -f ${S}/baseq2/fsr4_shaders/fsr4_model_v07_i8_${fsr4_model}_pre_weights.bin ]] || die "missing FSR4 v07 ${fsr4_model} pre-pass weights"
+		local fsr4_prefix=${S}/baseq2/fsr4_shaders/fsr4_model_v07_i8_${fsr4_model}
+		[[ -f ${fsr4_prefix}_initializers.bin ]] ||
+			die "missing FSR4 v07 ${fsr4_model} initializer"
+		[[ -f ${fsr4_prefix}_pre_weights.bin ]] ||
+			die "missing FSR4 v07 ${fsr4_model} pre-pass weights"
 	done
 	[[ -f ${S}/baseq2/fsr4_shaders/LICENSE-FSR4-v07.txt ]] || die "missing FSR4 v07 asset notice"
 
@@ -105,8 +108,11 @@ src_install() {
 	[[ -f ${game_root}/baseq2/shareware/pak0.pak ]] || die "shareware PAK was not installed"
 	[[ -d ${game_root}/baseq2/shareware/players ]] || die "shareware player models were not installed"
 	for fsr4_model in native quality balanced performance ultraperf drs; do
-		[[ -f ${game_root}/baseq2/fsr4_shaders/fsr4_model_v07_i8_${fsr4_model}_initializers.bin ]] || die "FSR4 v07 ${fsr4_model} initializer was not installed"
-		[[ -f ${game_root}/baseq2/fsr4_shaders/fsr4_model_v07_i8_${fsr4_model}_pre_weights.bin ]] || die "FSR4 v07 ${fsr4_model} pre-pass weights were not installed"
+		local fsr4_prefix=${game_root}/baseq2/fsr4_shaders/fsr4_model_v07_i8_${fsr4_model}
+		[[ -f ${fsr4_prefix}_initializers.bin ]] ||
+			die "FSR4 v07 ${fsr4_model} initializer was not installed"
+		[[ -f ${fsr4_prefix}_pre_weights.bin ]] ||
+			die "FSR4 v07 ${fsr4_model} pre-pass weights were not installed"
 	done
 	[[ -f ${game_root}/baseq2/fsr4_shaders/LICENSE-FSR4-v07.txt ]] || die "FSR4 v07 asset notice was not installed"
 
