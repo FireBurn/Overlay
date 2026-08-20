@@ -18,6 +18,7 @@ SRC_URI="
 LICENSE="GPL-2 MIT all-rights-reserved"
 SLOT="0"
 RESTRICT="bindist mirror"
+KEYWORDS="~amd64"
 
 DEPEND="
 	dev-util/vulkan-headers
