@@ -3,46 +3,40 @@
 
 EAPI=8
 
-inherit cmake
+inherit cmake git-r3
 
 EGIT_REPO_URI="https://github.com/FireBurn/Q2RTX.git"
 EGIT_SUBMODULES=( '-*' 'extern/stb' 'extern/tinyobjloader-c' )
-inherit git-r3
-
 RELEASE_VER="1.8.0"
+
+DESCRIPTION="NVIDIA's implementation of RTX ray-tracing in Quake II"
+HOMEPAGE="https://github.com/NVIDIA/Q2RTX"
 SRC_URI="
 	https://github.com/NVIDIA/Q2RTX/releases/download/v${RELEASE_VER}/q2rtx-${RELEASE_VER}-linux.tar.gz
 "
 
-DESCRIPTION="NVIDIA's implementation of RTX ray-tracing in Quake II"
-HOMEPAGE="https://github.com/NVIDIA/Q2RTX"
-
-LICENSE="GPL-2"
+LICENSE="GPL-2 MIT all-rights-reserved"
 SLOT="0"
-KEYWORDS="~amd64"
+RESTRICT="bindist mirror"
 
 DEPEND="
-	app-arch/7zip
-	dev-util/glslang
 	dev-util/vulkan-headers
+	media-libs/vulkan-loader
 	media-libs/libsdl2
 	media-libs/openal
-	media-libs/sdl2-image
-	media-libs/sdl2-mixer
 	net-misc/curl
-	sys-libs/zlib
+	virtual/zlib
+"
+
+BDEPEND="
+	app-arch/7zip
+	dev-util/glslang
+	dev-util/spirv-tools
 "
 
 RDEPEND="
-	media-libs/libsdl2
-	media-libs/openal
-	media-libs/sdl2-image
-	media-libs/sdl2-mixer
-	net-misc/curl
-	sys-libs/zlib
+	${DEPEND}
 "
-
-PATCHES="${FILESDIR}/install-to-bin.patch"
 
 src_unpack() {
 	git-r3_src_unpack
@@ -52,20 +46,38 @@ src_unpack() {
 
 src_prepare() {
 	cmake_src_prepare
-	einfo ${P}
-	einfo ${S}
+	einfo "${P}"
+	einfo "${S}"
 
-	mv ${WORKDIR}/${PN}/baseq2/blue_noise.pkz ${S}/baseq2/blue_noise.pkz || die
-	mv ${WORKDIR}/${PN}/baseq2/q2rtx_media.pkz ${S}/baseq2/q2rtx_media.pkz || die
-	mkdir -p ${S}/baseq2/shareware || die
-	mv ${WORKDIR}/${PN}/baseq2/pak0.pak ${S}/baseq2/shareware/pak0.pak || die
-	mv ${WORKDIR}/${PN}/baseq2/players ${S}/baseq2/shareware/players || die
+	local release_base=${WORKDIR}/${PN}/baseq2
+
+	[[ -f ${release_base}/blue_noise.pkz ]] || die "missing blue_noise.pkz"
+	[[ -f ${release_base}/q2rtx_media.pkz ]] || die "missing q2rtx_media.pkz"
+	[[ -f ${release_base}/pak0.pak ]] || die "missing shareware pak0.pak"
+	[[ -d ${release_base}/players ]] || die "missing shareware player models"
+
+	cp -p "${release_base}/blue_noise.pkz" "${S}/baseq2/" || die
+	# The checkout deliberately omits NVIDIA's large media tree. The packaging
+	# script updates only the source-controlled menu/config entries in this
+	# release archive, preserving the original textures/models/audio.
+	cp -p "${release_base}/q2rtx_media.pkz" "${S}/baseq2/" || die
+	mkdir -p "${S}/baseq2/shareware" || die
+	cp -p "${release_base}/pak0.pak" "${S}/baseq2/shareware/" || die
+	cp -a "${release_base}/players" "${S}/baseq2/shareware/" || die
 }
 
 src_configure() {
 	local mycmakeargs=(
 		-DCONFIG_LINUX_PACKAGING_SUPPORT=ON
+		-DCONFIG_LINUX_PACKAGING_SKIP_PKZ=OFF
 		-DCONFIG_BUILD_GLSLANG=OFF
+		-DCONFIG_VKPT_RENDERER=ON
+		-DCONFIG_VKPT_FSR3=ON
+		# v07 shader binaries are tracked, but its essential initializer and
+		# pre-pass weight blobs are ignored local artifacts.  Do not install an
+		# unusable partial graph from a live checkout.
+		-DCONFIG_VKPT_INSTALL_FSR4_V07_ASSETS=OFF
+		-DFFX_VK_PORTABLE_BUILD_FSR3_3_1_5_SCAFFOLD=ON
 		-DUSE_SYSTEM_ZLIB=ON
 		-DUSE_SYSTEM_OPENAL=ON
 		-DUSE_SYSTEM_CURL=ON
@@ -76,11 +88,30 @@ src_configure() {
 
 src_install() {
 	cmake_src_install
+
+	local game_root=${ED}/usr/share/quake2rtx
+	[[ -x ${ED}/usr/bin/q2rtx ]] || die "launcher was not installed to /usr/bin"
+	[[ -x ${ED}/usr/bin/q2rtxded ]] || die "dedicated server was not installed to /usr/bin"
+	[[ -x ${game_root}/bin/q2rtx ]] || die "client binary was not installed"
+	[[ -x ${game_root}/bin/find-retail-paks.sh ]] || die "retail PAK importer was not installed"
+	[[ -f ${game_root}/baseq2/q2rtx_media.pkz ]] || die "media archive was not installed"
+	[[ -f ${game_root}/baseq2/q2rtx.menu ]] || die "versioned menu override was not installed"
+	[[ -f ${game_root}/baseq2/shaders.pkz ]] || die "shader archive was not installed"
+	[[ -f ${game_root}/baseq2/blue_noise.pkz ]] || die "blue-noise asset was not installed"
+	[[ -f ${game_root}/baseq2/shareware/pak0.pak ]] || die "shareware PAK was not installed"
+	[[ -d ${game_root}/baseq2/shareware/players ]] || die "shareware player models were not installed"
+	[[ ! -e ${game_root}/baseq2/fsr4_shaders ]] || die "incomplete FSR4 v07 assets must not be installed"
+
+	# FSR3 and analytical FSR3 frame generation are compiled into the client.
+	# FSR4 v07 requires proprietary-provenance binary model data which the live
+	# source does not carry.  Its partial SPIR-V directory therefore stays out of
+	# the package until complete redistributable assets are supplied.
 }
 
 pkg_postinst() {
-	ewarn "This package does not include the required Quake II data files."
-	ewarn "You must copy the .pak files (pak0.pak, etc.) from your"
-	ewarn "original Quake II game installation into:"
-	ewarn "  \${HOME}/.local/share/quake2rtx/baseq2"
+	elog "The shareware data is installed. Retail PAKs, players, and music are optional."
+	elog "On first launch, choose the retail import prompt or copy them to:"
+	elog "  \${XDG_DATA_HOME:-\${HOME}/.local/share}/quake2rtx/baseq2"
+	elog "Native Vulkan FSR3 upscaling and analytical FSR3 frame generation are built in."
+	ewarn "Experimental FSR4 v07 is unavailable in this package: its required model blobs are not redistributable source assets."
 }
