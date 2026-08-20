@@ -106,8 +106,8 @@ src_install() {
 	[[ -f ${game_root}/baseq2/q2rtx.menu ]] || die "versioned menu override was not installed"
 	[[ -f ${game_root}/baseq2/shaders.pkz ]] || die "shader archive was not installed"
 	[[ -f ${game_root}/baseq2/blue_noise.pkz ]] || die "blue-noise asset was not installed"
-	[[ -f ${game_root}/baseq2/shareware/pak0.pak ]] || die "shareware PAK was not installed"
-	[[ -d ${game_root}/baseq2/shareware/players ]] || die "shareware player models were not installed"
+	[[ -f ${game_root}/baseq2/pak0.pak ]] || die "shareware PAK was not installed"
+	[[ -d ${game_root}/baseq2/players ]] || die "shareware player models were not installed"
 	for fsr4_model in native quality balanced performance ultraperf drs; do
 		local fsr4_prefix=${game_root}/baseq2/fsr4_shaders/fsr4_model_v07_i8_${fsr4_model}
 		[[ -f ${fsr4_prefix}_initializers.bin ]] ||
