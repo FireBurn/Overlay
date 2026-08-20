@@ -55,6 +55,11 @@ src_prepare() {
 	[[ -f ${release_base}/q2rtx_media.pkz ]] || die "missing q2rtx_media.pkz"
 	[[ -f ${release_base}/pak0.pak ]] || die "missing shareware pak0.pak"
 	[[ -d ${release_base}/players ]] || die "missing shareware player models"
+	for fsr4_model in native quality balanced performance ultraperf drs; do
+		[[ -f ${S}/baseq2/fsr4_shaders/fsr4_model_v07_i8_${fsr4_model}_initializers.bin ]] || die "missing FSR4 v07 ${fsr4_model} initializer"
+		[[ -f ${S}/baseq2/fsr4_shaders/fsr4_model_v07_i8_${fsr4_model}_pre_weights.bin ]] || die "missing FSR4 v07 ${fsr4_model} pre-pass weights"
+	done
+	[[ -f ${S}/baseq2/fsr4_shaders/LICENSE-FSR4-v07.txt ]] || die "missing FSR4 v07 asset notice"
 
 	cp -p "${release_base}/blue_noise.pkz" "${S}/baseq2/" || die
 	# The checkout deliberately omits NVIDIA's large media tree. The packaging
@@ -73,10 +78,9 @@ src_configure() {
 		-DCONFIG_BUILD_GLSLANG=OFF
 		-DCONFIG_VKPT_RENDERER=ON
 		-DCONFIG_VKPT_FSR3=ON
-		# v07 shader binaries are tracked, but its essential initializer and
-		# pre-pass weight blobs are ignored local artifacts.  Do not install an
-		# unusable partial graph from a live checkout.
-		-DCONFIG_VKPT_INSTALL_FSR4_V07_ASSETS=OFF
+		# The complete older source-v07 FSR4 graph and model asset pairs are
+		# versioned with manifest hashes and an upstream MIT asset notice.
+		-DCONFIG_VKPT_INSTALL_FSR4_V07_ASSETS=ON
 		-DFFX_VK_PORTABLE_BUILD_FSR3_3_1_5_SCAFFOLD=ON
 		-DUSE_SYSTEM_ZLIB=ON
 		-DUSE_SYSTEM_OPENAL=ON
@@ -100,12 +104,14 @@ src_install() {
 	[[ -f ${game_root}/baseq2/blue_noise.pkz ]] || die "blue-noise asset was not installed"
 	[[ -f ${game_root}/baseq2/shareware/pak0.pak ]] || die "shareware PAK was not installed"
 	[[ -d ${game_root}/baseq2/shareware/players ]] || die "shareware player models were not installed"
-	[[ ! -e ${game_root}/baseq2/fsr4_shaders ]] || die "incomplete FSR4 v07 assets must not be installed"
+	for fsr4_model in native quality balanced performance ultraperf drs; do
+		[[ -f ${game_root}/baseq2/fsr4_shaders/fsr4_model_v07_i8_${fsr4_model}_initializers.bin ]] || die "FSR4 v07 ${fsr4_model} initializer was not installed"
+		[[ -f ${game_root}/baseq2/fsr4_shaders/fsr4_model_v07_i8_${fsr4_model}_pre_weights.bin ]] || die "FSR4 v07 ${fsr4_model} pre-pass weights were not installed"
+	done
+	[[ -f ${game_root}/baseq2/fsr4_shaders/LICENSE-FSR4-v07.txt ]] || die "FSR4 v07 asset notice was not installed"
 
 	# FSR3 and analytical FSR3 frame generation are compiled into the client.
-	# FSR4 v07 requires proprietary-provenance binary model data which the live
-	# source does not carry.  Its partial SPIR-V directory therefore stays out of
-	# the package until complete redistributable assets are supplied.
+	# The complete older source-v07 FSR4 graph/model set is installed above.
 }
 
 pkg_postinst() {
@@ -113,5 +119,5 @@ pkg_postinst() {
 	elog "On first launch, choose the retail import prompt or copy them to:"
 	elog "  \${XDG_DATA_HOME:-\${HOME}/.local/share}/quake2rtx/baseq2"
 	elog "Native Vulkan FSR3 upscaling and analytical FSR3 frame generation are built in."
-	ewarn "Experimental FSR4 v07 is unavailable in this package: its required model blobs are not redistributable source assets."
+	ewarn "Experimental FSR4 v07 is installed with its source-v07 model assets; it is not AMD FSR 4.1.1."
 }
