@@ -1,18 +1,15 @@
 --- a/third_party/devtools-frontend/src/third_party/typescript/typescript.py
 +++ b/third_party/devtools-frontend/src/third_party/typescript/typescript.py
-@@ -12,23 +12,32 @@
+@@ -9,7 +9,7 @@
+ import os
+ 
+ 
 -def GetBinaryPath():
 +def GetBinaryCommand():
      if platform.machine() == 'arm64':
          darwin_path = 'mac-arm64'
      else:
-         darwin_path = 'mac-amd64'
- 
-     relative = {
-         'Darwin': (darwin_path, 'src', 'lib', 'tsc'),
-         'Linux': ('linux-amd64', 'src', 'lib', 'tsc'),
-         'Windows': ('windows-amd64', 'src', 'lib', 'tsc.exe'),
-     }[platform.system()]
+@@ -23,16 +23,25 @@
  
      devtools_checkout_path = os_path.join(os_path.dirname(__file__), *relative)
      if os_path.exists(devtools_checkout_path):
@@ -41,9 +38,7 @@
      process = subprocess.Popen(cmd,
                                 cwd=os.getcwd(),
                                 stdout=subprocess.PIPE,
-@@ -55,7 +64,7 @@
-         if len(stdout) > 0:
-             # Handle cases where stderr is empty, even though the command failed, for
+@@ -54,7 +63,7 @@
              # example https://github.com/microsoft/TypeScript/issues/615
              errs.append("stdout:\n" + stdout)
          errs.append("exit=%d" % code)
