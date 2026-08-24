@@ -81,7 +81,7 @@ LICENSE+=" IJG ISC LGPL-2 LGPL-2.1 MIT MPL-1.1 MPL-2.0 Ms-PL PSF-2 SGI-B-2.0 SSL
 LICENSE+=" Unicode-DFS-2015 Unlicense UoI-NCSA ZLIB libtiff openssl"
 LICENSE+=" rar? ( unRAR )"
 
-SLOT="unstable"
+SLOT="stable"
 # Unstable in gentoo exists mostly to give devs some breathing room for beta/stable releases.
 # It shouldn't be keyworded but adventurous users are encouraged to select it;
 # there's official dev channel Google Chrome after all.
@@ -512,6 +512,7 @@ src_prepare() {
 		"${FILESDIR}/cr152-cbor-crubit-enable-cpp-api-from-rust.patch"
 		"${FILESDIR}/cr152-devtools-public-inputs.patch"
 		"${FILESDIR}/cr152-rust-wrapper-inputs-system-rust.patch"
+		"${FILESDIR}/cr152-dawn-disable-lifetime-safety-flags.patch"
 		"${FILESDIR}/cr152-dawn-system-go.patch"
 		"${FILESDIR}/cross-compile.patch"
 	)
@@ -770,7 +771,6 @@ src_prepare() {
 		third_party/gperf # We symlink system gperf, but this will purge the symlink since we tidy up afterwards.
 		third_party/highway
 		third_party/hunspell
-		third_party/iamf_tools
 		third_party/ink/src/ink/brush
 		third_party/ink/src/ink/color
 		third_party/ink/src/ink/geometry
@@ -1366,8 +1366,6 @@ chromium_configure() {
 	fi
 
 	# Odds and ends
-
-	myconf_gn+=( "devtools_use_typescript_go=false" )
 
 	# skipping typecheck is only supported on amd64, bug #876157
 	if ! use amd64; then

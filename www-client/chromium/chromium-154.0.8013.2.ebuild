@@ -27,8 +27,8 @@ GN_MIN_VER=0.2374
 # chromium-tools/get-chromium-toolchain-strings.py (or just use Chromicler)
 # Node for M145+ should be 24.12.0 but that's not packaged in Gentoo yet. See #969145
 TEST_FONT="9c07d19d9c5ee1ff94f717e6fb17e0c8c354e6f9"
-BUNDLED_CLANG_VER="llvmorg-23-init-19482-g53d18800-1"
-BUNDLED_RUST_VER="b998449636a48e2c4a362809085b600a0174e1f2-5"
+BUNDLED_CLANG_VER="llvmorg-24-init-3796-g20e97c4b-2"
+BUNDLED_RUST_VER="0913b18e489ac1011b580e31fa5559654be12bfc-2"
 RUST_SHORT_HASH=${BUNDLED_RUST_VER:0:10}-${BUNDLED_RUST_VER##*-}
 NODE_VER="24.12.0"
 ESBUILD_VER="0.25.1"
@@ -81,14 +81,14 @@ LICENSE+=" IJG ISC LGPL-2 LGPL-2.1 MIT MPL-1.1 MPL-2.0 Ms-PL PSF-2 SGI-B-2.0 SSL
 LICENSE+=" Unicode-DFS-2015 Unlicense UoI-NCSA ZLIB libtiff openssl"
 LICENSE+=" rar? ( unRAR )"
 
-SLOT="beta"
+SLOT="unstable"
 # Unstable in gentoo exists mostly to give devs some breathing room for beta/stable releases.
 # It shouldn't be keyworded but adventurous users are encouraged to select it;
 # there's official dev channel Google Chrome after all.
 KEYWORDS="~amd64 ~arm64"
 
 IUSE_SYSTEM_LIBS="+system-harfbuzz +system-icu +system-zstd"
-IUSE="+X ${IUSE_SYSTEM_LIBS} bindist bundled-toolchain cups debug ffmpeg-chromium gtk4 +hangouts headless kerberos +official pax-kernel pgo"
+IUSE="+X ${IUSE_SYSTEM_LIBS} bindist +bundled-toolchain cups debug ffmpeg-chromium gtk4 +hangouts headless kerberos +official pax-kernel pgo"
 IUSE+=" +proprietary-codecs pulseaudio qt6 +rar +screencast selinux test +vaapi +wayland +widevine cpu_flags_ppc_vsx3 cpu_flags_x86_avx512f"
 RESTRICT="
 	!bindist? ( bindist )
@@ -506,14 +506,13 @@ src_prepare() {
 		"${FILESDIR}/cr138-nodejs-version-check.patch"
 		"${FILESDIR}/cr144-glibc-2.43.patch"
 		"${FILESDIR}/cr145-oauth2-client-switches.patch"
-		"${FILESDIR}/cr145-revert-to-rollup-wasm.patch"
+		"${FILESDIR}/cr154-revert-to-rollup-wasm.patch"
 		"${FILESDIR}/cr148-v8-fix-cfi-sanitizer-set-death-callback.patch"
 		"${FILESDIR}/cr149-channel-aware-build.patch"
-		"${FILESDIR}/cr152-cbor-crubit-enable-cpp-api-from-rust.patch"
 		"${FILESDIR}/cr152-devtools-public-inputs.patch"
-		"${FILESDIR}/cr152-rust-wrapper-inputs-system-rust.patch"
-		"${FILESDIR}/cr152-dawn-disable-lifetime-safety-flags.patch"
+		"${FILESDIR}/cr154-devtools-typescript-tsc-fallback.patch"
 		"${FILESDIR}/cr152-dawn-system-go.patch"
+		"${FILESDIR}/cr152-unbundle-minizip-undo-unicode.patch"
 		"${FILESDIR}/cross-compile.patch"
 	)
 
@@ -548,7 +547,8 @@ src_prepare() {
 		# Copium patches go here.
 		PATCHES+=(
 			"${WORKDIR}/copium/cr143-libsync-__BEGIN_DECLS.patch"
-			"${FILESDIR}/cr152-unbundle-minizip-undo-unicode.patch"
+			"${FILESDIR}/cr152-cbor-crubit-enable-cpp-api-from-rust.patch"
+			"${FILESDIR}/cr154-rust-wrapper-inputs-system-rust.patch"
 		)
 
 		if [[ ${LLVM_SLOT} -lt 23 ]]; then
@@ -621,12 +621,14 @@ src_prepare() {
 	${EPYTHON} "${FILESDIR}/bin-finder.py" --elf "${S}" | awk '{print $1}' | xargs rm -f ||
 		die "Failed to remove bundled binaries"
 
-	# And now we restore any that we actually need, from the host system
 	local esbuild_path="${S}/third_party/devtools-frontend/src/third_party/esbuild"
+	local clang_format_bin="${EPREFIX}/usr/lib/llvm/${LLVM_SLOT}/bin/clang-format"
+	[[ ! -x "${clang_format_bin}" ]] && clang_format_bin="${EPREFIX}/usr/bin/clang-format"
 	local -A restore_list=(
 		["/usr/bin/esbuild-${ESBUILD_VER}"]="${esbuild_path}/esbuild"
 		["/usr/bin/gperf"]="${S}/third_party/gperf/cipd/bin/gperf"
 		["/usr/bin/node"]="${S}/third_party/node/linux/node-linux-x64/bin/node"
+		["${clang_format_bin}"]="${S}/buildtools/linux64-format/clang-format"
 	)
 
 	for src in "${!restore_list[@]}"; do
@@ -771,6 +773,7 @@ src_prepare() {
 		third_party/gperf # We symlink system gperf, but this will purge the symlink since we tidy up afterwards.
 		third_party/highway
 		third_party/hunspell
+		third_party/iamf_tools
 		third_party/ink/src/ink/brush
 		third_party/ink/src/ink/color
 		third_party/ink/src/ink/geometry
@@ -1366,6 +1369,8 @@ chromium_configure() {
 	fi
 
 	# Odds and ends
+
+	myconf_gn+=( "use_typescript_go=false" )
 
 	# skipping typecheck is only supported on amd64, bug #876157
 	if ! use amd64; then

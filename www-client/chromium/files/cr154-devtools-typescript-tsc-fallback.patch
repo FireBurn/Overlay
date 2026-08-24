@@ -1,0 +1,54 @@
+--- a/third_party/devtools-frontend/src/third_party/typescript/typescript.py
++++ b/third_party/devtools-frontend/src/third_party/typescript/typescript.py
+@@ -12,23 +12,32 @@
+-def GetBinaryPath():
++def GetBinaryCommand():
+     if platform.machine() == 'arm64':
+         darwin_path = 'mac-arm64'
+     else:
+         darwin_path = 'mac-amd64'
+ 
+     relative = {
+         'Darwin': (darwin_path, 'src', 'lib', 'tsc'),
+         'Linux': ('linux-amd64', 'src', 'lib', 'tsc'),
+         'Windows': ('windows-amd64', 'src', 'lib', 'tsc.exe'),
+     }[platform.system()]
+ 
+     devtools_checkout_path = os_path.join(os_path.dirname(__file__), *relative)
+     if os_path.exists(devtools_checkout_path):
+-        return os_path.normpath(devtools_checkout_path)
++        return [os_path.normpath(devtools_checkout_path)]
+ 
+     # Assume we are in a chromium checkout.
+-    return os_path.normpath(
++    chromium_path = os_path.normpath(
+         os_path.join(os_path.dirname(__file__), '..', '..', '..', '..',
+                      'typescript', *relative))
++    if os_path.exists(chromium_path):
++        return [chromium_path]
++
++    devtools_root = os_path.normpath(
++        os_path.join(os_path.dirname(__file__), '..', '..'))
++    node_modules_tsc = os_path.join(devtools_root, 'node_modules', 'typescript', 'bin', 'tsc')
++    sys.path.append(os_path.join(devtools_root, 'scripts'))
++    import devtools_paths
++    return [devtools_paths.node_path(), node_modules_tsc]
+ 
+ 
+ def RunTypeScriptRaw(cmd_parts, stdout=None):
+-    cmd = [GetBinaryPath()] + cmd_parts
++    cmd = GetBinaryCommand() + cmd_parts
+     process = subprocess.Popen(cmd,
+                                cwd=os.getcwd(),
+                                stdout=subprocess.PIPE,
+@@ -55,7 +64,7 @@
+         if len(stdout) > 0:
+             # Handle cases where stderr is empty, even though the command failed, for
+             # example https://github.com/microsoft/TypeScript/issues/615
+             errs.append("stdout:\n" + stdout)
+         errs.append("exit=%d" % code)
+-        cmd = [GetBinaryPath()] + cmd_parts
++        cmd = GetBinaryCommand() + cmd_parts
+         raise RuntimeError('Command \'%s\' failed\n%s' %
+                            (' '.join(cmd), '\n'.join(errs)))
+     return stdout
