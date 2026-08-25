@@ -99,6 +99,8 @@ src_install() {
 
 	local game_root=${ED}/usr/share/quake2rtx
 	[[ -x ${ED}/usr/bin/q2rtx ]] || die "launcher was not installed to /usr/bin"
+	grep -Fq "Q2RTX shader layout revision:" "${ED}/usr/bin/q2rtx" ||
+		die "launcher shader-layout migration was not installed"
 	[[ -x ${ED}/usr/bin/q2rtxded ]] || die "dedicated server was not installed to /usr/bin"
 	[[ -x ${game_root}/bin/q2rtx ]] || die "client binary was not installed"
 	[[ -x ${game_root}/bin/find-retail-paks.sh ]] || die "retail PAK importer was not installed"
