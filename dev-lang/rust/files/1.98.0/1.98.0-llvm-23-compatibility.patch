@@ -1,0 +1,87 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: FireBurn <fireburn@gentoo.org>
+Date: Wed, 26 Aug 2026 12:00:00 +0100
+Subject: [PATCH] llvm 23 compatibility fixes
+
+1. Ignore removed amx-tf32 target feature on LLVM >= 23.
+   AMX-TF32 was dropped by Intel prior to silicon release and removed
+   from LLVM in version 23. Filter it out to prevent fatal LLVM errors
+   during target initialization.
+
+2. Run AssignGUIDPass and communicate ThinLTOPreLink phase for LLVM 23.
+   In LLVM 23, BitcodeWriter enforces that function definitions emitted
+   in ThinLTO bitcode have associated summary ValueInfo entries, which
+   requires AssignGUIDPass to have run on the module.
+---
+ compiler/rustc_codegen_llvm/src/llvm_util.rs        |  2 ++
+ compiler/rustc_llvm/llvm-wrapper/PassWrapper.cpp   | 23 ++++++++++++++++++---
+ 2 files changed, 22 insertions(+), 3 deletions(-)
+
+diff --git a/compiler/rustc_codegen_llvm/src/llvm_util.rs b/compiler/rustc_codegen_llvm/src/llvm_util.rs
+index 455dbca..57cb3e0 100644
+--- a/compiler/rustc_codegen_llvm/src/llvm_util.rs
++++ b/compiler/rustc_codegen_llvm/src/llvm_util.rs
+@@ -281,6 +281,8 @@ pub(crate) fn to_llvm_features<'a>(sess: &Session, s: &'a str) -> Option<LLVMFe
+                 "bmi1" => Some(LLVMFeature::new("bmi")),
+                 "cmpxchg16b" => Some(LLVMFeature::new("cx16")),
+                 "lahfsahf" => Some(LLVMFeature::new("sahf")),
++                // Removed from LLVM in 23
++                "amx-tf32" if major >= 23 => None,
+                 // Enable the evex512 target feature if an avx512 target feature is enabled.
+                 s if s.starts_with("avx512") && major < 22 => Some(LLVMFeature::with_dependencies(
+                     s,
+--- a/compiler/rustc_llvm/llvm-wrapper/PassWrapper.cpp
++++ b/compiler/rustc_llvm/llvm-wrapper/PassWrapper.cpp
+@@ -41,6 +41,9 @@
+ #include "llvm/Transforms/IPO/Internalize.h"
+ #include "llvm/Transforms/IPO/LowerTypeTests.h"
+ #include "llvm/Transforms/IPO/ThinLTOBitcodeWriter.h"
++#if LLVM_VERSION_GE(23, 0)
++#include "llvm/Transforms/Utils/AssignGUID.h"
++#endif
+ #include "llvm/Transforms/Instrumentation/AddressSanitizer.h"
+ #include "llvm/Transforms/Instrumentation/DataFlowSanitizer.h"
+ #include "llvm/Transforms/Instrumentation/HWAddressSanitizer.h"
+@@ -862,9 +865,15 @@
+     // buildO0DefaultPipeline() instead. At the same time, the LTO pipelines do
+     // support O0 and using them is required.
+     if (OptLevel == OptimizationLevel::O0 && !IsLTO) {
+-      // We manually schedule ThinLTOBufferPasses below, so don't pass the value
+-      // to enable it here.
+-      MPM = PB.buildO0DefaultPipeline(OptLevel);
++      ThinOrFullLTOPhase Phase = ThinOrFullLTOPhase::None;
++      if (OptStage == LLVMRustOptStage::PreLinkThinLTO) {
++        Phase = ThinOrFullLTOPhase::ThinLTOPreLink;
++        NeedThinLTOBufferPasses = false;
++      } else if (OptStage == LLVMRustOptStage::PreLinkFatLTO) {
++        Phase = ThinOrFullLTOPhase::FullLTOPreLink;
++        NeedThinLTOBufferPasses = false;
++      }
++      MPM = PB.buildO0DefaultPipeline(OptLevel, Phase);
+     } else {
+       switch (OptStage) {
+       case LLVMRustOptStage::PreLinkNoLTO:
+@@ -925,6 +934,9 @@
+   if (NeedThinLTOBufferPasses) {
+     MPM.addPass(CanonicalizeAliasesPass());
+     MPM.addPass(NameAnonGlobalPass());
++#if LLVM_VERSION_GE(23, 0)
++    MPM.addPass(AssignGUIDPass());
++#endif
+   }
+   // For `-Copt-level=0`, and the pre-link fat/thin LTO stages.
+   if (ThinLTOBufferRef && *ThinLTOBufferRef == nullptr) {
+@@ -1464,6 +1476,11 @@
+         PB.registerLoopAnalyses(LAM);
+         PB.crossRegisterProxies(LAM, FAM, CGAM, MAM);
+         ModulePassManager MPM;
++        MPM.addPass(CanonicalizeAliasesPass());
++        MPM.addPass(NameAnonGlobalPass());
++#if LLVM_VERSION_GE(23, 0)
++        MPM.addPass(AssignGUIDPass());
++#endif
+         MPM.addPass(ThinLTOBitcodeWriterPass(OS, nullptr));
+         MPM.run(*unwrap(M), MAM);
+       } else {
+-- 
+2.50.1
