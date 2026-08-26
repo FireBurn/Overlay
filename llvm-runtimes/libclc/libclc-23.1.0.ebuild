@@ -80,4 +80,19 @@ src_test() {
 
 src_install() {
 	multibuild_foreach_variant cmake_src_install
+
+	dodir /usr/share/pkgconfig
+	cat <<-EOF > "${ED}/usr/share/pkgconfig/libclc.pc"
+		libexecdir=${EPREFIX}/usr/share/clc
+
+		Name: libclc
+		Description: Library requirements of the OpenCL C programming language
+		Version: ${PV}
+		Libs: -L\${libexecdir}
+	EOF
+
+	if use spirv; then
+		dosym spirv32-unknown-unknown/libclc.spv /usr/share/clc/spirv-mesa3d-.spv
+		dosym spirv64-unknown-unknown/libclc.spv /usr/share/clc/spirv64-mesa3d-.spv
+	fi
 }
