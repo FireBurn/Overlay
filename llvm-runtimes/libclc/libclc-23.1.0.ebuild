@@ -68,7 +68,8 @@ my_configure() {
 }
 
 src_compile() {
-	multibuild_foreach_variant cmake_src_compile
+	# Force single job build to prevent parallel build failures
+	multibuild_foreach_variant cmake_src_compile -j1
 }
 
 src_test() {
