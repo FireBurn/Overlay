@@ -19,7 +19,7 @@ BDEPEND="
 	${PYTHON_DEPS}
 	llvm-core/clang:${LLVM_MAJOR}
 	spirv? (
-		>=dev-util/spirv-llvm-translator-23:*
+		llvm-core/llvm[llvm_targets_SPIRV(+)]
 	)
 	test? (
 		$(python_gen_any_dep '
@@ -56,6 +56,7 @@ my_configure() {
 		-DCMAKE_CLC_COMPILER="$(type -P clang-${LLVM_MAJOR})"
 		-DLLVM_DEFAULT_TARGET_TRIPLE="${MULTIBUILD_VARIANT}"
 		-DLLVM_INCLUDE_TESTS="$(usex test)"
+		-DLIBCLC_USE_SPIRV_BACKEND=true
 	)
 
 	use test && mycmakeargs+=(
