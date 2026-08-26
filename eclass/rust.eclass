@@ -67,35 +67,36 @@ fi
 # @DESCRIPTION:
 # Definitive list of Rust slots and the associated LLVM slot, newest first.
 declare -A -g -r _RUST_LLVM_MAP=(
-	["9999"]=22
-	["1.97.1"]=22
-	["1.96.1"]=22
-	["1.95.0"]=22
-	["1.94.1"]=22
-	["1.94.0"]=22
-	["1.93.1"]=21
-	["1.93.0"]=21
-	["1.92.0"]=21
-	["1.91.0"]=21
-	["1.90.0"]=20
-	["1.89.0"]=20
-	["1.88.0"]=20
-	["1.87.0"]=20
-	["1.86.0"]=19
-	["1.85.1"]=19
-	["1.85.0"]=19
-	["1.84.1"]=19
-	["1.84.0"]=19
-	["1.83.0"]=19
-	["1.82.0"]=19
-	["1.81.0"]=18
-	["1.80.1"]=18
-	["1.79.0"]=18
-	["1.78.0"]=18
-	["1.77.1"]=17
-	["1.76.0"]=17
-	["1.75.0"]=17
-	["1.74.1"]=17
+	["9999"]="23 22 21"
+	["1.98.0"]="23 22 21"
+	["1.97.1"]="22 21"
+	["1.96.1"]="22 21"
+	["1.95.0"]="22 21 20"
+	["1.94.1"]="22 21 20"
+	["1.94.0"]="22 21 20"
+	["1.93.1"]="21 20"
+	["1.93.0"]="21 20"
+	["1.92.0"]="21 20"
+	["1.91.0"]="21 20 19"
+	["1.90.0"]="20 19"
+	["1.89.0"]="20 19"
+	["1.88.0"]="20 19"
+	["1.87.0"]="20 19"
+	["1.86.0"]="19 18"
+	["1.85.1"]="19 18"
+	["1.85.0"]="19 18"
+	["1.84.1"]="19 18"
+	["1.84.0"]="19 18"
+	["1.83.0"]="19 18"
+	["1.82.0"]="19 18"
+	["1.81.0"]="18 17"
+	["1.80.1"]="18 17"
+	["1.79.0"]="18 17"
+	["1.78.0"]="18 17 16"
+	["1.77.1"]="17 16"
+	["1.76.0"]="17 16"
+	["1.75.0"]="17 16 15"
+	["1.74.1"]="17 16 15"
 )
 
 # @ECLASS_VARIABLE: _RUST_SLOTS_ORDERED
@@ -106,6 +107,7 @@ declare -A -g -r _RUST_LLVM_MAP=(
 # this array is used to store the Rust slots in a more convenient order for iteration.
 declare -a -g -r _RUST_SLOTS_ORDERED=(
 	"9999"
+	"1.98.0"
 	"1.97.1"
 	"1.96.1"
 	"1.95.0"
@@ -302,7 +304,7 @@ _rust_set_globals() {
 	else
 		for llvm_slot in "${LLVM_COMPAT[@]}"; do
 			# Quick sanity check to make sure that the llvm slot is valid for Rust.
-			if [[ "${_RUST_LLVM_MAP[@]}" == *"${llvm_slot}"* ]]; then
+			if [[ " ${_RUST_LLVM_MAP[*]} " == *" ${llvm_slot} "* ]]; then
 				# We're working a bit backwards here; iterate over _RUST_LLVM_MAP, check the
 				# LLVM slot, and if it matches add this to a new array because it may (and likely will)
 				# match multiple Rust slots. We already filtered Rust max/min slots.
@@ -310,7 +312,7 @@ _rust_set_globals() {
 				usedep="[llvm_slot_${llvm_slot}${RUST_REQ_USE+,${RUST_REQ_USE}}]"
 				local slot_dep_content=()
 				for rust_slot in "${_RUST_SLOTS[@]}"; do
-					if [[ "${_RUST_LLVM_MAP[${rust_slot}]}" == "${llvm_slot}" ]]; then
+					if has "${llvm_slot}" ${_RUST_LLVM_MAP[${rust_slot}]}; then
 						slot_dep_content+=(
 							"dev-lang/rust-bin:${rust_slot}${usedep}"
 							"dev-lang/rust:${rust_slot}${usedep}"
@@ -386,9 +388,10 @@ _get_rust_slot() {
 	if [[ -n "${RUST_NEEDS_LLVM}" ]]; then
 		local unique_slots=()
 		local llvm_r1_slot
-		# Associative array keys are unique, so let's use that to our advantage
-		for llvm_slot in "${_RUST_LLVM_MAP[@]}"; do
-			unique_slots["${llvm_slot}"]="1"
+		for slot in "${!_RUST_LLVM_MAP[@]}"; do
+			for llvm_slot in ${_RUST_LLVM_MAP[${slot}]}; do
+				unique_slots["${llvm_slot}"]="1"
+			done
 		done
 		for llvm_slot in "${!unique_slots[@]}"; do
 			if [[ "${LLVM_COMPAT[@]}" == *"${llvm_slot}"* ]]; then
@@ -403,7 +406,6 @@ _get_rust_slot() {
 
 	# iterate over known slots, newest first
 	for slot in "${_RUST_SLOTS_ORDERED[@]}"; do
-		llvm_slot="${_RUST_LLVM_MAP[${slot}]}"
 		# skip higher slots
 		if [[ -n "${max_slot}" ]]; then
 			if ver_test "${slot}" -eq "${max_slot}"; then
@@ -419,7 +421,7 @@ _get_rust_slot() {
 
 		# If we're in LLVM mode we can skip any slots that don't match the selected USE
 		if [[ -n "${RUST_NEEDS_LLVM}" ]]; then
-			if [[ "${llvm_slot}" != "${llvm_r1_slot}" ]]; then
+			if ! has "${llvm_r1_slot}" ${_RUST_LLVM_MAP[${slot}]}; then
 				einfo "Skipping Rust ${slot} as it does not match llvm_slot_${llvm_r1_slot}"
 				continue
 			fi
@@ -429,7 +431,7 @@ _get_rust_slot() {
 
 		if declare -f rust_check_deps >/dev/null; then
 			local RUST_SLOT="${slot}"
-			local LLVM_SLOT="${_RUST_LLVM_MAP[${slot}]}"
+			local LLVM_SLOT="${llvm_r1_slot:-${_RUST_LLVM_MAP[${slot}]%% *}}"
 			rust_check_deps && return
 		else
 			local usedep="${RUST_REQ_USE+[${RUST_REQ_USE}]}"
