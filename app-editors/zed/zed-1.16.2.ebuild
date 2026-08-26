@@ -86,7 +86,7 @@ declare -A GIT_CRATES=(
 	[yawc]='https://github.com/zed-industries/yawc;71a452f551cac178367eaac5d7418a09afa1f3a2;yawc-%commit%'
 )
 
-LLVM_COMPAT=( 22 )
+LLVM_COMPAT=( 22 23 )
 RUST_MIN_VER="1.97.1"
 RUST_NEEDS_LLVM=1
 WEBRTC_COMMIT="0001d84-4"
