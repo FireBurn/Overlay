@@ -513,6 +513,7 @@ src_prepare() {
 	fi
 
 	eapply "${WORKDIR}/firefox-patches"
+	eapply "${FILESDIR}/firefox-rustc-target-fallback-unknown.patch"
 
 	# Allow user to apply any additional patches without modifing ebuild
 	eapply_user
