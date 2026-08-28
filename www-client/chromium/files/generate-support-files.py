@@ -47,8 +47,13 @@ def main():
     # Configure contexts strictly for file generation
     # Common variables used across templates
     context = {
+        # Screenshot URL for appstream metadata - templated since M154, previously hardcoded
+        "appstream_screenshot_url": "https://www.gstatic.com/chrome/appstream/chrome-2.png",
         "BUGTRACKERURL": "https://bugs.gentoo.org/enter_bug.cgi?product=Gentoo Linux&amp;component=Current packages",
         "DEVELOPER_NAME": "The Chromium Authors",
+        # Exec/Icon for .desktop file - templated since M154, previously hardcoded
+        "desktop_exec": f"/usr/bin/chromium-browser{channel_suffix}",
+        "desktop_icon": f"chromium-browser{channel_suffix}",
         "EXTRA_DESKTOP_ENTRIES": "",
         "FULLDESC": "An open-source browser project that aims to build a safer, faster, and more stable way to experience the web.",
         "HELPURL": "https://wiki.gentoo.org/wiki/Chromium",
