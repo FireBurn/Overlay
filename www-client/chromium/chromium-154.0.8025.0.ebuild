@@ -27,7 +27,7 @@ GN_MIN_VER=0.2374
 # chromium-tools/get-chromium-toolchain-strings.py (or just use Chromicler)
 # Node for M145+ should be 24.12.0 but that's not packaged in Gentoo yet. See #969145
 TEST_FONT="9c07d19d9c5ee1ff94f717e6fb17e0c8c354e6f9"
-BUNDLED_CLANG_VER="llvmorg-24-init-3796-g20e97c4b-2"
+BUNDLED_CLANG_VER="llvmorg-24-init-3796-g20e97c4b-3"
 BUNDLED_RUST_VER="0913b18e489ac1011b580e31fa5559654be12bfc-2"
 RUST_SHORT_HASH=${BUNDLED_RUST_VER:0:10}-${BUNDLED_RUST_VER##*-}
 NODE_VER="24.12.0"
