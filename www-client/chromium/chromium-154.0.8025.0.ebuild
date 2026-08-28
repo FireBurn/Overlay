@@ -700,6 +700,7 @@ src_prepare() {
 		third_party/catapult/tracing/third_party/oboe
 		third_party/catapult/tracing/third_party/pako
 		third_party/ced
+		third_party/chromium-bidi
 		third_party/cld_3
 		third_party/closure_compiler
 		third_party/compiler-rt # Since M137 atomic is required; we could probably unbundle this as a target of opportunity.
@@ -842,6 +843,7 @@ src_prepare() {
 		third_party/openscreen
 		third_party/openscreen/src/third_party/
 		third_party/openscreen/src/third_party/tinycbor/src/src
+		third_party/openxr
 		third_party/opus
 		third_party/ots
 		third_party/pdfium
