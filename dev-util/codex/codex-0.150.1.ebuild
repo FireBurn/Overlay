@@ -126,6 +126,9 @@ src_prepare() {
 	tokio-tungstenite = { path = "$(gen_git_crate_dir tokio-tungstenite)" }
 	tungstenite = { path = "$(gen_git_crate_dir tungstenite)" }
 	EOF
+
+	# Increase recursion limit to avoid query depth overflow during layout computation of cli_main
+	sed -i '1i #![recursion_limit = "512"]' "${S}/cli/src/main.rs" || die
 }
 
 src_compile() {
