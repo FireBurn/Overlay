@@ -17,8 +17,8 @@ SRC_URI="
 
 LICENSE="GPL-2 MIT all-rights-reserved"
 SLOT="0"
-RESTRICT="bindist mirror"
 KEYWORDS="~amd64"
+RESTRICT="bindist mirror"
 
 DEPEND="
 	dev-util/vulkan-headers
@@ -62,6 +62,10 @@ src_prepare() {
 			die "missing FSR4 v07 ${fsr4_model} initializer"
 		[[ -f ${fsr4_prefix}_pre_weights.bin ]] ||
 			die "missing FSR4 v07 ${fsr4_model} pre-pass weights"
+		[[ -f ${fsr4_prefix}_shader_manifest.json ]] ||
+			die "missing FSR4 v07 ${fsr4_model} shader manifest"
+		compgen -G "${fsr4_prefix}_*.spv" >/dev/null ||
+			die "missing FSR4 v07 ${fsr4_model} SPIR-V modules"
 	done
 	[[ -f ${S}/baseq2/fsr4_shaders/LICENSE-FSR4-v07.txt ]] || die "missing FSR4 v07 asset notice"
 
@@ -116,6 +120,10 @@ src_install() {
 			die "FSR4 v07 ${fsr4_model} initializer was not installed"
 		[[ -f ${fsr4_prefix}_pre_weights.bin ]] ||
 			die "FSR4 v07 ${fsr4_model} pre-pass weights were not installed"
+		[[ -f ${fsr4_prefix}_shader_manifest.json ]] ||
+			die "FSR4 v07 ${fsr4_model} shader manifest was not installed"
+		compgen -G "${fsr4_prefix}_*.spv" >/dev/null ||
+			die "FSR4 v07 ${fsr4_model} SPIR-V modules were not installed"
 	done
 	[[ -f ${game_root}/baseq2/fsr4_shaders/LICENSE-FSR4-v07.txt ]] || die "FSR4 v07 asset notice was not installed"
 
