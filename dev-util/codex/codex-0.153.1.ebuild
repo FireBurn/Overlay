@@ -108,6 +108,9 @@ gen_git_crate_dir() {
 src_prepare() {
 	default
 
+	# Remove Windows-only git dependency on appcontainer_common (mxc)
+	sed -i '/appcontainer_common/d' "${S}/Cargo.toml" "${S}/sandboxing/Cargo.toml" || die
+
 	# Fix tokio-tungstenite's git dependency on tungstenite
 	sed -i '/^\[dependencies\.tungstenite\]/,/^$/{
 		s|git = "https://github.com/openai-oss-forks/tungstenite-rs"|path = "'"$(gen_git_crate_dir tungstenite)"'"|
