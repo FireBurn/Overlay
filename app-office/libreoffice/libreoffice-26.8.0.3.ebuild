@@ -227,6 +227,7 @@ COMMON_DEPEND="${PYTHON_DEPS}
 	pdfimport? ( >=app-text/poppler-22.06:=[cxx] )
 	postgres? ( >=dev-db/postgresql-9.0:*[kerberos] )
 	qt6? (
+		dev-libs/wayland
 		dev-qt/qtbase:6[gui,opengl,widgets]
 		dev-qt/qtmultimedia:6
 	)
@@ -298,6 +299,11 @@ PATCHES=(
 	# add qt6 backend as possible fallback for gtk-based desktop environments:
 	# https://bugs.gentoo.org/950170
 	"${FILESDIR}/${PN}-26.8-vcl-backend-fallback.patch"
+
+	# fix Qt6/KF6 Wayland fractional scaling:
+	# https://bugs.documentfoundation.org/show_bug.cgi?id=172896
+	# https://bugs.documentfoundation.org/show_bug.cgi?id=173298
+	"${FILESDIR}/${PN}-26.8-qt6-fractional-scaling.patch"
 )
 
 _check_reqs() {
