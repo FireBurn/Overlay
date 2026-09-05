@@ -1,3 +1,30 @@
+From 773f303b2ea20c7fba1ce6ef743460c0882e2b3f Mon Sep 17 00:00:00 2001
+From: mrf <jfitz1994@pm.me>
+Date: Thu, 27 Aug 2026 23:07:03 +0800
+Subject: [PATCH] tdf#173298 svx: build pre-render and overlay buffers from the
+ target device
+
+SdrPreRenderDevice and OverlayManagerBuffered both create their
+VirtualDevice with no comparison device, even though both already hold
+the OutputDevice they are drawing for.
+
+With no comparison device, VirtualDevice falls back to
+Application::GetDefaultDevice() (vcl/source/gdi/virdev.cxx), which is the
+hidden WorkWindow created by ImplGetDefaultContextWindow(). That window is
+never shown and never resized, so on backends where the frame surface
+carries a device scale the hidden window's surface keeps the scale it was
+created with, and every buffer derived from it inherits that instead of
+the scale of the window actually being painted.
+
+Where the two differ, the buffer is rasterised at the wrong resolution and
+then resampled into the frame, which shows up as soft text and chrome.
+
+Pass the device each object already has. No behavioural change where the
+default device and the target device have the same scale, which is the
+case on backends that use one scale for everything.
+
+Change-Id: I56b62dd3e1a25d0ed1e9071de8dbff4b8b45debf
+
 diff --git a/svx/source/sdr/overlay/overlaymanagerbuffered.cxx b/svx/source/sdr/overlay/overlaymanagerbuffered.cxx
 index 90ab566..8722c1b 100644
 --- a/svx/source/sdr/overlay/overlaymanagerbuffered.cxx
@@ -33,6 +60,74 @@ index 6989822..8bf87d4 100644
  {
  }
  
+From 5a8fc76c921bb11caf83743a732e3ab0cdcaf2b9 Mon Sep 17 00:00:00 2001
+From: mrf <jfitz1994@pm.me>
+Date: Tue, 21 Jul 2026 08:52:34 +0800
+Subject: [PATCH] tdf#172896 qt: use the real Wayland output scale for
+ fractional HiDPI
+
+On a Qt 6 Wayland session LibreOffice forced
+Qt::HighDpiScaleFactorRoundingPolicy::Round, which disables the compositor's
+fractional scaling: at a fractional desktop scale the buffer scale is rounded
+up to the next integer and the compositor downscales the oversized result,
+wasting fill rate. How much depends on the scale: roughly 1.6x the pixels at
+235% and 1.9x at 220%. The downscale also softens the output slightly, though
+that is a much smaller effect than the wasted work.
+Round was forced because the Qt 6 default, PassThrough, exposed size bugs in
+this plugin (tdf#159915).
+
+The core problem is that QScreen::devicePixelRatio() is not the real scale
+under Wayland. wl_output can only advertise an integer buffer scale, so a
+fractionally scaled output reports a rounded-up integer (2 for 125%, 3 for
+220%), and that is what Qt exposes. VCL derived both its DPI and the frame's
+device-pixel-ratio from it, so the UI was laid out and rendered for the wrong
+scale - e.g. 200% on a 125% display.
+
+The real fractional scale is available up front from the protocol, without a
+surface: wl_output's current mode (device pixels) divided by the logical size
+Qt reports as QScreen::geometry() gives the true scale. Read it once, cached,
+and use it for both the layout DPI (ImplGetResolution) and the frame's
+devicePixelRatioF(), so the two agree and the UI is drawn at the exact scale.
+
+With that in place the rounding policy no longer needs forcing: Qt 6 defaults
+to PassThrough and Qt 5 to Round, which is what we want, so the explicit call
+is removed.
+
+The query needs libwayland-client, so configure looks for it with pkg-config
+for Qt 5 and Qt 6 and defines QT5_USING_WAYLAND / QT6_USING_WAYLAND, following
+what is already done for XCB and QT[56]_USING_X11. It is not a hard
+requirement: where it is missing the plugin still builds and simply keeps
+using the scale Qt reports.
+
+Also fixes surface-size handling exposed by PassThrough:
+- handleResizeEvent() and SetPosSize() derive logical/device sizes with QSize
+  arithmetic; handleResizeEvent() previously used ceil(), which at a fractional
+  DPR made the backing surface one pixel larger than Qt's window geometry.
+- A fixed-size top-level laid out before its surface has the real DPR is
+  re-applied from reapplyDeviceSizeForDpr() once DevicePixelRatioChange /
+  screenChanged() arrives.
+
+Not addressed here:
+- Toolbar icon sizing still uses the coarse CountDPIScaleFactor buckets, so
+  icons snap to the nearest 50% rather than the exact fractional scale. That is
+  a pre-existing, backend-independent VCL limitation.
+- Relayout of an already-open window when the DPR changes at runtime (e.g.
+  dragging between differently scaled monitors) remains a pre-existing gap.
+- The reason this reads the protocol directly is that VCL fixes its layout DPI
+  when a window is created, before any surface exists, and Qt cannot report the
+  fractional scale until after the surface is configured. If layout stops
+  depending on the scale, the value is only needed at paint time and Qt's own
+  ratio is sufficient, at which point this code can be removed.
+
+Change-Id: I1f182727bd128be73372498eb401ab5a3c317436
+---
+Packaging note (Gentoo): dev-libs/wayland is already a hard dependency
+whenever USE=qt6 is built, so instead of the configure.ac/pkg-config
+detection above, QT5_USING_WAYLAND/QT6_USING_WAYLAND are defined
+unconditionally for Linux/FreeBSD in QtTools.hxx, and -lwayland-client is
+linked directly in the two Library_vclplug_qt{5,6}.mk files. Everything
+else is unchanged.
+
 diff --git a/vcl/Library_vclplug_qt5.mk b/vcl/Library_vclplug_qt5.mk
 index f48553c..f0ca736 100644
 --- a/vcl/Library_vclplug_qt5.mk
