@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>mike@fireburn.co.uk</email>
+		<name>Mike Lothian</name>
+	</maintainer>
+	<longdescription>
+		Qwen Code is an open-source AI coding agent for the terminal developed by Alibaba Cloud's Qwen team.
+		It provides intelligent codebase navigation, file editing, shell command execution, and multi-protocol LLM support.
+	</longdescription>
+	<upstream>
+		<bugs-to>https://github.com/QwenLM/qwen-code/issues</bugs-to>
+		<remote-id type="github">QwenLM/qwen-code</remote-id>
+	</upstream>
+</pkgmetadata>
