@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>mike@fireburn.co.uk</email>
+		<name>Mike Lothian</name>
+	</maintainer>
+	<longdescription>
+		OpenCode is an open-source AI coding agent built for the terminal.
+		It provides an interactive terminal user interface (TUI), session management,
+		model orchestration, ACP/MCP protocol server integration, and automated
+		code editing capabilities.
+	</longdescription>
+	<upstream>
+		<bugs-to>https://github.com/anomalyco/opencode/issues</bugs-to>
+		<remote-id type="github">anomalyco/opencode</remote-id>
+	</upstream>
+</pkgmetadata>
