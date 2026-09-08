@@ -304,6 +304,9 @@ PATCHES=(
 	# https://bugs.documentfoundation.org/show_bug.cgi?id=172896
 	# https://bugs.documentfoundation.org/show_bug.cgi?id=173298
 	"${FILESDIR}/${PN}-26.8-qt6-fractional-scaling.patch"
+
+	# box2d has no pkg-config file upstream; use a header check instead
+	"${FILESDIR}/${PN}-26.8-box2d-header-detect.patch"
 )
 
 _check_reqs() {
