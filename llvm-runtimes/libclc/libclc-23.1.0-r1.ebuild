@@ -79,4 +79,14 @@ src_test() {
 
 src_install() {
 	multibuild_foreach_variant cmake_src_install
+
+	dodir /usr/share/pkgconfig
+	cat <<-EOF > "${ED}/usr/share/pkgconfig/libclc.pc"
+		libexecdir=${EPREFIX}/usr/share/clc
+
+		Name: libclc
+		Description: Library requirements of the OpenCL C programming language
+		Version: ${PV}
+		Libs: -L\${libexecdir}
+	EOF
 }
