@@ -46,8 +46,6 @@ unset DEV_URI
 ADDONS_SRC=(
 	# not packaged in Gentoo
 	"${ADDONS_URI}/dragonbox-1.1.3.tar.gz"
-	# not packaged in Gentoo, https://www.netlib.org/fp/dtoa.c
-	"${ADDONS_URI}/dtoa-20180411.tgz"
 	# not packaged in Gentoo, https://github.com/serge-sans-paille/frozen
 	"${ADDONS_URI}/frozen-1.2.0.tar.gz"
 	# not packaged in Gentoo, https://skia.org/
@@ -66,9 +64,7 @@ ADDONS_SRC=(
 		${ADDONS_URI}/ace6ab49184e329db254e454a010f56d-libxml-1.1.7.zip
 		${ADDONS_URI}/39bb3fcea1514f1369fcfc87542390fd-sacjava-1.3.zip
 	)"
-	# Java-WebSocket: not packaged in Gentoo, https://github.com/TooTallNate/Java-WebSocket
 	"java? (
-		${ADDONS_URI}/Java-WebSocket-1.6.0.tar.gz
 		${ADDONS_URI}/17410483b5b5f267aa18b7e00b65e6e0-hsqldb_1_8_0.zip
 	)"
 	# no release for 8 years, should we package it?
@@ -85,7 +81,7 @@ LICENSE="|| ( LGPL-3 MPL-1.1 )"
 SLOT="0"
 
 [[ ${MY_PV} == *9999* ]] || \
-KEYWORDS="amd64 ~arm arm64 ~loong ppc64 ~riscv ~x86"
+KEYWORDS="~amd64 ~riscv"
 
 # Extensions that need extra work:
 LO_EXTS="nlpsolver scripting-beanshell scripting-javascript wiki-publisher"
@@ -149,7 +145,7 @@ COMMON_DEPEND="${PYTHON_DEPS}
 	>=dev-libs/redland-1.0.16
 	dev-libs/zxcvbn-c
 	>=dev-libs/xmlsec-1.2.35:=[nss]
-	>=games-engines/box2d-2.4.2-r2:0
+	>=games-engines/box2d-2.4.1:0
 	media-gfx/fontforge
 	media-gfx/graphite2
 	media-libs/fontconfig
@@ -248,6 +244,7 @@ DEPEND="${COMMON_DEPEND}
 	x11-libs/libXtst
 	java? (
 		dev-java/ant:0
+		dev-java/java-websocket:0
 		|| (
 			virtual/jdk:17
 			virtual/jdk:21
@@ -300,13 +297,13 @@ PATCHES=(
 	# https://bugs.gentoo.org/950170
 	"${FILESDIR}/${PN}-26.8-vcl-backend-fallback.patch"
 
+	# box2d has no pkg-config file upstream; use a header check instead
+	"${FILESDIR}/${PN}-26.8-box2d-header-detect.patch"
+
 	# fix Qt6/KF6 Wayland fractional scaling:
 	# https://bugs.documentfoundation.org/show_bug.cgi?id=172896
 	# https://bugs.documentfoundation.org/show_bug.cgi?id=173298
 	"${FILESDIR}/${PN}-26.8-qt6-fractional-scaling.patch"
-
-	# box2d has no pkg-config file upstream; use a header check instead
-	"${FILESDIR}/${PN}-26.8-box2d-header-detect.patch"
 )
 
 _check_reqs() {
@@ -562,7 +559,8 @@ src_configure() {
 		--without-system-jfreereport
 		--without-system-libfixmath
 		--without-system-sane
-		--without-system-java-websocket
+		$(use_with java system-java-websocket)
+		$(use_with java java-websocket-jar="${EPREFIX}/usr/share/java-websocket/lib/java-websocket.jar")
 		$(use_enable base report-builder)
 		$(use_enable bluetooth sdremote-bluetooth)
 		$(use_enable coinmp)
