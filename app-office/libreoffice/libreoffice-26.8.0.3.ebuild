@@ -145,7 +145,7 @@ COMMON_DEPEND="${PYTHON_DEPS}
 	>=dev-libs/redland-1.0.16
 	dev-libs/zxcvbn-c
 	>=dev-libs/xmlsec-1.2.35:=[nss]
-	>=games-engines/box2d-2.4.1:0
+	>=games-engines/box2d-3.1.1:0
 	media-gfx/fontforge
 	media-gfx/graphite2
 	media-libs/fontconfig
@@ -297,7 +297,7 @@ PATCHES=(
 	# https://bugs.gentoo.org/950170
 	"${FILESDIR}/${PN}-26.8-vcl-backend-fallback.patch"
 
-	# box2d has no pkg-config file upstream; use a header check instead
+	# box2d ships no pkg-config file; detect the 3.x API from its headers
 	"${FILESDIR}/${PN}-26.8-box2d-header-detect.patch"
 
 	# fix Qt6/KF6 Wayland fractional scaling:

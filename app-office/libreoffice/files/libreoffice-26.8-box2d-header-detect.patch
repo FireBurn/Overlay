@@ -8,10 +8,10 @@ diff --git a/configure.ac b/configure.ac
 -    BOX2D_VERSION=`$PKG_CONFIG --modversion box2d 2>/dev/null`
 -    BOX2D_MAJOR=`echo $BOX2D_VERSION | cut -d"." -f1`
 -    BOX2D_MINOR=`echo $BOX2D_VERSION | cut -d"." -f2`
-+    dnl box2d has no pkg-config file upstream; box2d/id.h only exists in
-+    dnl the 3.x rewrite, box2d/box2d.h alone means the 2.4.x layout
++    dnl box2d ships no pkg-config file upstream, so ask the headers which
++    dnl version is installed: box2d/id.h is new in the 3.x rewrite
 +    AC_CHECK_HEADER([box2d/id.h], [BOX2D_MAJOR=3; BOX2D_MINOR=1],
-+        [AC_CHECK_HEADER([box2d/box2d.h], [BOX2D_MAJOR=2; BOX2D_MINOR=4], [])])
++        [AC_MSG_ERROR([box2d 3.x headers not found.])])
      if test "$BOX2D_MAJOR" -eq "2"; then
          if test "$BOX2D_MINOR" -eq "4"; then
              _BOX2D_LIB=box2d
