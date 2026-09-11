@@ -21,6 +21,10 @@ BRANDING="${PN}-branding-gentoo-0.8.tar.xz"
 # PATCHSET="${P}-patchset-01.tar.xz"
 
 [[ ${MY_PV} == *9999* ]] && inherit git-r3
+# helpcontent2 is a submodule of core, pinned to the revision core expects,
+# so it doesn't need fetching separately. translations and dictionaries are
+# unused: we build with --with-lang="" and --without-myspell-dicts.
+EGIT_SUBMODULES=( '*' '-translations' '-dictionaries' )
 inherit autotools bash-completion-r1 check-reqs flag-o-matic java-pkg-opt-2 multiprocessing python-single-r1 qt-utils toolchain-funcs xdg-utils
 
 DESCRIPTION="A full office productivity suite"
@@ -112,7 +116,7 @@ COMMON_DEPEND="${PYTHON_DEPS}
 	>=app-text/libebook-0.1
 	app-text/libepubgen
 	>=app-text/libetonyek-0.1
-	app-text/libexttextcat
+	app-text/libexttextcat:=
 	app-text/liblangtag
 	>=app-text/libmspub-0.1.0
 	>=app-text/libmwaw-0.3.21
@@ -342,12 +346,9 @@ src_unpack() {
 		branch="master"
 		mypv=${MY_PV/.9999}
 		[[ ${mypv} != ${MY_PV} ]] && branch="${PN}-${mypv/./-}"
-		git-r3_fetch "${base_uri}/${PN}/core" "refs/heads/${branch}"
-		git-r3_checkout "${base_uri}/${PN}/core"
+		git-r3_fetch "${base_uri}/core" "refs/heads/${branch}"
+		git-r3_checkout "${base_uri}/core"
 		LOCOREGIT_VERSION=${EGIT_VERSION}
-
-		git-r3_fetch "${base_uri}/${PN}/help" "refs/heads/master"
-		git-r3_checkout "${base_uri}/${PN}/help" "helpcontent2" # doesn't match on help
 	fi
 }
 
@@ -381,26 +382,30 @@ src_prepare() {
 			sysui/desktop/menus/draw.desktop || die
 	fi
 
-	# These test failures are largely added blindly to give us a baseline
-	# and then chip away at, rather than disregarding tests entirely.
+	# These test failures are largely added blindly in 25.2.1.1 to
+	# give us a baseline and then chip away at, rather than disregarding
+	# tests entirely.
 	#
 	# Various test skips from Fedora
 	#
 	# "Failing on multiple arches"
+	# "https://bugzilla.redhat.com/show_bug.cgi?id=2334719
+	# started to fail in 25.2.0.0"
 	sed -i -e '/CppunitTest_svgio/d' svgio/Module_svgio.mk || die
 	sed -i \
 		-e '/CppunitTest_sw_layoutwriter3/d' \
 		-e '/CppunitTest_sw_layoutwriter4/d' \
 		sw/Module_sw.mk || die
 	# "testStatusBarPageNumber it is said to "fail from time to time"...
-	# Skip tests failing with latest app-text/poppler
+	# started to fail in 25.2.0.0"
+	# Skip tests failing with latest app-text/poppler (25.02.0?)
 	sed -i -e '/CppunitTest_sw_tiledrendering2/d' sw/Module_sw.mk || die
 	sed -i -e '/CppunitTest_sc_pdf_export/d' sc/Module_sc.mk || die
 	sed -i -e '/CppunitTest_sdext_pdfimport/d' sdext/Module_sdext.mk || die
 	sed -i -e '/CppunitTest_sfx2_view/d' sfx2/Module_sfx2.mk || die
 	sed -i -e '/CppunitTest_sw_pdf_test/d' sw/Module_sw.mk || die
 	#
-	# Fails on amd64
+	# Fails w/ 25.2.1.1 on amd64
 	sed -i -e '/CppunitTest_sd_layout_tests/d' sd/Module_sd.mk || die
 	sed -i -e '/CppunitTest_vcl_text/d' vcl/Module_vcl.mk || die
 	sed -i -e '/CppunitTest_svx_unit/d' svx/Module_svx.mk || die
@@ -464,7 +469,7 @@ src_configure() {
 	fi
 
 	# Workaround for bug #967047
-	tc-is-gcc && [[ $(gcc-major-version) -eq 16 ]] && append-cxxflags -fno-devirtualize-speculatively
+	tc-is-gcc && [[ $(gcc-major-version) -ge 16 ]] && append-cxxflags -fno-devirtualize-speculatively
 
 	# Show flags set at the end
 	einfo "  Used CFLAGS:    ${CFLAGS}"
@@ -685,7 +690,7 @@ EOF
 	for py in uno.py unohelper.py officehelper.py; do
 		dosym -r ${loprogdir}/${py} $(python_get_sitedir)/${py}
 		while IFS="" read -d $'\0' -r pyc; do
-			pyc=${pyc//*\//}
+			pyc=${pyc//*\/}
 			dosym -r ${loprogdir}/__pycache__/${pyc} $(python_get_sitedir)/__pycache__/${pyc}
 		done < <(find "${D}"${lodir}/program -type f -name ${py/.py/*.pyc} -print0)
 	done
