@@ -21,7 +21,7 @@ BRANDING="${PN}-branding-gentoo-0.8.tar.xz"
 # PATCHSET="${P}-patchset-01.tar.xz"
 
 [[ ${MY_PV} == *9999* ]] && inherit git-r3
-inherit autotools bash-completion-r1 check-reqs flag-o-matic java-pkg-opt-2 multiprocessing python-single-r1 qmake-utils toolchain-funcs xdg-utils
+inherit autotools bash-completion-r1 check-reqs flag-o-matic java-pkg-opt-2 multiprocessing python-single-r1 qt-utils toolchain-funcs xdg-utils
 
 DESCRIPTION="A full office productivity suite"
 HOMEPAGE="https://www.libreoffice.org"
@@ -190,7 +190,7 @@ COMMON_DEPEND="${PYTHON_DEPS}
 	)
 	gstreamer? (
 		media-libs/gstreamer:1.0
-		media-libs/gst-plugins-base:1.0
+		media-plugins/gst-plugins-meta:1.0
 	)
 	gtk3? (
 		app-accessibility/at-spi2-core:2
@@ -208,6 +208,7 @@ COMMON_DEPEND="${PYTHON_DEPS}
 		gui-libs/gtk:4[wayland,X]
 		x11-libs/pango
 	)
+	java? ( dev-java/java-websocket:0 )
 	kde? (
 		kde-frameworks/kconfig:6
 		kde-frameworks/kcoreaddons:6
@@ -244,7 +245,6 @@ DEPEND="${COMMON_DEPEND}
 	x11-libs/libXtst
 	java? (
 		dev-java/ant:0
-		dev-java/java-websocket:0
 		|| (
 			virtual/jdk:17
 			virtual/jdk:21
@@ -262,7 +262,7 @@ DEPEND="${COMMON_DEPEND}
 RDEPEND="${COMMON_DEPEND}
 	acct-group/libreoffice
 	acct-user/libreoffice
-	!<app-office/libreoffice-bin-26.8.0
+	!<app-office/libreoffice-bin-24.8.4-r2
 	!app-office/libreoffice-bin-debug
 	media-fonts/liberation-fonts
 	|| ( x11-misc/xdg-utils kde-plasma/kde-cli-tools:* )
@@ -479,11 +479,8 @@ src_configure() {
 	export PYTHON_CFLAGS=$(python_get_CFLAGS)
 	export PYTHON_LIBS=$(python_get_LIBS)
 
-	# doesn't respect CPPFLAGS
-	append-flags "-I${ESYSROOT}/usr/include/zxcvbn"
-
 	if use qt6; then
-		export QT6DIR="$(qt6_get_bindir)/.."
+		export QT6DIR="${EPREFIX}$(qt_get_bindir 6)/.."
 	fi
 
 	local gentoo_buildid="Gentoo official package"
