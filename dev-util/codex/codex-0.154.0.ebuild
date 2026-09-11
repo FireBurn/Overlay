@@ -108,8 +108,14 @@ gen_git_crate_dir() {
 src_prepare() {
 	default
 
-	# Remove Windows-only git dependency on appcontainer_common (mxc)
-	sed -i '/appcontainer_common/d' "${S}/Cargo.toml" "${S}/sandboxing/Cargo.toml" || die
+	# Remove Windows-only git dependency on mxc and its workspace member
+	sed -i -e '/"mxc-sandbox"/d' \
+		-e '/codex-mxc-sandbox/d' \
+		-e '/appcontainer_common/d' \
+		-e '/learning_mode_windows/d' \
+		-e '/wxc_common/d' \
+		"${S}/Cargo.toml" || die
+	sed -i '/codex-mxc-sandbox/d' "${S}/sandboxing/Cargo.toml" || die
 
 	# Fix tokio-tungstenite's git dependency on tungstenite
 	sed -i '/^\[dependencies\.tungstenite\]/,/^$/{
