@@ -27,8 +27,8 @@ GN_MIN_VER=0.2374
 # chromium-tools/get-chromium-toolchain-strings.py (or just use Chromicler)
 # Node for M145+ should be 24.12.0 but that's not packaged in Gentoo yet. See #969145
 TEST_FONT="9c07d19d9c5ee1ff94f717e6fb17e0c8c354e6f9"
-BUNDLED_CLANG_VER="llvmorg-23-init-19482-g53d18800-1"
-BUNDLED_RUST_VER="b998449636a48e2c4a362809085b600a0174e1f2-5"
+BUNDLED_CLANG_VER="llvmorg-24-init-3796-g20e97c4b-3"
+BUNDLED_RUST_VER="0913b18e489ac1011b580e31fa5559654be12bfc-2"
 RUST_SHORT_HASH=${BUNDLED_RUST_VER:0:10}-${BUNDLED_RUST_VER##*-}
 NODE_VER="24.12.0"
 ESBUILD_VER="0.25.1"
@@ -88,7 +88,7 @@ SLOT="beta"
 KEYWORDS="~amd64 ~arm64"
 
 IUSE_SYSTEM_LIBS="+system-harfbuzz +system-icu +system-zstd"
-IUSE="+X ${IUSE_SYSTEM_LIBS} bindist bundled-toolchain cups debug ffmpeg-chromium gtk4 +hangouts headless kerberos +official pax-kernel pgo"
+IUSE="+X ${IUSE_SYSTEM_LIBS} bindist +bundled-toolchain cups debug ffmpeg-chromium gtk4 +hangouts headless kerberos +official pax-kernel pgo"
 IUSE+=" +proprietary-codecs pulseaudio qt6 +rar +screencast selinux test +vaapi +wayland +widevine cpu_flags_ppc_vsx3 cpu_flags_x86_avx512f"
 RESTRICT="
 	!bindist? ( bindist )
@@ -506,13 +506,13 @@ src_prepare() {
 		"${FILESDIR}/cr138-nodejs-version-check.patch"
 		"${FILESDIR}/cr144-glibc-2.43.patch"
 		"${FILESDIR}/cr145-oauth2-client-switches.patch"
-		"${FILESDIR}/cr145-revert-to-rollup-wasm.patch"
+		"${FILESDIR}/cr154-revert-to-rollup-wasm.patch"
 		"${FILESDIR}/cr148-v8-fix-cfi-sanitizer-set-death-callback.patch"
 		"${FILESDIR}/cr149-channel-aware-build.patch"
-		"${FILESDIR}/cr152-cbor-crubit-enable-cpp-api-from-rust.patch"
 		"${FILESDIR}/cr152-devtools-public-inputs.patch"
-		"${FILESDIR}/cr152-rust-wrapper-inputs-system-rust.patch"
+		"${FILESDIR}/cr154-devtools-typescript-tsc-fallback.patch"
 		"${FILESDIR}/cr152-dawn-system-go.patch"
+		"${FILESDIR}/cr152-unbundle-minizip-undo-unicode.patch"
 		"${FILESDIR}/cross-compile.patch"
 	)
 
@@ -547,7 +547,8 @@ src_prepare() {
 		# Copium patches go here.
 		PATCHES+=(
 			"${WORKDIR}/copium/cr143-libsync-__BEGIN_DECLS.patch"
-			"${FILESDIR}/cr152-unbundle-minizip-undo-unicode.patch"
+			"${FILESDIR}/cr152-cbor-crubit-enable-cpp-api-from-rust.patch"
+			"${FILESDIR}/cr154-rust-wrapper-inputs-system-rust.patch"
 		)
 
 		if [[ ${LLVM_SLOT} -lt 23 ]]; then
@@ -620,12 +621,14 @@ src_prepare() {
 	${EPYTHON} "${FILESDIR}/bin-finder.py" --elf "${S}" | awk '{print $1}' | xargs rm -f ||
 		die "Failed to remove bundled binaries"
 
-	# And now we restore any that we actually need, from the host system
 	local esbuild_path="${S}/third_party/devtools-frontend/src/third_party/esbuild"
+	local clang_format_bin="${EPREFIX}/usr/lib/llvm/${LLVM_SLOT}/bin/clang-format"
+	[[ ! -x "${clang_format_bin}" ]] && clang_format_bin="${EPREFIX}/usr/bin/clang-format"
 	local -A restore_list=(
 		["/usr/bin/esbuild-${ESBUILD_VER}"]="${esbuild_path}/esbuild"
 		["/usr/bin/gperf"]="${S}/third_party/gperf/cipd/bin/gperf"
 		["/usr/bin/node"]="${S}/third_party/node/linux/node-linux-x64/bin/node"
+		["${clang_format_bin}"]="${S}/buildtools/linux64-format/clang-format"
 	)
 
 	for src in "${!restore_list[@]}"; do
@@ -697,6 +700,7 @@ src_prepare() {
 		third_party/catapult/tracing/third_party/oboe
 		third_party/catapult/tracing/third_party/pako
 		third_party/ced
+		third_party/chromium-bidi
 		third_party/cld_3
 		third_party/closure_compiler
 		third_party/compiler-rt # Since M137 atomic is required; we could probably unbundle this as a target of opportunity.
@@ -839,6 +843,7 @@ src_prepare() {
 		third_party/openscreen
 		third_party/openscreen/src/third_party/
 		third_party/openscreen/src/third_party/tinycbor/src/src
+		third_party/openxr
 		third_party/opus
 		third_party/ots
 		third_party/pdfium
@@ -1367,7 +1372,7 @@ chromium_configure() {
 
 	# Odds and ends
 
-	myconf_gn+=( "devtools_use_typescript_go=false" )
+	myconf_gn+=( "use_typescript_go=false" )
 
 	# skipping typecheck is only supported on amd64, bug #876157
 	if ! use amd64; then
