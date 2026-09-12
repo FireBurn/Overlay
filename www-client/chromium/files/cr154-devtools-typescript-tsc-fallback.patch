@@ -1,3 +1,9 @@
+From: Mike Lothian <mike@fireburn.co.uk>
+Subject: [PATCH] Fallback to system node and local tsc in devtools typescript runner
+
+When bundled typescript is not available, look for typescript in
+devtools node_modules and invoke with system node.
+---
 --- a/third_party/devtools-frontend/src/third_party/typescript/typescript.py
 +++ b/third_party/devtools-frontend/src/third_party/typescript/typescript.py
 @@ -9,7 +9,7 @@

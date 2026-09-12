@@ -1,3 +1,16 @@
+From: Mike Lothian <mike@fireburn.co.uk>
+Subject: [PATCH] Fix system rust wrapper inputs and bindgen libclang path
+
+Adapted from cr152-rust-wrapper-inputs-system-rust.patch:
+1. Points rustc_wrapper_inputs, cargo_crate inputs, and std/BUILD.gn inputs
+   to ${rust_sysroot}/bin/rustc when using system Rust.
+2. Declares bindgen_libclang_path in build/config/rust.gni and uses it
+   for _libclang_path in build/rust/rust_bindgen_generator.gni.
+   On Gentoo, libclang.so is located in /usr/lib/llvm/<slot>/lib64, so
+   bindgen_libclang_path must be passed to avoid bindgen failing to find
+   libclang in the default /usr/lib.
+3. Sets clang_resource_dir to clang_base_path when !use_chromium_rust_toolchain.
+---
 diff --git a/build/config/rust.gni b/build/config/rust.gni
 index 87b5ae8..eef7e7b 100644
 --- a/build/config/rust.gni
