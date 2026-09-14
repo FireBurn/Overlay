@@ -5,7 +5,7 @@ EAPI=8
 
 # Bump notes: https://wiki.gentoo.org/wiki/Project:Rust/Rust_bump
 
-LLVM_COMPAT=( 21 22 23 )
+RUST_LLVM_COMPAT=${PV%%_*}
 PYTHON_COMPAT=( python3_{12..15} )
 
 # Patches are kept in rust-patches.git, see its README.rst for the versioning
@@ -31,12 +31,8 @@ else
 	RUST_MIN_VER="$(ver_cut 1).$(($(ver_cut 2) - 1)).0"
 fi
 
-# Upstream Gentoo forces 'dev-lang/rust:1.98.1 llvm_slot_22' in profiles/base/package.use.force.
-# To allow users to select other supported LLVM slots (e.g. 21 or 23) without hitting
-# ^^ (exactly-one-of) REQUIRED_USE conflicts, we manage LLVM_REQUIRED_USE and dependencies manually.
-LLVM_OPTIONAL=1
-inherit check-reqs estack flag-o-matic llvm-r1 multiprocessing optfeature
-inherit multilib multilib-build python-any-r1 rust rust-toolchain toolchain-funcs
+inherit check-reqs estack flag-o-matic rust llvm-r1 multiprocessing optfeature
+inherit multilib multilib-build python-any-r1 rust-toolchain toolchain-funcs
 inherit verify-sig
 
 if [[ ${PV} = *9999* ]]; then
@@ -94,7 +90,7 @@ LICENSE="|| ( MIT Apache-2.0 ) BSD BSD-1 BSD-2 BSD-4"
 SLOT="${PV%%_*}" # Beta releases get to share the same SLOT as the eventual stable
 
 IUSE="big-endian +clippy cpu_flags_x86_sse2 debug dist doc llvm-libunwind lto"
-IUSE+=" +rustfmt rust-analyzer rust-src +system-llvm test"
+IUSE+=" +rustfmt rust-analyzer rust-src rustc-dev +system-llvm test"
 IUSE+=" ${ALL_LLVM_TARGETS[*]} ${ALL_RUST_SYSROOTS[*]}"
 
 if [[ ${PV} = *9999* ]]; then
@@ -102,23 +98,16 @@ if [[ ${PV} = *9999* ]]; then
 	IUSE+=" miri"
 fi
 
-rust_llvm_gen_dep() {
-	local dep=${1}
-	echo "llvm_slot_23? ( ${dep//\$\{LLVM_SLOT\}/23} )"
-	echo "llvm_slot_21? ( ${dep//\$\{LLVM_SLOT\}/21} )"
-	echo "!llvm_slot_21? ( !llvm_slot_23? ( ${dep//\$\{LLVM_SLOT\}/22} ) )"
-}
-
 LLVM_DEPEND=()
 # splitting usedeps needed to avoid CI/pkgcheck's UncheckableDep limitation
 for _x in "${ALL_LLVM_TARGETS[@]}"; do
-	LLVM_DEPEND+=( "	${_x}? ( $(rust_llvm_gen_dep "llvm-core/llvm:\${LLVM_SLOT}[${_x}=]") )" )
+	LLVM_DEPEND+=( "	${_x}? ( $(llvm_gen_dep "llvm-core/llvm:\${LLVM_SLOT}[${_x}=]") )" )
 	if [[ -v ALL_RUST_EXPERIMENTAL_TARGETS["${_x}"] ]] ; then
 		ALL_RUST_EXPERIMENTAL_TARGETS["${_x}"]=1
 	fi
 done
-LLVM_DEPEND+=( "	rust_sysroots_wasm? ( $(rust_llvm_gen_dep 'llvm-core/lld:${LLVM_SLOT}') )" )
-LLVM_DEPEND+=( "	$(rust_llvm_gen_dep 'llvm-core/llvm:${LLVM_SLOT}')" )
+LLVM_DEPEND+=( "	rust_sysroots_wasm? ( $(llvm_gen_dep 'llvm-core/lld:${LLVM_SLOT}') )" )
+LLVM_DEPEND+=( "	$(llvm_gen_dep 'llvm-core/llvm:${LLVM_SLOT}')" )
 
 # dev-libs/oniguruma is used for documentation
 BDEPEND="
@@ -131,7 +120,7 @@ BDEPEND="
 	)
 	lto? ( system-llvm? (
 		|| (
-			$(rust_llvm_gen_dep 'llvm-core/lld:${LLVM_SLOT}')
+			$(llvm_gen_dep 'llvm-core/lld:${LLVM_SLOT}')
 			sys-devel/mold
 		)
 	) )
@@ -177,8 +166,6 @@ REQUIRED_USE="
 	rust_sysroots_bpf? ( llvm_targets_BPF )
 	rust_sysroots_wasm? ( llvm_targets_WebAssembly )
 	x86? ( cpu_flags_x86_sse2 )
-	|| ( llvm_slot_21 llvm_slot_22 llvm_slot_23 )
-	?? ( llvm_slot_21 llvm_slot_23 )
 "
 
 # we don't use cmake.eclass, but can get a warning
@@ -275,17 +262,6 @@ pkg_setup() {
 	pre_build_checks
 	python-any-r1_pkg_setup
 
-	if ! [[ -v _RUST_LLVM_MAP[${SLOT}] ]] ; then
-		die "${SLOT} is missing from rust.eclass's RUST_LLVM_MAP! Please fix the eclass."
-	fi
-	local found_slot i
-	for (( i = 0; i < ${#_RUST_SLOTS_ORDERED[@]} ; i++ )) ; do
-		[[ ${_RUST_SLOTS_ORDERED[i]} == ${SLOT} ]] && found_slot=1
-	done
-	if ! [[ -v found_slot ]] ; then
-		die "${SLOT} is missing from rust.eclass's _RUST_SLOTS_ORDERED! Please fix the eclass."
-	fi
-
 	export LIBGIT2_NO_PKG_CONFIG=1 #749381
 	if tc-is-cross-compiler; then
 		use system-llvm && die "USE=system-llvm not allowed when cross-compiling"
@@ -297,13 +273,6 @@ pkg_setup() {
 	rust_pkg_setup
 
 	if use system-llvm; then
-		if use llvm_slot_23; then
-			LLVM_SLOT=23
-		elif use llvm_slot_21; then
-			LLVM_SLOT=21
-		else
-			LLVM_SLOT=22
-		fi
 		llvm-r1_pkg_setup
 
 		local llvm_config="$(get_llvm_prefix)/bin/llvm-config"
@@ -486,6 +455,7 @@ src_configure() {
 	use rustfmt && tools+=',"rustfmt"'
 	use rust-analyzer && tools+=',"rust-analyzer","rust-analyzer-proc-macro-srv"'
 	use rust-src && tools+=',"src"'
+	use rustc-dev && tools+=',"rustc-dev"'
 
 	if [[ ${PV} == *9999* ]]; then
 		use miri && tools+=',"miri"'

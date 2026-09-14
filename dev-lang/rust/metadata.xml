@@ -14,6 +14,7 @@
 		<flag name="parallel-compiler">Build a multi-threaded rustc (experimental, not tested by upstream)</flag>
 		<flag name="rust-analyzer">Install rust-analyzer, A Rust compiler front-end for IDEs (language server)</flag>
 		<flag name="rust-src">Install rust-src, needed by developer tools and for build-std (cross)</flag>
+		<flag name="rustc-dev">Install compiler development libraries for rustc_private consumers</flag>
 		<flag name="rustfmt">Install rustfmt, Rust code formatter</flag>
 		<flag name="system-llvm">Use the system LLVM installation</flag>
 		<flag name="wasm">Build support for the wasm32-unknown-unknown target</flag>

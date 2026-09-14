@@ -51,10 +51,6 @@ esac
 if [[ -z ${_RUST_ECLASS} ]]; then
 _RUST_ECLASS=1
 
-if [[ -n ${RUST_NEEDS_LLVM} ]]; then
-	inherit llvm-r1
-fi
-
 if [[ -n ${RUST_MULTILIB} ]]; then
 	inherit multilib-build
 	RUST_REQ_USE="${RUST_REQ_USE+${RUST_REQ_USE},}${MULTILIB_USEDEP}"
@@ -65,7 +61,7 @@ fi
 # @ECLASS_VARIABLE: _RUST_LLVM_MAP
 # @INTERNAL
 # @DESCRIPTION:
-# Definitive list of Rust slots and the associated LLVM slot, newest first.
+# LLVM slots supported by each Rust slot.
 declare -A -g -r _RUST_LLVM_MAP=(
 	["9999"]="23 22 21"
 	["1.98.1"]="23 22 21"
@@ -104,41 +100,37 @@ declare -A -g -r _RUST_LLVM_MAP=(
 # @INTERNAL
 # @DESCRIPTION:
 # Array of Rust slots, newest first.
-# While _RUST_LLVM_MAP stores useful info about the relationship between Rust and LLVM slots,
-# this array is used to store the Rust slots in a more convenient order for iteration.
-declare -a -g -r _RUST_SLOTS_ORDERED=(
-	"9999"
-	"1.98.1"
-	"1.98.0"
-	"1.97.1"
-	"1.96.1"
-	"1.95.0"
-	"1.94.1"
-	"1.94.0"
-	"1.93.1"
-	"1.93.0"
-	"1.92.0"
-	"1.91.0"
-	"1.90.0"
-	"1.89.0"
-	"1.88.0"
-	"1.87.0"
-	"1.86.0"
-	"1.85.1"
-	"1.85.0"
-	"1.84.1"
-	"1.84.0"
-	"1.83.0"
-	"1.82.0"
-	"1.81.0"
-	"1.80.1"
-	"1.79.0"
-	"1.78.0"
-	"1.77.1"
-	"1.76.0"
-	"1.75.0"
-	"1.74.1"
-)
+_rust_order_slots() {
+	local slot i
+	_RUST_SLOTS_ORDERED=()
+	for slot in "${!_RUST_LLVM_MAP[@]}"; do
+		for (( i=0; i<${#_RUST_SLOTS_ORDERED[@]}; i++ )); do
+			ver_test "${slot}" -gt "${_RUST_SLOTS_ORDERED[i]}" && break
+		done
+		_RUST_SLOTS_ORDERED=( "${_RUST_SLOTS_ORDERED[@]:0:i}" "${slot}" "${_RUST_SLOTS_ORDERED[@]:i}" )
+	done
+	readonly -a _RUST_SLOTS_ORDERED
+}
+_rust_order_slots
+unset -f _rust_order_slots
+
+# @ECLASS_VARIABLE: RUST_LLVM_COMPAT
+# @PRE_INHERIT
+# @DESCRIPTION:
+# Rust slot whose LLVM compatibility supplies LLVM_COMPAT when building Rust.
+# Set before inheriting rust and llvm-r1.
+if [[ -n ${RUST_LLVM_COMPAT} ]]; then
+	[[ -n ${_RUST_LLVM_MAP[${RUST_LLVM_COMPAT}]} ]] || die "Unknown Rust slot: ${RUST_LLVM_COMPAT}"
+	LLVM_COMPAT=()
+	for _rust_llvm_slot in ${_RUST_LLVM_MAP[${RUST_LLVM_COMPAT}]}; do
+		LLVM_COMPAT=( "${_rust_llvm_slot}" "${LLVM_COMPAT[@]}" )
+	done
+	unset _rust_llvm_slot
+fi
+
+if [[ -n ${RUST_NEEDS_LLVM} ]]; then
+	inherit llvm-r1
+fi
 
 # == user control knobs ==
 
@@ -175,6 +167,12 @@ declare -a -g -r _RUST_SLOTS_ORDERED=(
 # @DESCRIPTION:
 # Lowest Rust slot supported by the package. Needs to be set before
 # rust_pkg_setup is called. If unset, no lower bound is assumed.
+
+# @ECLASS_VARIABLE: RUST_SOURCE_ONLY
+# @PRE_INHERIT
+# @DEFAULT_UNSET
+# @DESCRIPTION:
+# Require source-built Rust when compiler components are unavailable in rust-bin.
 
 # @ECLASS_VARIABLE: RUST_SLOT
 # @OUTPUT_VARIABLE
@@ -278,7 +276,9 @@ _rust_set_globals() {
 
 	local rust_dep=()
 	local llvm_slot
-	local rust_slot
+	local rust_slot rust_package
+	local rust_packages=( dev-lang/rust-bin dev-lang/rust )
+	[[ -n ${RUST_SOURCE_ONLY} ]] && rust_packages=( dev-lang/rust )
 	local usedep="${RUST_REQ_USE+[${RUST_REQ_USE}]}"
 
 	# If we're not using LLVM, we can just generate a simple Rust dependency
@@ -287,46 +287,33 @@ _rust_set_globals() {
 		# We can be more flexible if we generate a simpler, open-ended dependency
 		# when we don't have a max version set.
 		if [[ -z "${RUST_MAX_VER}" ]]; then
-			rust_dep+=(
-				">=dev-lang/rust-bin-${RUST_MIN_VER}:*${usedep}"
-				">=dev-lang/rust-${RUST_MIN_VER}:*${usedep}"
-			)
+			for rust_package in "${rust_packages[@]}"; do
+				rust_dep+=( ">=${rust_package}-${RUST_MIN_VER}:*${usedep}" )
+			done
 		else
 			# depend on each slot between RUST_MIN_VER and RUST_MAX_VER; it's a bit specific but
 			# won't hurt as we only ever add newer Rust slots.
 			for slot in "${_RUST_SLOTS[@]}"; do
-				rust_dep+=(
-					"dev-lang/rust-bin:${slot}${usedep}"
-					"dev-lang/rust:${slot}${usedep}"
-				)
+				for rust_package in "${rust_packages[@]}"; do
+					rust_dep+=( "${rust_package}:${slot}${usedep}" )
+				done
 			done
 		fi
 		rust_dep+=( ")" )
 		RUST_DEPEND="${rust_dep[*]}"
 	else
-		for llvm_slot in "${LLVM_COMPAT[@]}"; do
-			# Quick sanity check to make sure that the llvm slot is valid for Rust.
-			if [[ " ${_RUST_LLVM_MAP[*]} " == *" ${llvm_slot} "* ]]; then
-				# We're working a bit backwards here; iterate over _RUST_LLVM_MAP, check the
-				# LLVM slot, and if it matches add this to a new array because it may (and likely will)
-				# match multiple Rust slots. We already filtered Rust max/min slots.
-				# We always have a usedep for the LLVM slot, append `,RUST_REQ_USE` if it's set
-				usedep="[llvm_slot_${llvm_slot}${RUST_REQ_USE+,${RUST_REQ_USE}}]"
-				local slot_dep_content=()
-				for rust_slot in "${_RUST_SLOTS[@]}"; do
-					if has "${llvm_slot}" ${_RUST_LLVM_MAP[${rust_slot}]}; then
-						slot_dep_content+=(
-							"dev-lang/rust-bin:${rust_slot}${usedep}"
-							"dev-lang/rust:${rust_slot}${usedep}"
-						)
-					fi
-				done
-				if [[ "${#slot_dep_content[@]}" -ne 0 ]]; then
-					rust_dep+=( "llvm_slot_${llvm_slot}? ( || ( ${slot_dep_content[*]} ) )" )
-				else
-					die "${FUNCNAME}: no Rust slots found for LLVM slot ${llvm_slot}"
+		for llvm_slot in "${_LLVM_SLOTS[@]}"; do
+			usedep="[llvm_slot_${llvm_slot}(-)${RUST_REQ_USE+,${RUST_REQ_USE}}]"
+			local slot_dep_content=()
+			for rust_slot in "${_RUST_SLOTS[@]}"; do
+				if has "${llvm_slot}" ${_RUST_LLVM_MAP[${rust_slot}]}; then
+					for rust_package in "${rust_packages[@]}"; do
+						slot_dep_content+=( "${rust_package}:${rust_slot}${usedep}" )
+					done
 				fi
-			fi
+			done
+			[[ ${#slot_dep_content[@]} -gt 0 ]] || die "No Rust slots found for LLVM slot ${llvm_slot}"
+			rust_dep+=( "llvm_slot_${llvm_slot}? ( || ( ${slot_dep_content[*]} ) )" )
 		done
 		RUST_DEPEND="${rust_dep[*]}"
 	fi
@@ -364,8 +351,7 @@ unset -f _rust_set_globals
 # Within the function scope, RUST_SLOT and LLVM_SLOT will be defined.
 #
 # The function should return a true status if the slot is acceptable,
-# false otherwise. If rust_check_deps() is not defined, the function
-# defaults to checking whether a suitable Rust package is installed.
+# false otherwise. A suitable Rust package must also be installed.
 _get_rust_slot() {
 	debug-print-function ${FUNCNAME} "$@"
 
@@ -378,44 +364,29 @@ _get_rust_slot() {
 		shift
 	done
 
-	local max_slot
-	if [[ -z "${RUST_MAX_VER}" ]]; then
-		max_slot=
-	else
-		max_slot="${RUST_MAX_VER}"
-	fi
-	local slot
-	local llvm_slot
+	case ${ERUST_TYPE_OVERRIDE} in
+		""|source|binary) ;;
+		*) die "Invalid ERUST_TYPE_OVERRIDE: ${ERUST_TYPE_OVERRIDE}" ;;
+	esac
 
-	if [[ -n "${RUST_NEEDS_LLVM}" ]]; then
-		local unique_slots=()
-		local llvm_r1_slot
-		for slot in "${!_RUST_LLVM_MAP[@]}"; do
-			for llvm_slot in ${_RUST_LLVM_MAP[${slot}]}; do
-				unique_slots["${llvm_slot}"]="1"
-			done
-		done
-		for llvm_slot in "${!unique_slots[@]}"; do
-			if [[ "${LLVM_COMPAT[@]}" == *"${llvm_slot}"* ]]; then
-				# We can check for the USE
-				use "llvm_slot_${llvm_slot}" && llvm_r1_slot="${llvm_slot}"
+	if [[ -n ${RUST_SOURCE_ONLY} && ${ERUST_TYPE_OVERRIDE} == binary ]]; then
+		die "This package requires source-built Rust"
+	fi
+
+	local slot llvm_r1_slot
+	if [[ -n ${RUST_NEEDS_LLVM} ]]; then
+		for slot in "${_LLVM_SLOTS[@]}"; do
+			if use "llvm_slot_${slot}"; then
+				[[ -z ${llvm_r1_slot} ]] || die "Multiple LLVM slots selected"
+				llvm_r1_slot=${slot}
 			fi
 		done
-		if [[ -z "${llvm_r1_slot}" ]]; then
-			die "${FUNCNAME}: no LLVM slot found"
-		fi
+		[[ -n ${llvm_r1_slot} ]] || die "No LLVM slot selected"
 	fi
 
-	# iterate over known slots, newest first
 	for slot in "${_RUST_SLOTS_ORDERED[@]}"; do
-		# skip higher slots
-		if [[ -n "${max_slot}" ]]; then
-			if ver_test "${slot}" -eq "${max_slot}"; then
-				max_slot=
-			elif ver_test "${slot}" -gt "${max_slot}"; then
-				continue
-			fi
-		fi
+		ver_test "${slot}" -ge "${RUST_MIN_VER:-0}" || continue
+		ver_test "${slot}" -le "${RUST_MAX_VER:-9999}" || continue
 
 		if [[ -n "${ERUST_SLOT_OVERRIDE}" && "${slot}" != "${ERUST_SLOT_OVERRIDE}" ]]; then
 			continue
@@ -432,57 +403,51 @@ _get_rust_slot() {
 		einfo "Checking whether Rust ${slot} is suitable ..."
 
 		if declare -f rust_check_deps >/dev/null; then
-			local RUST_SLOT="${slot}"
-			local LLVM_SLOT="${llvm_r1_slot:-${_RUST_LLVM_MAP[${slot}]%% *}}"
-			rust_check_deps && return
-		else
-			local usedep="${RUST_REQ_USE+[${RUST_REQ_USE}]}"
-			# When checking for installed packages prefer the source package;
-			# if effort was put into building it we should use it.
-			local rust_pkgs
-			case "${ERUST_TYPE_OVERRIDE}" in
-				source)
-					rust_pkgs=(
-						"dev-lang/rust:${slot}${usedep}"
-					)
-					;;
-				binary)
-					rust_pkgs=(
-						"dev-lang/rust-bin:${slot}${usedep}"
-					)
-					;;
-				*)
-					rust_pkgs=(
-						"dev-lang/rust:${slot}${usedep}"
-						"dev-lang/rust-bin:${slot}${usedep}"
-					)
-					;;
-			esac
-			local _pkg
-			for _pkg in "${rust_pkgs[@]}"; do
-				einfo " Checking for ${_pkg} ..."
-				if has_version "${hv_switch}" "${_pkg}"; then
-					export RUST_SLOT="${slot}"
-					if [[ "${_pkg}" == "dev-lang/rust:${slot}${usedep}" ]]; then
-						export RUST_TYPE="source"
-					else
-						export RUST_TYPE="binary"
-					fi
-					return
+			_rust_check_slot_deps "${slot}" "${llvm_r1_slot:-${_RUST_LLVM_MAP[${slot}]%% *}}" || continue
+		fi
+		local usedep="${RUST_REQ_USE+[${RUST_REQ_USE}]}"
+		if [[ -n ${RUST_NEEDS_LLVM} ]]; then
+			usedep="[llvm_slot_${llvm_r1_slot}(-)${RUST_REQ_USE+,${RUST_REQ_USE}}]"
+		fi
+		# When checking for installed packages prefer the source package;
+		# if effort was put into building it we should use it.
+		local rust_pkgs
+		case "${ERUST_TYPE_OVERRIDE}" in
+			source)
+				rust_pkgs=(
+					"dev-lang/rust:${slot}${usedep}"
+				)
+				;;
+			binary)
+				rust_pkgs=(
+					"dev-lang/rust-bin:${slot}${usedep}"
+				)
+				;;
+			*)
+				rust_pkgs=(
+					"dev-lang/rust:${slot}${usedep}"
+					"dev-lang/rust-bin:${slot}${usedep}"
+				)
+				;;
+		esac
+		if [[ -n ${RUST_SOURCE_ONLY} ]]; then
+			rust_pkgs=( "dev-lang/rust:${slot}${usedep}" )
+		fi
+		local _pkg
+		for _pkg in "${rust_pkgs[@]}"; do
+			einfo " Checking for ${_pkg} ..."
+			if has_version "${hv_switch}" "${_pkg}"; then
+				export RUST_SLOT="${slot}"
+				if [[ "${_pkg}" == "dev-lang/rust:${slot}${usedep}" ]]; then
+					export RUST_TYPE="source"
+				else
+					export RUST_TYPE="binary"
 				fi
-			done
-		fi
+				return
+			fi
+		done
 
-		# We want to process the slot before escaping the loop if we've hit the minimum slot
-		if ver_test "${slot}" -eq "${RUST_MIN_VER}"; then
-			break
-		fi
 	done
-
-	# max_slot should have been unset in the iteration
-	if [[ -n "${max_slot}" ]]; then
-		die "${FUNCNAME}: invalid max_slot=${max_slot}"
-	fi
 
 	local requirement_msg=""
 	[[ -n "${RUST_MAX_VER}" ]] && requirement_msg+="<= ${RUST_MAX_VER} "
@@ -490,6 +455,15 @@ _get_rust_slot() {
 	[[ -n "${RUST_REQ_USE}" ]] && requirement_msg+="with USE=${RUST_REQ_USE}"
 	requirement_msg="${requirement_msg% }"
 	die "No Rust matching requirements${requirement_msg:+ (${requirement_msg})} found installed!"
+}
+
+# @FUNCTION: _rust_check_slot_deps
+# @INTERNAL
+# @DESCRIPTION:
+# Run the consumer's dependency check with the candidate slots in scope.
+_rust_check_slot_deps() {
+	local RUST_SLOT=${1} LLVM_SLOT=${2}
+	rust_check_deps
 }
 
 # @FUNCTION: get_rust_path
