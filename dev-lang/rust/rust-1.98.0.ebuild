@@ -5,7 +5,7 @@ EAPI=8
 
 # Bump notes: https://wiki.gentoo.org/wiki/Project:Rust/Rust_bump
 
-LLVM_COMPAT=( 21 22 23 )
+RUST_LLVM_COMPAT=${PV%%_*}
 PYTHON_COMPAT=( python3_{12..14} )
 
 # Patches are kept in rust-patches.git, see its README.rst for the versioning
@@ -31,8 +31,8 @@ else
 	RUST_MIN_VER="$(ver_cut 1).$(($(ver_cut 2) - 1)).0"
 fi
 
-inherit check-reqs estack flag-o-matic llvm-r1 multiprocessing optfeature
-inherit multilib multilib-build python-any-r1 rust rust-toolchain toolchain-funcs
+inherit check-reqs estack flag-o-matic rust llvm-r1 multiprocessing optfeature
+inherit multilib multilib-build python-any-r1 rust-toolchain toolchain-funcs
 inherit verify-sig
 
 if [[ ${PV} = *9999* ]]; then
@@ -89,7 +89,7 @@ LICENSE="|| ( MIT Apache-2.0 ) BSD BSD-1 BSD-2 BSD-4"
 SLOT="${PV%%_*}" # Beta releases get to share the same SLOT as the eventual stable
 
 IUSE="big-endian +clippy cpu_flags_x86_sse2 debug dist doc llvm-libunwind lto"
-IUSE+=" +rustfmt rust-analyzer rust-src +system-llvm test"
+IUSE+=" +rustfmt rust-analyzer rust-src rustc-dev +system-llvm test"
 IUSE+=" ${ALL_LLVM_TARGETS[*]} ${ALL_RUST_SYSROOTS[*]}"
 
 if [[ ${PV} = *9999* ]]; then
@@ -455,6 +455,7 @@ src_configure() {
 	use rustfmt && tools+=',"rustfmt"'
 	use rust-analyzer && tools+=',"rust-analyzer","rust-analyzer-proc-macro-srv"'
 	use rust-src && tools+=',"src"'
+	use rustc-dev && tools+=',"rustc-dev"'
 
 	if [[ ${PV} == *9999* ]]; then
 		use miri && tools+=',"miri"'
