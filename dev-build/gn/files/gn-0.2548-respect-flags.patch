@@ -1,0 +1,23 @@
+Respect user optimization and debug flags, as in Gentoo's gn-gen patch.
+
+--- a/build/gen.py
++++ b/build/gen.py
+@@ -538,10 +538,6 @@
+         cflags.extend(['-D_LIBCPP_DEBUG=1', '-D_GLIBCXX_DEBUG=1'])
+     else:
+       cflags.append('-DNDEBUG')
+-      cflags.append('-O3')
+-      if options.no_strip:
+-        cflags.append('-g')
+-      ldflags.append('-O3')
+       # Use -fdata-sections and -ffunction-sections to place each function
+       # or data item into its own section so --gc-sections can eliminate any
+       # unused functions and data items.
+@@ -589,7 +585,6 @@
+         '-D_FILE_OFFSET_BITS=64',
+         '-D__STDC_CONSTANT_MACROS', '-D__STDC_FORMAT_MACROS',
+         '-pthread',
+-        '-pipe',
+         '-fno-exceptions',
+         '-fno-rtti',
+         '-fdiagnostics-color',
