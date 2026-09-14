@@ -1,0 +1,11 @@
+--- a/cc_bindings_from_rs/generate_bindings/generate_function.rs
++++ b/cc_bindings_from_rs/generate_bindings/generate_function.rs
+@@ -819,2 +819,7 @@
+         .map(|fully_qualified_name| fully_qualified_name.format_for_rs())
+-        .expect("Generated trait method for a trait with an invalid rs name");
++        .ok_or_else(|| {
++            anyhow!(
++                "Failed to format trait name `{}`: trait does not have a canonical name",
++                db.tcx().def_path_str(trait_ref.def_id)
++            )
++        })?;
