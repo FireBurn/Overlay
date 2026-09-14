@@ -531,7 +531,7 @@ src_prepare() {
 	# https://issues.chromium.org/issues/442698344
 	# Unreleased fontconfig changed magic numbers and google have rolled to this version
 	if has_version "<=media-libs/fontconfig-2.17.1"; then
-		PATCHES+=( "${FILESDIR}/chromium-142-work-with-old-fontconfig.patch" )
+		PATCHES+=( "${FILESDIR}/cr142-work-with-old-fontconfig.patch" )
 	fi
 
 	if use bundled-toolchain; then
@@ -559,11 +559,11 @@ src_prepare() {
 		# Copium patches go here.
 		PATCHES+=(
 			"${WORKDIR}/copium/cr143-libsync-__BEGIN_DECLS.patch"
-			"${FILESDIR}/chromium-system-crubit.patch"
+			"${FILESDIR}/cr153-system-crubit.patch"
 			"${FILESDIR}/cr152-cbor-crubit-enable-cpp-api-from-rust.patch"
-			"${FILESDIR}/chromium-rust-wrapper-inputs-system-rust.patch"
-			"${FILESDIR}/chromium-system-clang-runtime.patch"
-			"${FILESDIR}/chromium-bytemuck-stable-simd.patch"
+			"${FILESDIR}/cr153-rust-wrapper-inputs-system-rust.patch"
+			"${FILESDIR}/cr153-system-clang-runtime.patch"
+			"${FILESDIR}/cr153-bytemuck-stable-simd.patch"
 		)
 
 		if [[ ${LLVM_SLOT} -lt 23 ]]; then

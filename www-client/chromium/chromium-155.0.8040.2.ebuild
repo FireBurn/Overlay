@@ -23,7 +23,7 @@ EAPI=8
 # using an external CI system that we have some control over, in case
 # issues pop up again with official tarball generation.
 
-GN_MIN_VER=0.2374
+GN_MIN_VER=0.2548
 # chromium-tools/get-chromium-toolchain-strings.py (or just use Chromicler)
 # Node for M145+ should be 24.12.0 but that's not packaged in Gentoo yet. See #969145
 TEST_FONT="9c07d19d9c5ee1ff94f717e6fb17e0c8c354e6f9"
@@ -31,7 +31,7 @@ BUNDLED_CLANG_VER="llvmorg-24-init-3796-g20e97c4b-3"
 BUNDLED_RUST_VER="0913b18e489ac1011b580e31fa5559654be12bfc-2"
 RUST_SHORT_HASH=${BUNDLED_RUST_VER:0:10}-${BUNDLED_RUST_VER##*-}
 NODE_VER="24.12.0"
-ESBUILD_VER="0.25.1"
+ESBUILD_VER="0.28.2"
 ROLLUP_VER="4.57.1" # currently manual.
 VIRTUALX_REQUIRED="pgo"
 
@@ -521,7 +521,8 @@ src_prepare() {
 		"${FILESDIR}/cr154-revert-to-rollup-wasm.patch"
 		"${FILESDIR}/cr148-v8-fix-cfi-sanitizer-set-death-callback.patch"
 		"${FILESDIR}/cr149-channel-aware-build.patch"
-		"${FILESDIR}/cr152-devtools-public-inputs.patch"
+		"${FILESDIR}/cr155-devtools-public-inputs.patch"
+		"${FILESDIR}/cr155-devtools-isolated-declarations.patch"
 		"${FILESDIR}/cr154-devtools-typescript-tsc-fallback.patch"
 		"${FILESDIR}/cr152-dawn-system-go.patch"
 		"${FILESDIR}/cr152-unbundle-minizip-undo-unicode.patch"
@@ -531,7 +532,7 @@ src_prepare() {
 	# https://issues.chromium.org/issues/442698344
 	# Unreleased fontconfig changed magic numbers and google have rolled to this version
 	if has_version "<=media-libs/fontconfig-2.17.1"; then
-		PATCHES+=( "${FILESDIR}/chromium-142-work-with-old-fontconfig.patch" )
+		PATCHES+=( "${FILESDIR}/cr142-work-with-old-fontconfig.patch" )
 	fi
 
 	if use bundled-toolchain; then
@@ -559,11 +560,11 @@ src_prepare() {
 		# Copium patches go here.
 		PATCHES+=(
 			"${WORKDIR}/copium/cr143-libsync-__BEGIN_DECLS.patch"
-			"${FILESDIR}/chromium-system-crubit.patch"
-			"${FILESDIR}/cr152-cbor-crubit-enable-cpp-api-from-rust.patch"
-			"${FILESDIR}/chromium-rust-wrapper-inputs-system-rust.patch"
-			"${FILESDIR}/chromium-system-clang-runtime.patch"
-			"${FILESDIR}/chromium-bytemuck-stable-simd.patch"
+			"${FILESDIR}/cr153-system-crubit.patch"
+			"${FILESDIR}/cr155-cbor-crubit-enable-cpp-api-from-rust.patch"
+			"${FILESDIR}/cr153-rust-wrapper-inputs-system-rust.patch"
+			"${FILESDIR}/cr153-system-clang-runtime.patch"
+			"${FILESDIR}/cr153-bytemuck-stable-simd.patch"
 		)
 
 		if [[ ${LLVM_SLOT} -lt 23 ]]; then
@@ -692,7 +693,6 @@ src_prepare() {
 		third_party/anonymous_tokens
 		third_party/apple_apsl
 		third_party/axe-core
-		third_party/bidimapper
 		third_party/blink
 		third_party/boringssl
 		third_party/boringssl/src/third_party/fiat

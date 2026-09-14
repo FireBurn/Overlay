@@ -1,0 +1,37 @@
+From: Gentoo Overlay <gentoo@localhost>
+Subject: [PATCH] devtools: mark public_inputs as not_needed in action targets
+
+Refresh for Chromium 155. devtools_pre_built now exposes public_inputs
+on a group, which needs no workaround. Mark the entrypoint action's
+public_inputs as not_needed after adding optional invoker inputs.
+
+--- a/third_party/devtools-frontend/src/scripts/build/ninja/copy.gni
++++ b/third_party/devtools-frontend/src/scripts/build/ninja/copy.gni
+@@ -27,6 +27,7 @@
+ 
+     # Expose ts files to dependent targets.
+     public_inputs = filter_include(sources, [ "*.ts" ])
++    not_needed([ "public_inputs" ])
+ 
+     outputs = []
+     foreach(_input, sources) {
+--- a/third_party/devtools-frontend/src/scripts/build/typescript/typescript.gni
++++ b/third_party/devtools-frontend/src/scripts/build/typescript/typescript.gni
+@@ -216,6 +216,7 @@
+                            "*ahem.js",
+                          ])
+ 
++      not_needed([ "public_inputs" ])
+       args += [ "--sources" ] + rebase_path(sources, root_build_dir)
+ 
+       foreach(src, sources) {
+--- a/third_party/devtools-frontend/src/scripts/build/ninja/devtools_entrypoint.gni
++++ b/third_party/devtools-frontend/src/scripts/build/ninja/devtools_entrypoint.gni
+@@ -224,6 +224,7 @@
+     if (defined(invoker.inputs)) {
+       public_inputs += invoker.inputs
+     }
++    not_needed([ "public_inputs" ])
+ 
+     args = [
+              rebase_path(_generated_tsconfig_location, root_build_dir),
