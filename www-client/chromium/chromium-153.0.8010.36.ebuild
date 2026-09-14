@@ -42,13 +42,15 @@ CHROMIUM_LANGS="af am ar bg bn ca cs da de el en-GB es es-419 et fa fi fil fr gu
 LLVM_COMPAT=( 21 22 23 )
 PYTHON_COMPAT=( python3_{11..14} )
 PYTHON_REQ_USE="xml(+)"
-RUST_MIN_VER=1.91.0
+CHROMIUM_CRUBIT_VERSION=0_pre20260811
+RUST_MIN_VER=1.98.1
+RUST_MAX_VER=${RUST_MIN_VER}
 RUST_NEEDS_LLVM="yes please"
 RUST_OPTIONAL="yes" # Not actually optional, but we don't need system Rust (or LLVM) with USE=bundled-toolchain
 RUST_REQ_USE="rustfmt" # Upstream run rustfmt on bindgen output, so we need it to be available.
 
 inherit check-reqs chromium-2 desktop flag-o-matic llvm-r1 multiprocessing ninja-utils pax-utils
-inherit python-any-r1 readme.gentoo-r1 rust systemd toolchain-funcs virtualx xdg-utils
+inherit python-any-r1 readme.gentoo-r1 chromium-rust systemd toolchain-funcs virtualx xdg-utils
 
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://www.chromium.org/"
@@ -74,6 +76,10 @@ SRC_URI="https://github.com/chromium-linux-tarballs/chromium-tarballs/releases/d
 		https://gitlab.raptorengineering.com/raptor-engineering-public/chromium/openpower-patches/-/archive/${PPC64_HASH}/openpower-patches-${PPC64_HASH}.tar.bz2 -> chromium-openpower-${PPC64_HASH:0:10}.tar.bz2
 	)
 	pgo? ( https://github.com/elkablo/chromium-profiler/releases/download/v0.2/chromium-profiler-0.2.tar )"
+SRC_URI+=" !bundled-toolchain? (
+	https://github.com/google/crubit/archive/${CRUBIT_COMMIT}.tar.gz -> crubit-${CHROMIUM_CRUBIT_VERSION}.tar.gz
+	${CARGO_CRATE_URIS}
+)"
 
 # https://gitweb.gentoo.org/proj/chromium-tools.git/tree/get-chromium-licences.py @ 145.0.7632.76
 LICENSE="Apache-2.0 Apache-2.0-with-LLVM-exceptions BSD BSD-2 Base64 Boost-1.0 CC-BY-3.0 CC-BY-4.0 Clear-BSD FFT2D FTL"
@@ -201,6 +207,7 @@ DEPEND="${COMMON_DEPEND}
 "
 
 BDEPEND="
+	dev-lang/typescript
 	${COMMON_SNAPSHOT_DEPEND}
 	${PYTHON_DEPS}
 	$(python_gen_any_dep '
@@ -213,6 +220,7 @@ BDEPEND="
 	!bundled-toolchain? ( $(llvm_gen_dep '
 		llvm-core/clang:${LLVM_SLOT}
 		llvm-core/llvm:${LLVM_SLOT}
+		llvm-runtimes/compiler-rt:${LLVM_SLOT}
 		official? (
 			!ppc64? ( llvm-runtimes/compiler-rt-sanitizers:${LLVM_SLOT}[cfi] )
 		) ')
@@ -220,7 +228,9 @@ BDEPEND="
 			$(llvm_gen_dep 'llvm-core/lld:${LLVM_SLOT}')
 			>=sys-devel/mold-2.41.0
 		)
+		dev-cpp/abseil-cpp
 		${RUST_DEPEND}
+		dev-build/gnrt
 	)
 	pgo? (
 		>=dev-python/selenium-3.141.0
@@ -402,6 +412,7 @@ pkg_setup() {
 }
 
 src_unpack() {
+	use bundled-toolchain || chromium_rust_unpack_crubit
 	unpack ${P}-linux.tar.xz
 	# These should only be required when we're not using the official toolchain
 	if use !bundled-toolchain; then
@@ -494,6 +505,7 @@ remove_compiler_builtins() {
 }
 
 src_prepare() {
+	use bundled-toolchain || chromium_rust_prepare_crubit
 	# Calling this here supports resumption via FEATURES=keepwork
 	python_setup
 
@@ -548,9 +560,10 @@ src_prepare() {
 		# Copium patches go here.
 		PATCHES+=(
 			"${WORKDIR}/copium/cr143-libsync-__BEGIN_DECLS.patch"
-			"${FILESDIR}/cr152-cbor-crubit-enable-cpp-api-from-rust.patch"
-			"${FILESDIR}/cr153-uncrubit-blink-opentype.patch"
-			"${FILESDIR}/cr153-rust-wrapper-inputs-system-rust.patch"
+			"${FILESDIR}/chromium-system-crubit.patch"
+			"${FILESDIR}/chromium-rust-wrapper-inputs-system-rust.patch"
+			"${FILESDIR}/chromium-system-clang-runtime.patch"
+			"${FILESDIR}/chromium-bytemuck-stable-simd.patch"
 		)
 
 		if [[ ${LLVM_SLOT} -lt 23 ]]; then
@@ -581,18 +594,6 @@ src_prepare() {
 				PATCHES+=( "${patchset_dir}/${isa_3_patch}" )
 			fi
 		fi
-
-		remove_compiler_builtins
-
-		# We can't rely on the eselect'd Rust to actually include rustfmt, so we'll point to the selected slot specifically.
-		local suffix=""
-		if [[ "${RUST_TYPE}" == "binary" ]]; then
-			suffix="-bin-${RUST_SLOT}"
-		else
-			suffix="-${RUST_SLOT}"
-		fi
-		sed -i "s|/bin/rustfmt|/bin/rustfmt${suffix}|g" build/rust/rust_bindgen_generator.gni ||
-			die "Failed to update rustfmt path"
 
 	fi
 
@@ -1131,6 +1132,11 @@ chromium_configure() {
 		strip-unsupported-flags
 		append-ldflags -Wl,--undefined-version # https://bugs.gentoo.org/918897#c32
 
+		local clang_resource_dir clang_builtin_library
+		clang_resource_dir=$(clang-${LLVM_SLOT} --print-resource-dir) || die
+		clang_builtin_library=$(clang-${LLVM_SLOT} --rtlib=compiler-rt --print-libgcc-file-name) || die
+		[[ -f ${clang_builtin_library} ]] || die "Missing Clang compiler builtins"
+
 		myconf_gn+=(
 			"is_clang=true"
 			"clang_use_chrome_plugins=false"
@@ -1138,12 +1144,14 @@ chromium_configure() {
 			'custom_toolchain="//build/toolchain/linux/unbundle:default"'
 			# From M127 we need to provide a location for libclang and the clang resource dir so that bindgen can find them
 			"bindgen_libclang_path=\"$(get_llvm_prefix)/$(get_libdir)\""
-			"bindgen_clang_resource_dir=\"${EPREFIX}/usr/lib/clang/${LLVM_SLOT}/include\""
-			"bindgen_extra_clang_args=[\"-I${EPREFIX}/usr/lib/clang/${LLVM_SLOT}/include\"]"
-			"clang_base_path=\"${EPREFIX}/usr/lib/clang/${LLVM_SLOT}/\""
+			"system_clang_resource_dir=\"${clang_resource_dir}\""
+			"system_clang_builtin_library=\"${clang_builtin_library}\""
+			"clang_base_path=\"$(get_llvm_prefix)/\""
+			"clang_version=\"${LLVM_SLOT}\""
 			"rust_bindgen_root=\"${EPREFIX}/usr/\""
 			"rust_sysroot_absolute=\"$(get_rust_prefix)\""
 			"rustc_version=\"${RUST_SLOT}\""
+			"use_system_crubit=true"
 		)
 
 		if tc-ld-is-mold; then
@@ -1265,8 +1273,6 @@ chromium_configure() {
 		# See dependency logic in third_party/BUILD.gn
 		"use_system_harfbuzz=$(usex system-harfbuzz true false)"
 		"use_thin_lto=${use_lto}"
-		# Only enabled for clang, but gcc has endian macros too
-		"v8_use_libm_trig_functions=true"
 	)
 
 	if use bindist ; then
@@ -1398,6 +1404,16 @@ chromium_configure() {
 }
 
 src_configure() {
+	if ! use bundled-toolchain; then
+		rust_pkg_setup
+		chromium_rust_build_crubit
+		chromium_rust_prepare_toolchain
+		export RUSTC_BOOTSTRAP=1
+		export BINDGEN_EXTRA_CLANG_ARGS="-I${EPREFIX}/usr/lib/clang/${LLVM_SLOT}/include -I$(gcc -print-file-name=include)"
+		mkdir -p third_party/typescript/linux-amd64/src/lib || die
+		ln -sf /usr/bin/tsc third_party/typescript/linux-amd64/src/lib/tsc || die
+	fi
+
 	chromium_configure $(usex pgo 1 0)
 }
 

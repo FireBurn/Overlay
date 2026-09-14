@@ -1,0 +1,40 @@
+--- a/third_party/rust/chromium_crates_io/vendor/bytemuck-v1/src/pod.rs
++++ b/third_party/rust/chromium_crates_io/vendor/bytemuck-v1/src/pod.rs
+@@ -143,7 +143,7 @@
+   }
+ );
+
+-#[rustversion::before(2026-01-27)] // See https://github.com/Lokathor/bytemuck/issues/343
++#[rustversion::all(before(2026-01-27), before(1.98))] // See https://github.com/Lokathor/bytemuck/issues/343
+ #[cfg(feature = "nightly_portable_simd")]
+ #[cfg_attr(
+   feature = "nightly_docs",
+@@ -156,7 +156,7 @@
+ {
+ }
+
+-#[rustversion::since(2026-01-27)] // See https://github.com/Lokathor/bytemuck/issues/343
++#[rustversion::any(since(2026-01-27), since(1.98))] // See https://github.com/Lokathor/bytemuck/issues/343
+ #[cfg(feature = "nightly_portable_simd")]
+ #[cfg_attr(
+   feature = "nightly_docs",
+--- a/third_party/rust/chromium_crates_io/vendor/bytemuck-v1/src/zeroable.rs
++++ b/third_party/rust/chromium_crates_io/vendor/bytemuck-v1/src/zeroable.rs
+@@ -222,7 +222,7 @@
+     }
+ );
+
+-#[rustversion::before(2026-01-27)] // See https://github.com/Lokathor/bytemuck/issues/343
++#[rustversion::all(before(2026-01-27), before(1.98))] // See https://github.com/Lokathor/bytemuck/issues/343
+ #[cfg(feature = "nightly_portable_simd")]
+ #[cfg_attr(
+   feature = "nightly_docs",
+@@ -235,7 +235,7 @@
+ {
+ }
+
+-#[rustversion::since(2026-01-27)] // See https://github.com/Lokathor/bytemuck/issues/343
++#[rustversion::any(since(2026-01-27), since(1.98))] // See https://github.com/Lokathor/bytemuck/issues/343
+ #[cfg(feature = "nightly_portable_simd")]
+ #[cfg_attr(
+   feature = "nightly_docs",
