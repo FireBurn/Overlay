@@ -104,7 +104,7 @@ chromium_rust_build_crubit() (
 
 chromium_rust_prepare_crubit() {
 	pushd "${WORKDIR}/crubit-${CRUBIT_COMMIT}" >/dev/null || die
-	eapply "${FILESDIR}/chromium-crubit-return-error-invalid-trait-name.patch"
+	eapply "${FILESDIR}/cr153-crubit-return-error-invalid-trait-name.patch"
 	sed -i 's/const LIB_EXTENSION: &str = "a";/const LIB_EXTENSION: \&str = "so";/' \
 		cargo/build/absl.rs cargo/build/clang.rs || die
 	popd >/dev/null || die
