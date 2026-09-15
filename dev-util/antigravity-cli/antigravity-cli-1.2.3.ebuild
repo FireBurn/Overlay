@@ -33,18 +33,3 @@ src_install() {
 	[[ -f LICENSE ]] && dodoc LICENSE
 	[[ -f README.md ]] && dodoc README.md
 }
-
-pkg_postinst() {
-	elog "Google Antigravity CLI has been installed successfully."
-	elog "To launch the Terminal User Interface (TUI), execute:"
-	elog ""
-	elog "    antigravity"
-	elog ""
-	elog "Features available in version ${PV}:"
-	elog " - Local workspace and multi-agent orchestration"
-	elog " - Model Context Protocol (MCP) server support"
-	elog " - Support for custom skills via Markdown"
-	elog ""
-	elog "Note: The first time you launch 'agy', it will prompt you to authorize"
-	elog "via your system keyring or a Google OAuth browser sign-in."
-}
