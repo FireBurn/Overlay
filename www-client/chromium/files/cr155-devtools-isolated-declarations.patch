@@ -1,18 +1,35 @@
 From: Gentoo Overlay <gentoo@localhost>
-Subject: [PATCH] devtools: explicitly include undefined in response property type
+Subject: [PATCH] devtools: fix isolated declaration emit for constructor parameters
 
-TypeScript isolated declaration emit cannot infer the undefined union for
-this optional constructor parameter property. Spell it out while keeping
-the argument optional and preserving runtime behavior.
+Explicitly include undefined in optional/defaulted parameter types for
+TypeScript isolated declaration emit. Keep AiAssistancePanel.view as a
+separate non-optional property, initialized with the defaulted parameter,
+to preserve its type and runtime behavior.
 
 --- a/third_party/devtools-frontend/src/front_end/core/host/DispatchHttpRequestClient.ts
 +++ b/third_party/devtools-frontend/src/front_end/core/host/DispatchHttpRequestClient.ts
 @@ -14,7 +14,7 @@
  }
- 
+
  export class DispatchHttpRequestError extends Error {
 -  constructor(readonly type: ErrorType, readonly response?: DispatchHttpRequestResult, options?: ErrorOptions) {
 +  constructor(readonly type: ErrorType, readonly response?: DispatchHttpRequestResult|undefined, options?: ErrorOptions) {
      super(undefined, options);
    }
  }
+--- a/third_party/devtools-frontend/src/front_end/panels/ai_assistance/AiAssistancePanel.ts
++++ b/third_party/devtools-frontend/src/front_end/panels/ai_assistance/AiAssistancePanel.ts
+@@ -627,9 +627,12 @@
+   #textInputValue = '';
+
+-  constructor(private view: View = defaultView, {aidaClient, aidaAvailability}: {
++  private view: View;
++
++  constructor(view: View|undefined = defaultView, {aidaClient, aidaAvailability}: {
+     aidaClient: Host.AidaClient.AidaClient,
+     aidaAvailability: Host.AidaClient.AidaAccessPreconditions,
+   }) {
+     super(AiAssistancePanel.panelName);
++    this.view = view;
+     this.registerRequiredCSS(aiAssistancePanelStyles);
+     this.#aiAssistanceEnabledSetting = this.#getAiAssistanceEnabledSetting();
