@@ -1,0 +1,98 @@
+From: Mike Lothian <mike@fireburn.co.uk>
+Subject: [PATCH] devtools: mark public_inputs as not_needed in action and group targets
+
+Mark public_inputs as not_needed where system gn complains about unused variables.
+---
+--- a/third_party/devtools-frontend/src/scripts/build/ninja/copy.gni
++++ b/third_party/devtools-frontend/src/scripts/build/ninja/copy.gni
+@@ -27,6 +27,7 @@
+
+     # Expose ts files to dependent targets.
+     public_inputs = filter_include(sources, [ "*.ts" ])
++    not_needed([ "public_inputs" ])
+
+     outputs = []
+     foreach(_input, sources) {
+--- a/third_party/devtools-frontend/src/scripts/build/ninja/devtools_entrypoint.gni
++++ b/third_party/devtools-frontend/src/scripts/build/ninja/devtools_entrypoint.gni
+@@ -217,6 +217,7 @@
+
+     # Expose ts files to dependent targets.
+     public_inputs = [ invoker.entrypoint ]
++    not_needed([ "public_inputs" ])
+
+     args = [
+              rebase_path(_generated_tsconfig_location, root_build_dir),
+@@ -243,6 +244,7 @@
+   _sources_target = "${target_name}_sources"
+   group(_sources_target) {
+     public_inputs = [ invoker.entrypoint ]
++    not_needed([ "public_inputs" ])
+     if (defined(invoker.testonly)) {
+       testonly = invoker.testonly
+     }
+--- a/third_party/devtools-frontend/src/scripts/build/ninja/devtools_entrypoint_split.gni
++++ b/third_party/devtools-frontend/src/scripts/build/ninja/devtools_entrypoint_split.gni
+@@ -52,6 +52,7 @@
+     _sources_target = "${target_name}_sources"
+     group(_sources_target) {
+       public_inputs = [ invoker.entrypoint ]
++      not_needed([ "public_inputs" ])
+       forward_variables_from(invoker, [ "testonly" ])
+       if (defined(invoker.visibility)) {
+         visibility = [ ":*" ] + invoker.visibility
+--- a/third_party/devtools-frontend/src/scripts/build/ninja/devtools_pre_built.gni
++++ b/third_party/devtools-frontend/src/scripts/build/ninja/devtools_pre_built.gni
+@@ -126,6 +126,7 @@
+     if (defined(invoker.inputs)) {
+       public_inputs += invoker.inputs
+     }
++    not_needed([ "public_inputs" ])
+     public_deps = [ ":$_gen_target_name" ]
+     if (defined(invoker.public_deps)) {
+       public_deps += invoker.public_deps
+--- a/third_party/devtools-frontend/src/scripts/build/typescript/ts_library_split.gni
++++ b/third_party/devtools-frontend/src/scripts/build/typescript/ts_library_split.gni
+@@ -259,6 +259,7 @@
+
+     # Expose handwritten .d.ts files to dependent targets if any.
+     public_inputs = filter_include(_all_sources, [ "*.d.ts" ])
++    not_needed([ "public_inputs" ])
+
+     response_file_contents =
+         rebase_path(_dts_outputs, root_build_dir) + [ "--" ] + [
+@@ -317,6 +318,7 @@
+     if (defined(invoker.inputs)) {
+       public_inputs += invoker.inputs
+     }
++    not_needed([ "public_inputs" ])
+     public_deps = _non_ts_deps
+     if (defined(invoker.visibility)) {
+       visibility = [ ":*" ] + invoker.visibility
+@@ -398,6 +400,7 @@
+                   ] + _ts_deps
+     public_inputs = filter_include(_dts_outputs, [ "*.d.ts" ]) +
+                     _handwritten_dts + [ _tsconfig_ref_file ]
++    not_needed([ "public_inputs" ])
+     if (defined(invoker.public_deps)) {
+       public_deps += invoker.public_deps
+     }
+--- a/third_party/devtools-frontend/src/scripts/build/typescript/typescript.gni
++++ b/third_party/devtools-frontend/src/scripts/build/typescript/typescript.gni
+@@ -215,6 +215,8 @@
+                            "*ahem.js",
+                          ])
+
++      not_needed([ "public_inputs" ])
++
+       args += [ "--sources" ] + rebase_path(sources, root_build_dir)
+
+       foreach(src, sources) {
+@@ -299,6 +301,7 @@
+     if (defined(invoker.inputs)) {
+       public_inputs += invoker.inputs
+     }
++    not_needed([ "public_inputs" ])
+     if (defined(invoker.visibility)) {
+       visibility = [ ":*" ] + invoker.visibility
+     }
