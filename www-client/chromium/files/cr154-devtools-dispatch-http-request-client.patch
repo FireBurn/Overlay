@@ -1,0 +1,12 @@
+From: Mike Lothian <mike@fireburn.co.uk>
+Subject: [PATCH] devtools: fix typescript isolated declarations in DispatchHttpRequestClient
+
+Explicitly type optional parameter property as undefined for isolatedDeclarations.
+---
+--- a/third_party/devtools-frontend/src/front_end/core/host/DispatchHttpRequestClient.ts
++++ b/third_party/devtools-frontend/src/front_end/core/host/DispatchHttpRequestClient.ts
+@@ -17,3 +17,3 @@
+ export class DispatchHttpRequestError extends Error {
+-  constructor(readonly type: ErrorType, readonly response?: DispatchHttpRequestResult, options?: ErrorOptions) {
++  constructor(readonly type: ErrorType, readonly response?: DispatchHttpRequestResult | undefined, options?: ErrorOptions) {
+     super(undefined, options);

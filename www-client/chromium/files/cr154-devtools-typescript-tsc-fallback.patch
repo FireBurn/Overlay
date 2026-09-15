@@ -8,20 +8,20 @@ devtools node_modules and invoke with system node.
 +++ b/third_party/devtools-frontend/src/third_party/typescript/typescript.py
 @@ -9,7 +9,7 @@
  import os
- 
- 
+
+
 -def GetBinaryPath():
 +def GetBinaryCommand():
      if platform.machine() == 'arm64':
          darwin_path = 'mac-arm64'
      else:
 @@ -23,16 +23,25 @@
- 
+
      devtools_checkout_path = os_path.join(os_path.dirname(__file__), *relative)
      if os_path.exists(devtools_checkout_path):
 -        return os_path.normpath(devtools_checkout_path)
 +        return [os_path.normpath(devtools_checkout_path)]
- 
+
      # Assume we are in a chromium checkout.
 -    return os_path.normpath(
 +    chromium_path = os_path.normpath(
@@ -36,8 +36,8 @@ devtools node_modules and invoke with system node.
 +    sys.path.append(os_path.join(devtools_root, 'scripts'))
 +    import devtools_paths
 +    return [devtools_paths.node_path(), node_modules_tsc]
- 
- 
+
+
  def RunTypeScriptRaw(cmd_parts, stdout=None):
 -    cmd = [GetBinaryPath()] + cmd_parts
 +    cmd = GetBinaryCommand() + cmd_parts
@@ -53,3 +53,14 @@ devtools node_modules and invoke with system node.
          raise RuntimeError('Command \'%s\' failed\n%s' %
                             (' '.join(cmd), '\n'.join(errs)))
      return stdout
+--- a/third_party/devtools-frontend/src/scripts/build/typescript/typescript_vars.gni
++++ b/third_party/devtools-frontend/src/scripts/build/typescript/typescript_vars.gni
+@@ -6,7 +6,7 @@
+ import("../ninja/vars.gni")
+
+ if (host_os == "linux") {
+-  tsc_binary = "//third_party/typescript/linux-amd64/src/lib/tsc"
++  tsc_binary = devtools_location_prepend + "node_modules/typescript/bin/tsc"
+ } else if (host_os == "win") {
+   tsc_binary = "//third_party/typescript/windows-amd64/src/lib/tsc.exe"
+ } else if (host_os == "mac") {
