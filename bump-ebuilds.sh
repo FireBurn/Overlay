@@ -22,6 +22,7 @@ ALL_PKGS=(
     dev-util/antigravity-cli
     dev-util/opencode
     dev-util/qwen-code
+    dev-util/pi
     dev-util/codex
     app-editors/zed
 )
@@ -110,6 +111,7 @@ latest_pv() {
         dev-util/codex)           repo=openai/codex;               prefix="rust-v" ;;
         dev-util/opencode)        repo=anomalyco/opencode;         prefix="v" ;;
         dev-util/qwen-code)       repo=QwenLM/qwen-code;           prefix="v" ;;
+        dev-util/pi)              repo=earendil-works/pi;          prefix="v" ;;
         app-editors/zed)          repo=zed-industries/zed;         prefix="v" ;;
         *) return 0 ;;
     esac
@@ -154,6 +156,8 @@ readiness_url() {
             echo "https://github.com/anomalyco/opencode/releases/download/v$pv/opencode-linux-x64.tar.gz" ;;
         dev-util/qwen-code)
             echo "https://github.com/QwenLM/qwen-code/releases/download/v$pv/qwen-code-linux-x64.tar.gz" ;;
+        dev-util/pi)
+            echo "https://github.com/earendil-works/pi/releases/download/v$pv/pi-linux-x64.tar.gz" ;;
         dev-util/codex)
             echo "https://github.com/gentoo-zh-drafts/codex/releases/download/rust-v$pv/codex-rust-v$pv-crates.tar.xz" ;;
         app-editors/zed)
@@ -206,7 +210,7 @@ bump_simple() {
         return 1
     fi
     git add "$pkg"
-    git commit -q -m "$pn: Bump to $new" || { echo "ERROR: commit failed for $pkg" >&2; return 1; }
+    git commit -q -m "$pkg: Bump to $new" || { echo "ERROR: commit failed for $pkg" >&2; return 1; }
     info "bumped $pkg $old -> $new"
     return 0
 }
@@ -231,7 +235,7 @@ bump_complex() {
     local prompt
     prompt="Bump $pkg from $old to $new. The upstream crate tarball for $new already exists at:
 $url
-Do the full bump: rename the ebuild to $pn-$new.ebuild, then verify the GIT_CRATES commits (and RUSTY_V8_TAG / WEBRTC_COMMIT where applicable) against the new version's source, updating them only if they changed. Regenerate the Manifest (ebuild digest + ebuild manifest), validate, and commit with the message '$pn: Bump to $new'. Do NOT push — the calling script handles pushing."
+Do the full bump: rename the ebuild to $pn-$new.ebuild, then verify the GIT_CRATES commits (and RUSTY_V8_TAG / WEBRTC_COMMIT where applicable) against the new version's source, updating them only if they changed. Regenerate the Manifest (ebuild digest + ebuild manifest), validate, and commit with the message '$pkg: Bump to $new'. Do NOT push — the calling script handles pushing."
 
     if ! opencode run --agent ebuild-bumper "$prompt"; then
         echo "ERROR: agent bump failed for $pkg" >&2
