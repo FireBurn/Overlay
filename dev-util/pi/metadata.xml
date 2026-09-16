@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>mike@fireburn.co.uk</email>
+		<name>Mike Lothian</name>
+	</maintainer>
+	<longdescription>
+		Pi is an open-source AI agent toolkit featuring an interactive coding agent CLI,
+		a terminal user interface (TUI), a unified multi-provider LLM API, and an extensible agent loop.
+	</longdescription>
+	<upstream>
+		<bugs-to>https://github.com/earendil-works/pi/issues</bugs-to>
+		<remote-id type="github">earendil-works/pi</remote-id>
+	</upstream>
+</pkgmetadata>
