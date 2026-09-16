@@ -82,7 +82,10 @@ For each package:
 
 After successfully bumping a package:
 1. `git add <category>/<pkg>`
-2. `git commit -m "<pkg>: Bump to <version>"` (one commit per package)
+2. `git commit -m "<category>/<pkg>: Bump to <version>"` (one commit per package)
+
+The commit subject MUST start with the full `category/pkg:` prefix (e.g.
+`dev-util/antigravity-cli: Bump to 1.2.3`), never just the bare package name.
 
 Do not push — the calling script (`bump-ebuilds.sh`) handles pushing.
 
