@@ -135,13 +135,53 @@ latest_pv() {
     printf '%s' "$best"
 }
 
-# Current PV from the non-9999 ebuild filename.
+# Current non-9999 ebuild file (highest version if there are several).
+current_ebuild() {
+    local pkg="$1" pn
+    pn="$(pn_of "$pkg")"
+    ls "$pkg/$pn"-*.ebuild 2>/dev/null | grep -v -- '-9999' | sort -V | tail -n1
+}
+
+# Current PV (without revision) from the non-9999 ebuild filename.
 current_pv() {
     local pkg="$1" pn f
     pn="$(pn_of "$pkg")"
-    f="$(ls "$pkg/$pn"-*.ebuild 2>/dev/null | grep -v -- '-9999' | head -n1 || true)"
+    f="$(current_ebuild "$pkg")"
     [[ -n "$f" ]] || return 1
-    basename "$f" .ebuild | sed "s/^$pn-//"
+    basename "$f" .ebuild | sed -E "s/^$pn-//; s/-r[0-9]+$//"
+}
+
+# Upstream lockfiles (repo-relative) for packages built with npm.eclass.
+# Their NPM_PKGS block is regenerated from these on every bump.
+npm_lockfiles() {
+    case "$1" in
+        dev-util/pi) echo "earendil-works/pi v package-lock.json" ;;
+    esac
+}
+
+# Regenerate NPM_PKGS (and ESBUILD_SLOT, if the ebuild pins one) for a new PV.
+update_npm_pkgs() {
+    local pkg="$1" pv="$2" ebuild="$3" spec repo prefix tmp f lock=() esb
+    spec="$(npm_lockfiles "$pkg")"
+    [[ -n "$spec" ]] || return 0
+    read -r repo prefix f <<<"$spec"
+    tmp="$(mktemp -d)"
+    for f in ${spec#* * }; do
+        mkdir -p "$tmp/$(dirname "$f")"
+        curl -fsSL "https://raw.githubusercontent.com/$repo/$prefix$pv/$f" -o "$tmp/$f" ||
+            { rm -rf "$tmp"; echo "ERROR: cannot fetch $f for $pkg $pv" >&2; return 1; }
+        lock+=("$tmp/$f")
+    done
+    ./scripts/npm-deps.py "${lock[@]}" --ebuild "$ebuild" || { rm -rf "$tmp"; return 1; }
+
+    if grep -q '^ESBUILD_SLOT=' "$ebuild" && [[ "${lock[0]}" == *package-lock.json ]]; then
+        esb="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["packages"]["node_modules/esbuild"]["version"])' "${lock[0]}")"
+        sed -i "s/^ESBUILD_SLOT=.*/ESBUILD_SLOT=\"$esb\"/" "$ebuild"
+        if ! ls dev-util/esbuild/esbuild-"$esb".ebuild >/dev/null 2>&1; then
+            info "warning: $pkg $pv needs dev-util/esbuild:$esb, which has no ebuild yet"
+        fi
+    fi
+    rm -rf "$tmp"
 }
 
 # The one upstream artifact that gates a bump (HEAD-checked before we start).
@@ -157,7 +197,7 @@ readiness_url() {
         dev-util/qwen-code)
             echo "https://github.com/QwenLM/qwen-code/releases/download/v$pv/qwen-code-linux-x64.tar.gz" ;;
         dev-util/pi)
-            echo "https://github.com/earendil-works/pi/releases/download/v$pv/pi-linux-x64.tar.gz" ;;
+            echo "https://registry.npmjs.org/@earendil-works/pi-ai/-/pi-ai-$pv.tgz" ;;
         dev-util/codex)
             echo "https://github.com/gentoo-zh-drafts/codex/releases/download/rust-v$pv/codex-rust-v$pv-crates.tar.xz" ;;
         app-editors/zed)
@@ -175,9 +215,9 @@ http_code() {
 # --- bump implementations -------------------------------------------------
 # Undo a partially-applied simple bump (rename + Manifest).
 revert_bump() {
-    local pkg="$1" old="$2" new="$3" pn
-    pn="$(pn_of "$pkg")"
-    git mv "$pkg/$pn-$new.ebuild" "$pkg/$pn-$old.ebuild" 2>/dev/null
+    local pkg="$1" oldf="$2" newf="$3"
+    git checkout -q -- "$newf" 2>/dev/null
+    git mv "$newf" "$oldf" 2>/dev/null
     git checkout -q -- "$pkg/Manifest" 2>/dev/null
     git reset -q -- "$pkg" 2>/dev/null
 }
@@ -186,7 +226,7 @@ revert_bump() {
 bump_simple() {
     local pkg="$1" old="$2" new="$3"
     local pn oldf newf
-    pn="$(pn_of "$pkg")"; oldf="$pkg/$pn-$old.ebuild"; newf="$pkg/$pn-$new.ebuild"
+    pn="$(pn_of "$pkg")"; oldf="$(current_ebuild "$pkg")"; newf="$pkg/$pn-$new.ebuild"
 
     if [[ "$DRY_RUN" == 1 ]]; then
         info "[dry-run] would bump $pkg $old -> $new"
@@ -199,13 +239,18 @@ bump_simple() {
     fi
 
     git mv "$oldf" "$newf" || { echo "ERROR: git mv failed for $pkg" >&2; return 1; }
+    if ! update_npm_pkgs "$pkg" "$new" "$newf"; then
+        revert_bump "$pkg" "$oldf" "$newf"
+        echo "ERROR: NPM_PKGS update failed for $pkg (reverted)" >&2
+        return 1
+    fi
     if ! ebuild "$newf" digest; then
-        revert_bump "$pkg" "$old" "$new"
+        revert_bump "$pkg" "$oldf" "$newf"
         echo "ERROR: ebuild digest failed for $pkg (reverted)" >&2
         return 1
     fi
     if ! ebuild "$newf" manifest; then
-        revert_bump "$pkg" "$old" "$new"
+        revert_bump "$pkg" "$oldf" "$newf"
         echo "ERROR: ebuild manifest failed for $pkg (reverted)" >&2
         return 1
     fi
