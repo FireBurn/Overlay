@@ -57,3 +57,8 @@ src_configure() {
 	)
 	cmake_src_configure
 }
+
+src_compile() {
+	# Force single job build to prevent parallel build failures
+	cmake_src_compile -j1
+}
