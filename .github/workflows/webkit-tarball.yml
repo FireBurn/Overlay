@@ -1,0 +1,74 @@
+# Publish source tarballs of the oven-sh/WebKit commits dev-lang/bun pins.
+#
+# GitHub cannot generate archives of that fork (it is too large), so this
+# fetches the pinned commit shallowly, exports it without the test suites and
+# attaches WebKit-<commit>.tar.xz to a "webkit-<commit>" release. The ebuild
+# fetches it from there and the Manifest verifies it.
+
+name: WebKit source tarball
+
+on:
+  push:
+    branches: [master]
+    paths: ["dev-lang/bun/*.ebuild"]
+  workflow_dispatch:
+    inputs:
+      commit:
+        description: "oven-sh/WebKit commit (default: every BUN_WEBKIT_COMMIT in dev-lang/bun)"
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  tarball:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Find commits without a published tarball
+        id: commits
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_COMMIT: ${{ inputs.commit }}
+        run: |
+          if [[ -n $INPUT_COMMIT ]]; then
+            commits=$INPUT_COMMIT
+          else
+            commits=$(sed -n 's/^BUN_WEBKIT_COMMIT="\([0-9a-f]\{40\}\)"$/\1/p' dev-lang/bun/*.ebuild | sort -u)
+          fi
+          todo=
+          for c in $commits; do
+            [[ $c =~ ^[0-9a-f]{40}$ ]] || { echo "invalid commit: $c"; exit 1; }
+            if gh release view "webkit-$c" >/dev/null 2>&1; then
+              echo "webkit-$c already published"
+            else
+              todo+="$c "
+            fi
+          done
+          echo "todo=$todo" >> "$GITHUB_OUTPUT"
+
+      - name: Build and publish tarballs
+        if: steps.commits.outputs.todo != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TODO: ${{ steps.commits.outputs.todo }}
+        run: |
+          for c in $TODO; do
+            rm -rf webkit.git
+            git init -q --bare webkit.git
+            # oven-sh tags every WebKit build as autobuild-<commit>; a tag can be
+            # fetched at depth 1, a bare commit cannot
+            git --git-dir=webkit.git fetch -q --depth 1 https://github.com/oven-sh/WebKit.git \
+              "+refs/tags/autobuild-$c:refs/tags/autobuild-$c"
+            # Archiving by commit id also proves the tag still points at it
+            git --git-dir=webkit.git archive --format=tar --prefix="WebKit-$c/" "$c" -- . \
+              ':!LayoutTests' ':!JSTests' ':!PerformanceTests' ':!ManualTests' \
+              ':!Websites' ':!WebDriverTests' \
+              | xz -T0 -6 > "WebKit-$c.tar.xz"
+            sha512sum "WebKit-$c.tar.xz"
+            gh release create "webkit-$c" "WebKit-$c.tar.xz" \
+              --title "WebKit source $c" \
+              --notes "Source of https://github.com/oven-sh/WebKit/commit/$c without test suites, for dev-lang/bun."
+            rm -rf webkit.git "WebKit-$c.tar.xz"
+          done
