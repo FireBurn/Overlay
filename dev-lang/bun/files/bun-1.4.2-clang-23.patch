@@ -1,0 +1,83 @@
+diff -ru a/src/jsc/bindings/highway_strings.cpp b/src/jsc/bindings/highway_strings.cpp
+--- a/src/jsc/bindings/highway_strings.cpp	2026-09-17 12:38:38.650217162 +0100
++++ b/src/jsc/bindings/highway_strings.cpp	2026-09-17 12:38:38.660801482 +0100
+@@ -2621,12 +2621,10 @@
+ // On Linux, override the libc memmem with our implementation
+ // This uses the GNU-specific attribute to alias our function to the libc symbol
+ // The alias will be visible across the entire program, not just this file
+-extern "C" {
+-// Using both "default" visibility and "weak" ensures our implementation is used
+-// throughout the entire program when linked, not just in this object file
+-__attribute__((visibility("default"), weak, used)) void* memmem(const void* haystack, size_t haystacklen, const void* needle, size_t needlelen)
+-    __attribute__((alias("highway_memmem")));
+-}
++// Declared with assembler directives like the macOS branch: clang 23 rejects
++// the alias attribute because highway_memmem takes uint8_t pointers
++__asm__(".weak memmem");
++__asm__(".set memmem, highway_memmem");
+ 
+ #endif
+ 
+diff -ru a/src/jsc/bindings/JSCommonJSModule.cpp b/src/jsc/bindings/JSCommonJSModule.cpp
+--- a/src/jsc/bindings/JSCommonJSModule.cpp	2026-09-17 12:38:38.639864147 +0100
++++ b/src/jsc/bindings/JSCommonJSModule.cpp	2026-09-17 12:38:38.659840462 +0100
+@@ -1568,7 +1568,7 @@
+ 
+                 JSValue keyValue = identifierToJSValue(vm, moduleKey);
+                 JSValue entry = globalObject->requireMap()->get(globalObject, keyValue);
+-                RETURN_IF_EXCEPTION(scope, {});
++                RETURN_IF_EXCEPTION(scope, );
+ 
+                 if (entry) {
+                     if (auto* moduleObject = dynamicDowncast<JSCommonJSModule>(entry)) {
+@@ -1587,7 +1587,7 @@
+                                 // On error, remove the module from the require map
+                                 // so that it can be re-evaluated on the next require.
+                                 globalObject->requireMap()->remove(globalObject, moduleObject->filename());
+-                                RETURN_IF_EXCEPTION(scope, {});
++                                RETURN_IF_EXCEPTION(scope, );
+ 
+                                 scope.throwException(globalObject, exception);
+                                 return;
+@@ -1595,7 +1595,7 @@
+                         }
+ 
+                         moduleObject->toSyntheticSource(globalObject, moduleKey, exportNames, exportValues);
+-                        RETURN_IF_EXCEPTION(scope, {});
++                        RETURN_IF_EXCEPTION(scope, );
+                     }
+                 } else {
+                     // require map was cleared of the entry
+diff -ru a/src/jsc/bindings/JSMockFunction.cpp b/src/jsc/bindings/JSMockFunction.cpp
+--- a/src/jsc/bindings/JSMockFunction.cpp	2026-09-17 12:38:38.643864163 +0100
++++ b/src/jsc/bindings/JSMockFunction.cpp	2026-09-17 12:38:38.660246697 +0100
+@@ -897,7 +897,7 @@
+     auto setReturnValue = [&](JSC::JSValue value) -> void {
+         if (auto* returnValuesArray = fn->returnValues.get()) {
+             returnValuesArray->push(globalObject, value);
+-            RETURN_IF_EXCEPTION(scope, {});
++            RETURN_IF_EXCEPTION(scope, );
+             returnValueIndex = returnValuesArray->length() - 1;
+         } else {
+             JSC::ObjectInitializationScope object(vm);
+diff -ru a/src/jsc/modules/ObjectModule.cpp b/src/jsc/modules/ObjectModule.cpp
+--- a/src/jsc/modules/ObjectModule.cpp	2026-09-17 12:38:38.647954920 +0100
++++ b/src/jsc/modules/ObjectModule.cpp	2026-09-17 12:38:38.660416066 +0100
+@@ -47,7 +47,7 @@
+         PropertyNameArrayBuilder properties(vm, PropertyNameMode::Strings,
+             PrivateSymbolMode::Exclude);
+         object->getPropertyNames(globalObject, properties, DontEnumPropertiesMode::Exclude);
+-        RETURN_IF_EXCEPTION(scope, {});
++        RETURN_IF_EXCEPTION(scope, );
+         gcUnprotectNullTolerant(object);
+ 
+         exportNames.append(vm.propertyNames->defaultKeyword);
+@@ -61,7 +61,7 @@
+             exportNames.append(entry);
+ 
+             JSValue value = object->get(globalObject, entry);
+-            RETURN_IF_EXCEPTION(scope, {});
++            RETURN_IF_EXCEPTION(scope, );
+             exportValues.append(value);
+         }
+     };

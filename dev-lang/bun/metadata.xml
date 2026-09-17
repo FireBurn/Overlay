@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>mike@fireburn.co.uk</email>
+		<name>Mike Lothian</name>
+	</maintainer>
+	<longdescription>
+		Bun is a JavaScript and TypeScript runtime built on JavaScriptCore, with a bundled package manager, bundler and test runner. This package builds Bun, its vendored libraries and its WebKit fork from source.
+	</longdescription>
+	<use>
+		<flag name="system-bootstrap">Use an installed dev-lang/bun to run the build scripts instead of the upstream release binary</flag>
+	</use>
+	<upstream>
+		<bugs-to>https://github.com/oven-sh/bun/issues</bugs-to>
+		<remote-id type="github">oven-sh/bun</remote-id>
+	</upstream>
+</pkgmetadata>
