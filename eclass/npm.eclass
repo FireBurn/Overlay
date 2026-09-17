@@ -216,6 +216,7 @@ npm_setup_env() {
 	export PUPPETEER_SKIP_DOWNLOAD=1
 	export CYPRESS_INSTALL_BINARY=0
 	export SHARP_IGNORE_GLOBAL_LIBVIPS=1
+	export SENTRYCLI_SKIP_DOWNLOAD=1
 }
 
 # @FUNCTION: npm_registry_start
