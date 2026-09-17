@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>mike@fireburn.co.uk</email>
+		<name>Mike Lothian</name>
+	</maintainer>
+	<use>
+		<flag name="gamescope">Install a desktop entry that runs Heroic inside gui-wm/gamescope</flag>
+		<flag name="vulkan">Use games-util/vulkan-helper to report Vulkan versions, which DXVK and VKD3D need</flag>
+	</use>
+	<upstream>
+		<remote-id type="github">Heroic-Games-Launcher/HeroicGamesLauncher</remote-id>
+	</upstream>
+</pkgmetadata>

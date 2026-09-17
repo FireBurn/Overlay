@@ -1,0 +1,37 @@
+diff -ru a/src/backend/constants/paths.ts b/src/backend/constants/paths.ts
+--- a/src/backend/constants/paths.ts	2026-09-17 23:01:07.478441513 +0100
++++ b/src/backend/constants/paths.ts	2026-09-17 23:01:07.495160587 +0100
+@@ -38,11 +38,7 @@
+ export const sharedWinePrefix = join(defaultWinePrefixDir, 'shared')
+ export const defaultWinePrefix = join(defaultWinePrefixDir, 'default')
+ 
+-export const publicDir = resolve(
+-  __dirname,
+-  '..',
+-  app.isPackaged || process.env.CI === 'e2e' ? '' : '../public'
+-)
++export const publicDir = resolve(__dirname, '..')
+ 
+ // Built preload scripts live next to the main process bundle
+ // (`build/preload/`). The webview preload is built from
+diff -ru a/src/backend/main.ts b/src/backend/main.ts
+--- a/src/backend/main.ts	2026-09-17 23:01:07.480067072 +0100
++++ b/src/backend/main.ts	2026-09-17 23:01:07.495418593 +0100
+@@ -254,7 +254,7 @@
+ 
+   // Changelog links workaround
+   mainWindow.webContents.on('will-navigate', (event, url) => {
+-    const pattern = app.isPackaged ? publicDir : 'localhost:5173'
++    const pattern = publicDir
+     if (!url.match(pattern)) {
+       event.preventDefault()
+       openUrlOrFile(url)
+@@ -262,7 +262,7 @@
+   })
+ 
+   mainWindow.webContents.setWindowOpenHandler((details) => {
+-    const pattern = app.isPackaged ? publicDir : 'localhost:5173'
++    const pattern = publicDir
+     return { action: !details.url.match(pattern) ? 'allow' : 'deny' }
+   })
+ 
