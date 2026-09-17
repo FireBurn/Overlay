@@ -1,0 +1,19 @@
+--- a/third_party/dawn/tools/generate-sources-gn.py
++++ b/third_party/dawn/tools/generate-sources-gn.py
+@@ -29,6 +29,7 @@
+ import os
+ import subprocess
+ import sys
++import shutil
+ 
+ SCRIPT_DIR = os.path.dirname(__file__)
+ CMD_DIR = os.path.join(SCRIPT_DIR, 'src', 'cmd')
+@@ -45,6 +46,8 @@ def main() -> int:
+                              cipd_deps.get_cipd_platform(), 'bin', 'go')
+     if sys.platform == 'win32':
+         go_binary += '.exe'
++    if not os.path.exists(go_binary):
++        go_binary = shutil.which('go') or 'go'
+ 
+     tool_dir = os.path.relpath(os.path.join(CMD_DIR, 'gen', 'sources'),
+                                DAWN_ROOT)

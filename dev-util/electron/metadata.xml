@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>mike@fireburn.co.uk</email>
+		<name>Mike Lothian</name>
+	</maintainer>
+	<longdescription>
+		Framework for building cross-platform desktop applications with Chromium and Node.js, built from source and slotted by major version.
+	</longdescription>
+	<use>
+		<flag name="custom-cflags">Keep -march, -mtune and -mcpu from CFLAGS (unsupported, known to break some components)</flag>
+		<flag name="official">Enable Chromium official build optimisations</flag>
+		<flag name="pax-kernel">Allow building on a PaX-enabled kernel</flag>
+		<flag name="proprietary-codecs">Enable proprietary codecs like H.264 and AAC in the bundled ffmpeg</flag>
+		<flag name="screencast">Enable screen capture via PipeWire on Wayland</flag>
+		<flag name="system-harfbuzz">Use the system copy of media-libs/harfbuzz</flag>
+		<flag name="system-zstd">Use the system copy of app-arch/zstd</flag>
+		<flag name="vaapi">Enable hardware video acceleration via VA-API</flag>
+	</use>
+	<upstream>
+		<bugs-to>https://github.com/electron/electron/issues</bugs-to>
+		<remote-id type="github">electron/electron</remote-id>
+	</upstream>
+</pkgmetadata>
