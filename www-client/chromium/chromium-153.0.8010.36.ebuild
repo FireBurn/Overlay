@@ -49,7 +49,7 @@ RUST_NEEDS_LLVM="yes please"
 RUST_OPTIONAL="yes" # Not actually optional, but we don't need system Rust (or LLVM) with USE=bundled-toolchain
 RUST_REQ_USE="rustfmt" # Upstream run rustfmt on bindgen output, so we need it to be available.
 
-inherit check-reqs chromium-2 desktop flag-o-matic llvm-r1 multiprocessing ninja-utils pax-utils
+inherit check-reqs chromium-2 desktop flag-o-matic llvm-r2 multiprocessing ninja-utils pax-utils
 inherit python-any-r1 readme.gentoo-r1 chromium-rust systemd toolchain-funcs virtualx xdg-utils
 
 DESCRIPTION="Open-source version of Google Chrome web browser"
@@ -346,7 +346,7 @@ pkg_setup() {
 		# to a sane value.
 		# This is effectively the 'force-clang' path if GCC support is re-added.
 		if use !bundled-toolchain; then
-			llvm-r1_pkg_setup
+			llvm-r2_pkg_setup
 			rust_pkg_setup
 
 			# Forcing clang; respect llvm_slot_x to enable selection of impl via LLVM_COMPAT

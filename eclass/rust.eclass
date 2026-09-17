@@ -118,7 +118,7 @@ unset -f _rust_order_slots
 # @PRE_INHERIT
 # @DESCRIPTION:
 # Rust slot whose LLVM compatibility supplies LLVM_COMPAT when building Rust.
-# Set before inheriting rust and llvm-r1.
+# Set before inheriting rust and llvm-r2.
 if [[ -n ${RUST_LLVM_COMPAT} ]]; then
 	[[ -n ${_RUST_LLVM_MAP[${RUST_LLVM_COMPAT}]} ]] || die "Unknown Rust slot: ${RUST_LLVM_COMPAT}"
 	LLVM_COMPAT=()
@@ -129,7 +129,7 @@ if [[ -n ${RUST_LLVM_COMPAT} ]]; then
 fi
 
 if [[ -n ${RUST_NEEDS_LLVM} ]]; then
-	inherit llvm-r1
+	inherit llvm-r2
 fi
 
 # == user control knobs ==
@@ -195,7 +195,7 @@ fi
 # packages that need a tight coupling between Rust and LLVM but don't
 # really care _which_ version of Rust is selected. Combine with
 # RUST_MAX_VER and RUST_MIN_VER to limit the range of Rust versions
-# that are acceptable. Will `die` if llvm-r1 is not inherited or
+# that are acceptable. Will `die` if llvm-r2 is not inherited or
 # an invalid combination of RUST and LLVM slots is detected; this probably
 # means that a LLVM slot in LLVM_COMPAT has had all of its Rust slots filtered.
 
@@ -524,7 +524,7 @@ rust_prepend_path() {
 # @DESCRIPTION:
 # Prepend the appropriate executable directory for the newest
 # acceptable Rust slot to the PATH. If used with LLVM, an appropriate
-# `llvm-r1_pkg_setup` call should be made in addition to this function.
+# `llvm-r2_pkg_setup` call should be made in addition to this function.
 # For path determination logic, please see the get_rust_prefix documentation.
 #
 # The highest acceptable Rust slot can be set in the RUST_MAX_VER variable.
