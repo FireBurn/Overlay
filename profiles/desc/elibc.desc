@@ -1,0 +1,7 @@
+# Copyright 1999-2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+# This file contains descriptions of ELIBC USE_EXPAND flags added by this
+# repository. The rest are described in the gentoo repository.
+
+llvm - ELIBC setting for systems that use LLVM's libc
