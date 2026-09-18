@@ -1,0 +1,88 @@
+--- a/src/pyghidra_mcp/context.py
++++ b/src/pyghidra_mcp/context.py
+@@ -9,7 +9,10 @@
+ from pathlib import Path
+ from typing import TYPE_CHECKING, Any, Union
+ 
+-import chromadb
++try:
++    import chromadb
++except ImportError:
++    chromadb = None
+ 
+ from pyghidra_mcp.decompiler_pool import DecompilerPool
+ from pyghidra_mcp.import_detection import is_ghidra_importable
+@@ -44,7 +47,7 @@
+     ghidra_analysis_complete: bool
+     file_path: Path | None = None
+     load_time: float | None = None
+-    code_collection: chromadb.Collection | None = None
++    code_collection: Any | None = None
+     strings: list | None = None
+ 
+     @property
+--- a/src/pyghidra_mcp/indexing_mixin.py
++++ b/src/pyghidra_mcp/indexing_mixin.py
+@@ -4,8 +4,12 @@
+ from pathlib import Path
+ from typing import Any
+ 
+-import chromadb
+-from chromadb.config import Settings
++try:
++    import chromadb
++    from chromadb.config import Settings
++except ImportError:
++    chromadb = None
++    Settings = None
+ 
+ from pyghidra_mcp.tools import DEFAULT_DECOMPILE_TIMEOUT_SECONDS, GhidraTools
+ 
+@@ -23,6 +27,12 @@
+     programs: dict[str, Any]
+ 
+     def _init_indexing_state(self, pyghidra_mcp_dir: Path, *, threaded: bool) -> None:
++        if chromadb is None:
++            self.chroma_client = None
++            self.index_executor = None
++            self._index_futures = {}
++            self._index_lock = threading.Lock()
++            return
+         chromadb_path = pyghidra_mcp_dir / "chromadb"
+         chromadb_path.mkdir(parents=True, exist_ok=True)
+         self.chroma_client = chromadb.PersistentClient(
+@@ -98,6 +108,8 @@
+             self.schedule_indexing(program_info.name)
+ 
+     def _open_complete_collection(self, name: str) -> Any | None:
++        if self.chroma_client is None:
++            return None
+         """Return an existing, fully-indexed collection, or None.
+ 
+         Completion is decided by the ``COLLECTION_COMPLETE_KEY`` marker, not by
+@@ -128,6 +140,8 @@
+         )
+ 
+     def _init_chroma_code_collection_for_program(self, program_info: Any) -> None:
++        if self.chroma_client is None:
++            return
+         from ghidra.program.model.listing import Function
+ 
+         logger.info("Initializing Chroma code collection for %s", program_info.name)
+--- a/src/pyghidra_mcp/server.py
++++ b/src/pyghidra_mcp/server.py
+@@ -28,6 +28,17 @@
+ )
+ logger = logging.getLogger(__name__)
+ 
++import builtins
++_orig_print = builtins.print
++def _safe_mcp_print(*args, **kwargs):
++    if kwargs.get("file") is None or kwargs.get("file") is sys.stdout:
++        kwargs["file"] = sys.stderr
++    try:
++        _orig_print(*args, **kwargs)
++    except (ValueError, OSError):
++        pass
++builtins.print = _safe_mcp_print
++
