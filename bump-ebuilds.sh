@@ -159,6 +159,7 @@ npm_lockfiles() {
     case "$1" in
         dev-util/pi)         echo "earendil-works/pi v package-lock.json" ;;
         dev-util/qwen-code)  echo "QwenLM/qwen-code v pnpm-lock.yaml" ;;
+        dev-util/opencode)   echo "anomalyco/opencode v bun.lock" ;;
         games-util/heroic)   echo "Heroic-Games-Launcher/HeroicGamesLauncher v pnpm-lock.yaml" ;;
     esac
 }
@@ -223,9 +224,9 @@ readiness_url() {
         dev-util/antigravity-cli)
             echo "https://github.com/google-antigravity/antigravity-cli/releases/download/$pv/agy_cli_linux_x64.tar.gz" ;;
         dev-util/opencode)
-            echo "https://github.com/anomalyco/opencode/releases/download/v$pv/opencode-linux-x64.tar.gz" ;;
+            echo "https://github.com/anomalyco/opencode/archive/refs/tags/v$pv.tar.gz" ;;
         dev-util/qwen-code)
-            echo "https://github.com/QwenLM/qwen-code/releases/download/v$pv/qwen-code-linux-x64.tar.gz" ;;
+            echo "https://github.com/QwenLM/qwen-code/archive/refs/tags/v$pv.tar.gz" ;;
         dev-util/pi)
             echo "https://registry.npmjs.org/@earendil-works/pi-ai/-/pi-ai-$pv.tgz" ;;
         dev-util/codex)
