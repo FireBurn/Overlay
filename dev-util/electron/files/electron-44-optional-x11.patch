@@ -1,8 +1,12 @@
 Build the X11 parts of Electron only when the X11 ozone platform is enabled.
 
-Electron pulls in the X11 event and device targets, and links libxshmfence,
-for every Linux build, but those targets assert(ozone_platform_x11), so a
-Wayland-only configuration fails at "gn gen".
+Electron is only ever built with both ozone platforms, so X11 code has
+leaked out of its SUPPORTS_OZONE_X11 guards: the X11 event and device
+targets and libxshmfence are linked for every Linux build (and assert
+ozone_platform_x11 in gn), parts of the desktop capturer and native
+window code use X11 types and helpers under a plain IS_LINUX, and the
+offscreen display client overrides a method Chromium only declares when
+the X11 platform is built.
 
 --- a/electron/BUILD.gn
 +++ b/electron/BUILD.gn
@@ -36,3 +40,179 @@ Wayland-only configuration fails at "gn gen".
        public_deps += [
          "//ui/base/x",
          "//ui/ozone/platform/x11",
+--- a/electron/shell/browser/api/electron_api_desktop_capturer.cc
++++ b/electron/shell/browser/api/electron_api_desktop_capturer.cc
+@@ -55,7 +55,7 @@
+ #endif
+ 
+ namespace {
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(SUPPORTS_OZONE_X11)
+ // Private function in ui/base/x/x11_display_util.cc
+ base::flat_map<x11::RandR::Output, int> GetMonitors(
+     std::pair<uint32_t, uint32_t> version,
+--- a/electron/shell/browser/native_window_views.cc
++++ b/electron/shell/browser/native_window_views.cc
+@@ -355,6 +355,7 @@
+   if (parent)
+     SetParentWindow(parent);
+ 
++#if BUILDFLAG(SUPPORTS_OZONE_X11)
+   if (x11_util::IsX11()) {
+     // Before the window is mapped the SetWMSpecState can not work, so we have
+     // to manually set the _NET_WM_STATE.
+@@ -386,6 +387,7 @@
+       SetWindowType(static_cast<x11::Window>(GetAcceleratedWidget()),
+                     window_type);
+   }
++#endif  // BUILDFLAG(SUPPORTS_OZONE_X11)
+ #endif
+ 
+ #if BUILDFLAG(IS_WIN)
+@@ -549,7 +551,7 @@
+ }
+ 
+ void NativeWindowViews::SetGTKDarkThemeEnabled(bool use_dark_theme) {
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(SUPPORTS_OZONE_X11)
+   if (x11_util::IsX11()) {
+     const std::string color = use_dark_theme ? "dark" : "light";
+     auto* connection = x11::Connection::Get();
+@@ -618,8 +620,10 @@
+   NotifyWindowShow();
+ 
+ #if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(SUPPORTS_OZONE_X11)
+   if (global_menu_bar_)
+     global_menu_bar_->OnWindowMapped();
++#endif
+ 
+   // On X11, setting Z order before showing the window doesn't take effect,
+   // so we have to call it again.
+@@ -636,8 +640,10 @@
+   NotifyWindowShow();
+ 
+ #if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(SUPPORTS_OZONE_X11)
+   if (global_menu_bar_)
+     global_menu_bar_->OnWindowMapped();
++#endif
+ 
+   // On X11, setting Z order before showing the window doesn't take effect,
+   // so we have to call it again.
+@@ -654,7 +660,7 @@
+ 
+   NotifyWindowHide();
+ 
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(SUPPORTS_OZONE_X11)
+   if (global_menu_bar_)
+     global_menu_bar_->OnWindowUnmapped();
+ #endif
+@@ -686,8 +692,10 @@
+ #if BUILDFLAG(IS_WIN)
+   return ::IsWindowEnabled(GetAcceleratedWidget());
+ #elif BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(SUPPORTS_OZONE_X11)
+   if (x11_util::IsX11())
+     return !event_disabler_.get();
++#endif
+   NOTIMPLEMENTED();
+   return true;
+ #endif
+@@ -722,7 +730,7 @@
+ 
+ #if BUILDFLAG(IS_WIN)
+   ::EnableWindow(GetAcceleratedWidget(), enable);
+-#else
++#elif BUILDFLAG(SUPPORTS_OZONE_X11)
+   if (x11_util::IsX11()) {
+     views::DesktopWindowTreeHostPlatform* tree_host =
+         views::DesktopWindowTreeHostLinux::GetHostForWidget(
+@@ -1043,7 +1051,7 @@
+   ::SetWindowPos(GetAcceleratedWidget(), GetWindow(otherWindow, GW_HWNDPREV), 0,
+                  0, 0, 0,
+                  SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+-#else
++#elif BUILDFLAG(SUPPORTS_OZONE_X11)
+   if (x11_util::IsX11()) {
+     if (!IsWindowValid(static_cast<x11::Window>(id.id)))
+       return false;
+@@ -1065,7 +1073,7 @@
+   ::SetWindowPos(GetAcceleratedWidget(), HWND_TOP, pos.x(), pos.y(),
+                  size.width(), size.height(),
+                  SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+-#else
++#elif BUILDFLAG(SUPPORTS_OZONE_X11)
+   if (x11_util::IsX11())
+     electron::MoveWindowToForeground(
+         static_cast<x11::Window>(GetAcceleratedWidget()));
+@@ -1408,7 +1416,7 @@
+   } else {
+     SetForwardMouseMessages(forward);
+   }
+-#else
++#elif BUILDFLAG(SUPPORTS_OZONE_X11)
+   if (x11_util::IsX11()) {
+     auto* connection = x11::Connection::Get();
+     if (ignore) {
+@@ -1476,7 +1484,7 @@
+ }
+ 
+ void NativeWindowViews::SetMenu(ElectronMenuModel* menu_model) {
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(SUPPORTS_OZONE_X11)
+   // Remove global menu bar.
+   bool try_global_menu_bar = true;
+   if (global_menu_bar_ && menu_model == nullptr) {
+@@ -1544,7 +1552,7 @@
+ void NativeWindowViews::SetParentWindow(NativeWindow* parent) {
+   NativeWindow::SetParentWindow(parent);
+ 
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(SUPPORTS_OZONE_X11)
+   if (x11_util::IsX11()) {
+     auto* connection = x11::Connection::Get();
+     connection->SetProperty(
+--- a/electron/shell/browser/native_window_views.h
++++ b/electron/shell/browser/native_window_views.h
+@@ -38,7 +38,7 @@
+ 
+ namespace electron {
+ 
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(SUPPORTS_OZONE_X11)
+ class GlobalMenuBarX11;
+ #endif
+ 
+@@ -291,7 +291,7 @@
+   // events from resizing the window.
+   extensions::SizeConstraints old_size_constraints_;
+ 
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(SUPPORTS_OZONE_X11)
+   std::unique_ptr<GlobalMenuBarX11> global_menu_bar_;
+ #endif
+ 
+--- a/electron/shell/browser/osr/osr_host_display_client.cc
++++ b/electron/shell/browser/osr/osr_host_display_client.cc
+@@ -102,7 +102,7 @@
+   layered_window_updater_->SetActive(active_);
+ }
+ 
+-#if BUILDFLAG(IS_LINUX) && !BUILDFLAG(IS_CHROMEOS)
++#if BUILDFLAG(IS_LINUX) && BUILDFLAG(SUPPORTS_OZONE_X11)
+ void OffScreenHostDisplayClient::DidCompleteSwapWithNewSize(
+     const gfx::Size& size) {}
+ #endif
+--- a/electron/shell/browser/osr/osr_host_display_client.h
++++ b/electron/shell/browser/osr/osr_host_display_client.h
+@@ -74,7 +74,7 @@
+       mojo::PendingReceiver<viz::mojom::LayeredWindowUpdater> receiver)
+       override;
+ 
+-#if BUILDFLAG(IS_LINUX) && !BUILDFLAG(IS_CHROMEOS)
++#if BUILDFLAG(IS_LINUX) && BUILDFLAG(SUPPORTS_OZONE_X11)
+   void DidCompleteSwapWithNewSize(const gfx::Size& size) override;
+ #endif
+ 

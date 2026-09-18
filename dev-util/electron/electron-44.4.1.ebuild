@@ -1243,6 +1243,7 @@ COMMON_DEPEND="
 	virtual/udev
 	x11-libs/cairo:=
 	x11-libs/gdk-pixbuf:2
+	x11-libs/libnotify
 	x11-libs/pango:=
 	cups? ( >=net-print/cups-1.3.11:= )
 	X? ( ${COMMON_X_DEPEND} )
