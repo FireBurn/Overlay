@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>mike@fireburn.co.uk</email>
+		<name>Mike Lothian</name>
+	</maintainer>
+	<use>
+		<flag name="gui">Build rog-control-center, the graphical front end</flag>
+	</use>
+	<upstream>
+		<remote-id type="gitlab">asus-linux/asusctl</remote-id>
+	</upstream>
+</pkgmetadata>
