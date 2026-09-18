@@ -25,6 +25,7 @@ ALL_PKGS=(
     dev-util/pi
     dev-util/codex
     app-editors/zed
+    games-util/heroic
 )
 COMPLEX_PKGS=( dev-util/codex app-editors/zed )
 
@@ -113,6 +114,7 @@ latest_pv() {
         dev-util/qwen-code)       repo=QwenLM/qwen-code;           prefix="v" ;;
         dev-util/pi)              repo=earendil-works/pi;          prefix="v" ;;
         app-editors/zed)          repo=zed-industries/zed;         prefix="v" ;;
+        games-util/heroic)        repo=Heroic-Games-Launcher/HeroicGamesLauncher; prefix="v" ;;
         *) return 0 ;;
     esac
     # Keep only stable releases whose tag carries this package's prefix, then
@@ -155,8 +157,36 @@ current_pv() {
 # Their NPM_PKGS block is regenerated from these on every bump.
 npm_lockfiles() {
     case "$1" in
-        dev-util/pi) echo "earendil-works/pi v package-lock.json" ;;
+        dev-util/pi)         echo "earendil-works/pi v package-lock.json" ;;
+        dev-util/qwen-code)  echo "QwenLM/qwen-code v pnpm-lock.yaml" ;;
+        games-util/heroic)   echo "Heroic-Games-Launcher/HeroicGamesLauncher v pnpm-lock.yaml" ;;
     esac
+}
+
+# Upstream Cargo.lock (repo-relative) for packages built with cargo.eclass.
+# Their CRATES block is regenerated from it on every bump.
+cargo_lockfiles() {
+    case "$1" in
+        dev-util/codex)  echo "openai/codex rust-v codex-rs/Cargo.lock" ;;
+        app-editors/zed) echo "zed-industries/zed v Cargo.lock" ;;
+    esac
+}
+
+# Regenerate CRATES for a new PV. Git dependencies are reported but not
+# updated: GIT_CRATES still needs a human (or the agent) to check them.
+update_crates() {
+    local pkg="$1" pv="$2" ebuild="$3" spec repo prefix f tmp
+    spec="$(cargo_lockfiles "$pkg")"
+    [[ -n "$spec" ]] || return 0
+    set -- $spec; repo="$1"; prefix="$2"; f="$3"
+    tmp="$(mktemp -d)"
+    if ! curl -fsSL "https://raw.githubusercontent.com/$repo/$prefix$pv/$f" -o "$tmp/Cargo.lock"; then
+        rm -rf "$tmp"
+        echo "ERROR: cannot fetch $f for $pkg $pv" >&2
+        return 1
+    fi
+    ./scripts/cargo-crates.py "$tmp/Cargo.lock" --ebuild "$ebuild" || { rm -rf "$tmp"; return 1; }
+    rm -rf "$tmp"
 }
 
 # Regenerate NPM_PKGS (and ESBUILD_SLOT, if the ebuild pins one) for a new PV.
@@ -199,9 +229,11 @@ readiness_url() {
         dev-util/pi)
             echo "https://registry.npmjs.org/@earendil-works/pi-ai/-/pi-ai-$pv.tgz" ;;
         dev-util/codex)
-            echo "https://github.com/gentoo-zh-drafts/codex/releases/download/rust-v$pv/codex-rust-v$pv-crates.tar.xz" ;;
+            echo "https://github.com/openai/codex/archive/rust-v$pv.tar.gz" ;;
         app-editors/zed)
-            echo "https://github.com/gentoo-crate-dist/zed/releases/download/v$pv/zed-$pv-crates.tar.xz" ;;
+            echo "https://github.com/zed-industries/zed/archive/refs/tags/v$pv.tar.gz" ;;
+        games-util/heroic)
+            echo "https://github.com/Heroic-Games-Launcher/HeroicGamesLauncher/archive/refs/tags/v$pv.tar.gz" ;;
     esac
 }
 
@@ -244,6 +276,11 @@ bump_simple() {
         echo "ERROR: NPM_PKGS update failed for $pkg (reverted)" >&2
         return 1
     fi
+    if ! update_crates "$pkg" "$new" "$newf"; then
+        revert_bump "$pkg" "$oldf" "$newf"
+        echo "ERROR: CRATES update failed for $pkg (reverted)" >&2
+        return 1
+    fi
     if ! ebuild "$newf" digest; then
         revert_bump "$pkg" "$oldf" "$newf"
         echo "ERROR: ebuild digest failed for $pkg (reverted)" >&2
@@ -268,19 +305,20 @@ bump_complex() {
     url="$(readiness_url "$pkg" "$new")"
     code="$(http_code "$url")"
     if [[ "$code" != 2* ]]; then
-        info "skip $pkg: crate tarball for $new not ready yet (HTTP $code)"
+        info "skip $pkg: upstream source for $new not available yet (HTTP $code)"
         return 1
     fi
     if [[ "$DRY_RUN" == 1 ]]; then
-        info "[dry-run] would ask agent to bump $pkg $old -> $new (tarball ready)"
+        info "[dry-run] would ask agent to bump $pkg $old -> $new (source available)"
         return 0
     fi
 
     log "agent: $pkg $old -> $new"
     local prompt
-    prompt="Bump $pkg from $old to $new. The upstream crate tarball for $new already exists at:
+    prompt="Bump $pkg from $old to $new. The upstream source for $new already exists at:
 $url
-Do the full bump: rename the ebuild to $pn-$new.ebuild, then verify the GIT_CRATES commits (and RUSTY_V8_TAG / WEBRTC_COMMIT where applicable) against the new version's source, updating them only if they changed. Regenerate the Manifest (ebuild digest + ebuild manifest), validate, and commit with the message '$pkg: Bump to $new'. Do NOT push — the calling script handles pushing."
+Do the full bump: rename the ebuild to $pn-$new.ebuild, regenerate CRATES with
+scripts/cargo-crates.py from the new version's Cargo.lock, then verify the GIT_CRATES commits (and RUSTY_V8_TAG / WEBRTC_COMMIT where applicable) against the new version's source, updating them only if they changed. Regenerate the Manifest (ebuild digest + ebuild manifest), validate, and commit with the message '$pkg: Bump to $new'. Do NOT push — the calling script handles pushing."
 
     if ! opencode run --agent ebuild-bumper "$prompt"; then
         echo "ERROR: agent bump failed for $pkg" >&2

@@ -246,11 +246,17 @@ npm_registry_start() {
 
 	local entry name version conds file
 	local distdir=${PORTAGE_ACTUAL_DISTDIR:-${DISTDIR}}
+	# Which distfiles this build actually has, as a set: NPM_PKGS runs to
+	# thousands of entries, and searching ${A} for each one does not scale
+	local -A fetched=()
+	for file in ${A}; do
+		fetched[${file}]=1
+	done
 	: > "${dir}/index" || die
 	for entry in ${NPM_PKGS}; do
 		_npm_split "${entry}"
 		file=$(_npm_distfile "${name}" "${version}")
-		if has "${file}" ${A}; then
+		if [[ -n ${fetched[${file}]} ]]; then
 			printf '%s\t%s\t%s\n' "${name}" "${version}" "${distdir}/${file}" \
 				>> "${dir}/index" || die
 		else

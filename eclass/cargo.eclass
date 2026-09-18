@@ -563,11 +563,9 @@ cargo_crate_unpack() {
 
 		popd >/dev/null || die
 
-		if [[ ${#crates[@]} -ge 300 ]]; then
-			eqawarn "QA Notice: This package uses a very large number of CRATES.  Please provide"
-			eqawarn "a crate tarball instead and fetch it via SRC_URI.  You can use"
-			eqawarn "'pycargoebuild --crate-tarball' to create one."
-		fi
+		# Upstream warns about large CRATES lists here and asks for a crate
+		# tarball.  This overlay deliberately lists every crate instead, so
+		# that each one is fetched from crates.io and verified by Manifest.
 	fi
 }
 
