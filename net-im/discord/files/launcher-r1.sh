@@ -22,6 +22,10 @@ EBUILD_WAYLAND=false
 # process.resourcesPath, which points at Electron's own installation
 export DISCORD_R=@@DESTDIR@@/resources
 
+# The system Electron binary is named "electron", which makes Electron print
+# its development security warnings even for a production app
+export ELECTRON_DISABLE_SECURITY_WARNINGS=1
+
 # https://bugs.gentoo.org/905289
 @@DESTDIR@@/disable-breaking-updates.py
 

@@ -98,6 +98,13 @@ CONFIG_CHECK="~USER_NS"
 repackage_node_modules() {
 	brotli -d "${DISTDIR}/${P}"-$1.distro -o "${T}"/$1.tar 2>/dev/null || die
 	unpack "${T}"/$1.tar || die
+	if [[ $1 == discord_krisp ]]; then
+		# The Krisp module refuses to initialize unless the host executable
+		# matches a hardcoded hash of the official Discord binary, which the
+		# system Electron never will. Force the check to pass.
+		"${EPYTHON}" "${FILESDIR}/patch-krisp.py" "${WORKDIR}/files/discord_krisp.node" ||
+			die "failed to patch the Krisp signature check"
+	fi
 	pushd "${WORKDIR}"/files 2>/dev/null || die
 	zip -rq "${WORKDIR}"/$1.zip . || die
 	popd 2>/dev/null || die
@@ -253,6 +260,15 @@ src_install() {
 
 pkg_postinst() {
 	xdg_pkg_postinst
+
+	# Modules are only (re)extracted from the bootstrap zips on the first
+	# launch, so patch the already-installed Krisp module for upgrades from
+	# unpatched builds.
+	local krisp_node="${XDG_CONFIG_HOME:-${HOME}/.config}/discord/${PV}/modules/discord_krisp/discord_krisp.node"
+	if [[ -f ${krisp_node} ]]; then
+		"${EPYTHON}" "${FILESDIR}/patch-krisp.py" "${krisp_node}" >/dev/null ||
+			ewarn "The installed discord_krisp module could not be patched; Krisp noise cancellation will not work until the module is reinstalled (remove ~/.config/discord/${PV}/modules and relaunch Discord)."
+	fi
 
 	optfeature_header "Install the following packages for additional support:"
 	optfeature "sound support" \
