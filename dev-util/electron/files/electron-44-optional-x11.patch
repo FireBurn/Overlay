@@ -1,0 +1,38 @@
+Build the X11 parts of Electron only when the X11 ozone platform is enabled.
+
+Electron pulls in the X11 event and device targets, and links libxshmfence,
+for every Linux build, but those targets assert(ozone_platform_x11), so a
+Wayland-only configuration fails at "gn gen".
+
+--- a/electron/BUILD.gn
++++ b/electron/BUILD.gn
+@@ -750,7 +750,6 @@
+     }
+   }
+   if (is_linux) {
+-    libs = [ "xshmfence" ]
+     deps += [
+       ":electron_gtk_stubs",
+       ":libnotify_loader",
+@@ -763,8 +762,6 @@
+       "//device/bluetooth",
+       "//third_party/crashpad/crashpad/client",
+       "//ui/base/ime/linux",
+-      "//ui/events/devices/x11",
+-      "//ui/events/platform/x11",
+       "//ui/gtk:gtk_config",
+       "//ui/linux:display_server_utils",
+       "//ui/linux:linux_ui",
+@@ -772,7 +769,12 @@
+       "//ui/wm",
+     ]
+     if (ozone_platform_x11) {
++      libs = [ "xshmfence" ]
+       sources += filenames.lib_sources_linux_x11
++      deps += [
++        "//ui/events/devices/x11",
++        "//ui/events/platform/x11",
++      ]
+       public_deps += [
+         "//ui/base/x",
+         "//ui/ozone/platform/x11",

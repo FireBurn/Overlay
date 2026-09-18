@@ -1493,6 +1493,7 @@ src_prepare() {
 		"${WORKDIR}/copium/cr143-libsync-__BEGIN_DECLS.patch"
 		"${FILESDIR}/cr152-unbundle-minizip-undo-unicode.patch"
 		"${FILESDIR}/cr153-bytemuck-stable-simd.patch"
+		"${FILESDIR}/electron-44-optional-x11.patch"
 	)
 
 	if has_version "<=media-libs/fontconfig-2.17.1"; then
