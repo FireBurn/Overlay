@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>mike@fireburn.co.uk</email>
+		<name>Mike Lothian</name>
+	</maintainer>
+	<use>
+		<flag name="appindicator">Enable tray icon support via dev-libs/libayatana-appindicator</flag>
+		<flag name="bundled-electron">Use the Electron bundled by upstream instead of dev-util/electron</flag>
+		<flag name="seccomp">Enable the seccomp sandbox</flag>
+	</use>
+	<upstream>
+		<remote-id type="github">flathub/com.discordapp.Discord</remote-id>
+	</upstream>
+</pkgmetadata>
