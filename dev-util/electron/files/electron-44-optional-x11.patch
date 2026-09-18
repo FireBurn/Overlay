@@ -3,8 +3,8 @@ Build the X11 parts of Electron only when the X11 ozone platform is enabled.
 Electron is only ever built with both ozone platforms, so X11 code has
 leaked out of its SUPPORTS_OZONE_X11 guards: the X11 event and device
 targets and libxshmfence are linked for every Linux build (and assert
-ozone_platform_x11 in gn), parts of the desktop capturer and native
-window code use X11 types and helpers under a plain IS_LINUX, and the
+ozone_platform_x11 in gn), the desktop capturer, native window and GTK
+menu code use X11 types and helpers under a plain IS_LINUX, and the
 offscreen display client overrides a method Chromium only declares when
 the X11 platform is built.
 
@@ -216,3 +216,53 @@ the X11 platform is built.
    void DidCompleteSwapWithNewSize(const gfx::Size& size) override;
  #endif
  
+--- a/electron/shell/browser/ui/gtk/menu_util.cc
++++ b/electron/shell/browser/ui/gtk/menu_util.cc
+@@ -20,10 +20,14 @@
+ #include "ui/base/accelerators/menu_label_accelerator_util_linux.h"
+ #include "ui/base/models/image_model.h"
+ #include "ui/base/models/menu_model.h"
++#include "ui/base/ozone_buildflags.h"
+ #include "ui/events/event_constants.h"
+-#include "ui/events/keycodes/keyboard_code_conversion_x.h"
+ #include "ui/ozone/public/ozone_platform.h"
+ 
++#if BUILDFLAG(SUPPORTS_OZONE_X11)
++#include "ui/events/keycodes/keyboard_code_conversion_x.h"
++#endif
++
+ namespace electron::gtkui {
+ 
+ namespace {
+@@ -41,6 +45,7 @@
+   return flags;
+ }
+ 
++#if BUILDFLAG(SUPPORTS_OZONE_X11)
+ guint GetGdkKeyCodeForAccelerator(const ui::Accelerator& accelerator) {
+   // The second parameter is false because accelerator keys are expressed in
+   // terms of the non-shift-modified key.
+@@ -59,6 +64,7 @@
+     modifier |= GDK_MOD1_MASK;
+   return static_cast<GdkModifierType>(modifier);
+ }
++#endif  // BUILDFLAG(SUPPORTS_OZONE_X11)
+ 
+ }  // namespace
+ 
+@@ -215,6 +221,7 @@
+       connect_to_activate = false;
+     }
+ 
++#if BUILDFLAG(SUPPORTS_OZONE_X11)
+     if (x11_util::IsX11()) {
+       ui::Accelerator accelerator;
+       if (model->GetAcceleratorAt(i, &accelerator)) {
+@@ -224,6 +231,7 @@
+                                    GTK_ACCEL_VISIBLE);
+       }
+     }
++#endif
+ 
+     g_object_set_data(G_OBJECT(menu_item), "model", model);
+     AppendMenuItemToMenu(i, model, menu_item, menu, connect_to_activate,
