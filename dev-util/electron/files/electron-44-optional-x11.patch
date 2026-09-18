@@ -4,9 +4,10 @@ Electron is only ever built with both ozone platforms, so X11 code has
 leaked out of its SUPPORTS_OZONE_X11 guards: the X11 event and device
 targets and libxshmfence are linked for every Linux build (and assert
 ozone_platform_x11 in gn), the desktop capturer, native window and GTK
-menu code use X11 types and helpers under a plain IS_LINUX, and the
-offscreen display client overrides a method Chromium only declares when
-the X11 platform is built.
+menu code use X11 types and helpers under a plain IS_LINUX, the offscreen
+display client overrides a method Chromium only declares when the X11
+platform is built, and x11_util compares against platform ids that only
+exist in the generated platform list when that platform is built.
 
 --- a/electron/BUILD.gn
 +++ b/electron/BUILD.gn
@@ -51,6 +52,32 @@ the X11 platform is built.
  // Private function in ui/base/x/x11_display_util.cc
  base::flat_map<x11::RandR::Output, int> GetMonitors(
      std::pair<uint32_t, uint32_t> version,
+--- a/electron/shell/browser/linux/x11_util.cc
++++ b/electron/shell/browser/linux/x11_util.cc
+@@ -5,12 +5,13 @@
+ #include "shell/browser/linux/x11_util.h"
+ 
+ #include "build/build_config.h"
++#include "ui/base/ozone_buildflags.h"
+ #include "ui/ozone/platform_selection.h"  // nogncheck
+ 
+ namespace x11_util {
+ 
+ bool IsX11() {
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(SUPPORTS_OZONE_X11)
+   static const bool is = ui::GetOzonePlatformId() == ui::kPlatformX11;
+   return is;
+ #else
+@@ -19,7 +20,7 @@
+ }
+ 
+ bool IsWayland() {
+-#if BUILDFLAG(IS_LINUX)
++#if BUILDFLAG(SUPPORTS_OZONE_WAYLAND)
+   static const bool is = ui::GetOzonePlatformId() == ui::kPlatformWayland;
+   return is;
+ #else
 --- a/electron/shell/browser/native_window_views.cc
 +++ b/electron/shell/browser/native_window_views.cc
 @@ -355,6 +355,7 @@
