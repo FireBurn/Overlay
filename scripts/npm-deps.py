@@ -77,11 +77,14 @@ class Collector:
     def __init__(self, arches):
         self.arches = arches
         self.pkgs = {}  # (name, version) -> set of conds
+        self.stubs = set()  # (name, version) for other platforms
         self.skipped = []
 
     def add(self, name, version, os_=None, cpu=None, libc=None):
         conds = conditions(os_, cpu, libc, self.arches)
         if conds is None:
+            # pnpm reads the metadata of packages it will never install
+            self.stubs.add((name, version))
             return
         cur = self.pkgs.setdefault((name, version), set())
         cur.update(conds)
@@ -221,18 +224,25 @@ def main():
         parse(lf, col)
 
     block = 'NPM_PKGS="\n' + "".join(f"\t{l}\n" for l in col.render()) + '"'
+    stubs = sorted(f"{n}@{v}" for n, v in col.stubs if (n, v) not in col.pkgs)
+    stub_block = 'NPM_STUB_PKGS="\n' + "".join(f"\t{l}\n" for l in stubs) + '"'
     for s in col.skipped:
         print(f"skipped {s}", file=sys.stderr)
-    print(f"{len(col.pkgs)} packages", file=sys.stderr)
+    print(f"{len(col.pkgs)} packages, {len(col.stubs)} other-platform stubs", file=sys.stderr)
 
     if args.ebuild:
         text = args.ebuild.read_text()
         new, n = re.subn(r'^NPM_PKGS="[^"]*"', lambda _: block, text, count=1, flags=re.M)
         if not n:
             sys.exit(f"{args.ebuild}: no NPM_PKGS block found")
+        new, n = re.subn(r'^NPM_STUB_PKGS="[^"]*"', lambda _: stub_block, new, count=1, flags=re.M)
+        if not n and stubs:
+            print(f"{args.ebuild}: no NPM_STUB_PKGS block; add one for pnpm", file=sys.stderr)
         args.ebuild.write_text(new)
     else:
         print(block)
+        if stubs:
+            print(stub_block)
 
 
 if __name__ == "__main__":

@@ -64,6 +64,18 @@ inherit edo multiprocessing toolchain-funcs
 # Upstream registry the tarballs are fetched from.
 : "${NPM_REGISTRY_URI:=https://registry.npmjs.org}"
 
+# @ECLASS_VARIABLE: NPM_STUB_PKGS
+# @PRE_INHERIT
+# @DEFAULT_UNSET
+# @DESCRIPTION:
+# Packages the offline registry should describe but not serve, as
+# "name@version".  These are the platform-specific optional packages for
+# other operating systems and arches: pnpm reads their metadata (a
+# .pnpmfile.mjs hook makes it read every manifest) but never installs
+# them, so the registry reports a platform that cannot match instead of
+# downloading megabytes of foreign binaries.  scripts/npm-deps.py
+# generates the list.
+
 # @ECLASS_VARIABLE: NPM_PNPM_VERSION
 # @PRE_INHERIT
 # @DEFAULT_UNSET
@@ -179,8 +191,6 @@ npm_setup_env() {
 
 	# pnpm, yarn and bun keep their own stores
 	export XDG_CONFIG_HOME="${HOME}/.config"
-	mkdir -p "${XDG_CONFIG_HOME}/pnpm" || die
-	echo "store-dir=${T}/pnpm-store" > "${XDG_CONFIG_HOME}/pnpm/rc" || die
 	export PNPM_HOME="${T}/pnpm-home"
 	export YARN_CACHE_FOLDER="${T}/yarn-cache"
 	export YARN_ENABLE_GLOBAL_CACHE=false
@@ -240,9 +250,18 @@ npm_registry_start() {
 	for entry in ${NPM_PKGS}; do
 		_npm_split "${entry}"
 		file=$(_npm_distfile "${name}" "${version}")
-		has "${file}" ${A} || continue
-		printf '%s\t%s\t%s\n' "${name}" "${version}" "${distdir}/${file}" \
-			>> "${dir}/index" || die
+		if has "${file}" ${A}; then
+			printf '%s\t%s\t%s\n' "${name}" "${version}" "${distdir}/${file}" \
+				>> "${dir}/index" || die
+		else
+			# Not fetched for this arch or libc: describe it as a platform
+			# that cannot match, like NPM_STUB_PKGS
+			printf '%s\t%s\t-\n' "${name}" "${version}" >> "${dir}/index" || die
+		fi
+	done
+	for entry in ${NPM_STUB_PKGS}; do
+		_npm_split "${entry}"
+		printf '%s\t%s\t-\n' "${name}" "${version}" >> "${dir}/index" || die
 	done
 	for file in "${_NPM_LOCAL_TARBALLS[@]}"; do
 		printf '\t\t%s\n' "${file}" >> "${dir}/index" || die
@@ -265,6 +284,11 @@ npm_registry_start() {
 	fi
 
 	local url="http://127.0.0.1:$(<"${dir}/port")/"
+	# pnpm ignores npm_config_registry, so put it in the user config too
+	cat > "${HOME}/.npmrc" <<-EOF || die
+	registry=${url}
+	store-dir=${T}/pnpm-store
+	EOF
 	export NPM_REGISTRY_LOCAL=${url}
 	export npm_config_registry=${url}
 	export NPM_CONFIG_REGISTRY=${url}
@@ -273,6 +297,8 @@ npm_registry_start() {
 	export YARN_NPM_REGISTRY_SERVER=${url%/}
 	export YARN_UNSAFE_HTTP_WHITELIST=127.0.0.1
 	einfo "Offline npm registry serving $(wc -l < "${dir}/index") packages at ${url}"
+	einfo "The install that follows unpacks and links every one of them, and"
+	einfo "prints nothing while it does; expect several quiet minutes."
 }
 
 # @FUNCTION: npm_registry_add
@@ -331,6 +357,24 @@ npm_with_registry() {
 	local ret=$?
 	npm_registry_stop
 	[[ ${ret} -eq 0 ]] || die "${ECLASS}: ${1} failed"
+}
+
+# @FUNCTION: npm_clean_npmrc
+# @USAGE: [dir]
+# @DESCRIPTION:
+# Comments out registry settings in the .npmrc files below the given
+# directory (the working directory by default).  Package managers give a
+# project's .npmrc priority over the environment, so a pinned registry
+# there would bypass the offline registry.
+npm_clean_npmrc() {
+	debug-print-function ${FUNCNAME} "$@"
+
+	local file
+	while IFS= read -r -d '' file; do
+		grep -qE '^[^#]*registry[[:space:]]*=' "${file}" || continue
+		einfo "Dropping registry settings from ${file#${PWD}/}"
+		sed -i -E 's|^([^#]*registry[[:space:]]*=)|# \1|' "${file}" || die
+	done < <(find "${1:-.}" -name .npmrc -not -path '*/node_modules/*' -print0)
 }
 
 # @FUNCTION: npm_remove_prebuilds
@@ -407,7 +451,7 @@ _npm_write_registry() {
 	for (const line of readFileSync(`${dir}/index`, "utf8").split("\n")) {
 		if (!line) continue;
 		let [name, version, path] = line.split("\t");
-		const entry = { path };
+		const entry = path === "-" ? { stub: true } : { path };
 		if (!name) {
 			// Local tarball: name and version come from its package.json
 			({ name, version } = load(entry).manifest);
@@ -440,6 +484,7 @@ _npm_write_registry() {
 	}
 
 	function load(entry) {
+		if (entry.stub) return entry;
 		if (!entry.data) {
 			const data = readFileSync(entry.path);
 			entry.data = data;
@@ -474,7 +519,7 @@ _npm_write_registry() {
 			const prefix = `${name.split("/").pop()}-`;
 			const version = file.startsWith(prefix) ? file.slice(prefix.length).replace(/\.tgz$/, "") : "";
 			const entry = pkgs.get(name)?.get(version);
-			if (!entry) { missing(`tarball\t${name}@${version || file}`); return send(404, "{}", "application/json"); }
+			if (!entry || entry.stub) { missing(`tarball\t${name}@${version || file}`); return send(404, "{}", "application/json"); }
 			return send(200, load(entry).data, "application/octet-stream");
 		}
 		const versions = pkgs.get(path);
@@ -486,7 +531,11 @@ _npm_write_registry() {
 		for (const [version, entry] of versions) {
 			load(entry);
 			out.time[version] = epoch;
-			out.versions[version] = {
+			out.versions[version] = entry.stub ? {
+				// Described so an installer can skip it, never downloaded
+				name: path, version, os: ["none"], cpu: ["none"],
+				dist: { tarball: `${base}${path}/-/stub-${version}.tgz` },
+			} : {
 				...entry.manifest, name: path, version,
 				dist: {
 					tarball: `${base}${path}/-/${path.split("/").pop()}-${version}.tgz`,
