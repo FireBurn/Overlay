@@ -3,26 +3,46 @@
 
 EAPI=8
 
-ROCM_VERSION="6.3"
+if [[ ${PV} == 9999 ]]; then
+	# The web UI's npm dependencies change with every commit, so the live
+	# ebuild installs them from the checked-out lockfile in src_unpack
+	NPM_PKGS=""
+else
+	# Generated from tools/ui/package-lock.json by scripts/npm-deps.py
+	NPM_PKGS=""
+	NPM_STUB_PKGS=""
+	XDNA_COMMIT=""
+fi
 
-inherit cmake cuda rocm linux-info flag-o-matic git-r3
+inherit cmake cuda flag-o-matic linux-info npm
+[[ ${PV} == 9999 ]] && inherit git-r3
 
-DESCRIPTION="Port of Facebook's LLaMA model in C/C++ (Live Source with UI Build)"
+DESCRIPTION="Port of Facebook's LLaMA model in C/C++, with its web UI"
 HOMEPAGE="https://github.com/ggml-org/llama.cpp"
-EGIT_REPO_URI="https://github.com/ggml-org/llama.cpp.git"
+if [[ ${PV} == 9999 ]]; then
+	EGIT_REPO_URI="https://github.com/ggml-org/llama.cpp.git"
+else
+	SRC_URI="
+		https://github.com/ggml-org/llama.cpp/archive/refs/tags/v${PV}.tar.gz -> ${P}.gh.tar.gz
+		xdna? (
+			https://github.com/FireBurn/ggml-xdna1/archive/${XDNA_COMMIT}.tar.gz
+				-> ggml-xdna1-${XDNA_COMMIT:0:10}.gh.tar.gz
+		)
+		${NPM_PKG_URIS}
+	"
+	S="${WORKDIR}/llama.cpp-${PV}"
+fi
 
 LICENSE="MIT"
+# Web UI npm package licenses
+LICENSE+=" 0BSD Apache-2.0 BSD BSD-2 CC0-1.0 ISC MIT MPL-2.0 Unlicense"
 SLOT="0"
 KEYWORDS="~amd64"
-IUSE="curl openblas +openmp blis hip cuda opencl vulkan xdna"
+IUSE="curl openblas +openmp blis cuda opencl vulkan xdna"
+RESTRICT="mirror"
 
-# We must restrict the network sandbox because 'npm install' needs to
-# fetch frontend dependencies during the src_compile phase.
-RESTRICT="network-sandbox"
-
-# Build-time dependencies
 BDEPEND="
-	net-libs/nodejs[npm]
+	${NPM_NODE_DEPEND}
 	virtual/pkgconfig
 "
 
@@ -31,9 +51,6 @@ CDEPEND="
 	openblas? ( sci-libs/openblas:= )
 	openmp? ( llvm-runtimes/openmp:= )
 	blis? ( sci-libs/blis:= )
-	hip? ( >=dev-util/hip-6.3:=
-		>=sci-libs/hipBLAS-6.3:=
-	)
 	cuda? ( dev-util/nvidia-cuda-toolkit:= )
 "
 DEPEND="${CDEPEND}
@@ -47,19 +64,8 @@ RDEPEND="${CDEPEND}
 "
 
 pkg_setup() {
-	if use hip || use xdna; then
-		linux-info_pkg_setup
-	fi
-
-	if use hip; then
-		if linux-info_get_any_version && linux_config_exists; then
-			if ! linux_chkconfig_present HSA_AMD_SVM; then
-				ewarn "To use ROCm/HIP, you need to have HSA_AMD_SVM option enabled in your kernel."
-			fi
-		fi
-	fi
-
 	if use xdna; then
+		linux-info_pkg_setup
 		if linux-info_get_any_version && linux_config_exists; then
 			if ! linux_chkconfig_present DRM_AMDXDNA; then
 				ewarn "To use the XDNA1 backend, you likely need the AMD XDNA DRM driver enabled"
@@ -70,14 +76,24 @@ pkg_setup() {
 }
 
 src_unpack() {
-	# 1. Unpack llama.cpp
-	git-r3_src_unpack
+	if [[ ${PV} == 9999 ]]; then
+		git-r3_src_unpack
+		if use xdna; then
+			local xdna_uri="https://github.com/FireBurn/ggml-xdna1.git"
+			git-r3_fetch "${xdna_uri}"
+			git-r3_checkout "${xdna_uri}" "${WORKDIR}/ggml-xdna1"
+		fi
 
-	# 2. Unpack ggml-xdna1 backend if requested
-	if use xdna; then
-		local xdna_uri="https://github.com/FireBurn/ggml-xdna1.git"
-		git-r3_fetch "${xdna_uri}"
-		git-r3_checkout "${xdna_uri}" "${WORKDIR}/ggml-xdna1"
+		# A live ebuild may use the network here; the build then runs offline
+		pushd "${S}/tools/ui" >/dev/null || die
+		HOME="${T}/npm-home" npm ci --ignore-scripts --no-audit --no-fund \
+			--cache "${T}/npm-cache" || die "npm ci failed"
+		popd >/dev/null || die
+	else
+		npm_src_unpack
+		if use xdna; then
+			mv "${WORKDIR}/ggml-xdna1-${XDNA_COMMIT}" "${WORKDIR}/ggml-xdna1" || die
+		fi
 	fi
 }
 
@@ -133,13 +149,6 @@ src_configure() {
 		addpredict "/dev/char/"
 	fi
 
-	if use hip; then
-		rocm_use_hipcc
-		mycmakeargs+=(
-			-DGGML_HIP=ON -DAMDGPU_TARGETS=$(get_amdgpu_flags)
-		)
-	fi
-
 	# Configure llama.cpp
 	local CMAKE_USE_DIR="${S}"
 	local BUILD_DIR="${WORKDIR}/${P}_build"
@@ -163,13 +172,12 @@ src_compile() {
 	einfo "Building Web UI assets using npm..."
 	pushd "${S}/tools/ui" > /dev/null || die
 
-	# Clean any stale build artifacts
-	rm -rf dist node_modules || die
-
-	# Install JS dependencies and run the build (Vite/SvelteKit)
-	# This generates the /dist folder CMake expects.
-	npm install || die
-	npm run build || die
+	# Releases install the UI's dependencies from the offline registry
+	if [[ ${PV} != 9999 ]]; then
+		npm_with_registry npm ci --ignore-scripts
+	fi
+	# Generates the dist/ directory CMake embeds
+	HOME="${T}/npm-home" npm run build --offline || die
 
 	popd > /dev/null || die
 
