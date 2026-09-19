@@ -3,6 +3,8 @@
 
 EAPI=8
 
+ROCM_VERSION="10.0"
+
 if [[ ${PV} == 9999 ]]; then
 	# The web UI's npm dependencies change with every commit, so the live
 	# ebuild installs them from the checked-out lockfile in src_unpack
@@ -14,7 +16,7 @@ else
 	XDNA_COMMIT=""
 fi
 
-inherit cmake cuda flag-o-matic linux-info npm
+inherit cmake cuda flag-o-matic linux-info npm rocm
 [[ ${PV} == 9999 ]] && inherit git-r3
 
 DESCRIPTION="Port of Facebook's LLaMA model in C/C++, with its web UI"
@@ -38,7 +40,7 @@ LICENSE="MIT"
 LICENSE+=" 0BSD Apache-2.0 BSD BSD-2 CC0-1.0 ISC MIT MPL-2.0 Unlicense"
 SLOT="0"
 KEYWORDS="~amd64"
-IUSE="curl openblas +openmp blis cuda opencl vulkan xdna"
+IUSE="curl openblas +openmp blis hip cuda opencl vulkan xdna"
 RESTRICT="mirror"
 
 BDEPEND="
@@ -51,6 +53,7 @@ CDEPEND="
 	openblas? ( sci-libs/openblas:= )
 	openmp? ( llvm-runtimes/openmp:= )
 	blis? ( sci-libs/blis:= )
+	hip? ( >=dev-util/hip-10.0:= >=sci-libs/hipBLAS-10.0:= )
 	cuda? ( dev-util/nvidia-cuda-toolkit:= )
 "
 DEPEND="${CDEPEND}
@@ -68,11 +71,18 @@ PATCHES=(
 	"${FILESDIR}/0002-vulkan-share-K-V-pass-between-query-rows.patch"
 	"${FILESDIR}/0003-qwen35-optional-reduced-vocab-LM-head-for-MTP-drafting.patch"
 	"${FILESDIR}/0005-vulkan-use-4-rows-for-legacy-quant-mat-vec-from-2-columns.patch"
+	"${FILESDIR}/0006-hip-fix-gfx12-bf16-wmma-with-llvm-23.patch"
 )
 
 pkg_setup() {
-	if use xdna; then
+	if use hip || use xdna; then
 		linux-info_pkg_setup
+	fi
+	if use hip && linux-info_get_any_version && linux_config_exists; then
+		linux_chkconfig_present HSA_AMD_SVM ||
+			ewarn "ROCm/HIP requires CONFIG_HSA_AMD_SVM in the kernel."
+	fi
+	if use xdna; then
 		if linux-info_get_any_version && linux_config_exists; then
 			if ! linux_chkconfig_present DRM_AMDXDNA; then
 				ewarn "To use the XDNA1 backend, you likely need the AMD XDNA DRM driver enabled"
@@ -148,6 +158,11 @@ src_configure() {
 
 	if use blis ; then
 		mycmakeargs+=( -DGGML_BLAS=ON -DGGML_BLAS_VENDOR=FLAME )
+	fi
+
+	if use hip; then
+		rocm_use_hipcc
+		mycmakeargs+=( -DGGML_HIP=ON -DAMDGPU_TARGETS="$(get_amdgpu_flags)" )
 	fi
 
 	if use cuda; then
