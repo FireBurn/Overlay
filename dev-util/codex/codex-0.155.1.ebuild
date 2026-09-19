@@ -674,6 +674,7 @@ CRATES="
 	objc2-encode@4.1.0
 	objc2-foundation@0.3.2
 	objc2-io-surface@0.3.2
+	objc2-local-authentication@0.3.2
 	objc2-quartz-core@0.3.2
 	objc2-ui-kit@0.3.2
 	objc2-user-notifications@0.3.2
@@ -826,6 +827,7 @@ CRATES="
 	rand_core@0.10.1
 	rand_core@0.6.4
 	rand_core@0.9.5
+	rand_regex@0.18.1
 	rand_xorshift@0.4.0
 	ratatui-core@0.1.2
 	ratatui-crossterm@0.1.2
