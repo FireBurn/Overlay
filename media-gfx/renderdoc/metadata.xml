@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+  <!-- maintainer-needed -->
+  <use>
+    <flag name="qt6">
+       Build and install the qrenderdoc GUI
+    </flag>
+    <flag name="wayland">
+       Build the Wayland windowing support needed to capture Wayland
+       clients.  Upstream considers this experimental and unsupported; the
+       qrenderdoc GUI itself still runs on the xcb Qt platform unless
+       QT_QPA_PLATFORM says otherwise.
+    </flag>
+  </use>
+  <upstream>
+    <remote-id type="github">baldurk/renderdoc</remote-id>
+  </upstream>
+</pkgmetadata>

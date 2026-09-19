@@ -1,0 +1,31 @@
+qrenderdoc: Keep the GUI on the xcb Qt platform with Wayland support built in
+
+Building the Wayland windowing support in is what lets renderdoc capture
+native Wayland applications, but it also stops qrenderdoc defaulting to
+the xcb Qt platform, and upstream says running the GUI directly on
+Wayland is unsupported and likely to crash.
+
+The two are independent: keep defaulting the GUI to xcb either way, so a
+build with Wayland capture support still runs its own window on the
+well-tested path. Setting QT_QPA_PLATFORM still overrides it, and the
+unsupported warning is still shown to anyone who does.
+--- a/qrenderdoc/Code/qrenderdoc.cpp
++++ b/qrenderdoc/Code/qrenderdoc.cpp
+@@ -200,7 +200,7 @@
+   if(IsRunningAsAdmin())
+     qInfo() << "Running as administrator";
+ 
+-#if defined(RENDERDOC_PLATFORM_LINUX) && !defined(RENDERDOC_WINDOWING_WAYLAND)
++#if defined(RENDERDOC_PLATFORM_LINUX)
+   bool envChanged = false;
+   {
+     const char *qpa_plat = getenv("QT_QPA_PLATFORM");
+@@ -609,7 +609,7 @@
+       RENDERDOC_InitialiseReplay(env, coreargs);
+     }
+ 
+-#if defined(RENDERDOC_PLATFORM_LINUX) && !defined(RENDERDOC_WINDOWING_WAYLAND)
++#if defined(RENDERDOC_PLATFORM_LINUX)
+     if(envChanged)
+       unsetenv("QT_QPA_PLATFORM");
+ #endif

@@ -1,0 +1,42 @@
+Default the analytics opt-in to off.
+
+Nothing is sent before the user accepts anyway; this just makes "do not
+gather" the preselected choice and the stored default.
+
+--- a/qrenderdoc/Code/Interface/PersistentConfig.h
++++ b/qrenderdoc/Code/Interface/PersistentConfig.h
+@@ -709,10 +709,10 @@
+       "``True`` if the user has selected to completely opt-out from and disable all analytics "    \
+       "collection and reporting.\n"                                                                \
+       "\n"                                                                                         \
+-      "Defaults to ``False``."                                                                     \
++      "Defaults to ``True``."                                                                      \
+       ""                                                                                           \
+       ":type: bool");                                                                              \
+-  CONFIG_SETTING_VAL(public, bool, bool, Analytics_TotalOptOut, false)                             \
++  CONFIG_SETTING_VAL(public, bool, bool, Analytics_TotalOptOut, true)                              \
+                                                                                                    \
+   DOCUMENT(                                                                                        \
+       "``True`` if the user has remained with analytics turned on, but has chosen to manually "    \
+--- a/qrenderdoc/Windows/Dialogs/AnalyticsPromptDialog.ui
++++ b/qrenderdoc/Windows/Dialogs/AnalyticsPromptDialog.ui
+@@ -38,9 +38,6 @@
+         <property name="text">
+          <string>Gather anonymous low-detail statistics and submit automatically.</string>
+         </property>
+-        <property name="checked">
+-         <bool>true</bool>
+-        </property>
+        </widget>
+       </item>
+       <item>
+@@ -55,6 +52,9 @@
+         <property name="text">
+          <string>Do not gather or submit any statistics.</string>
+         </property>
++        <property name="checked">
++         <bool>true</bool>
++        </property>
+        </widget>
+       </item>
+      </layout>

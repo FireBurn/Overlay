@@ -1,0 +1,2014 @@
+qrenderdoc: Build with Qt6 as well as Qt5
+
+Qt6 removed a long list of what qrenderdoc uses: QtX11Extras and QX11Info,
+QRegExp, QDesktopWidget, QTextCodec, Qt::AA_X11InitThreads,
+QLayout::setMargin and margin, QStyleOption::init, QPalette::foreground,
+QPalette::Foreground and Background, QStyle::PE_IndicatorViewItemCheck,
+QPainter::drawRoundRect and HighQualityAntialiasing, QFontMetrics::width,
+QWheelEvent::delta, pos, x and orientation, QTime::start and elapsed,
+QString::null and midRef, QModelIndex::child, QSet and QVector::toList,
+QMetaType::registerComparators, QComboBox::setAutoCompletion,
+QAbstractItemView::viewOptions, QSortFilterProxyModel::setFilterRegExp,
+Qt::MidButton, Qt::ImMicroFocus, QVariant's relational operators and the
+QString::SplitBehavior flags. It also made QVector an alias of QList,
+turned QNetworkReply::error into a getter with errorOccurred as the
+signal, made QLabel::pixmap return by value, QTimer::QPrivateSignal and
+the event copy constructors inaccessible, changed QWidget::enterEvent to
+take a QEnterEvent, and stopped converting 0 to any QFlags or NULL to
+QPointer.
+
+Port each of those, keeping the Qt5 spelling wherever the replacement is
+newer than the Qt 5.6 this still builds against. QTextCodec is the one
+exception: rather than rewrite scintilla's conversion layer, take it from
+the Qt5Compat module that Qt ships for exactly this.
+
+Qt6 also ignores a CONFIG request below c++17, so qrenderdoc.pro's
+"CONFIG += c++14" left the standard up to the compiler's default. That is
+gnu++20 with GCC 16, where the replay API structs that declare a
+defaulted default constructor are no longer aggregates and the returns
+that brace-initialise them stop compiling. Ask for c++17 with Qt6.
+
+Finally, Qt6 gave QString an operator+=(QUtf8StringView) and an rvalue
+operator+, which an rdcstr or rdcinflexiblestr converts to just as
+readily as it does to QString, so appending or concatenating one became
+ambiguous; exact-match operators settle it.
+
+diff --git a/qrenderdoc/3rdparty/flowlayout/FlowLayout.cpp b/qrenderdoc/3rdparty/flowlayout/FlowLayout.cpp
+index f91dc07..b48f677 100644
+--- a/qrenderdoc/3rdparty/flowlayout/FlowLayout.cpp
++++ b/qrenderdoc/3rdparty/flowlayout/FlowLayout.cpp
+@@ -115,7 +115,7 @@ QLayoutItem *FlowLayout::takeAt(int index)
+ 
+ Qt::Orientations FlowLayout::expandingDirections() const
+ {
+-    return 0;
++    return Qt::Orientations();
+ }
+ 
+ bool FlowLayout::hasHeightForWidth() const
+@@ -160,7 +160,8 @@ QSize FlowLayout::minimumSize() const
+     foreach (item, itemList)
+         size = size.expandedTo(item->minimumSize());
+ 
+-    size += QSize(2*margin(), 2*margin());
++    const QMargins margins = contentsMargins();
++    size += QSize(margins.left() + margins.right(), margins.top() + margins.bottom());
+ 
+     if(!m_prevRect.isEmpty())
+     {
+diff --git a/qrenderdoc/3rdparty/scintilla/include/qt/ScintillaEditBase.h b/qrenderdoc/3rdparty/scintilla/include/qt/ScintillaEditBase.h
+index a7ba734..98ac773 100644
+--- a/qrenderdoc/3rdparty/scintilla/include/qt/ScintillaEditBase.h
++++ b/qrenderdoc/3rdparty/scintilla/include/qt/ScintillaEditBase.h
+@@ -16,6 +16,7 @@
+ #include "../Scintilla.h"
+ 
+ #include <QAbstractScrollArea>
++#include <QElapsedTimer>
+ #include <QMimeData>
+ #include <QTime>
+ 
+@@ -137,9 +138,9 @@ protected:
+ private:
+ 	ScintillaQt *sqt;
+ 
+-	QTime time;
++  QElapsedTimer time;
+ 
+-	int preeditPos;
++  int preeditPos;
+ 	QString preeditString;
+ 
+ 	int wheelDelta;
+diff --git a/qrenderdoc/3rdparty/scintilla/qt/ScintillaEditBase/PlatQt.cpp b/qrenderdoc/3rdparty/scintilla/qt/ScintillaEditBase/PlatQt.cpp
+index fd41e57..bca2640 100644
+--- a/qrenderdoc/3rdparty/scintilla/qt/ScintillaEditBase/PlatQt.cpp
++++ b/qrenderdoc/3rdparty/scintilla/qt/ScintillaEditBase/PlatQt.cpp
+@@ -12,28 +12,28 @@
+ #include "Scintilla.h"
+ #include "FontQuality.h"
+ 
++#include <QAction>
+ #include <QApplication>
+-#include <QFont>
+ #include <QColor>
+-#include <QRect>
++#include <QElapsedTimer>
++#include <QFont>
++#include <QLibrary>
++#include <QListWidget>
++#include <QMenu>
++#include <QMessageBox>
+ #include <QPaintDevice>
+ #include <QPaintEngine>
+-#include <QWidget>
+-#include <QPixmap>
+ #include <QPainter>
+-#include <QMenu>
+-#include <QAction>
+-#include <QTime>
+-#include <QMessageBox>
+-#include <QTextCodec>
+-#include <QListWidget>
+-#include <QVarLengthArray>
++#include <QPixmap>
++#include <QRect>
++#include <QScreen>
+ #include <QScrollBar>
+-#include <QDesktopWidget>
++#include <QTextCodec>
+ #include <QTextLayout>
+ #include <QTextLine>
+-#include <QLibrary>
+-#include <QElapsedTimer>
++#include <QTime>
++#include <QVarLengthArray>
++#include <QWidget>
+ #include <cstdio>
+ 
+ #ifdef SCI_NAMESPACE
+@@ -330,7 +330,8 @@ void SurfaceImpl::RoundedRectangle(PRectangle rc,
+ {
+ 	PenColour(fore);
+ 	BrushColour(back);
+-	GetPainter()->drawRoundRect(QRectFFromPRect(rc));
++  const QRectF rect = QRectFFromPRect(rc);
++  GetPainter()->drawRoundedRect(rect, 25.0, 25.0, Qt::RelativeSize);
+ }
+ 
+ void SurfaceImpl::AlphaRectangle(PRectangle rc,
+@@ -510,13 +511,21 @@ XYPOSITION SurfaceImpl::WidthText(Font &font, const char *s, int len)
+ 	QFontMetricsF metrics(*FontPointer(font), device);
+ 	SetCodec(font);
+ 	QString string = codec->toUnicode(s, len);
+-	return metrics.width(string);
++#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
++  return metrics.horizontalAdvance(string);
++#else
++  return metrics.width(string);
++#endif
+ }
+ 
+ XYPOSITION SurfaceImpl::WidthChar(Font &font, char ch)
+ {
+ 	QFontMetricsF metrics(*FontPointer(font), device);
+-	return metrics.width(QChar::fromLatin1(ch));
++#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
++  return metrics.horizontalAdvance(QChar::fromLatin1(ch));
++#else
++  return metrics.width(QChar::fromLatin1(ch));
++#endif
+ }
+ 
+ XYPOSITION SurfaceImpl::Ascent(Font &font)
+@@ -651,11 +660,18 @@ void Window::SetPositionRelative(PRectangle rc, Window relativeTo)
+ 	ox += rc.left;
+ 	oy += rc.top;
+ 
+-	QDesktopWidget *desktop = QApplication::desktop();
+-	QRect rectDesk = desktop->availableGeometry(QPoint(ox, oy));
+-	/* do some corrections to fit into screen */
+-	int sizex = rc.right - rc.left;
+-	int sizey = rc.bottom - rc.top;
++#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
++  const QScreen *screen = QGuiApplication::screenAt(QPoint(ox, oy));
++  if(!screen)
++    screen = QGuiApplication::primaryScreen();
++  QRect rectDesk = screen->availableGeometry();
++#else
++  QDesktopWidget *desktop = QApplication::desktop();
++  QRect rectDesk = desktop->availableGeometry(QPoint(ox, oy));
++#endif
++  /* do some corrections to fit into screen */
++  int sizex = rc.right - rc.left;
++  int sizey = rc.bottom - rc.top;
+ 	int screenWidth = rectDesk.width();
+ 	if (ox < rectDesk.x())
+ 		ox = rectDesk.x();
+@@ -738,11 +754,17 @@ PRectangle Window::GetMonitorRect(Point pt)
+ {
+ 	QPoint originGlobal = window(wid)->mapToGlobal(QPoint(0, 0));
+ 	QPoint posGlobal = window(wid)->mapToGlobal(QPoint(pt.x, pt.y));
+-	QDesktopWidget *desktop = QApplication::desktop();
+-	QRect rectScreen = desktop->availableGeometry(posGlobal);
+-	rectScreen.translate(-originGlobal.x(), -originGlobal.y());
+-	return PRectangle(rectScreen.left(), rectScreen.top(),
+-	        rectScreen.right(), rectScreen.bottom());
++#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
++  const QScreen *screen = QGuiApplication::screenAt(posGlobal);
++  if(!screen)
++    screen = QGuiApplication::primaryScreen();
++  QRect rectScreen = screen->availableGeometry();
++#else
++  QDesktopWidget *desktop = QApplication::desktop();
++  QRect rectScreen = desktop->availableGeometry(posGlobal);
++#endif
++  rectScreen.translate(-originGlobal.x(), -originGlobal.y());
++  return PRectangle(rectScreen.left(), rectScreen.top(), rectScreen.right(), rectScreen.bottom());
+ }
+ 
+ 
+@@ -790,7 +812,11 @@ public:
+ 
+ protected:
+ 	virtual void mouseDoubleClickEvent(QMouseEvent *event);
+-	virtual QStyleOptionViewItem viewOptions() const;
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++  void initViewItemOption(QStyleOptionViewItem *option) const override;
++#else
++  virtual QStyleOptionViewItem viewOptions() const;
++#endif
+ 
+ private:
+ 	CallBackAction doubleClickAction;
+@@ -1089,12 +1115,20 @@ void ListWidget::mouseDoubleClickEvent(QMouseEvent * /* event */)
+ 	}
+ }
+ 
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++void ListWidget::initViewItemOption(QStyleOptionViewItem *option) const
++{
++  QListWidget::initViewItemOption(option);
++  option->state |= QStyle::State_Active;
++}
++#else
+ QStyleOptionViewItem ListWidget::viewOptions() const
+ {
+ 	QStyleOptionViewItem result = QListWidget::viewOptions();
+ 	result.state |= QStyle::State_Active;
+ 	return result;
+ }
++#endif
+ 
+ //----------------------------------------------------------------------
+ 
+diff --git a/qrenderdoc/3rdparty/scintilla/qt/ScintillaEditBase/PlatQt.h b/qrenderdoc/3rdparty/scintilla/qt/ScintillaEditBase/PlatQt.h
+index be35d81..4e1171d 100644
+--- a/qrenderdoc/3rdparty/scintilla/qt/ScintillaEditBase/PlatQt.h
++++ b/qrenderdoc/3rdparty/scintilla/qt/ScintillaEditBase/PlatQt.h
+@@ -17,6 +17,10 @@
+ #include <QPainter>
+ #include <QHash>
+ 
++QT_BEGIN_NAMESPACE
++class QTextCodec;
++QT_END_NAMESPACE
++
+ #ifdef SCI_NAMESPACE
+ namespace Scintilla {
+ #endif
+diff --git a/qrenderdoc/3rdparty/scintilla/qt/ScintillaEditBase/ScintillaEditBase.cpp b/qrenderdoc/3rdparty/scintilla/qt/ScintillaEditBase/ScintillaEditBase.cpp
+index 77452c7..6bb0bee 100644
+--- a/qrenderdoc/3rdparty/scintilla/qt/ScintillaEditBase/ScintillaEditBase.cpp
++++ b/qrenderdoc/3rdparty/scintilla/qt/ScintillaEditBase/ScintillaEditBase.cpp
+@@ -152,30 +152,41 @@ void ScintillaEditBase::paintEvent(QPaintEvent *event)
+ 
+ void ScintillaEditBase::wheelEvent(QWheelEvent *event)
+ {
+-	if (event->orientation() == Qt::Horizontal) {
+-		if (horizontalScrollBarPolicy() == Qt::ScrollBarAlwaysOff)
+-			event->ignore();
++#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
++  if(event->angleDelta().x() != 0 && event->angleDelta().y() == 0)
++  {
++#else
++  if(event->orientation() == Qt::Horizontal)
++  {
++#endif
++    if(horizontalScrollBarPolicy() == Qt::ScrollBarAlwaysOff)
++      event->ignore();
+ 		else
+ 			QAbstractScrollArea::wheelEvent(event);
+ 	} else {
+ 		if (QApplication::keyboardModifiers() & Qt::ControlModifier) {
+ 			// Zoom! We play with the font sizes in the styles.
+ 			// Number of steps/line is ignored, we just care if sizing up or down
+-			if (event->delta() > 0) {
+-				sqt->KeyCommand(SCI_ZOOMIN);
+-			} else {
+-				sqt->KeyCommand(SCI_ZOOMOUT);
+-			}
+-		} else {
+-			// Ignore wheel events when the scroll bars are disabled.
+-			if (verticalScrollBarPolicy() == Qt::ScrollBarAlwaysOff) {
++      if(event->angleDelta().y() > 0)
++      {
++        sqt->KeyCommand(SCI_ZOOMIN);
++      }
++      else
++      {
++        sqt->KeyCommand(SCI_ZOOMOUT);
++      }
++    }
++    else
++    {
++      // Ignore wheel events when the scroll bars are disabled.
++      if (verticalScrollBarPolicy() == Qt::ScrollBarAlwaysOff) {
+ 				event->ignore();
+ 			} else {
+ 				// Scroll
+ 				QAbstractScrollArea::wheelEvent(event);
+ 			}
+-		}
+-	}
++    }
++  }
+ }
+ 
+ void ScintillaEditBase::focusInEvent(QFocusEvent *event)
+@@ -293,18 +304,18 @@ void ScintillaEditBase::mousePressEvent(QMouseEvent *event)
+ 
+ 	emit buttonPressed(event);
+ 
+-	if (event->button() == Qt::MidButton &&
+-	    QApplication::clipboard()->supportsSelection()) {
+-		SelectionPosition selPos = sqt->SPositionFromLocation(
+-					pos, false, false, sqt->UserVirtualSpace());
+-		sqt->sel.Clear();
++  if(event->button() == Qt::MiddleButton && QApplication::clipboard()->supportsSelection())
++  {
++    SelectionPosition selPos = sqt->SPositionFromLocation(pos, false, false, sqt->UserVirtualSpace());
++    sqt->sel.Clear();
+ 		sqt->SetSelection(selPos, selPos);
+ 		sqt->PasteFromMode(QClipboard::Selection);
+ 		return;
+-	}
++  }
+ 
+-	if (event->button() == Qt::LeftButton) {
+-		bool shift = QApplication::keyboardModifiers() & Qt::ShiftModifier;
++  if(event->button() == Qt::LeftButton)
++  {
++    bool shift = QApplication::keyboardModifiers() & Qt::ShiftModifier;
+ 		bool ctrl  = QApplication::keyboardModifiers() & Qt::ControlModifier;
+ #ifdef Q_WS_X11
+ 		// On X allow choice of rectangular modifier since most window
+@@ -315,9 +326,9 @@ void ScintillaEditBase::mousePressEvent(QMouseEvent *event)
+ #endif
+ 
+ 		sqt->ButtonDown(pos, time.elapsed(), shift, ctrl, alt);
+-	}
++  }
+ 
+-	if (event->button() == Qt::RightButton) {
++  if (event->button() == Qt::RightButton) {
+ 		bool shift = QApplication::keyboardModifiers() & Qt::ShiftModifier;
+ 		bool ctrl  = QApplication::keyboardModifiers() & Qt::ControlModifier;
+ 		bool alt   = QApplication::keyboardModifiers() & Qt::AltModifier;
+@@ -610,16 +621,16 @@ QVariant ScintillaEditBase::inputMethodQuery(Qt::InputMethodQuery query) const
+ 	int line = send(SCI_LINEFROMPOSITION, pos);
+ 
+ 	switch (query) {
+-		case Qt::ImMicroFocus:
+-		{
+-			int startPos = (preeditPos >= 0) ? preeditPos : pos;
++    case Qt::ImCursorRectangle:
++    {
++      int startPos = (preeditPos >= 0) ? preeditPos : pos;
+ 			Point pt = sqt->LocationFromPosition(startPos);
+ 			int width = send(SCI_GETCARETWIDTH);
+ 			int height = send(SCI_TEXTHEIGHT, line);
+ 			return QRect(pt.x, pt.y, width, height);
+-		}
++    }
+ 
+-		case Qt::ImFont:
++    case Qt::ImFont:
+ 		{
+ 			char fontName[64];
+ 			int style = send(SCI_GETSTYLEAT, pos);
+diff --git a/qrenderdoc/3rdparty/scintilla/qt/ScintillaEditBase/ScintillaEditBase.h b/qrenderdoc/3rdparty/scintilla/qt/ScintillaEditBase/ScintillaEditBase.h
+index 7c52e56..ad37c40 100644
+--- a/qrenderdoc/3rdparty/scintilla/qt/ScintillaEditBase/ScintillaEditBase.h
++++ b/qrenderdoc/3rdparty/scintilla/qt/ScintillaEditBase/ScintillaEditBase.h
+@@ -16,6 +16,7 @@
+ #include "Scintilla.h"
+ 
+ #include <QAbstractScrollArea>
++#include <QElapsedTimer>
+ #include <QMimeData>
+ #include <QTime>
+ 
+@@ -137,10 +138,10 @@ protected:
+ private:
+ 	ScintillaQt *sqt;
+ 
+-	QTime time;
++  QElapsedTimer time;
+ 
+-	int preeditPos;
+-	QString preeditString;
++  int preeditPos;
++  QString preeditString;
+ 
+ 	int wheelDelta;
+ 
+diff --git a/qrenderdoc/3rdparty/toolwindowmanager/ToolWindowManager.cpp b/qrenderdoc/3rdparty/toolwindowmanager/ToolWindowManager.cpp
+index 0e496b8..98a7d82 100644
+--- a/qrenderdoc/3rdparty/toolwindowmanager/ToolWindowManager.cpp
++++ b/qrenderdoc/3rdparty/toolwindowmanager/ToolWindowManager.cpp
+@@ -25,7 +25,6 @@
+ #include "ToolWindowManager.h"
+ #include <QApplication>
+ #include <QDebug>
+-#include <QDesktopWidget>
+ #include <QDrag>
+ #include <QEvent>
+ #include <QMetaMethod>
+@@ -70,7 +69,7 @@ ToolWindowManager::ToolWindowManager(QWidget *parent) : QWidget(parent)
+   m_hoverArea = NULL;
+ 
+   QPalette pal = palette();
+-  pal.setColor(QPalette::Background, pal.color(QPalette::Highlight));
++  pal.setColor(QPalette::Window, pal.color(QPalette::Highlight));
+ 
+   m_previewOverlay = new QWidget(NULL);
+   m_previewOverlay->setAutoFillBackground(true);
+@@ -664,7 +663,7 @@ void ToolWindowManager::restoreState(const QVariantMap &dataMap)
+     wrapper->show();
+     if(wrapper->windowState() & Qt::WindowMaximized)
+     {
+-      wrapper->setWindowState(0);
++      wrapper->setWindowState(Qt::WindowNoState);
+       wrapper->setWindowState(Qt::WindowMaximized);
+     }
+   }
+@@ -1350,7 +1349,6 @@ void ToolWindowManager::drawHotspotPixmaps()
+     QPainter p(&m_pixmaps[ref]);
+     p.setCompositionMode(QPainter::CompositionMode_Source);
+     p.setRenderHint(QPainter::Antialiasing);
+-    p.setRenderHint(QPainter::HighQualityAntialiasing);
+ 
+     QRectF rect(0, 0, m_dropHotspotDimension, m_dropHotspotDimension);
+ 
+diff --git a/qrenderdoc/3rdparty/toolwindowmanager/ToolWindowManagerArea.cpp b/qrenderdoc/3rdparty/toolwindowmanager/ToolWindowManagerArea.cpp
+index db951bf..5368b38 100644
+--- a/qrenderdoc/3rdparty/toolwindowmanager/ToolWindowManagerArea.cpp
++++ b/qrenderdoc/3rdparty/toolwindowmanager/ToolWindowManagerArea.cpp
+@@ -194,7 +194,7 @@ bool ToolWindowManagerArea::eventFilter(QObject *object, QEvent *event)
+         // stop internal tab drag in QTabBar
+         QMouseEvent *releaseEvent =
+             new QMouseEvent(QEvent::MouseButtonRelease, static_cast<QMouseEvent *>(event)->pos(),
+-                            Qt::LeftButton, Qt::LeftButton, 0);
++                            Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+         qApp->sendEvent(tabBar(), releaseEvent);
+         m_manager->startDrag(QList<QWidget *>() << toolWindow, NULL);
+       }
+diff --git a/qrenderdoc/3rdparty/toolwindowmanager/ToolWindowManagerTabBar.cpp b/qrenderdoc/3rdparty/toolwindowmanager/ToolWindowManagerTabBar.cpp
+index 2b71ca4..c73bcc9 100644
+--- a/qrenderdoc/3rdparty/toolwindowmanager/ToolWindowManagerTabBar.cpp
++++ b/qrenderdoc/3rdparty/toolwindowmanager/ToolWindowManagerTabBar.cpp
+@@ -51,8 +51,8 @@ ToolWindowManagerTabBar::ToolWindowManagerTabBar(QWidget *parent) : QTabBar(pare
+ 
+   buttonOpt.initFrom(parentWidget());
+   buttonOpt.iconSize = QSize(size, size);
+-  buttonOpt.subControls = 0;
+-  buttonOpt.activeSubControls = 0;
++  buttonOpt.subControls = QStyle::SubControls();
++  buttonOpt.activeSubControls = QStyle::SubControls();
+   buttonOpt.features = QStyleOptionToolButton::None;
+   buttonOpt.arrowType = Qt::NoArrow;
+   buttonOpt.state |= QStyle::State_AutoRaise;
+@@ -157,8 +157,8 @@ void ToolWindowManagerTabBar::paintEvent(QPaintEvent *event)
+ 
+     buttonOpt.initFrom(parentWidget());
+     buttonOpt.iconSize = QSize(size, size);
+-    buttonOpt.subControls = 0;
+-    buttonOpt.activeSubControls = 0;
++    buttonOpt.subControls = QStyle::SubControls();
++    buttonOpt.activeSubControls = QStyle::SubControls();
+     buttonOpt.features = QStyleOptionToolButton::None;
+     buttonOpt.arrowType = Qt::NoArrow;
+     buttonOpt.state = QStyle::State_Active | QStyle::State_Enabled | QStyle::State_AutoRaise;
+diff --git a/qrenderdoc/3rdparty/toolwindowmanager/ToolWindowManagerWrapper.cpp b/qrenderdoc/3rdparty/toolwindowmanager/ToolWindowManagerWrapper.cpp
+index c0f3c19..18c3264 100644
+--- a/qrenderdoc/3rdparty/toolwindowmanager/ToolWindowManagerWrapper.cpp
++++ b/qrenderdoc/3rdparty/toolwindowmanager/ToolWindowManagerWrapper.cpp
+@@ -61,7 +61,6 @@ ToolWindowManagerWrapper::ToolWindowManagerWrapper(ToolWindowManager *manager, b
+ 
+   QVBoxLayout *mainLayout = new QVBoxLayout(this);
+   mainLayout->setContentsMargins(0, 0, 0, 0);
+-  mainLayout->setMargin(0);
+   mainLayout->setSpacing(0);
+   m_manager->m_wrappers << this;
+ 
+@@ -361,7 +360,7 @@ void ToolWindowManagerWrapper::paintEvent(QPaintEvent *)
+     QStylePainter p(this);
+ 
+     QStyleOptionFrame frameOptions;
+-    frameOptions.init(this);
++    frameOptions.initFrom(this);
+     p.drawPrimitive(QStyle::PE_FrameDockWidget, frameOptions);
+ 
+     // Title must be painted after the frame, since the areas overlap, and
+@@ -382,8 +381,8 @@ void ToolWindowManagerWrapper::paintEvent(QPaintEvent *)
+ 
+     buttonOpt.initFrom(this);
+     buttonOpt.iconSize = QSize(m_closeButtonSize, m_closeButtonSize);
+-    buttonOpt.subControls = 0;
+-    buttonOpt.activeSubControls = 0;
++    buttonOpt.subControls = QStyle::SubControls();
++    buttonOpt.activeSubControls = QStyle::SubControls();
+     buttonOpt.features = QStyleOptionToolButton::None;
+     buttonOpt.arrowType = Qt::NoArrow;
+     buttonOpt.state = QStyle::State_Active | QStyle::State_Enabled | QStyle::State_AutoRaise;
+diff --git a/qrenderdoc/Code/CaptureContext.cpp b/qrenderdoc/Code/CaptureContext.cpp
+index 2b9fb4e..bda2860 100644
+--- a/qrenderdoc/Code/CaptureContext.cpp
++++ b/qrenderdoc/Code/CaptureContext.cpp
+@@ -585,7 +585,7 @@ rdcstr CaptureContext::LoadExtension(rdcstr name)
+   for(QAction *a : m_MainWindow->GetMenuActions())
+     CleanMenu(a);
+ 
+-  m_RegisteredMenuItems.removeAll(NULL);
++  m_RegisteredMenuItems.removeAll(nullptr);
+ 
+   return ret;
+ }
+@@ -1157,9 +1157,9 @@ void CaptureContext::LoadCaptureThreaded(const QString &captureFile, const Repla
+       }
+ 
+       if(m_CurWinSystem == WindowingSystem::XCB)
+-        m_XCBConnection = QX11Info::connection();
++        m_XCBConnection = RDX11Connection();
+       else
+-        m_X11Display = QX11Info::display();
++        m_X11Display = RDX11Display();
+     }
+ 
+ #elif defined(RENDERDOC_PLATFORM_APPLE)
+diff --git a/qrenderdoc/Code/CaptureContext.h b/qrenderdoc/Code/CaptureContext.h
+index ca00d45..3163fdb 100644
+--- a/qrenderdoc/Code/CaptureContext.h
++++ b/qrenderdoc/Code/CaptureContext.h
+@@ -34,7 +34,7 @@
+ #include "ReplayManager.h"
+ 
+ #if defined(RENDERDOC_PLATFORM_LINUX)
+-#include <QX11Info>
++#include "QRDX11.h"
+ #endif
+ 
+ class MainWindow;
+diff --git a/qrenderdoc/Code/Interface/PersistentConfig.cpp b/qrenderdoc/Code/Interface/PersistentConfig.cpp
+index ec9a760..6c4f4bc 100644
+--- a/qrenderdoc/Code/Interface/PersistentConfig.cpp
++++ b/qrenderdoc/Code/Interface/PersistentConfig.cpp
+@@ -298,7 +298,7 @@ void PersistentConfig::applyValues(const QVariantMap &values)
+       if(settings.contains(lit("shader.debug.searchPaths")))
+       {
+         QStringList searchPaths = settings[lit("shader.debug.searchPaths")].toString().split(
+-            QLatin1Char(';'), QString::SkipEmptyParts);
++            QLatin1Char(';'), RDSkipEmptyParts);
+ 
+         SDObject *debug = RENDERDOC_SetConfigSetting("DXBC.Debug.SearchDirPaths");
+ 
+diff --git a/qrenderdoc/Code/MiniQtHelper.cpp b/qrenderdoc/Code/MiniQtHelper.cpp
+index 759de47..d56d177 100644
+--- a/qrenderdoc/Code/MiniQtHelper.cpp
++++ b/qrenderdoc/Code/MiniQtHelper.cpp
+@@ -190,7 +190,7 @@ bool MiniQtHelper::ShowWidgetAsDialog(QWidget *widget)
+ 
+   QVBoxLayout l;
+   l.addWidget(widget);
+-  l.setMargin(3);
++  l.setContentsMargins(3, 3, 3, 3);
+ 
+   m_CurrentDialog->setLayout(&l);
+ 
+diff --git a/qrenderdoc/Code/QRDUtils.cpp b/qrenderdoc/Code/QRDUtils.cpp
+index 15cc6a1..e11e18c 100644
+--- a/qrenderdoc/Code/QRDUtils.cpp
++++ b/qrenderdoc/Code/QRDUtils.cpp
+@@ -1897,7 +1897,7 @@ QIcon MakeSwatchIcon(QWidget *parentWidget, QColor swatchColor)
+   {
+     QPainter painter(&pm);
+ 
+-    QPen pen(parentWidget->palette().foreground(), 1.0);
++    QPen pen(parentWidget->palette().windowText(), 1.0);
+     painter.setPen(pen);
+     painter.drawLine(QPoint(0, 0), QPoint(h - 1, 0));
+     painter.drawLine(QPoint(h - 1, 0), QPoint(h - 1, h - 1));
+@@ -2555,8 +2555,8 @@ QString RDDialog::getExistingDirectory(QWidget *parent, const QString &caption,
+ {
+   QFileDialog fd(parent, caption, dir, QString());
+   fd.setAcceptMode(QFileDialog::AcceptOpen);
+-  fd.setFileMode(QFileDialog::DirectoryOnly);
+-  fd.setOptions(options);
++  fd.setFileMode(QFileDialog::Directory);
++  fd.setOptions(options | QFileDialog::ShowDirsOnly);
+   show(&fd);
+ 
+   if(fd.result() == QFileDialog::Accepted)
+@@ -3987,7 +3987,7 @@ QVariant StructuredDataItemModel::headerData(int section, Qt::Orientation orient
+ Qt::ItemFlags StructuredDataItemModel::flags(const QModelIndex &index) const
+ {
+   if(!index.isValid())
+-    return 0;
++    return Qt::NoItemFlags;
+ 
+   return QAbstractItemModel::flags(index);
+ }
+diff --git a/qrenderdoc/Code/QRDUtils.h b/qrenderdoc/Code/QRDUtils.h
+index 76675aa..409b9e7 100644
+--- a/qrenderdoc/Code/QRDUtils.h
++++ b/qrenderdoc/Code/QRDUtils.h
+@@ -44,6 +44,47 @@
+ #define ENABLE_UNIT_TESTS 0
+ #endif
+ 
++// Qt 5.14 moved the QString::split() behaviour flags into the Qt namespace, and
++// Qt 6 removed the QString spelling
++// Qt 6 replaced QAbstractItemView::viewOptions() with initViewItemOption(),
++// which fills an option the caller owns
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++#define RDViewOptions(view)           \
++  ([&]() {                            \
++    QStyleOptionViewItem opt;         \
++    (view)->initViewItemOption(&opt); \
++    return opt;                       \
++  }())
++#else
++#define RDViewOptions(view) ((view)->viewOptions())
++#endif
++
++// Qt 6 removed the relational operators on QVariant in favour of compare()
++inline bool RDVariantLessThan(const QVariant &left, const QVariant &right)
++{
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++  return QVariant::compare(left, right) == QPartialOrdering::Less;
++#else
++  return left < right;
++#endif
++}
++
++// Qt 5.15 renamed the QNetworkReply::error signal, and in Qt 6 error() is only
++// the getter
++#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
++#define RDNetworkReplyError &QNetworkReply::errorOccurred
++#else
++#define RDNetworkReplyError OverloadedSlot<QNetworkReply::NetworkError>::of(&QNetworkReply::error)
++#endif
++
++#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
++#define RDSkipEmptyParts Qt::SkipEmptyParts
++#define RDKeepEmptyParts Qt::KeepEmptyParts
++#else
++#define RDSkipEmptyParts QString::SkipEmptyParts
++#define RDKeepEmptyParts QString::KeepEmptyParts
++#endif
++
+ class QHeaderView;
+ 
+ template <typename T>
+diff --git a/qrenderdoc/Code/QRDX11.h b/qrenderdoc/Code/QRDX11.h
+new file mode 100644
+index 0000000..4907b21
+--- /dev/null
++++ b/qrenderdoc/Code/QRDX11.h
+@@ -0,0 +1,74 @@
++/******************************************************************************
++ * The MIT License (MIT)
++ *
++ * Copyright (c) 2019-2025 Baldur Karlsson
++ *
++ * Permission is hereby granted, free of charge, to any person obtaining a copy
++ * of this software and associated documentation files (the "Software"), to deal
++ * in the Software without restriction, including without limitation the rights
++ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++ * copies of the Software, and to permit persons to whom the Software is
++ * furnished to do so, subject to the following conditions:
++ *
++ * The above copyright notice and this permission notice shall be included in
++ * all copies or substantial portions of the Software.
++ *
++ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
++ * THE SOFTWARE.
++ ******************************************************************************/
++
++#pragma once
++
++// Qt6 dropped QX11Info. Its replacement is the X11 native interface, which only
++// exists when Qt itself was built with xcb support, so both of these can return
++// NULL there where QX11Info would always have answered.
++
++#include <QtGlobal>
++
++struct _XDisplay;
++typedef struct _XDisplay Display;
++struct xcb_connection_t;
++
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++
++#include <QtGui/qguiapplication_platform.h>
++#include <QGuiApplication>
++
++inline Display *RDX11Display()
++{
++#if QT_CONFIG(xcb)
++  if(auto *x11 = qGuiApp->nativeInterface<QNativeInterface::QX11Application>())
++    return x11->display();
++#endif
++  return NULL;
++}
++
++inline xcb_connection_t *RDX11Connection()
++{
++#if QT_CONFIG(xcb)
++  if(auto *x11 = qGuiApp->nativeInterface<QNativeInterface::QX11Application>())
++    return x11->connection();
++#endif
++  return NULL;
++}
++
++#else
++
++#include <QX11Info>
++
++inline Display *RDX11Display()
++{
++  return QX11Info::display();
++}
++
++inline xcb_connection_t *RDX11Connection()
++{
++  return QX11Info::connection();
++}
++
++#endif
+diff --git a/qrenderdoc/Code/qprocessinfo.cpp b/qrenderdoc/Code/qprocessinfo.cpp
+index a15c162..577ca45 100644
+--- a/qrenderdoc/Code/qprocessinfo.cpp
++++ b/qrenderdoc/Code/qprocessinfo.cpp
+@@ -122,7 +122,7 @@ QProcessList QProcessInfo::enumerate(bool includeWindowTitles)
+ 
+ #include <QDir>
+ #include <QProcess>
+-#include <QRegExp>
++#include <QRegularExpression>
+ #include <QStandardPaths>
+ #include <QTextStream>
+ 
+@@ -285,24 +285,26 @@ QProcessList QProcessInfo::enumerate(bool includeWindowTitles)
+       // should be three lines: Window <id> \n Position: ... \n Geometry: ...
+       if(winGeometry.size() >= 3)
+       {
+-        QRegExp pos(QStringLiteral("Position: (-?\\d+),(-?\\d+)"));
+-        QRegExp geometry(QStringLiteral("Geometry: (\\d+)x(\\d+)"));
++        QRegularExpression pos(QStringLiteral("Position: (-?\\d+),(-?\\d+)"));
++        QRegularExpression geometry(QStringLiteral("Geometry: (\\d+)x(\\d+)"));
+ 
+         QString posString = QString::fromUtf8(winGeometry[1]);
+         QString geometryString = QString::fromUtf8(winGeometry[2]);
+ 
+         int x = 0, y = 0, w = 1000, h = 1000;
+ 
+-        if(pos.indexIn(posString) >= 0)
++        QRegularExpressionMatch posMatch = pos.match(posString);
++        if(posMatch.hasMatch())
+         {
+-          x = pos.cap(1).toInt();
+-          y = pos.cap(2).toInt();
++          x = posMatch.captured(1).toInt();
++          y = posMatch.captured(2).toInt();
+         }
+ 
+-        if(geometry.indexIn(geometryString) >= 0)
++        QRegularExpressionMatch geometryMatch = geometry.match(geometryString);
++        if(geometryMatch.hasMatch())
+         {
+-          w = geometry.cap(1).toInt();
+-          h = geometry.cap(2).toInt();
++          w = geometryMatch.captured(1).toInt();
++          h = geometryMatch.captured(2).toInt();
+         }
+ 
+         // some invisible windows are placed off screen, if we detect that skip it
+diff --git a/qrenderdoc/Code/qrenderdoc.cpp b/qrenderdoc/Code/qrenderdoc.cpp
+index 5058566..879c8cd 100644
+--- a/qrenderdoc/Code/qrenderdoc.cpp
++++ b/qrenderdoc/Code/qrenderdoc.cpp
+@@ -184,7 +184,9 @@ int main(int argc, char *argv[])
+ {
+   // call this as the very first thing - no-op on other platforms, but on linux it means
+   // XInitThreads will be called allowing driver access to xlib on multiple threads.
++#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+   QCoreApplication::setAttribute(Qt::AA_X11InitThreads);
++#endif
+ 
+   qInstallMessageHandler(sharedLogOutput);
+ 
+@@ -578,7 +580,7 @@ int main(int argc, char *argv[])
+     {
+       GlobalEnvironment env;
+ #if defined(RENDERDOC_PLATFORM_LINUX)
+-      env.xlibDisplay = QX11Info::display();
++      env.xlibDisplay = RDX11Display();
+       if(QGuiApplication::platformName() == lit("wayland"))
+       {
+         env.waylandDisplay = (wl_display *)AccessWaylandPlatformInterface("display", NULL);
+diff --git a/qrenderdoc/Styles/RDStyle/RDStyle.cpp b/qrenderdoc/Styles/RDStyle/RDStyle.cpp
+index d5cdc95..b36e8dd 100644
+--- a/qrenderdoc/Styles/RDStyle/RDStyle.cpp
++++ b/qrenderdoc/Styles/RDStyle/RDStyle.cpp
+@@ -1546,7 +1546,7 @@ void RDStyle::drawPrimitive(PrimitiveElement element, const QStyleOption *opt, Q
+ 
+     return;
+   }
+-  else if(element == QStyle::PE_IndicatorViewItemCheck || element == QStyle::PE_IndicatorCheckBox)
++  else if(element == QStyle::PE_IndicatorItemViewItemCheck || element == QStyle::PE_IndicatorCheckBox)
+   {
+     QRect rect = opt->rect;
+     int w = rect.width();
+diff --git a/qrenderdoc/Styles/RDStyle/RDStyle.h b/qrenderdoc/Styles/RDStyle/RDStyle.h
+index 99ee1a0..d606426 100644
+--- a/qrenderdoc/Styles/RDStyle/RDStyle.h
++++ b/qrenderdoc/Styles/RDStyle/RDStyle.h
+@@ -99,7 +99,7 @@ protected:
+   bool eventFilter(QObject *watched, QEvent *event) override;
+ 
+   const QBrush &outlineBrush(const QPalette &pal,
+-                             QPalette::ColorRole role = QPalette::Foreground) const;
++                             QPalette::ColorRole role = QPalette::WindowText) const;
+ 
+   void drawRoundedRectBorder(const QStyleOption *opt, QPainter *p, const QWidget *widget,
+                              QPalette::ColorRole fillRole, bool shadow) const;
+diff --git a/qrenderdoc/Styles/RDTweakedNativeStyle/RDTweakedNativeStyle.cpp b/qrenderdoc/Styles/RDTweakedNativeStyle/RDTweakedNativeStyle.cpp
+index 3334954..b98147c 100644
+--- a/qrenderdoc/Styles/RDTweakedNativeStyle/RDTweakedNativeStyle.cpp
++++ b/qrenderdoc/Styles/RDTweakedNativeStyle/RDTweakedNativeStyle.cpp
+@@ -521,7 +521,11 @@ void RDTweakedNativeStyle::drawControl(ControlElement control, const QStyleOptio
+       // elide text from the right if there's not enough space
+       QFontMetrics metrics(toolopt->font);
+ 
++#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
++      int space = metrics.horizontalAdvance(QLatin1Char(' '));
++#else
+       int space = metrics.width(QLatin1Char(' '));
++#endif
+       textRect = QStyle::visualRect(opt->direction, rect, textRect);
+ 
+       if(toolopt->toolButtonStyle == Qt::ToolButtonTextOnly)
+diff --git a/qrenderdoc/Widgets/AnnotationDisplay.cpp b/qrenderdoc/Widgets/AnnotationDisplay.cpp
+index e47f162..5c5cbf9 100644
+--- a/qrenderdoc/Widgets/AnnotationDisplay.cpp
++++ b/qrenderdoc/Widgets/AnnotationDisplay.cpp
+@@ -50,7 +50,8 @@ AnnotationDisplay::AnnotationDisplay(ICaptureContext &ctx, bool standalone, QWid
+ 
+   QVBoxLayout *layout = new QVBoxLayout(this);
+   layout->setSpacing(0);
+-  layout->setMargin(m_Standalone ? 3 : 0);
++  const int margin = m_Standalone ? 3 : 0;
++  layout->setContentsMargins(margin, margin, margin, margin);
+ 
+   layout->addWidget(m_Tree);
+ 
+diff --git a/qrenderdoc/Widgets/Extended/RDHeaderView.cpp b/qrenderdoc/Widgets/Extended/RDHeaderView.cpp
+index 517bdb5..1028c01 100644
+--- a/qrenderdoc/Widgets/Extended/RDHeaderView.cpp
++++ b/qrenderdoc/Widgets/Extended/RDHeaderView.cpp
+@@ -491,7 +491,11 @@ void RDHeaderView::resizeSectionsWithHints()
+     }
+   }
+ 
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++  resizeSections(sizes);
++#else
+   resizeSections(sizes.toList());
++#endif
+ }
+ 
+ void RDHeaderView::setColumnStretchHints(const QList<int> &hints)
+@@ -857,7 +861,7 @@ void RDHeaderView::paintEvent(QPaintEvent *e)
+   if(accumRect.right() < e->rect().right())
+   {
+     QStyleOption opt;
+-    opt.init(this);
++    opt.initFrom(this);
+     opt.state |= QStyle::State_Horizontal;
+     opt.rect =
+         QRect(accumRect.right() + 1, 0, e->rect().right() - accumRect.right(), viewport()->height());
+diff --git a/qrenderdoc/Widgets/Extended/RDLabel.cpp b/qrenderdoc/Widgets/Extended/RDLabel.cpp
+index 6694e1a..712c4f6 100644
+--- a/qrenderdoc/Widgets/Extended/RDLabel.cpp
++++ b/qrenderdoc/Widgets/Extended/RDLabel.cpp
+@@ -163,7 +163,12 @@ void RDLabel::leaveEvent(QEvent *event)
+ 
+ void RDLabel::resizeEvent(QResizeEvent *event)
+ {
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++  const QPixmap pm = pixmap();
++  const QPixmap *p = pm.isNull() ? NULL : &pm;
++#else
+   const QPixmap *p = pixmap();
++#endif
+   if(m_preserveRatio && p)
+   {
+     QRect r = rect();
+diff --git a/qrenderdoc/Widgets/Extended/RDTableView.h b/qrenderdoc/Widgets/Extended/RDTableView.h
+index f251cb7..0ef9b00 100644
+--- a/qrenderdoc/Widgets/Extended/RDTableView.h
++++ b/qrenderdoc/Widgets/Extended/RDTableView.h
+@@ -65,7 +65,20 @@ public:
+ 
+   void setColumnGroupRole(int role);
+   int columnGroupRole() const { return m_columnGroupRole; }
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++  void initViewItemOption(QStyleOptionViewItem *option) const override
++  {
++    QTableView::initViewItemOption(option);
++  }
++  QStyleOptionViewItem viewOptions() const
++  {
++    QStyleOptionViewItem opt;
++    initViewItemOption(&opt);
++    return opt;
++  }
++#else
+   QStyleOptionViewItem viewOptions() const override { return QTableView::viewOptions(); }
++#endif
+   void setPinnedColumns(int numColumns);
+   int pinnedColumns() const { return m_pinnedColumns; }
+ protected:
+diff --git a/qrenderdoc/Widgets/Extended/RDToolTip.cpp b/qrenderdoc/Widgets/Extended/RDToolTip.cpp
+index 6b8b1b9..db310c2 100644
+--- a/qrenderdoc/Widgets/Extended/RDToolTip.cpp
++++ b/qrenderdoc/Widgets/Extended/RDToolTip.cpp
+@@ -24,9 +24,9 @@
+ 
+ #include "RDToolTip.h"
+ #include <QApplication>
+-#include <QDesktopWidget>
+ #include <QMouseEvent>
+ #include <QProxyStyle>
++#include <QScreen>
+ #include <QStyleOptionFrame>
+ #include <QStylePainter>
+ 
+@@ -36,7 +36,13 @@ void ICustomToolTipDisplay::showTip(QWidget *widget, QString text, QModelIndex i
+ 
+   // estimate, as this is not easily queryable
+   const QPoint cursorSize(16, 16);
++#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
++  const QScreen *screen = QGuiApplication::screenAt(p);
++  const QRect screenAvailGeom =
++      screen ? screen->availableGeometry() : QGuiApplication::primaryScreen()->availableGeometry();
++#else
+   const QRect screenAvailGeom = QApplication::desktop()->availableGeometry(p);
++#endif
+ 
+   // start with the tooltip placed bottom-right of the cursor, as the default
+   QRect tooltipRect;
+@@ -94,7 +100,7 @@ void RDToolTip::paintEvent(QPaintEvent *ev)
+ {
+   QStylePainter p(this);
+   QStyleOptionFrame opt;
+-  opt.init(this);
++  opt.initFrom(this);
+   p.drawPrimitive(QStyle::PE_PanelTipLabel, opt);
+   p.end();
+ 
+@@ -131,7 +137,7 @@ void RDToolTip::resizeEvent(QResizeEvent *e)
+ {
+   QStyleHintReturnMask frameMask;
+   QStyleOption option;
+-  option.init(this);
++  option.initFrom(this);
+   if(style()->styleHint(QStyle::SH_ToolTip_Mask, &option, this, &frameMask))
+     setMask(frameMask.region);
+ 
+diff --git a/qrenderdoc/Widgets/Extended/RDTreeView.cpp b/qrenderdoc/Widgets/Extended/RDTreeView.cpp
+index 34dea8d..d60ba6d 100644
+--- a/qrenderdoc/Widgets/Extended/RDTreeView.cpp
++++ b/qrenderdoc/Widgets/Extended/RDTreeView.cpp
+@@ -187,7 +187,11 @@ void RDTreeView::mouseMoveEvent(QMouseEvent *e)
+ void RDTreeView::wheelEvent(QWheelEvent *e)
+ {
+   QTreeView::wheelEvent(e);
++#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
++  m_currentHoverIndex = indexAt(e->position().toPoint());
++#else
+   m_currentHoverIndex = indexAt(e->pos());
++#endif
+ }
+ 
+ void RDTreeView::leaveEvent(QEvent *e)
+@@ -578,8 +582,8 @@ void RDTreeView::drawRow(QPainter *painter, const QStyleOptionViewItem &options,
+   {
+     QPen p = painter->pen();
+ 
+-    QColor back = options.palette.color(QPalette::Active, QPalette::Background);
+-    QColor fore = options.palette.color(QPalette::Active, QPalette::Foreground);
++    QColor back = options.palette.color(QPalette::Active, QPalette::Window);
++    QColor fore = options.palette.color(QPalette::Active, QPalette::WindowText);
+ 
+     // draw the grid lines with a colour half way between background and foreground
+     painter->setPen(QPen(QColor::fromRgbF(back.redF() * 0.8 + fore.redF() * 0.2,
+@@ -678,7 +682,7 @@ void RDTreeView::drawBranches(QPainter *painter, const QRect &rect, const QModel
+   if(foreColVar.isValid())
+   {
+     foreCol = foreColVar.value<QBrush>().color();
+-    opt.palette.setColor(QPalette::Foreground, foreCol);
++    opt.palette.setColor(QPalette::WindowText, foreCol);
+     opt.palette.setColor(QPalette::Text, foreCol);
+   }
+ 
+@@ -707,7 +711,7 @@ void RDTreeView::drawBranches(QPainter *painter, const QRect &rect, const QModel
+     if(model()->rowCount(index) == 0)
+       return;
+ 
+-    QStyleOptionViewItem branchopt = viewOptions();
++    QStyleOptionViewItem branchopt = RDViewOptions(this);
+ 
+     branchopt.rect = primitive;
+ 
+diff --git a/qrenderdoc/Widgets/Extended/RDTreeWidget.cpp b/qrenderdoc/Widgets/Extended/RDTreeWidget.cpp
+index 1c98bb5..1aa8028 100644
+--- a/qrenderdoc/Widgets/Extended/RDTreeWidget.cpp
++++ b/qrenderdoc/Widgets/Extended/RDTreeWidget.cpp
+@@ -153,7 +153,7 @@ public:
+   Qt::ItemFlags flags(const QModelIndex &index) const override
+   {
+     if(!index.isValid())
+-      return 0;
++      return Qt::NoItemFlags;
+ 
+     RDTreeWidgetItem *item = itemForIndex(index);
+ 
+@@ -654,7 +654,7 @@ void RDTreeWidget::beginUpdate()
+   m_queueUpdates = true;
+ 
+   m_queuedItem = NULL;
+-  m_lowestIndex = m_highestIndex = qMakePair<int, int>(-1, -1);
++  m_lowestIndex = m_highestIndex = qMakePair(-1, -1);
+   m_queuedChildren = false;
+   m_queuedRoles = 0;
+ 
+@@ -913,8 +913,8 @@ void RDTreeWidget::itemDataChanged(RDTreeWidgetItem *item, int column, int role)
+     if(m_lowestIndex.first == -1)
+     {
+       m_queuedItem = item;
+-      m_lowestIndex = qMakePair<int, int>(row, 0);
+-      m_highestIndex = qMakePair<int, int>(m_lowestIndex.first, m_headers.count() - 1);
++      m_lowestIndex = qMakePair(row, 0);
++      m_highestIndex = qMakePair(m_lowestIndex.first, m_headers.count() - 1);
+     }
+     else
+     {
+@@ -952,8 +952,8 @@ void RDTreeWidget::beginInsertChild(RDTreeWidgetItem *item, int index)
+       // in a later row, but we're generally only changing data *or* adding children, not both,
+       // and in either case this is primarily about batching updates not providing a minimal update
+       // set
+-      m_lowestIndex = qMakePair<int, int>(0, 0);
+-      m_highestIndex = qMakePair<int, int>(0, m_headers.count() - 1);
++      m_lowestIndex = qMakePair(0, 0);
++      m_highestIndex = qMakePair(0, m_headers.count() - 1);
+     }
+     else
+     {
+diff --git a/qrenderdoc/Widgets/FindReplace.cpp b/qrenderdoc/Widgets/FindReplace.cpp
+index 3302bbd..8534e58 100644
+--- a/qrenderdoc/Widgets/FindReplace.cpp
++++ b/qrenderdoc/Widgets/FindReplace.cpp
+@@ -47,8 +47,13 @@ FindReplace::FindReplace(QList<ScintillaEdit *> &scintillas, QWidget *parent)
+   RDLineEdit *edit = new RDLineEdit(this);
+   ui->findText->setLineEdit(edit);
+ 
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++  ui->findText->setCompleter(NULL);
++  ui->replaceText->setCompleter(NULL);
++#else
+   ui->findText->setAutoCompletion(false);
+   ui->replaceText->setAutoCompletion(false);
++#endif
+ 
+   QObject::connect(edit, &RDLineEdit::keyPress, [this](QKeyEvent *event) {
+     if(event->key() == Qt::Key_Return || event->key() == Qt::Key_Enter)
+diff --git a/qrenderdoc/Widgets/MarkerBreadcrumbs.cpp b/qrenderdoc/Widgets/MarkerBreadcrumbs.cpp
+index f3b6e12..c664de7 100644
+--- a/qrenderdoc/Widgets/MarkerBreadcrumbs.cpp
++++ b/qrenderdoc/Widgets/MarkerBreadcrumbs.cpp
+@@ -61,7 +61,7 @@ int BreadcrumbsLayout::count() const
+ 
+ Qt::Orientations BreadcrumbsLayout::expandingDirections() const
+ {
+-  return 0;
++  return Qt::Orientations();
+ }
+ 
+ QSize BreadcrumbsLayout::minimumSize() const
+@@ -217,7 +217,7 @@ MarkerBreadcrumbs::MarkerBreadcrumbs(ICaptureContext &ctx, IEventBrowser *browse
+ 
+   m_Layout = new BreadcrumbsLayout(this, m_ElidedItems);
+   m_Layout->setContentsMargins(QMargins(0, 2, 0, 2));
+-  m_Layout->setMargin(0);
++  m_Layout->setContentsMargins(0, 0, 0, 0);
+   setLayout(m_Layout);
+ 
+   m_ElidedMenu = new QMenu(this);
+diff --git a/qrenderdoc/Widgets/ResourcePreview.cpp b/qrenderdoc/Widgets/ResourcePreview.cpp
+index f679a46..6b55249 100644
+--- a/qrenderdoc/Widgets/ResourcePreview.cpp
++++ b/qrenderdoc/Widgets/ResourcePreview.cpp
+@@ -58,8 +58,8 @@ ResourcePreview::ResourcePreview(bool, QWidget *parent)
+ 
+ void ResourcePreview::Initialise()
+ {
+-  setBackgroundRole(QPalette::Background);
+-  setForegroundRole(QPalette::Foreground);
++  setBackgroundRole(QPalette::Window);
++  setForegroundRole(QPalette::WindowText);
+ 
+   QPalette Pal(palette());
+ 
+@@ -71,13 +71,13 @@ void ResourcePreview::Initialise()
+ 
+   ui->slotLabel->setPalette(palette());
+   ui->slotLabel->setBackgroundRole(QPalette::Dark);
+-  ui->slotLabel->setForegroundRole(QPalette::Foreground);
++  ui->slotLabel->setForegroundRole(QPalette::WindowText);
+   ui->slotLabel->setAutoFillBackground(true);
+   ui->slotLabel->setFont(Formatter::PreferredFont());
+   ui->descriptionLabel->setPalette(palette());
+   ui->descriptionLabel->setAutoFillBackground(true);
+   ui->descriptionLabel->setBackgroundRole(QPalette::Dark);
+-  ui->descriptionLabel->setForegroundRole(QPalette::Foreground);
++  ui->descriptionLabel->setForegroundRole(QPalette::WindowText);
+   ui->descriptionLabel->setFont(Formatter::PreferredFont());
+ 
+   if(ui->thumbnail)
+@@ -138,7 +138,7 @@ void ResourcePreview::setSelected(bool sel)
+ {
+   m_Selected = sel;
+ 
+-  setForegroundRole(sel ? QPalette::Highlight : QPalette::Foreground);
++  setForegroundRole(sel ? QPalette::Highlight : QPalette::WindowText);
+ }
+ 
+ WindowingData ResourcePreview::GetWidgetWindowingData()
+diff --git a/qrenderdoc/Widgets/TextureGoto.cpp b/qrenderdoc/Widgets/TextureGoto.cpp
+index d38b968..730e821 100644
+--- a/qrenderdoc/Widgets/TextureGoto.cpp
++++ b/qrenderdoc/Widgets/TextureGoto.cpp
+@@ -39,7 +39,7 @@ TextureGoto::TextureGoto(QWidget *parent, std::function<void(QPoint)> callback)
+ 
+   QHBoxLayout *hbox = new QHBoxLayout(this);
+   hbox->setSpacing(5);
+-  hbox->setMargin(0);
++  hbox->setContentsMargins(0, 0, 0, 0);
+ 
+   QFrame *frame = new QFrame(this);
+   frame->setGeometry(geometry());
+diff --git a/qrenderdoc/Windows/BufferViewer.cpp b/qrenderdoc/Windows/BufferViewer.cpp
+index cb03780..6c67283 100644
+--- a/qrenderdoc/Windows/BufferViewer.cpp
++++ b/qrenderdoc/Windows/BufferViewer.cpp
+@@ -296,7 +296,7 @@ public:
+   {
+     CameraWrapper::MouseWheel(e);
+ 
+-    float mod = (1.0f - e->delta() / 2500.0f);
++    float mod = (1.0f - e->angleDelta().y() / 2500.0f);
+ 
+     SetDistance(qMax(1e-6f, m_Distance * mod));
+   }
+@@ -497,7 +497,11 @@ struct BufferData
+ {
+   BufferData()
+   {
++#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
++    refcount.storeRelaxed(1);
++#else
+     refcount.store(1);
++#endif
+     stride = 0;
+   }
+ 
+@@ -959,7 +963,7 @@ public:
+   Qt::ItemFlags flags(const QModelIndex &index) const override
+   {
+     if(!index.isValid())
+-      return 0;
++      return Qt::NoItemFlags;
+ 
+     return QAbstractItemModel::flags(index);
+   }
+diff --git a/qrenderdoc/Windows/DebugMessageView.cpp b/qrenderdoc/Windows/DebugMessageView.cpp
+index b010362..f50f5a3 100644
+--- a/qrenderdoc/Windows/DebugMessageView.cpp
++++ b/qrenderdoc/Windows/DebugMessageView.cpp
+@@ -63,7 +63,7 @@ public:
+   Qt::ItemFlags flags(const QModelIndex &index) const override
+   {
+     if(!index.isValid())
+-      return 0;
++      return Qt::NoItemFlags;
+ 
+     return QAbstractItemModel::flags(index);
+   }
+@@ -198,7 +198,8 @@ protected:
+ 
+   bool lessThan(const QModelIndex &left, const QModelIndex &right) const override
+   {
+-    return sourceModel()->data(left, SortDataRole) < sourceModel()->data(right, SortDataRole);
++    return RDVariantLessThan(sourceModel()->data(left, SortDataRole),
++                             sourceModel()->data(right, SortDataRole));
+   }
+ 
+ private:
+diff --git a/qrenderdoc/Windows/DescriptorViewer.cpp b/qrenderdoc/Windows/DescriptorViewer.cpp
+index f1f0f2e..29caa13 100644
+--- a/qrenderdoc/Windows/DescriptorViewer.cpp
++++ b/qrenderdoc/Windows/DescriptorViewer.cpp
+@@ -434,7 +434,7 @@ public:
+   Qt::ItemFlags flags(const QModelIndex &index) const override
+   {
+     if(!index.isValid())
+-      return 0;
++      return Qt::NoItemFlags;
+ 
+     return QAbstractItemModel::flags(index);
+   }
+@@ -1289,7 +1289,9 @@ DescriptorViewer::DescriptorViewer(ICaptureContext &ctx, QWidget *parent)
+     if(!registered)
+     {
+       registered = true;
++#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+       QMetaType::registerComparators<ButtonTag>();
++#endif
+     }
+   }
+ 
+diff --git a/qrenderdoc/Windows/Dialogs/CameraControlsDialog.cpp b/qrenderdoc/Windows/Dialogs/CameraControlsDialog.cpp
+index 0aebd8d..f179f3d 100644
+--- a/qrenderdoc/Windows/Dialogs/CameraControlsDialog.cpp
++++ b/qrenderdoc/Windows/Dialogs/CameraControlsDialog.cpp
+@@ -464,7 +464,7 @@ void FetchDefaultPrimaryKeys()
+ #elif defined(Q_OS_LINUX)
+ 
+ #include <dlfcn.h>
+-#include <QX11Info>
++#include "Code/QRDX11.h"
+ 
+ // predeclare enough of xkbcommon, so we don't have a new build time dependency on it. Qt will load it for us
+ extern "C" {
+@@ -550,7 +550,7 @@ void FetchDefaultPrimaryKeys()
+   // if both general and xcb symbols loaded, we're good to go
+   if(dyn_xkb_context_new && dyn_xkb_x11_keymap_new_from_device)
+   {
+-    xcb_connection_t *connection = QX11Info::connection();
++    xcb_connection_t *connection = RDX11Connection();
+     xkb_context *context = dyn_xkb_context_new(XKB_CONTEXT_NO_DEFAULT_INCLUDES);
+     int core_device_id = dyn_xkb_x11_get_core_keyboard_device_id(connection);
+     xkb_keymap *keymap = dyn_xkb_x11_keymap_new_from_device(context, connection, core_device_id,
+diff --git a/qrenderdoc/Windows/Dialogs/CaptureDialog.cpp b/qrenderdoc/Windows/Dialogs/CaptureDialog.cpp
+index 337a52b..16fa6fd 100644
+--- a/qrenderdoc/Windows/Dialogs/CaptureDialog.cpp
++++ b/qrenderdoc/Windows/Dialogs/CaptureDialog.cpp
+@@ -69,7 +69,7 @@ void CaptureDialog::initWarning(RDLabel *warning)
+ 
+     QColor base = pal.color(QPalette::ToolTipBase);
+ 
+-    pal.setColor(QPalette::Foreground, pal.color(QPalette::ToolTipText));
++    pal.setColor(QPalette::WindowText, pal.color(QPalette::ToolTipText));
+     pal.setColor(QPalette::Window, base);
+     pal.setColor(QPalette::Base, base.darker(120));
+ 
+@@ -79,7 +79,7 @@ void CaptureDialog::initWarning(RDLabel *warning)
+   calcPaletteFromStyle(NULL);
+ 
+   warning->setBackgroundRole(QPalette::Window);
+-  warning->setForegroundRole(QPalette::Foreground);
++  warning->setForegroundRole(QPalette::WindowText);
+ 
+   QObject::connect(warning, &RDLabel::mouseMoved,
+                    [warning](QMouseEvent *) { warning->setBackgroundRole(QPalette::Base); });
+diff --git a/qrenderdoc/Windows/Dialogs/ConfigEditor.cpp b/qrenderdoc/Windows/Dialogs/ConfigEditor.cpp
+index a024152..1607145 100644
+--- a/qrenderdoc/Windows/Dialogs/ConfigEditor.cpp
++++ b/qrenderdoc/Windows/Dialogs/ConfigEditor.cpp
+@@ -135,7 +135,7 @@ public:
+   Qt::ItemFlags flags(const QModelIndex &index) const override
+   {
+     if(!index.isValid())
+-      return 0;
++      return Qt::NoItemFlags;
+ 
+     Qt::ItemFlags ret = QAbstractItemModel::flags(index);
+ 
+@@ -251,7 +251,7 @@ public:
+       }
+       else if(role == Qt::TextAlignmentRole && col == Column_ResetButton)
+       {
+-        return Qt::AlignHCenter + Qt::AlignTop;
++        return int(Qt::AlignHCenter | Qt::AlignTop);
+       }
+       else if(role == Qt::ToolTipRole)
+       {
+@@ -419,8 +419,8 @@ void SettingDelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
+       int size = m_Editor->style()->pixelMetric(QStyle::PM_SmallIconSize, 0, m_Editor);
+ 
+       buttonOpt.iconSize = QSize(size, size);
+-      buttonOpt.subControls = 0;
+-      buttonOpt.activeSubControls = 0;
++      buttonOpt.subControls = QStyle::SubControls();
++      buttonOpt.activeSubControls = QStyle::SubControls();
+       buttonOpt.features = QStyleOptionToolButton::None;
+       buttonOpt.arrowType = Qt::NoArrow;
+       buttonOpt.state = QStyle::State_Active | QStyle::State_Enabled | QStyle::State_AutoRaise;
+diff --git a/qrenderdoc/Windows/Dialogs/CrashDialog.cpp b/qrenderdoc/Windows/Dialogs/CrashDialog.cpp
+index e94bbf4..a6ace57 100644
+--- a/qrenderdoc/Windows/Dialogs/CrashDialog.cpp
++++ b/qrenderdoc/Windows/Dialogs/CrashDialog.cpp
+@@ -25,7 +25,6 @@
+ #include "CrashDialog.h"
+ #include <QApplication>
+ #include <QDateTime>
+-#include <QDesktopWidget>
+ #include <QElapsedTimer>
+ #include <QFileInfo>
+ #include <QHttpMultiPart>
+@@ -485,8 +484,7 @@ void CrashDialog::sendReport()
+   multiPart->setParent(m_Request);
+ 
+   QObject::connect(
+-      m_Request, OverloadedSlot<QNetworkReply::NetworkError>::of(&QNetworkReply::error),
+-      [this](QNetworkReply::NetworkError err) {
++      m_Request, RDNetworkReplyError, [this](QNetworkReply::NetworkError err) {
+         ui->progressBar->setValue(0);
+         if(m_Request->error() == QNetworkReply::ProtocolInvalidOperationError)
+         {
+diff --git a/qrenderdoc/Windows/Dialogs/PerformanceCounterSelection.cpp b/qrenderdoc/Windows/Dialogs/PerformanceCounterSelection.cpp
+index 910f450..3e3c5c2 100644
+--- a/qrenderdoc/Windows/Dialogs/PerformanceCounterSelection.cpp
++++ b/qrenderdoc/Windows/Dialogs/PerformanceCounterSelection.cpp
+@@ -452,7 +452,7 @@ void PerformanceCounterSelection::Load()
+         selectedCounters.insert(m_UuidToCounter[uuid]);
+       }
+ 
+-      SetSelectedCounters(selectedCounters.toList());
++      SetSelectedCounters(selectedCounters.values());
+     }
+     else
+     {
+diff --git a/qrenderdoc/Windows/Dialogs/UpdateDialog.cpp b/qrenderdoc/Windows/Dialogs/UpdateDialog.cpp
+index be71824..2bca3ce 100644
+--- a/qrenderdoc/Windows/Dialogs/UpdateDialog.cpp
++++ b/qrenderdoc/Windows/Dialogs/UpdateDialog.cpp
+@@ -49,7 +49,7 @@ UpdateDialog::UpdateDialog(QString updateResponse, QWidget *parent)
+   setWindowFlags((windowFlags() | Qt::MSWindowsFixedSizeDialogHint) &
+                  ~Qt::WindowContextHelpButtonHint);
+ 
+-  QStringList lines = updateResponse.split(QLatin1Char('\n'), QString::SkipEmptyParts);
++  QStringList lines = updateResponse.split(QLatin1Char('\n'), RDSkipEmptyParts);
+ 
+   m_NewVer = lines[0];
+   m_URL = lines[1];
+@@ -198,16 +198,14 @@ void UpdateDialog::on_update_clicked()
+                              tr("Downloading update..."));
+     });
+ 
+-    QObject::connect(
+-        m_Request, OverloadedSlot<QNetworkReply::NetworkError>::of(&QNetworkReply::error),
+-        [this](QNetworkReply::NetworkError err) {
+-          ui->progressBar->setValue(0);
+-          ui->progressText->setText(tr("Network error:\n%1").arg(m_Request->errorString()));
+-          ui->update->setEnabled(true);
+-          ui->close->setEnabled(true);
+-          ui->close->setText(tr("Close"));
+-          ui->update->setText(tr("Retry Update"));
+-        });
++    QObject::connect(m_Request, RDNetworkReplyError, [this](QNetworkReply::NetworkError err) {
++      ui->progressBar->setValue(0);
++      ui->progressText->setText(tr("Network error:\n%1").arg(m_Request->errorString()));
++      ui->update->setEnabled(true);
++      ui->close->setEnabled(true);
++      ui->close->setText(tr("Close"));
++      ui->update->setText(tr("Retry Update"));
++    });
+ 
+     QObject::connect(m_Request, &QNetworkReply::finished, [this]() {
+       // if we cancelled, close the dialog now
+diff --git a/qrenderdoc/Windows/Dialogs/VirtualFileDialog.cpp b/qrenderdoc/Windows/Dialogs/VirtualFileDialog.cpp
+index 05db854..b423f7b 100644
+--- a/qrenderdoc/Windows/Dialogs/VirtualFileDialog.cpp
++++ b/qrenderdoc/Windows/Dialogs/VirtualFileDialog.cpp
+@@ -27,7 +27,7 @@
+ #include <QKeyEvent>
+ #include <QPainter>
+ #include <QPushButton>
+-#include <QRegExp>
++#include <QRegularExpression>
+ #include <QSortFilterProxyModel>
+ #include "Code/ReplayManager.h"
+ #include "Code/Resources.h"
+@@ -794,8 +794,13 @@ void VirtualFileDialog::on_filename_keyPress(QKeyEvent *e)
+ 
+   QString text = ui->filename->text();
+ 
++#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
++  QRegularExpression re(
++      QRegularExpression::anchoredPattern(QRegularExpression::wildcardToRegularExpression(text)));
++#else
+   QRegExp re(text);
+   re.setPatternSyntax(QRegExp::Wildcard);
++#endif
+ 
+   int fileCount = m_FileProxy->rowCount(curDir);
+   int matches = 0, dirmatches = 0;
+@@ -809,7 +814,11 @@ void VirtualFileDialog::on_filename_keyPress(QKeyEvent *e)
+ 
+     QString filename = m_FileProxy->data(file, RemoteFileModel::FileNameRole).toString();
+ 
++#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
++    if(re.match(filename).hasMatch())
++#else
+     if(re.exactMatch(filename))
++#endif
+     {
+       idx = file;
+       dirmatches += isDir ? 1 : 0;
+@@ -846,7 +855,11 @@ void VirtualFileDialog::on_filename_keyPress(QKeyEvent *e)
+     fileNotFound(text);
+   }
+ 
++#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
++  m_FileProxy->setFilterRegularExpression(re);
++#else
+   m_FileProxy->setFilterRegExp(re);
++#endif
+   m_FileProxy->refresh();
+ }
+ 
+@@ -867,7 +880,7 @@ void VirtualFileDialog::on_buttonBox_accepted()
+   }
+ 
+   // simulate enter being pressed
+-  QKeyEvent fakeEvent(QEvent::KeyPress, Qt::Key_Return, 0);
++  QKeyEvent fakeEvent(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
+   on_filename_keyPress(&fakeEvent);
+ }
+ 
+diff --git a/qrenderdoc/Windows/EventBrowser.cpp b/qrenderdoc/Windows/EventBrowser.cpp
+index fd2dee4..ad23526 100644
+--- a/qrenderdoc/Windows/EventBrowser.cpp
++++ b/qrenderdoc/Windows/EventBrowser.cpp
+@@ -1645,7 +1645,11 @@ protected:
+     int off = name.indexOf(QLatin1Char('<'));
+     while(off >= 0 && off + 4 < name.size())
+     {
++#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
++      if(name[off + 1] == QLatin1Char('/') || QStringView(name).mid(off, 5) == lit("<span"))
++#else
+       if(name[off + 1] == QLatin1Char('/') || name.midRef(off, 5) == lit("<span"))
++#endif
+       {
+         int end = name.indexOf(QLatin1Char('>'), off);
+         name.remove(off, end - off + 1);
+@@ -2672,7 +2676,7 @@ and these can be queried with a filter such as <code>$action(flags & Clear|Clear
+       // split by whitespace)
+       QStringList flagStrings;
+       for(int i = 2; i < tokens.count(); i++)
+-        flagStrings.append(tokens[i].text.split(QLatin1Char('|'), QString::KeepEmptyParts));
++        flagStrings.append(tokens[i].text.split(QLatin1Char('|'), RDKeepEmptyParts));
+ 
+       // if we have an empty string in the list somewhere that means the | list was broken
+       if(flagStrings.contains(QString()))
+@@ -3744,7 +3748,7 @@ void ParseErrorTipLabel::paintEvent(QPaintEvent *ev)
+ {
+   QStylePainter p(this);
+   QStyleOptionFrame opt;
+-  opt.init(this);
++  opt.initFrom(this);
+   p.drawPrimitive(QStyle::PE_PanelTipLabel, opt);
+   p.end();
+ 
+@@ -3758,7 +3762,7 @@ void ParseErrorTipLabel::resizeEvent(QResizeEvent *e)
+ {
+   QStyleHintReturnMask frameMask;
+   QStyleOption option;
+-  option.init(this);
++  option.initFrom(this);
+   if(style()->styleHint(QStyle::SH_ToolTip_Mask, &option, this, &frameMask))
+     setMask(frameMask.region);
+ 
+@@ -3849,7 +3853,7 @@ EventBrowser::EventBrowser(ICaptureContext &ctx, QWidget *parent)
+   {
+     QHBoxLayout *box = new QHBoxLayout(ui->breadcrumbStrip);
+     box->setContentsMargins(QMargins(0, 0, 0, 0));
+-    box->setMargin(0);
++    box->setContentsMargins(0, 0, 0, 0);
+     box->setSpacing(0);
+     m_Breadcrumbs = new MarkerBreadcrumbs(m_Ctx, this, this);
+     box->addWidget(m_Breadcrumbs);
+@@ -4729,7 +4733,7 @@ For searching arbitrary parameters consider using the <code>$param()</code> func
+     {
+       // stop the timer, we'll manually fire it instantly
+       m_FilterSettings.Timeout->stop();
+-      m_FilterSettings.Timeout->timeout({});
++      QMetaObject::invokeMethod(m_FilterSettings.Timeout, "timeout");
+     }
+ 
+     if(e->key() == Qt::Key_Down)
+@@ -5490,7 +5494,7 @@ void EventBrowser::GetMaxNameLength(int &maxNameLength, int indent, bool firstch
+ 
+   for(int i = 0, rowCount = idx.model()->rowCount(idx); i < rowCount; i++)
+   {
+-    GetMaxNameLength(maxNameLength, indent + 1, firstchild, idx.child(i, COL_NAME));
++    GetMaxNameLength(maxNameLength, indent + 1, firstchild, idx.model()->index(i, COL_NAME, idx));
+     firstchild = false;
+   }
+ }
+@@ -5528,7 +5532,7 @@ void EventBrowser::ExportAction(QTextStream &writer, int maxNameLength, int inde
+ 
+   for(int i = 0, rowCount = idx.model()->rowCount(idx); i < rowCount; i++)
+   {
+-    ExportAction(writer, maxNameLength, indent + 1, firstchild, idx.child(i, COL_NAME));
++    ExportAction(writer, maxNameLength, indent + 1, firstchild, idx.model()->index(i, COL_NAME, idx));
+     firstchild = false;
+   }
+ }
+diff --git a/qrenderdoc/Windows/LogView.cpp b/qrenderdoc/Windows/LogView.cpp
+index c77b10b..1067084 100644
+--- a/qrenderdoc/Windows/LogView.cpp
++++ b/qrenderdoc/Windows/LogView.cpp
+@@ -74,7 +74,7 @@ public:
+   Qt::ItemFlags flags(const QModelIndex &index) const override
+   {
+     if(!index.isValid())
+-      return 0;
++      return Qt::NoItemFlags;
+ 
+     return QAbstractItemModel::flags(index);
+   }
+diff --git a/qrenderdoc/Windows/MainWindow.cpp b/qrenderdoc/Windows/MainWindow.cpp
+index 2bad07c..c9e2dc2 100644
+--- a/qrenderdoc/Windows/MainWindow.cpp
++++ b/qrenderdoc/Windows/MainWindow.cpp
+@@ -35,6 +35,7 @@
+ #include <QProgressBar>
+ #include <QProgressDialog>
+ #include <QShortcut>
++#include <QStandardPaths>
+ #include <QToolButton>
+ #include <QToolTip>
+ #include "Code/QRDUtils.h"
+@@ -82,10 +83,9 @@ void NetworkWorker::get(QUrl url)
+ 
+   // connect up error and finished slots on *this* thread, and in the lambda emit signals to
+   // cross-thread back onto the UI thread.
+-  QObject::connect(req, OverloadedSlot<QNetworkReply::NetworkError>::of(&QNetworkReply::error),
+-                   [this, req](QNetworkReply::NetworkError) {
+-                     emit requestFailed(req->url(), req->errorString());
+-                   });
++  QObject::connect(req, RDNetworkReplyError, [this, req](QNetworkReply::NetworkError) {
++    emit requestFailed(req->url(), req->errorString());
++  });
+ 
+   QObject::connect(req, &QNetworkReply::finished, [this, req]() {
+     if(req->error() != QNetworkReply::NoError)
+@@ -658,7 +658,7 @@ void MainWindow::on_action_Open_Capture_with_Options_triggered()
+ 
+   QVBoxLayout l;
+   l.addWidget(replayOptions);
+-  l.setMargin(3);
++  l.setContentsMargins(3, 3, 3, 3);
+   l.setSizeConstraint(QLayout::SetFixedSize);
+ 
+   openWithOptions->setLayout(&l);
+diff --git a/qrenderdoc/Windows/PerformanceCounterViewer.cpp b/qrenderdoc/Windows/PerformanceCounterViewer.cpp
+index 138e1b4..e6e1b52 100644
+--- a/qrenderdoc/Windows/PerformanceCounterViewer.cpp
++++ b/qrenderdoc/Windows/PerformanceCounterViewer.cpp
+@@ -122,7 +122,7 @@ public:
+   Qt::ItemFlags flags(const QModelIndex &index) const override
+   {
+     if(!index.isValid())
+-      return 0;
++      return Qt::NoItemFlags;
+ 
+     return QAbstractItemModel::flags(index);
+   }
+@@ -136,7 +136,7 @@ public:
+ 
+       const CounterDescription &cd = m_Descriptions[section - 1];
+ 
+-      QString unit = QString::null;
++      QString unit = QString();
+       switch(cd.unit)
+       {
+         case CounterUnit::Bytes: unit = lit("bytes"); break;
+@@ -272,7 +272,8 @@ protected:
+ 
+   bool lessThan(const QModelIndex &left, const QModelIndex &right) const override
+   {
+-    return sourceModel()->data(left, SortDataRole) < sourceModel()->data(right, SortDataRole);
++    return RDVariantLessThan(sourceModel()->data(left, SortDataRole),
++                             sourceModel()->data(right, SortDataRole));
+   }
+ 
+ private:
+diff --git a/qrenderdoc/Windows/PipelineState/GLPipelineStateViewer.cpp b/qrenderdoc/Windows/PipelineState/GLPipelineStateViewer.cpp
+index e29baed..2f87dbf 100644
+--- a/qrenderdoc/Windows/PipelineState/GLPipelineStateViewer.cpp
++++ b/qrenderdoc/Windows/PipelineState/GLPipelineStateViewer.cpp
+@@ -3939,7 +3939,7 @@ void GLPipelineStateViewer::exportHTML(QXmlStreamWriter &xml, const GLPipe::Fram
+                              {
+                                  tr("Read Buffer"),
+                              },
+-                             {fb.readFBO.readBuffer});
++                             QVariantList{fb.readFBO.readBuffer});
+   }
+ }
+ 
+diff --git a/qrenderdoc/Windows/PipelineState/PipelineStateViewer.cpp b/qrenderdoc/Windows/PipelineState/PipelineStateViewer.cpp
+index 13e8484..d51cdf5 100644
+--- a/qrenderdoc/Windows/PipelineState/PipelineStateViewer.cpp
++++ b/qrenderdoc/Windows/PipelineState/PipelineStateViewer.cpp
+@@ -162,7 +162,7 @@ void RDPreviewTooltip::paintEvent(QPaintEvent *ev)
+ {
+   QStylePainter p(this);
+   QStyleOptionFrame opt;
+-  opt.init(this);
++  opt.initFrom(this);
+   p.drawPrimitive(QStyle::PE_PanelTipLabel, opt);
+   p.end();
+ 
+@@ -173,7 +173,7 @@ void RDPreviewTooltip::resizeEvent(QResizeEvent *e)
+ {
+   QStyleHintReturnMask frameMask;
+   QStyleOption option;
+-  option.init(this);
++  option.initFrom(this);
+   if(style()->styleHint(QStyle::SH_ToolTip_Mask, &option, this, &frameMask))
+     setMask(frameMask.region);
+ 
+diff --git a/qrenderdoc/Windows/PixelHistoryView.cpp b/qrenderdoc/Windows/PixelHistoryView.cpp
+index 41d31dc..e65b79b 100644
+--- a/qrenderdoc/Windows/PixelHistoryView.cpp
++++ b/qrenderdoc/Windows/PixelHistoryView.cpp
+@@ -148,7 +148,7 @@ public:
+   Qt::ItemFlags flags(const QModelIndex &index) const override
+   {
+     if(!index.isValid())
+-      return 0;
++      return Qt::NoItemFlags;
+ 
+     return QAbstractItemModel::flags(index);
+   }
+@@ -731,7 +731,11 @@ void PixelHistoryView::SetFailedDebug()
+ void PixelHistoryView::enableTimelineHighlight()
+ {
+   if(m_Ctx.HasTimelineBar())
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++    m_Ctx.GetTimelineBar()->HighlightHistory(m_Model->texID(), m_Model->modifications());
++#else
+     m_Ctx.GetTimelineBar()->HighlightHistory(m_Model->texID(), m_Model->modifications().toList());
++#endif
+ }
+ 
+ void PixelHistoryView::disableTimelineHighlight()
+@@ -740,7 +744,11 @@ void PixelHistoryView::disableTimelineHighlight()
+     m_Ctx.GetTimelineBar()->HighlightHistory(ResourceId(), {});
+ }
+ 
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++void PixelHistoryView::enterEvent(QEnterEvent *event)
++#else
+ void PixelHistoryView::enterEvent(QEvent *event)
++#endif
+ {
+   enableTimelineHighlight();
+ }
+diff --git a/qrenderdoc/Windows/PixelHistoryView.h b/qrenderdoc/Windows/PixelHistoryView.h
+index de98975..4248053 100644
+--- a/qrenderdoc/Windows/PixelHistoryView.h
++++ b/qrenderdoc/Windows/PixelHistoryView.h
+@@ -60,7 +60,11 @@ private slots:
+   void on_events_doubleClicked(const QModelIndex &index);
+ 
+ protected:
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++  void enterEvent(QEnterEvent *event) override;
++#else
+   void enterEvent(QEvent *event) override;
++#endif
+   void leaveEvent(QEvent *event) override;
+ 
+ private:
+diff --git a/qrenderdoc/Windows/PythonShell.cpp b/qrenderdoc/Windows/PythonShell.cpp
+index 8216c2b..3138bf7 100644
+--- a/qrenderdoc/Windows/PythonShell.cpp
++++ b/qrenderdoc/Windows/PythonShell.cpp
+@@ -74,7 +74,7 @@ EditorWrapper::EditorWrapper(PythonShell *parent) : QFrame(parent), m_PyShell(pa
+   layout()->addWidget(m_Warning);
+   layout()->addWidget(m_Scintilla);
+   layout()->setSpacing(0);
+-  layout()->setMargin(0);
++  layout()->setContentsMargins(0, 0, 0, 0);
+   layout()->setContentsMargins(0, 0, 0, 0);
+ 
+   setTitle(QString());
+@@ -293,7 +293,11 @@ PythonShell::PythonShell(ICaptureContext &ctx, QWidget *parent)
+        e->key() != Qt::Key_Down)
+       return;
+     ui->lineInput->setFocus(Qt::OtherFocusReason);
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++    QApplication::postEvent(ui->lineInput, e->clone());
++#else
+     QApplication::postEvent(ui->lineInput, new QKeyEvent(*e));
++#endif
+   });
+ 
+   m_ToolTip = new RDToolTip(this);
+diff --git a/qrenderdoc/Windows/ResourceInspector.cpp b/qrenderdoc/Windows/ResourceInspector.cpp
+index 5ec9b1f..6442389 100644
+--- a/qrenderdoc/Windows/ResourceInspector.cpp
++++ b/qrenderdoc/Windows/ResourceInspector.cpp
+@@ -74,7 +74,7 @@ public:
+   Qt::ItemFlags flags(const QModelIndex &index) const override
+   {
+     if(!index.isValid())
+-      return 0;
++      return Qt::NoItemFlags;
+ 
+     return QAbstractItemModel::flags(index);
+   }
+@@ -464,7 +464,7 @@ void ResourceInspector::RevealParameter(SDObject *param)
+         if(current->GetChild(i) == next)
+         {
+           current = next;
+-          item = parent.child((int)i, 0);
++          item = parent.model()->index((int)i, 0, parent);
+           break;
+         }
+       }
+@@ -746,7 +746,11 @@ void ResourceInspector::resourceUsage_contextMenu(const QPoint &pos)
+   RDDialog::show(&contextMenu, ui->resourceUsage->viewport()->mapToGlobal(pos));
+ }
+ 
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++void ResourceInspector::enterEvent(QEnterEvent *event)
++#else
+ void ResourceInspector::enterEvent(QEvent *event)
++#endif
+ {
+   HighlightUsage();
+ }
+diff --git a/qrenderdoc/Windows/ResourceInspector.h b/qrenderdoc/Windows/ResourceInspector.h
+index 9ea814c..ab058b2 100644
+--- a/qrenderdoc/Windows/ResourceInspector.h
++++ b/qrenderdoc/Windows/ResourceInspector.h
+@@ -112,7 +112,11 @@ private slots:
+   void resourceUsage_SplitByMarker_toggled();
+ 
+ protected:
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++  void enterEvent(QEnterEvent *event) override;
++#else
+   void enterEvent(QEvent *event) override;
++#endif
+   void showEvent(QShowEvent *event) override;
+ 
+ private:
+diff --git a/qrenderdoc/Windows/ShaderViewer.cpp b/qrenderdoc/Windows/ShaderViewer.cpp
+index fd70990..64b08dd 100644
+--- a/qrenderdoc/Windows/ShaderViewer.cpp
++++ b/qrenderdoc/Windows/ShaderViewer.cpp
+@@ -291,7 +291,7 @@ ShaderViewer::ShaderViewer(ICaptureContext &ctx, QWidget *parent)
+ 
+     QVBoxLayout *framelayout = new QVBoxLayout(m_DisassemblyFrame);
+     framelayout->setSpacing(0);
+-    framelayout->setMargin(0);
++    framelayout->setContentsMargins(0, 0, 0, 0);
+     framelayout->addWidget(m_DisassemblyToolbar);
+     framelayout->addWidget(m_DisassemblyView);
+ 
+diff --git a/qrenderdoc/Windows/TextureViewer.cpp b/qrenderdoc/Windows/TextureViewer.cpp
+index 95a7090..05e1db2 100644
+--- a/qrenderdoc/Windows/TextureViewer.cpp
++++ b/qrenderdoc/Windows/TextureViewer.cpp
+@@ -474,6 +474,7 @@ TextureViewer::TextureViewer(ICaptureContext &ctx, QWidget *parent)
+       m_Ctx(ctx),
+       m_Following(*this, FollowType::OutputColor, ShaderStage::Pixel, 0, 0)
+ {
++  m_CustomShaderTimer.start();
+   ui->setupUi(this);
+ 
+   ui->render->SetContext(m_Ctx);
+@@ -705,7 +706,11 @@ TextureViewer::~TextureViewer()
+   delete ui;
+ }
+ 
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++void TextureViewer::enterEvent(QEnterEvent *event)
++#else
+ void TextureViewer::enterEvent(QEvent *event)
++#endif
+ {
+   HighlightUsage();
+ }
+@@ -984,7 +989,7 @@ void TextureViewer::UI_UpdateStatusText()
+   {
+     QPalette Pal(palette());
+ 
+-    Pal.setColor(QPalette::Background, swatchColor);
++    Pal.setColor(QPalette::Window, swatchColor);
+ 
+     ui->pickSwatch->setAutoFillBackground(true);
+     ui->pickSwatch->setPalette(Pal);
+@@ -2639,13 +2644,17 @@ void TextureViewer::thumb_clicked(QMouseEvent *e)
+ 
+ void TextureViewer::render_mouseWheel(QWheelEvent *e)
+ {
++#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
++  QPoint cursorPos = e->position().toPoint();
++#else
+   QPoint cursorPos = e->pos();
++#endif
+ 
+   setFitToWindow(false);
+ 
+   // scroll in logarithmic scale
+   double logScale = logf(m_TexDisplay.scale);
+-  logScale += e->delta() / 2500.0;
++  logScale += e->angleDelta().y() / 2500.0;
+   UI_SetScale((float)expf(logScale), cursorPos.x() * ui->render->devicePixelRatioF(),
+               cursorPos.y() * ui->render->devicePixelRatioF());
+ 
+@@ -3017,7 +3026,7 @@ void TextureViewer::Reset()
+   {
+     QPalette Pal(palette());
+ 
+-    Pal.setColor(QPalette::Background, Qt::black);
++    Pal.setColor(QPalette::Window, Qt::black);
+ 
+     ui->pickSwatch->setAutoFillBackground(true);
+     ui->pickSwatch->setPalette(Pal);
+diff --git a/qrenderdoc/Windows/TextureViewer.h b/qrenderdoc/Windows/TextureViewer.h
+index c8d0db2..a94d987 100644
+--- a/qrenderdoc/Windows/TextureViewer.h
++++ b/qrenderdoc/Windows/TextureViewer.h
+@@ -25,6 +25,7 @@
+ #pragma once
+ 
+ #include <QDir>
++#include <QElapsedTimer>
+ #include <QFrame>
+ #include <QMenu>
+ #include <QMouseEvent>
+@@ -235,7 +236,11 @@ private slots:
+   void channelsWidget_toggled(bool checked) { UI_UpdateChannels(); }
+   void channelsWidget_selected(int index) { UI_UpdateChannels(); }
+ protected:
++#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
++  void enterEvent(QEnterEvent *event) override;
++#else
+   void enterEvent(QEvent *event) override;
++#endif
+   void showEvent(QShowEvent *event) override;
+ 
+ private:
+@@ -373,7 +378,7 @@ private:
+ 
+   rdcarray<DescriptorThumbUpdate> m_DescriptorThumbUpdates;
+ 
+-  QTime m_CustomShaderTimer;
++  QElapsedTimer m_CustomShaderTimer;
+   int m_CustomShaderWriteTime = 0;
+ 
+   QFileSystemWatcher *m_Watcher = NULL;
+diff --git a/qrenderdoc/Windows/TimelineBar.cpp b/qrenderdoc/Windows/TimelineBar.cpp
+index e4fb683..dc50f74 100644
+--- a/qrenderdoc/Windows/TimelineBar.cpp
++++ b/qrenderdoc/Windows/TimelineBar.cpp
+@@ -428,7 +428,7 @@ void TimelineBar::mouseMoveEvent(QMouseEvent *e)
+ 
+ void TimelineBar::wheelEvent(QWheelEvent *e)
+ {
+-  float mod = (1.0 + e->delta() / 2500.0f);
++  float mod = (1.0 + e->angleDelta().y() / 2500.0f);
+ 
+   qreal prevZoom = m_zoom;
+ 
+@@ -439,9 +439,15 @@ void TimelineBar::wheelEvent(QWheelEvent *e)
+   // adjust the pan so that it's still in bounds, and so the zoom acts centred on the mouse
+   qreal newPan = m_pan;
+ 
+-  newPan -= (e->x() - m_eidAxisRect.left());
++#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
++  const qreal wheelX = e->position().x();
++#else
++  const qreal wheelX = e->x();
++#endif
++
++  newPan -= (wheelX - m_eidAxisRect.left());
+   newPan = newPan * zoomDelta;
+-  newPan += (e->x() - m_eidAxisRect.left());
++  newPan += (wheelX - m_eidAxisRect.left());
+ 
+   m_pan = qBound(-m_dataArea.width() * (m_zoom - 1.0), newPan, 0.0);
+ 
+diff --git a/qrenderdoc/qrenderdoc.pro b/qrenderdoc/qrenderdoc.pro
+index dabf69d..453cd8b 100644
+--- a/qrenderdoc/qrenderdoc.pro
++++ b/qrenderdoc/qrenderdoc.pro
+@@ -134,7 +134,16 @@ win32 {
+ 	SOURCES += $$CMAKE_DIR/qrenderdoc/qrenderdoc_python.cxx
+ 
+ 	CONFIG += warn_off
+-	CONFIG += c++14
++	# Qt 6 ignores any request below C++17, which would leave the standard
++	# up to the compiler's default
++	equals(QT_MAJOR_VERSION, 5) {
++		CONFIG += c++14
++	} else {
++		CONFIG += c++17
++		# scintilla converts text with QTextCodec, which Qt 6 moved into the
++		# Qt5Compat module
++		QT += core5compat
++	}
+ 	QMAKE_CFLAGS_WARN_OFF -= -w
+ 	QMAKE_CXXFLAGS_WARN_OFF -= -w
+ 
+@@ -158,7 +167,7 @@ win32 {
+ 		QMAKE_POST_LINK += ln -sf $$[QT_INSTALL_PLUGINS] $${QTPLUGINS_PATH} ;
+ 		QMAKE_POST_LINK += sh $$_PRO_FILE_PWD_/../util/set_plist_version.sh $${RENDERDOC_VERSION}.0 $${INFO_PLIST_PATH}
+ 	} else {
+-		QT += x11extras
++		equals(QT_MAJOR_VERSION, 5): QT += x11extras
+ 		DEFINES += RENDERDOC_PLATFORM_POSIX RENDERDOC_PLATFORM_LINUX RENDERDOC_WINDOWING_XLIB RENDERDOC_WINDOWING_XCB
+ 		QMAKE_LFLAGS += '-Wl,--no-as-needed -rdynamic'
+ 	}
+diff --git a/renderdoc/api/replay/rdcarray.h b/renderdoc/api/replay/rdcarray.h
+index 0422fc3..904bbbd 100644
+--- a/renderdoc/api/replay/rdcarray.h
++++ b/renderdoc/api/replay/rdcarray.h
+@@ -841,6 +841,8 @@ public:
+     return *this;
+   }
+ 
++#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
++  // in Qt6 QVector is an alias of QList, so these would be duplicates
+   rdcarray(const QVector<T> &in)
+   {
+     elems = NULL;
+@@ -865,6 +867,7 @@ public:
+     return *this;
+   }
+ #endif
++#endif
+ };
+ 
+ // fixed size array, wrapped to be more python-friendly (mapped to an N-tuple)
+diff --git a/renderdoc/api/replay/rdcstr.h b/renderdoc/api/replay/rdcstr.h
+index caf358e..e7d65f9 100644
+--- a/renderdoc/api/replay/rdcstr.h
++++ b/renderdoc/api/replay/rdcstr.h
+@@ -941,6 +941,14 @@ inline rdcstr operator+(const QString &left, const rdcstr &right)
+   return rdcstr(left) += right;
+ }
+ 
++// Qt 6 added QString::operator+=(QUtf8StringView), which an rdcstr converts to
++// just as readily as it does to QString. Take the ambiguity away with an exact
++// match.
++inline QString &operator+=(QString &left, const rdcstr &right)
++{
++  return left += QString(right);
++}
++
+ inline rdcstr operator+(const QChar &left, const rdcstr &right)
+ {
+   return rdcstr(left) += right;
+@@ -1171,6 +1179,26 @@ public:
+ #endif
+ };
+ 
++#if defined(RENDERDOC_QT_COMPAT)
++// as for rdcstr, take away the QString/QUtf8StringView ambiguity Qt 6 creates
++inline QString &operator+=(QString &left, const rdcinflexiblestr &right)
++{
++  return left += QString(right);
++}
++
++// likewise, concatenating onto an rdcinflexiblestr only went through QString,
++// and Qt 6 added an rvalue operator+ that ties with the const reference one
++inline rdcstr operator+(const rdcinflexiblestr &left, const rdcstr &right)
++{
++  return rdcstr(left) += right;
++}
++
++inline rdcstr operator+(const rdcinflexiblestr &left, const char *const right)
++{
++  return rdcstr(left) += right;
++}
++#endif
++
+ // add a std::hash overload so rdcstr can be used in hashmaps
+ #ifdef RENDERDOC_EXPORTS
+ 
