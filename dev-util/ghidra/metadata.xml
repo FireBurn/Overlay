@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>fireburn@gentoo.org</email>
+		<name>Mike Lothian</name>
+	</maintainer>
+	<use>
+		<flag name="bsim">Enable BSim function similarity and duplicate code search engine (requires PostgreSQL support)</flag>
+		<flag name="debugger">Enable dynamic analysis and debugger subsystem (GDB, LLDB, DAP, trace modeling)</flag>
+		<flag name="eclipse">Package Eclipse plugins (GhidraDev, GhidraSleighEditor)</flag>
+		<flag name="fidb">Download and install Function ID signature databases for standard library recognition</flag>
+		<flag name="gui">Install desktop entries, icons, and GUI launcher</flag>
+		<flag name="ida">Install IDA Pro loader and export plugins</flag>
+		<flag name="jython">Install Jython 2.7 legacy scripting extension</flag>
+		<flag name="lisa">Install LiSA (Library for Static Analysis) abstract interpretation engine</flag>
+		<flag name="machine-learning">Install Machine Learning function detection plugin</flag>
+		<flag name="python">Enable PyGhidra Python 3 integration, interactive interpreter, and stubs</flag>
+		<flag name="sarif">Enable SARIF (Static Analysis Results Interchange Format) support</flag>
+		<flag name="server">Install GhidraServer multi-user collaboration daemon</flag>
+		<flag name="z3">Enable SymbolicSummaryZ3 symbolic execution extension using Z3 SMT solver</flag>
+	</use>
+	<upstream>
+		<remote-id type="github">NationalSecurityAgency/ghidra</remote-id>
+	</upstream>
+</pkgmetadata>
