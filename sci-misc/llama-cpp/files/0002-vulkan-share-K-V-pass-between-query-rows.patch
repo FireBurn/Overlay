@@ -1,4 +1,4 @@
-From b95ee24b1019e42642a790a5e636eb7ecdd1f85f Mon Sep 17 00:00:00 2001
+From e124527c101c95e5412a374b2035e15f4efd11ba Mon Sep 17 00:00:00 2001
 From: Mike Lothian <mike@fireburn.co.uk>
 Date: Wed, 16 Sep 2026 15:38:10 +0100
 Subject: [PATCH] vulkan: share the K/V pass between query rows in coopmat1 GQA
@@ -15,26 +15,26 @@ Qwen3.8-27B on an R9700 (RADV) at 65K context: 2-token forward 53.3 -> 48.2 ms,
 
 Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>
 ---
- ggml/src/ggml-vulkan/ggml-vulkan.cpp          | 31 ++++++++--
+ ggml/src/ggml-vulkan/ggml-vulkan.cpp          | 32 ++++++++--
  .../vulkan-shaders/flash_attn_base.glsl       | 33 ++++++++++-
  .../vulkan-shaders/flash_attn_cm1.comp        | 59 +++++++++++++++----
- 3 files changed, 104 insertions(+), 19 deletions(-)
+ 3 files changed, 104 insertions(+), 20 deletions(-)
 
 diff --git a/ggml/src/ggml-vulkan/ggml-vulkan.cpp b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
-index baa44ad1f..63cbba0df 100644
+index da0e24fcd..ac8849122 100644
 --- a/ggml/src/ggml-vulkan/ggml-vulkan.cpp
 +++ b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
-@@ -4133,7 +4133,8 @@ static vk_fa_tuning_params get_fa_tuning_params(const vk_device& device, uint32_
+@@ -1348,7 +1348,8 @@ vk_fa_tuning_params get_fa_tuning_params(const vk_device& device, uint32_t hsk,
  }
  
- static vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_tuning_params& params, uint32_t hsk, uint32_t hsv, bool aligned, bool f32acc,
+ vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_tuning_params& params, uint32_t hsk, uint32_t hsv, bool aligned, bool f32acc,
 -                                                  bool use_mask, bool use_mask_opt, bool use_logit_softcap, bool use_sparse, ggml_type k_type, ggml_type v_type) {
 +                                                  bool use_mask, bool use_mask_opt, bool use_logit_softcap, bool use_sparse, ggml_type k_type, ggml_type v_type,
 +                                                  bool use_mq = false) {
      const bool old_amd_windows = device->vendor_id == VK_VENDOR_ID_AMD && device->driver_id == vk::DriverId::eAmdProprietary &&
                                   (device->architecture == AMD_GCN || device->architecture == AMD_RDNA1 || device->architecture == AMD_RDNA2);
  
-@@ -4141,7 +4142,8 @@ static vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const
+@@ -1356,7 +1357,8 @@ vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_
                       (use_mask          ? 2 : 0) |
                       (use_logit_softcap ? 4 : 0) |
                       (old_amd_windows   ? 8 : 0) |
@@ -44,7 +44,7 @@ index baa44ad1f..63cbba0df 100644
  
      const uint32_t subgroup_size = params.disable_subgroups ? 0 : params.subgroup_size;
  
-@@ -11307,6 +11309,20 @@ static void ggml_vk_flash_attn(ggml_backend_vk_context * ctx, vk_context& subctx
+@@ -7835,6 +7837,20 @@ void ggml_vk_flash_attn(ggml_backend_vk_context * ctx, vk_context& subctx, const
  
      tuning_params = get_fa_tuning_params(ctx->device, HSK, HSV, N, KV, k_type_eff, v_type_eff, f32acc);
  
@@ -65,7 +65,7 @@ index baa44ad1f..63cbba0df 100644
      float scale         = 1.0f;
      float max_bias      = 0.0f;
      float logit_softcap = 0.0f;
-@@ -11324,7 +11340,7 @@ static void ggml_vk_flash_attn(ggml_backend_vk_context * ctx, vk_context& subctx
+@@ -7852,7 +7868,7 @@ void ggml_vk_flash_attn(ggml_backend_vk_context * ctx, vk_context& subctx, const
      static const bool disable_sparse = getenv("GGML_VK_FA_SPARSE_DISABLE") != nullptr;
      // cm2 dense is fast, so it needs a larger reduction to win.
      const int64_t min_ratio = tuning_params.path == FA_COOPMAT2 ? 4 : 2;
@@ -74,7 +74,7 @@ index baa44ad1f..63cbba0df 100644
                              max_bias == 0.0f && logit_softcap == 0.0f &&
                              k_type_eff == GGML_TYPE_F16 && v_type_eff == GGML_TYPE_F16 &&
                              nem0 == KV &&
-@@ -11364,10 +11380,11 @@ static void ggml_vk_flash_attn(ggml_backend_vk_context * ctx, vk_context& subctx
+@@ -7892,10 +7908,11 @@ void ggml_vk_flash_attn(ggml_backend_vk_context * ctx, vk_context& subctx, const
      }
  
      // Only use mask opt when the mask is fairly large. This hasn't been tuned extensively.
@@ -88,7 +88,7 @@ index baa44ad1f..63cbba0df 100644
  
      vk_pipeline pipeline = nullptr;
  
-@@ -11400,6 +11417,10 @@ static void ggml_vk_flash_attn(ggml_backend_vk_context * ctx, vk_context& subctx
+@@ -7928,6 +7945,10 @@ void ggml_vk_flash_attn(ggml_backend_vk_context * ctx, vk_context& subctx, const
  
      GGML_ASSERT(Br == pipeline->wg_denoms[0]);
      const uint32_t Tr = CEIL_DIV(N, Br);
@@ -99,6 +99,11 @@ index baa44ad1f..63cbba0df 100644
  
      // Try to use split_k when KV is large enough to be worth the overhead.
      // Sparse: split_kv carries n_kv_max, split_k partitions its blocks for occupancy.
+@@ -16114,4 +16135,3 @@ void ggml_vk_debug_label::begin(vk_context & ctx, const std::string & name) {
+     subctx->debug_labels.push_back(name);
+     ggml_vk_cmd_label_begin(subctx->s->buffer->buf, subctx->debug_labels.back().c_str());
+ }
+-
 diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl
 index 2e0e23bc1..810ff0514 100644
 --- a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl
