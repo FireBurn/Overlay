@@ -1324,8 +1324,6 @@ NPM_PKGS="
 	node-sarif-builder@3.4.0
 	nopt@8.1.0
 	normalize-package-data@7.0.1
-	node-addon-api@7.1.1
-	node-pty@1.1.0
 	normalize-path@3.0.0
 	normalize-range@0.1.2
 	npm-normalize-package-bin@4.0.0
@@ -1427,6 +1425,7 @@ NPM_PKGS="
 	playwright@1.61.1
 	playwright-core@1.58.2
 	playwright-core@1.61.1
+	playwright-core@1.62.1
 	pluralize@2.0.0
 	pluralize@8.0.0
 	points-on-curve@0.2.0
