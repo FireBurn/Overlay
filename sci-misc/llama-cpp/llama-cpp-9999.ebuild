@@ -63,6 +63,12 @@ RDEPEND="${CDEPEND}
 	vulkan? ( media-libs/vulkan-loader )
 "
 
+PATCHES=(
+	"${FILESDIR}/0001-vulkan-handle-larger-batch-sizes-2-efficiently-for-IQ4_XS-mat-vec.patch"
+	"${FILESDIR}/0003-qwen35-optional-reduced-vocab-LM-head-for-MTP-drafting.patch"
+	"${FILESDIR}/0005-vulkan-use-4-rows-for-legacy-quant-mat-vec-from-2-columns.patch"
+)
+
 pkg_setup() {
 	if use xdna; then
 		linux-info_pkg_setup
