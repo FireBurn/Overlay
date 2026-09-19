@@ -65,6 +65,7 @@ RDEPEND="${CDEPEND}
 
 PATCHES=(
 	"${FILESDIR}/0001-vulkan-handle-larger-batch-sizes-2-efficiently-for-IQ4_XS-mat-vec.patch"
+	"${FILESDIR}/0002-vulkan-share-K-V-pass-between-query-rows.patch"
 	"${FILESDIR}/0003-qwen35-optional-reduced-vocab-LM-head-for-MTP-drafting.patch"
 	"${FILESDIR}/0005-vulkan-use-4-rows-for-legacy-quant-mat-vec-from-2-columns.patch"
 )
