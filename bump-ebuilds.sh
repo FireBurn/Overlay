@@ -98,6 +98,24 @@ vercmp() {
     echo eq
 }
 
+# The tags to consider for a package, newest first.
+#
+# Most packages are tracked by their GitHub releases, which is what marks a
+# version as one users are meant to have. opencode is tracked by its tags
+# instead: it tags the line we follow without ever publishing a release for
+# it, so going by releases would hold us on a version we do not want.
+upstream_tags() {
+    local pkg="$1" repo="$2"
+    case "$pkg" in
+        dev-util/opencode)
+            gh api "repos/$repo/tags?per_page=100" --jq '.[].name' 2>/dev/null ;;
+        *)
+            gh release list --repo "$repo" --limit 30 \
+                --json tagName,isPrerelease \
+                --jq '.[] | select(.isPrerelease|not) | .tagName' 2>/dev/null ;;
+    esac
+}
+
 # Latest stable upstream PV ("" if it cannot be determined).
 latest_pv() {
     local pkg="$1"
@@ -117,23 +135,22 @@ latest_pv() {
         games-util/heroic)        repo=Heroic-Games-Launcher/HeroicGamesLauncher; prefix="v" ;;
         *) return 0 ;;
     esac
-    # Keep only stable releases whose tag carries this package's prefix, then
-    # take the highest PV. The prefix is what separates e.g. codex's rust-v*
-    # tags from its python-v* tags, or qwen-code's v* from sdk-typescript-v*.
+    # Keep only versions whose tag carries this package's prefix, then take
+    # the highest PV. The prefix is what separates e.g. codex's rust-v* tags
+    # from its python-v* tags, or qwen-code's v* from sdk-typescript-v*, and
+    # a PV still has to start with a digit: opencode also carries vscode-v*
+    # tags, which share the v prefix but are a different thing entirely.
     while IFS= read -r t; do
         [[ -n "$t" ]] || continue
         if [[ -n "$prefix" ]]; then
             [[ "$t" == "$prefix"* ]] || continue
             pv="${t#"$prefix"}"
         else
-            [[ "$t" =~ ^[0-9] ]] || continue
             pv="$t"
         fi
-        [[ -n "$pv" ]] || continue
+        [[ "$pv" =~ ^[0-9] ]] || continue
         if [[ -z "$best" ]] || [[ "$(vercmp "$pv" "$best")" == gt ]]; then best="$pv"; fi
-    done < <(gh release list --repo "$repo" --limit 30 \
-                --json tagName,isPrerelease \
-                --jq '.[] | select(.isPrerelease|not) | .tagName' 2>/dev/null)
+    done < <(upstream_tags "$pkg" "$repo")
     printf '%s' "$best"
 }
 
@@ -255,7 +272,7 @@ revert_bump() {
     git reset -q -- "$pkg" 2>/dev/null
 }
 
-# Simple bump: rename + Manifest refresh. Returns 0 on success, 1 otherwise.
+# Simple bump: rename + Manifest refresh. Returns 0 on success, 2 on failure.
 bump_simple() {
     local pkg="$1" old="$2" new="$3"
     local pn oldf newf
@@ -275,30 +292,31 @@ bump_simple() {
     if ! update_npm_pkgs "$pkg" "$new" "$newf"; then
         revert_bump "$pkg" "$oldf" "$newf"
         echo "ERROR: NPM_PKGS update failed for $pkg (reverted)" >&2
-        return 1
+        return 2
     fi
     if ! update_crates "$pkg" "$new" "$newf"; then
         revert_bump "$pkg" "$oldf" "$newf"
         echo "ERROR: CRATES update failed for $pkg (reverted)" >&2
-        return 1
+        return 2
     fi
     if ! ebuild "$newf" digest; then
         revert_bump "$pkg" "$oldf" "$newf"
         echo "ERROR: ebuild digest failed for $pkg (reverted)" >&2
-        return 1
+        return 2
     fi
     if ! ebuild "$newf" manifest; then
         revert_bump "$pkg" "$oldf" "$newf"
         echo "ERROR: ebuild manifest failed for $pkg (reverted)" >&2
-        return 1
+        return 2
     fi
     git add "$pkg"
-    git commit -q -m "$pkg: Bump to $new" || { echo "ERROR: commit failed for $pkg" >&2; return 1; }
+    git commit -q -m "$pkg: Bump to $new" || { echo "ERROR: commit failed for $pkg" >&2; return 2; }
     info "bumped $pkg $old -> $new"
     return 0
 }
 
-# Complex bump: delegate to the LLM agent. Returns 0 on success, 1 otherwise.
+# Complex bump: delegate to the LLM agent.
+# Returns 0 on success, 1 if there is nothing to do yet, 2 on failure.
 bump_complex() {
     local pkg="$1" old="$2" new="$3"
     local pn url code
@@ -323,7 +341,7 @@ scripts/cargo-crates.py from the new version's Cargo.lock, then verify the GIT_C
 
     if ! opencode run --agent ebuild-bumper "$prompt"; then
         echo "ERROR: agent bump failed for $pkg" >&2
-        return 1
+        return 2
     fi
     info "agent bumped $pkg $old -> $new"
     return 0
@@ -331,6 +349,7 @@ scripts/cargo-crates.py from the new version's Cargo.lock, then verify the GIT_C
 
 # --- main -----------------------------------------------------------------
 changed=0
+failed=()
 for pkg in "${WORK[@]}"; do
     log "check: $pkg"
     old="$(current_pv "$pkg")" || { info "no ebuild found; skipping"; continue; }
@@ -345,14 +364,18 @@ for pkg in "${WORK[@]}"; do
     esac
 
     if is_complex "$pkg"; then
-        bump_complex "$pkg" "$old" "$new" && changed=1
+        bump_complex "$pkg" "$old" "$new"
     else
         if [[ "$(http_code "$(readiness_url "$pkg" "$new")")" != 2* ]]; then
             info "skip $pkg: $new artifact not available yet"
             continue
         fi
-        bump_simple "$pkg" "$old" "$new" && changed=1
+        bump_simple "$pkg" "$old" "$new"
     fi
+    case "$?" in
+        0) changed=1 ;;
+        2) failed+=("$pkg") ;;
+    esac
 done
 
 if [[ "$changed" == 1 && "$PUSH" == 1 && "$DRY_RUN" == 0 ]]; then
@@ -361,6 +384,14 @@ if [[ "$changed" == 1 && "$PUSH" == 1 && "$DRY_RUN" == 0 ]]; then
     else
         die "git push failed"
     fi
+fi
+
+if [[ "${#failed[@]}" -gt 0 ]]; then
+    log "failed"
+    for pkg in "${failed[@]}"; do
+        info "$pkg"
+    done
+    exit 1
 fi
 
 log "done"
