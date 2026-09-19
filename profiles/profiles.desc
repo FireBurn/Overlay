@@ -1,0 +1,6 @@
+# Copyright 2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+# arch                  profile                                          status
+amd64  default/linux/amd64/23.0/llvm-libc                  exp
+amd64  default/linux/amd64/23.0/llvm-libc/desktop/plasma   exp
