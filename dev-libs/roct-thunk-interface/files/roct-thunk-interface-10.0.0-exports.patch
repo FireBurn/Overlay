@@ -1,0 +1,24 @@
+Export ROCr 10 thunk entry points omitted from the release version script and
+make the public Linux API visible when built with -fvisibility=hidden.
+--- a/src/libhsakmt.ver
++++ b/src/libhsakmt.ver
+@@ -1,4 +1,8 @@
+ HSAKMT_1
+ {
+ global:
++hsaKmtCreateQueueExt;
++hsaKmtCreateQueueV2;
++hsaKmtModelEnabled;
++hsaKmtRegisterGraphicsHandleToNodesExt;
+ hsaKmtOpenKFD;
+--- a/include/hsakmt/hsakmttypes.h
++++ b/include/hsakmt/hsakmttypes.h
+@@ -57,7 +57,7 @@
+ #include <stdbool.h>
+ #include <stdint.h>
+ 
+-    #define HSAKMTAPI
++    #define HSAKMTAPI __attribute__((visibility("default")))
+ 
+     typedef uint8_t     HSAuint8;
+     typedef int8_t      HSAint8;

@@ -1,0 +1,21 @@
+The released source uses std::unordered_set without including its header.
+--- a/src/comgr-compiler.cpp
++++ b/src/comgr-compiler.cpp
+@@ -78,5 +78,6 @@
+ 
+ #include <csignal>
+ #include <sstream>
++#include <unordered_set>
+ 
+ LLD_HAS_DRIVER(elf)
+--- a/src/hotswap/rewriter/CMakeLists.txt
++++ b/src/hotswap/rewriter/CMakeLists.txt
+@@ -68,4 +68,8 @@ llvm_map_components_to_libnames(hotswap_rewriter_llvm_libs
+   AMDGPUDisassembler
+   AMDGPUInfo)
+ 
++if(LLVM_LINK_LLVM_DYLIB)
++  set(hotswap_rewriter_llvm_libs LLVM)
++endif()
++
+ target_link_libraries(hotswap-rewriter PUBLIC ${hotswap_rewriter_llvm_libs})
