@@ -108,7 +108,7 @@ src_prepare() {
 	use cuda && cuda_src_prepare
 
 	if use xdna; then
-		# Fix hardcoded library installation path to match llama.cpp's isolation 
+		# Fix hardcoded library installation path to match llama.cpp's isolation
 		# so `libggml-xdna1.so` ends up in `/usr/$(get_libdir)/llama.cpp/` instead of `/usr/lib/`
 		sed -i -e "s|DESTINATION lib|DESTINATION $(get_libdir)/llama.cpp|g" \
 			"${WORKDIR}/ggml-xdna1/CMakeLists.txt" || die
