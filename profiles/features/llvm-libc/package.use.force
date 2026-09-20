@@ -1,0 +1,7 @@
+# ::gentoo pins rust to the llvm its upstream builds against, which stops the
+# slot this profile does have from being the only one picked. Nothing here
+# has llvm 22 to offer.
+dev-lang/rust -llvm_slot_22
+dev-lang/rust-bin -llvm_slot_22
+dev-lang/rust -llvm_slot_21
+dev-lang/rust-bin -llvm_slot_21
