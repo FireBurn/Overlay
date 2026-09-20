@@ -420,8 +420,9 @@ src_install() {
 	[[ -n ${moddir} ]] || die "npm global install produced no node_modules"
 	moddir=${moddir#"${ED}"}
 
-	# The shrinkwrap pulls these in regardless of --omit=optional
-	rm -r "${ED}${moddir}"/@earendil-works/pi-coding-agent/node_modules/{@esbuild,@mariozechner/clipboard-*} || die
+	# The shrinkwrap pulls esbuild in regardless of --omit=optional
+	rm -r "${ED}${moddir}"/@earendil-works/pi-coding-agent/node_modules/@esbuild || die
+	rm -rf "${ED}${moddir}"/@earendil-works/pi-coding-agent/node_modules/@mariozechner/clipboard-*
 
 	rm "${ED}/usr/bin/pi" || die
 	newbin - pi <<-EOT
