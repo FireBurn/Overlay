@@ -72,6 +72,7 @@ PATCHES=(
 	"${FILESDIR}/0003-qwen35-optional-reduced-vocab-LM-head-for-MTP-drafting.patch"
 	"${FILESDIR}/0005-vulkan-use-4-rows-for-legacy-quant-mat-vec-from-2-columns.patch"
 	"${FILESDIR}/0006-hip-fix-gfx12-bf16-wmma-with-llvm-23.patch"
+	"${FILESDIR}/0007-server-keep-speculative-checkpoints-on-device.patch"
 )
 
 pkg_setup() {
