@@ -35,6 +35,8 @@ BDEPEND="
 	${PYTHON_DEPS}
 "
 DEPEND="virtual/os-headers"
+# ldd below is a wrapper around lddtree
+RDEPEND="app-misc/pax-utils"
 
 # The libc is built through the runtimes directory rather than on its own, so
 # that scudo can be taken from compiler-rt in the same configure.
@@ -144,4 +146,56 @@ src_install() {
 	dosym ld.so.conf "/etc/ld-llvm-libc-${arch}.path"
 
 	dobin "${T}"/getent
+
+	# The loader has no trace mode for glibc's ldd to drive, so this reads the
+	# dependencies out of the ELF files instead of by loading them.
+	cat > "${T}"/ldd <<-'EOF'
+		#!/bin/sh
+
+		files=
+		for arg; do
+		  case ${arg} in
+		  --version) echo "ldd (llvm-libc)"; exit 0 ;;
+		  --help) echo "usage: ldd FILE..."; exit 0 ;;
+		  -*) ;;
+		  *) files="${files} ${arg}" ;;
+		  esac
+		done
+
+		set -- ${files}
+		if [ $# -eq 0 ]; then
+		  echo "ldd: missing file arguments" >&2
+		  exit 1
+		fi
+
+		status=0
+		count=$#
+		for f; do
+		  [ ${count} -gt 1 ] && echo "${f}:"
+		  if [ ! -e "${f}" ]; then
+		    echo "ldd: ${f}: No such file or directory" >&2
+		    status=1
+		    continue
+		  fi
+		  # lddtree prints the file itself first and the rest as an indented
+		  # tree, in which a library reached more than one way repeats.
+		  deps=$(lddtree "${f}" 2>/dev/null | tail -n +2 | sed 's/^ *//' | sort -u)
+		  if [ -z "${deps}" ]; then
+		    printf '\tnot a dynamic executable\n'
+		    status=1
+		    continue
+		  fi
+		  echo "${deps}" | while IFS= read -r line; do
+		    soname=${line%% =>*}
+		    path=${line#*=> }
+		    if [ "${path}" = "not found" ]; then
+		      printf '\t%s => not found\n' "${soname}"
+		    else
+		      printf '\t%s => %s (0x0000000000000000)\n' "${soname}" "${path}"
+		    fi
+		  done
+		done
+		exit ${status}
+	EOF
+	dobin "${T}"/ldd
 }
