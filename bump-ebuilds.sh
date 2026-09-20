@@ -181,6 +181,14 @@ npm_lockfiles() {
     esac
 }
 
+# Registry packages required by the ebuild but not recorded in upstream's
+# lockfile. Keep these here so dependency regeneration cannot silently drop them.
+npm_extra_pkgs() {
+    case "$1" in
+        dev-util/qwen-code) echo "node-pty@1.1.0" ;;
+    esac
+}
+
 # Upstream Cargo.lock (repo-relative) for packages built with cargo.eclass.
 # Their CRATES block is regenerated from it on every bump.
 cargo_lockfiles() {
@@ -209,7 +217,7 @@ update_crates() {
 
 # Regenerate NPM_PKGS (and ESBUILD_SLOT, if the ebuild pins one) for a new PV.
 update_npm_pkgs() {
-    local pkg="$1" pv="$2" ebuild="$3" spec repo prefix tmp f lock=() esb
+    local pkg="$1" pv="$2" ebuild="$3" spec repo prefix tmp f lock=() extras=() esb
     spec="$(npm_lockfiles "$pkg")"
     [[ -n "$spec" ]] || return 0
     read -r repo prefix f <<<"$spec"
@@ -220,6 +228,13 @@ update_npm_pkgs() {
             { rm -rf "$tmp"; echo "ERROR: cannot fetch $f for $pkg $pv" >&2; return 1; }
         lock+=("$tmp/$f")
     done
+    read -r -a extras <<<"$(npm_extra_pkgs "$pkg")"
+    if (( ${#extras[@]} )); then
+        mkdir -p "$tmp/extras"
+        npm install --package-lock-only --ignore-scripts --prefix "$tmp/extras" \
+            "${extras[@]}" >/dev/null || { rm -rf "$tmp"; return 1; }
+        lock+=("$tmp/extras/package-lock.json")
+    fi
     ./scripts/npm-deps.py "${lock[@]}" --ebuild "$ebuild" || { rm -rf "$tmp"; return 1; }
 
     if grep -q '^ESBUILD_SLOT=' "$ebuild" && [[ "${lock[0]}" == *package-lock.json ]]; then
