@@ -8,17 +8,21 @@ inherit cmake llvm.org python-any-r1 toolchain-funcs
 
 DESCRIPTION="LLVM's implementation of the C standard library"
 HOMEPAGE="https://libc.llvm.org/"
-# getent is the one Alpine wrote for musl, the same file sys-libs/musl installs.
-# llvm.org_set_globals adds the LLVM sources to this further down.
-GETENT_COMMIT="93a08815f8598db442d8b766b463d0150ed8e2ab"
-GETENT_FILE="musl-getent-${GETENT_COMMIT}.c"
+# getent and iconv are the ones Alpine wrote for musl, the same files
+# sys-libs/musl installs. The library has iconv itself; this is the utility
+# which goes with it. llvm.org_set_globals adds the LLVM sources further down.
+MUSL_UTIL_COMMIT="93a08815f8598db442d8b766b463d0150ed8e2ab"
+GETENT_FILE="musl-getent-${MUSL_UTIL_COMMIT}.c"
+ICONV_FILE="musl-iconv-${MUSL_UTIL_COMMIT}.c"
 SRC_URI="
-	https://gitlab.alpinelinux.org/alpine/aports/-/raw/${GETENT_COMMIT}/main/musl/getent.c
+	https://gitlab.alpinelinux.org/alpine/aports/-/raw/${MUSL_UTIL_COMMIT}/main/musl/getent.c
 		-> ${GETENT_FILE}
+	https://gitlab.alpinelinux.org/alpine/aports/-/raw/${MUSL_UTIL_COMMIT}/main/musl/iconv.c
+		-> ${ICONV_FILE}
 "
 
-# getent is BSD-2.
-LICENSE="Apache-2.0-with-LLVM-exceptions || ( UoI-NCSA MIT ) BSD-2"
+# getent is BSD-2, iconv is GPL-2+.
+LICENSE="Apache-2.0-with-LLVM-exceptions || ( UoI-NCSA MIT ) BSD-2 GPL-2+"
 SLOT="${LLVM_MAJOR}"
 IUSE="test"
 RESTRICT="!test? ( test )"
@@ -116,12 +120,17 @@ src_compile() {
 	cmake_build libc libc-shared libm libm-shared libmvec libmvec-shared \
 		libc-startup libc-loader generate-libc-headers
 
-	# getent is built against the library just built rather than the one
-	# installed, which may be too old to have everything it calls.
+	# These are built against the library just built rather than the one
+	# installed, which may be too old to have everything they call.
 	local libc_build=${BUILD_DIR}/libc
-	"$(tc-getCC)" ${CPPFLAGS} -isystem "${libc_build}/include" ${CFLAGS} \
-		${LDFLAGS} -L"${libc_build}/lib" -o "${T}"/getent \
-		"${DISTDIR}/${GETENT_FILE}" || die "building getent failed"
+	local util
+	for util in getent iconv; do
+		local src=GETENT_FILE
+		[[ ${util} == iconv ]] && src=ICONV_FILE
+		"$(tc-getCC)" ${CPPFLAGS} -isystem "${libc_build}/include" ${CFLAGS} \
+			${LDFLAGS} -L"${libc_build}/lib" -o "${T}/${util}" \
+			"${DISTDIR}/${!src}" || die "building ${util} failed"
+	done
 }
 
 src_test() {
@@ -145,7 +154,7 @@ src_install() {
 	[[ ${arch} == riscv* ]] && arch=riscv
 	dosym ld.so.conf "/etc/ld-llvm-libc-${arch}.path"
 
-	dobin "${T}"/getent
+	dobin "${T}"/getent "${T}"/iconv
 
 	# The loader has no trace mode for glibc's ldd to drive, so this reads the
 	# dependencies out of the ELF files instead of by loading them.
