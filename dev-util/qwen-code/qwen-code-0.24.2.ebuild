@@ -1315,11 +1315,13 @@ NPM_PKGS="
 	nice-try@1.0.5
 	node-abi@3.92.0
 	node-addon-api@4.3.0
+	node-addon-api@7.1.1
 	node-domexception@1.0.0
 	node-fetch@2.7.0
 	node-fetch@3.3.2
 	node-gyp@11.5.0
 	node-gyp-build@4.8.4
+	node-pty@1.1.0
 	node-releases@2.0.27
 	node-sarif-builder@3.4.0
 	nopt@8.1.0
