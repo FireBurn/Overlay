@@ -1,0 +1,23 @@
+key.dns_resolver parses DNS replies with the BIND ns_* API from libresolv,
+which llvm-libc does not provide. It is only the upcall helper for AFS, NFS
+and CIFS; libkeyutils, which is what everything else wants, still builds.
+
+--- a/Makefile
++++ b/Makefile
+@@ -100,7 +100,7 @@
+ # Normal build rule
+ #
+ ###############################################################################
+-all: keyctl request-key key.dns_resolver cxx
++all: keyctl request-key cxx
+ 
+ ###############################################################################
+ #
+@@ -214,7 +214,6 @@
+ 	$(INSTALL) -D keyctl $(DESTDIR)$(BINDIR)/keyctl
+ 	$(INSTALL) -D request-key $(DESTDIR)$(SBINDIR)/request-key
+ 	$(INSTALL) -D request-key-debug.sh $(DESTDIR)$(SHAREDIR)/request-key-debug.sh
+-	$(INSTALL) -D key.dns_resolver $(DESTDIR)$(SBINDIR)/key.dns_resolver
+ 	$(INSTALL) -D -m 0644 request-key.conf $(DESTDIR)$(ETCDIR)/request-key.conf
+ 	mkdir -p $(DESTDIR)$(ETCDIR)/request-key.d
+ 	mkdir -p $(DESTDIR)$(ETCDIR)/keyutils
