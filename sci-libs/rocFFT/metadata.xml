@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+  <maintainer type="project">
+    <email>sci@gentoo.org</email>
+  </maintainer>
+  <upstream>
+    <remote-id type="github">ROCm/rocm-libraries</remote-id>
+  </upstream>
+  <use>
+    <flag name="benchmark">Build benchmark clients</flag>
+    <flag name="perfscripts">Install benchmark performance scripts</flag>
+  </use>
+</pkgmetadata>
