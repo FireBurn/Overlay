@@ -32,11 +32,11 @@ S="${WORKDIR}"
 LICENSE="all-rights-reserved"
 SLOT="0"
 KEYWORDS="amd64 arm64"
-QA_PREBUILT="opt/bin/claude opt/claude-code/claude"
+QA_PREBUILT="opt/bin/claude"
 
 RDEPEND="
 	sys-apps/ripgrep
-	elibc_llvm? ( sys-libs/musl-runtime )
+	elibc_llvm? ( sys-libs/musl-abi )
 "
 
 IUSE="cpu_flags_x86_avx cpu_flags_x86_avx2"
@@ -52,27 +52,11 @@ src_compile() {
 src_install() {
 	# NOTE(JayF) Literally the file we download is all there is to
 	#            install. It's just a binary. No docs. Nothing else.
-	if use elibc_llvm ; then
-		# There is no build of this for llvm-libc, so the musl one runs
-		# under musl's loader from /opt/musl. patchelf is not an option:
-		# the binary is Bun's, which finds the payload appended to it by
-		# offset, and the eight kilobytes patchelf adds move it.
-		local ldso=/opt/musl/lib/ld-musl-$(usex amd64 x86_64 aarch64).so.1
-
-		exeinto /opt/claude-code
-		newexe "${DISTDIR}/${A[0]}" claude
-
-		cat > "${T}"/claude <<-EOF || die
-			#!/bin/sh
-			exec ${ldso} --library-path /opt/musl/lib \\
-				/opt/claude-code/claude "\$@"
-		EOF
-		exeinto /opt/bin
-		doexe "${T}"/claude
-	else
-		exeinto /opt/bin
-		newexe "${DISTDIR}/${A[0]}" claude
-	fi
+	# There is no build of this for llvm-libc. The musl one needs no
+	# changing: sys-libs/musl-abi answers to the ABI it was built for and
+	# this libc serves it underneath, so the file goes in as it came.
+	exeinto /opt/bin
+	newexe "${DISTDIR}/${A[0]}" claude
 
 	insinto /etc/${PN}
 	newins "${FILESDIR}/managed-settings-native.json" managed-settings.json
