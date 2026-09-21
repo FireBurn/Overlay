@@ -1,0 +1,7 @@
+# Copyright 2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+# Masked for anything that might fall back to GCC. Nothing here can: this
+# profile has no GCC and no glibc, which is the same reason the musl/llvm
+# profiles unmask it.
+-llvm-runtimes/libatomic-stub
