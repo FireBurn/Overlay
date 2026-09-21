@@ -38,6 +38,10 @@ fi
 
 LICENSE="MIT"
 
+PATCHES=(
+	"${FILESDIR}"/${P}-no-noinline-macro.patch
+)
+
 IUSE="debug +hip opencl test video_cards_amdgpu"
 
 # many tests are broken; also tests run against installed version, not built one
