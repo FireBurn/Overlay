@@ -17,10 +17,12 @@ SRC_URI="
 	amd64? (
 		elibc_glibc? ( ${GCS_BUCKET}/${PV}/linux-x64/claude -> claude-amd64-glibc-${PV} )
 		elibc_musl?  ( ${GCS_BUCKET}/${PV}/linux-x64-musl/claude -> claude-amd64-musl-${PV} )
+		elibc_llvm?  ( ${GCS_BUCKET}/${PV}/linux-x64-musl/claude -> claude-amd64-musl-${PV} )
 	)
 	arm64? (
 		elibc_glibc? ( ${GCS_BUCKET}/${PV}/linux-arm64/claude -> claude-arm64-glibc-${PV} )
 		elibc_musl?  ( ${GCS_BUCKET}/${PV}/linux-arm64-musl/claude -> claude-arm64-musl-${PV} )
+		elibc_llvm?  ( ${GCS_BUCKET}/${PV}/linux-arm64-musl/claude -> claude-arm64-musl-${PV} )
 	)"
 S="${WORKDIR}"
 
@@ -30,9 +32,12 @@ S="${WORKDIR}"
 LICENSE="all-rights-reserved"
 SLOT="0"
 KEYWORDS="amd64 arm64"
-QA_PREBUILT="opt/bin/claude"
+QA_PREBUILT="opt/bin/claude opt/claude-code/claude"
 
-RDEPEND="sys-apps/ripgrep"
+RDEPEND="
+	sys-apps/ripgrep
+	elibc_llvm? ( sys-libs/musl-runtime )
+"
 
 IUSE="cpu_flags_x86_avx cpu_flags_x86_avx2"
 REQUIRED_USE="amd64? ( cpu_flags_x86_avx cpu_flags_x86_avx2 )"
@@ -47,8 +52,27 @@ src_compile() {
 src_install() {
 	# NOTE(JayF) Literally the file we download is all there is to
 	#            install. It's just a binary. No docs. Nothing else.
-	exeinto /opt/bin
-	newexe "${DISTDIR}/${A[0]}" claude
+	if use elibc_llvm ; then
+		# There is no build of this for llvm-libc, so the musl one runs
+		# under musl's loader from /opt/musl. patchelf is not an option:
+		# the binary is Bun's, which finds the payload appended to it by
+		# offset, and the eight kilobytes patchelf adds move it.
+		local ldso=/opt/musl/lib/ld-musl-$(usex amd64 x86_64 aarch64).so.1
+
+		exeinto /opt/claude-code
+		newexe "${DISTDIR}/${A[0]}" claude
+
+		cat > "${T}"/claude <<-EOF || die
+			#!/bin/sh
+			exec ${ldso} --library-path /opt/musl/lib \\
+				/opt/claude-code/claude "\$@"
+		EOF
+		exeinto /opt/bin
+		doexe "${T}"/claude
+	else
+		exeinto /opt/bin
+		newexe "${DISTDIR}/${A[0]}" claude
+	fi
 
 	insinto /etc/${PN}
 	newins "${FILESDIR}/managed-settings-native.json" managed-settings.json
