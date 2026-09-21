@@ -3,3 +3,4 @@
 
 PORTAGE_LIBC="llvm"
 ELIBC="llvm"
+USE_EXPAND_VALUES_ELIBC="bionic Darwin glibc mingw musl SunOS llvm"
