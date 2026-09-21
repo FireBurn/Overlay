@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="project">
+		<email>asahi@gentoo.org</email>
+	</maintainer>
+	<upstream>
+		<remote-id type="sourceforge">mingw-w64</remote-id>
+		<remote-id type="github">llvm/llvm-project</remote-id>
+	</upstream>
+	<use>
+		<flag name="arm64-pe">Enable the aarch64-w64-mingw32 target</flag>
+		<flag name="arm64ec-pe">Enable the arm64ec-w64-mingw32 target</flag>
+		<flag name="i686-pe">Enable the i686-w64-mingw32 target</flag>
+		<flag name="x86-64-pe">Enable the x86_64-w64-mingw32 target</flag>
+	</use>
+</pkgmetadata>
