@@ -54,8 +54,11 @@ pkg_pretend() {
 	[[ ${MERGE_TYPE} == buildonly ]] && return
 	local lib
 	for lib in "${EROOT}"/{,usr/}lib{,64}/{libc.so.6,ld-musl-*.so.1}; do
-		[[ -e ${lib} ]] &&
-			die "${lib#"${EROOT}"} belongs to another C library, which ${PN} would replace"
+		[[ -e ${lib} ]] || continue
+		# sys-libs/musl-abi puts this library's own loader under the name a
+		# musl binary asks for. That is this library, not another one.
+		[[ $(readlink "${lib}") == ld-llvm-libc-*.so.1 ]] && continue
+		die "${lib#"${EROOT}"} belongs to another C library, which ${PN} would replace"
 	done
 }
 
