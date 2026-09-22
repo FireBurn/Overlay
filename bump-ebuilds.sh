@@ -1,23 +1,11 @@
 #!/bin/bash
-# bump-ebuilds.sh — check tracked ebuilds for newer upstream versions and bump them.
-#
-# The deterministic work (version checks, simple bumps, Manifest, validation,
-# commit) runs here in bash. The LLM agent (ebuild-bumper) is invoked only for
-# the complex Rust packages (codex, zed), and only when a newer stable version
-# exists AND its crate tarball is already published upstream.
-#
-# A "simple" bump is just a rename + Manifest refresh, because those ebuilds
-# derive PV from the filename and reference it via ${PV}. No LLM is involved.
+# Check known packages directly and ask the agent to assess new or complex ones.
 
 set -uo pipefail
 cd "$(dirname "$0")"
 
-BRANCH="master"
-
-# --- tracked packages -----------------------------------------------------
-# "category/package" paths. To track a new package, add it here; if it is a
-# complex Rust crate that needs dependency tracking, also add it to COMPLEX_PKGS.
-ALL_PKGS=(
+# Packages with known version sources and bump procedures.
+KNOWN_PKGS=(
     dev-util/claude-code
     dev-util/antigravity-cli
     dev-util/opencode
@@ -27,29 +15,35 @@ ALL_PKGS=(
     app-editors/zed
     games-util/heroic
 )
-COMPLEX_PKGS=( dev-util/codex app-editors/zed )
+AI_PKGS=( dev-util/codex app-editors/zed www-client/chromium )
+
+mapfile -t ALL_PKGS < <(
+    find . -mindepth 3 -maxdepth 3 -name '*.ebuild' -printf '%h\n' |
+        sed 's@^./@@' | sort -u
+)
 
 # --- CLI ------------------------------------------------------------------
 DRY_RUN=0
-PUSH=1
+PUSH=0
 PKG=""
 usage() {
     cat <<'EOF'
 Usage: bump-ebuilds.sh [options] [package]
 
-Check tracked ebuilds for newer upstream versions and bump them.
+Check overlay ebuilds for newer upstream versions and bump them.
 
 Options:
   -n, --dry-run    Report what would change without touching anything
-      --no-push    Commit bumps but do not push to origin
+      --push       Push successful bumps to origin/master
   -h, --help       Show this help
 
-With no package argument, all tracked packages are checked.
+With no package argument, all overlay packages are checked.
 EOF
 }
 for arg in "$@"; do
     case "$arg" in
         -n|--dry-run) DRY_RUN=1 ;;
+        --push)       PUSH=1 ;;
         --no-push)    PUSH=0 ;;
         -h|--help)    usage; exit 0 ;;
         -*)           echo "unknown option: $arg" >&2; usage >&2; exit 2 ;;
@@ -60,10 +54,16 @@ done
 if [[ -n "$PKG" ]]; then
     if [[ "$PKG" != */* ]]; then            # accept a bare "claude-code"
         hit=""
-        for p in "${ALL_PKGS[@]}"; do [[ "${p##*/}" == "$PKG" ]] && hit="$p"; done
+        for p in "${ALL_PKGS[@]}"; do
+            if [[ "${p##*/}" == "$PKG" ]]; then
+                [[ -z "$hit" ]] || { echo "ambiguous package name: $PKG" >&2; exit 2; }
+                hit="$p"
+            fi
+        done
         [[ -n "$hit" ]] || { echo "unknown package: $PKG" >&2; exit 2; }
         PKG="$hit"
     fi
+    [[ " ${ALL_PKGS[*]} " == *" $PKG "* ]] || { echo "unknown package: $PKG" >&2; exit 2; }
     WORK=("$PKG")
 else
     WORK=("${ALL_PKGS[@]}")
@@ -74,7 +74,11 @@ info() { printf '   %s\n' "$1"; }
 die()  { echo "ERROR: $*" >&2; exit 1; }
 
 pn_of()      { echo "${1##*/}"; }
-is_complex() { local p; for p in "${COMPLEX_PKGS[@]}"; do [[ "$p" == "$1" ]] && return 0; done; return 1; }
+in_list() { local item="$1" p; shift; for p; do [[ "$p" == "$item" ]] && return 0; done; return 1; }
+
+package_clean() {
+    [[ -z "$(git status --porcelain -- "$1")" ]]
+}
 
 # --- version helpers ------------------------------------------------------
 # vercmp A B -> prints gt / eq / lt (sufficient for stable versions).
@@ -281,10 +285,8 @@ http_code() {
 # Undo a partially-applied simple bump (rename + Manifest).
 revert_bump() {
     local pkg="$1" oldf="$2" newf="$3"
-    git checkout -q -- "$newf" 2>/dev/null
-    git mv "$newf" "$oldf" 2>/dev/null
-    git checkout -q -- "$pkg/Manifest" 2>/dev/null
-    git reset -q -- "$pkg" 2>/dev/null
+    git mv -f "$newf" "$oldf" 2>/dev/null || true
+    git restore --staged --worktree -- "$pkg" 2>/dev/null || true
 }
 
 # Simple bump: rename + Manifest refresh. Returns 0 on success, 2 on failure.
@@ -293,17 +295,33 @@ bump_simple() {
     local pn oldf newf
     pn="$(pn_of "$pkg")"; oldf="$(current_ebuild "$pkg")"; newf="$pkg/$pn-$new.ebuild"
 
+    # A pinned old version needs package-specific review.
+    if grep -qF "$old" "$oldf"; then
+        info "$oldf contains a literal '$old'; asking agent"
+        bump_agent "$pkg" "$old" "$new"
+        return $?
+    fi
     if [[ "$DRY_RUN" == 1 ]]; then
-        info "[dry-run] would bump $pkg $old -> $new"
+        info "[dry-run] would bump and emerge $pkg $old -> $new"
         return 0
     fi
 
-    # These ebuilds derive PV from the filename; a literal old version is a red flag.
-    if grep -qF "$old" "$oldf"; then
-        info "warning: $oldf contains a literal '$old' — verify it is not hardcoded"
-    fi
-
     git mv "$oldf" "$newf" || { echo "ERROR: git mv failed for $pkg" >&2; return 1; }
+    python3 - "$newf" <<'PY'
+from pathlib import Path
+import re
+import sys
+
+path = Path(sys.argv[1])
+text = path.read_text()
+
+def testing_keywords(match):
+    keywords = [flag if flag.startswith(("~", "-")) else "~" + flag
+                for flag in match.group(1).split()]
+    return 'KEYWORDS="' + ' '.join(keywords) + '"'
+
+path.write_text(re.sub(r'^KEYWORDS="([^"]*)"', testing_keywords, text, flags=re.M))
+PY
     if ! update_npm_pkgs "$pkg" "$new" "$newf"; then
         revert_bump "$pkg" "$oldf" "$newf"
         echo "ERROR: NPM_PKGS update failed for $pkg (reverted)" >&2
@@ -324,42 +342,53 @@ bump_simple() {
         echo "ERROR: ebuild manifest failed for $pkg (reverted)" >&2
         return 2
     fi
+    local -a emerge_cmd=( emerge )
+    (( EUID == 0 )) || emerge_cmd=( sudo -n emerge )
+    if ! "${emerge_cmd[@]}" -1 "=$pkg-$new"; then
+        revert_bump "$pkg" "$oldf" "$newf"
+        echo "ERROR: emerge failed for $pkg $new (reverted)" >&2
+        return 2
+    fi
+    if ! pkgcheck scan --repo FireBurn "$pkg" ||
+       ! pkgcheck scan --repo FireBurn --commits; then
+        revert_bump "$pkg" "$oldf" "$newf"
+        echo "ERROR: pkgcheck failed for $pkg $new (reverted)" >&2
+        return 2
+    fi
     git add "$pkg"
-    git commit -q -m "$pkg: Bump to $new" || { echo "ERROR: commit failed for $pkg" >&2; return 2; }
+    git diff --cached --check -- "$pkg" || { revert_bump "$pkg" "$oldf" "$newf"; return 2; }
+    git diff --cached -- "$pkg"
+    git commit -q --only -m "$pkg: bump to $new" -- "$pkg" || { echo "ERROR: commit failed for $pkg" >&2; return 2; }
     info "bumped $pkg $old -> $new"
     return 0
 }
 
-# Complex bump: delegate to the LLM agent.
-# Returns 0 on success, 1 if there is nothing to do yet, 2 on failure.
-bump_complex() {
-    local pkg="$1" old="$2" new="$3"
-    local pn url code
-    pn="$(pn_of "$pkg")"
-    url="$(readiness_url "$pkg" "$new")"
-    code="$(http_code "$url")"
-    if [[ "$code" != 2* ]]; then
-        info "skip $pkg: upstream source for $new not available yet (HTTP $code)"
+# Returns 0 on a commit, 1 when no bump was needed, 2 on failure.
+bump_agent() {
+    local pkg="$1" old="$2" new="${3:-}" head prompt
+    if [[ "$DRY_RUN" == 1 ]]; then
+        info "[dry-run] would ask agent to assess $pkg (local $old${new:+, upstream $new})"
         return 1
     fi
-    if [[ "$DRY_RUN" == 1 ]]; then
-        info "[dry-run] would ask agent to bump $pkg $old -> $new (source available)"
-        return 0
-    fi
 
-    log "agent: $pkg $old -> $new"
-    local prompt
-    prompt="Bump $pkg from $old to $new. The upstream source for $new already exists at:
-$url
-Do the full bump: rename the ebuild to $pn-$new.ebuild, regenerate CRATES with
-scripts/cargo-crates.py from the new version's Cargo.lock, then verify the GIT_CRATES commits (and RUSTY_V8_TAG / WEBRTC_COMMIT where applicable) against the new version's source, updating them only if they changed. Regenerate the Manifest (ebuild digest + ebuild manifest), validate, and commit with the message '$pkg: Bump to $new'. Do NOT push — the calling script handles pushing."
+    log "agent: $pkg"
+    head="$(git rev-parse HEAD)"
+    prompt="Assess $pkg in this overlay (current version $old${new:+, candidate $new}). Read AGENTS.md and the existing ebuilds. If no candidate is supplied, find and verify the latest appropriate upstream release. Determine whether a version bump is appropriate and whether it is a simple rename or requires package-specific work. Chromium and its coupled packages always require AI review. Preserve the source build and update fetched dependencies and the Manifest as needed. Run a normal emerge -1 of the new package and a relevant smoke test, then pkgcheck scan --repo FireBurn --commits. Commit only if emerge installed successfully and checks pass, using one package per commit. Leave the package unchanged and report why if there is no safe bump. Do not push."
 
     if ! opencode run --agent ebuild-bumper "$prompt"; then
         echo "ERROR: agent bump failed for $pkg" >&2
         return 2
     fi
-    info "agent bumped $pkg $old -> $new"
-    return 0
+    if ! package_clean "$pkg"; then
+        echo "ERROR: agent left uncommitted changes in $pkg" >&2
+        return 2
+    fi
+    if [[ "$(git rev-parse HEAD)" != "$head" ]]; then
+        info "agent committed $pkg"
+        return 0
+    fi
+    info "agent made no commit for $pkg"
+    return 1
 }
 
 # --- main -----------------------------------------------------------------
@@ -367,7 +396,16 @@ changed=0
 failed=()
 for pkg in "${WORK[@]}"; do
     log "check: $pkg"
+    if ! package_clean "$pkg"; then
+        info "skip $pkg: package has uncommitted changes"
+        continue
+    fi
     old="$(current_pv "$pkg")" || { info "no ebuild found; skipping"; continue; }
+    if ! in_list "$pkg" "${KNOWN_PKGS[@]}"; then
+        bump_agent "$pkg" "$old"
+        case "$?" in 0) changed=1 ;; 2) failed+=("$pkg") ;; esac
+        continue
+    fi
     new="$(latest_pv "$pkg")"
     if [[ -z "$new" ]]; then
         info "could not determine upstream version; skipping"
@@ -378,8 +416,8 @@ for pkg in "${WORK[@]}"; do
         lt) info "upstream $new is older than local $old; skipping"; continue ;;
     esac
 
-    if is_complex "$pkg"; then
-        bump_complex "$pkg" "$old" "$new"
+    if in_list "$pkg" "${AI_PKGS[@]}"; then
+        bump_agent "$pkg" "$old" "$new"
     else
         if [[ "$(http_code "$(readiness_url "$pkg" "$new")")" != 2* ]]; then
             info "skip $pkg: $new artifact not available yet"
@@ -394,8 +432,8 @@ for pkg in "${WORK[@]}"; do
 done
 
 if [[ "$changed" == 1 && "$PUSH" == 1 && "$DRY_RUN" == 0 ]]; then
-    if git push origin "$BRANCH"; then
-        info "pushed to origin/$BRANCH"
+    if git push origin master; then
+        info "pushed to origin/master"
     else
         die "git push failed"
     fi
