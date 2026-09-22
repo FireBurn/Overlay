@@ -217,6 +217,8 @@ def main():
     ap.add_argument("lockfiles", nargs="+", type=Path)
     ap.add_argument("--arches", default="amd64,arm64")
     ap.add_argument("--ebuild", type=Path)
+    ap.add_argument("--strict", action="store_true",
+                    help="fail if a dependency cannot be represented")
     args = ap.parse_args()
 
     col = Collector(args.arches.split(","))
@@ -229,6 +231,8 @@ def main():
     for s in col.skipped:
         print(f"skipped {s}", file=sys.stderr)
     print(f"{len(col.pkgs)} packages, {len(col.stubs)} other-platform stubs", file=sys.stderr)
+    if args.strict and col.skipped:
+        sys.exit("unhandled dependencies in lockfile")
 
     if args.ebuild:
         text = args.ebuild.read_text()
@@ -237,6 +241,8 @@ def main():
             sys.exit(f"{args.ebuild}: no NPM_PKGS block found")
         new, n = re.subn(r'^NPM_STUB_PKGS="[^"]*"', lambda _: stub_block, new, count=1, flags=re.M)
         if not n and stubs:
+            if args.strict:
+                sys.exit(f"{args.ebuild}: no NPM_STUB_PKGS block; add one for pnpm")
             print(f"{args.ebuild}: no NPM_STUB_PKGS block; add one for pnpm", file=sys.stderr)
         args.ebuild.write_text(new)
     else:

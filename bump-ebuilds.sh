@@ -224,8 +224,7 @@ cargo_lockfiles() {
     esac
 }
 
-# Regenerate CRATES for a new PV. Git dependencies are reported but not
-# updated: GIT_CRATES still needs a human (or the agent) to check them.
+# Regenerate CRATES for a new PV. Complex Rust packages are handled by the agent.
 update_crates() {
     local pkg="$1" pv="$2" ebuild="$3" spec repo prefix f tmp
     spec="$(cargo_lockfiles "$pkg")"
@@ -261,13 +260,15 @@ update_npm_pkgs() {
             "${extras[@]}" >/dev/null || { rm -rf "$tmp"; return 1; }
         lock+=("$tmp/extras/package-lock.json")
     fi
-    ./scripts/npm-deps.py "${lock[@]}" --ebuild "$ebuild" || { rm -rf "$tmp"; return 1; }
+    ./scripts/npm-deps.py "${lock[@]}" --strict --ebuild "$ebuild" || { rm -rf "$tmp"; return 1; }
 
     if grep -q '^ESBUILD_SLOT=' "$ebuild" && [[ "${lock[0]}" == *package-lock.json ]]; then
         esb="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["packages"]["node_modules/esbuild"]["version"])' "${lock[0]}")"
         sed -i "s/^ESBUILD_SLOT=.*/ESBUILD_SLOT=\"$esb\"/" "$ebuild"
         if ! ls dev-util/esbuild/esbuild-"$esb".ebuild >/dev/null 2>&1; then
-            info "warning: $pkg $pv needs dev-util/esbuild:$esb, which has no ebuild yet"
+            echo "ERROR: $pkg $pv needs dev-util/esbuild:$esb, which has no ebuild yet" >&2
+            rm -rf "$tmp"
+            return 1
         fi
     fi
     rm -rf "$tmp"
@@ -311,6 +312,20 @@ revert_bump() {
     git restore --staged --worktree -- "$pkg" 2>/dev/null || true
 }
 
+retry_with_agent() {
+    local pkg="$1" old="$2" new="$3" oldf="$4" newf="$5" reason="$6" result
+    revert_bump "$pkg" "$oldf" "$newf"
+    if ! package_clean "$pkg"; then
+        echo "ERROR: could not restore $pkg after $reason" >&2
+        return 2
+    fi
+    info "$reason; asking agent to inspect and fix it"
+    bump_agent "$pkg" "$old" "$new" "$reason"
+    result=$?
+    [[ "$result" == 1 ]] && return 2
+    return "$result"
+}
+
 # Simple bump: rename + Manifest refresh. Returns 0 on success, 2 on failure.
 bump_simple() {
     local pkg="$1" old="$2" new="$3"
@@ -345,31 +360,26 @@ def testing_keywords(match):
 path.write_text(re.sub(r'^KEYWORDS="([^"]*)"', testing_keywords, text, flags=re.M))
 PY
     if ! update_npm_pkgs "$pkg" "$new" "$newf"; then
-        revert_bump "$pkg" "$oldf" "$newf"
-        echo "ERROR: NPM_PKGS update failed for $pkg (reverted)" >&2
-        return 2
+        retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "dependency regeneration failed"
+        return $?
     fi
     if ! update_crates "$pkg" "$new" "$newf"; then
-        revert_bump "$pkg" "$oldf" "$newf"
-        echo "ERROR: CRATES update failed for $pkg (reverted)" >&2
-        return 2
+        retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "Rust dependency regeneration failed"
+        return $?
     fi
     if ! ebuild "$newf" digest; then
-        revert_bump "$pkg" "$oldf" "$newf"
-        echo "ERROR: ebuild digest failed for $pkg (reverted)" >&2
-        return 2
+        retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "ebuild digest failed"
+        return $?
     fi
     if ! ebuild "$newf" manifest; then
-        revert_bump "$pkg" "$oldf" "$newf"
-        echo "ERROR: ebuild manifest failed for $pkg (reverted)" >&2
-        return 2
+        retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "ebuild manifest failed"
+        return $?
     fi
     local -a emerge_cmd=( emerge )
     (( EUID == 0 )) || emerge_cmd=( sudo -n emerge )
     if ! "${emerge_cmd[@]}" -1 "=$pkg-$new"; then
-        revert_bump "$pkg" "$oldf" "$newf"
-        echo "ERROR: emerge failed for $pkg $new (reverted)" >&2
-        return 2
+        retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "emerge failed"
+        return $?
     fi
     if ! pkgcheck scan --repo FireBurn "$pkg" ||
        ! pkgcheck scan --repo FireBurn --commits; then
@@ -387,7 +397,7 @@ PY
 
 # Returns 0 on a commit, 1 when no bump was needed, 2 on failure.
 bump_agent() {
-    local pkg="$1" old="$2" new="${3:-}" head prompt
+    local pkg="$1" old="$2" new="${3:-}" reason="${4:-}" head prompt
     if [[ "$DRY_RUN" == 1 ]]; then
         info "[dry-run] would ask agent to assess $pkg (local $old${new:+, upstream $new})"
         return 1
@@ -395,7 +405,7 @@ bump_agent() {
 
     log "agent: $pkg"
     head="$(git rev-parse HEAD)"
-    prompt="Assess $pkg in this overlay (current version $old${new:+, candidate $new}). Read AGENTS.md and the existing ebuilds. If no candidate is supplied, find and verify the latest appropriate upstream release. Determine whether a version bump is appropriate and whether it is a simple rename or requires package-specific work. For Chromium, follow the three-channel instructions in .opencode/agent/ebuild-bumper.md and build exactly one Chromium version at a time with no other package builds running. Preserve the source build and update fetched dependencies and the Manifest as needed. Run a normal emerge -1 of the new package and a relevant smoke test, then pkgcheck scan --repo FireBurn --commits. Commit only if emerge installed successfully and checks pass, using one package per commit. Leave the package unchanged and report why if there is no safe bump. Do not push."
+    prompt="Assess $pkg in this overlay (current version $old${new:+, candidate $new}${reason:+, automatic attempt: $reason}). Read AGENTS.md and .opencode/agent/ebuild-bumper.md and the existing ebuilds. If an automatic attempt failed, inspect its output and build log, then fix the cause. If no candidate is supplied, find and verify the latest appropriate upstream release. Determine whether a version bump is appropriate and whether it is a simple rename or requires package-specific work. For Chromium, follow the three-channel instructions and build exactly one Chromium version at a time with no other package builds running. Preserve the source build and update fetched dependencies and the Manifest as needed. Run a normal emerge -1 of the new package and a relevant smoke test, then pkgcheck scan --repo FireBurn --commits. Commit only if emerge installed successfully and checks pass, using one package per commit. Leave the package unchanged and report why if there is no safe bump. Do not push."
 
     if ! opencode run --agent ebuild-bumper "$prompt"; then
         echo "ERROR: agent bump failed for $pkg" >&2

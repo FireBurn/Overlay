@@ -69,14 +69,14 @@ crates = sorted({f'{p["name"]}@{p["version"]}' for p in pkgs
                  if p.get("source", "").startswith("registry+")})
 gits = [p for p in lock["package"] if p.get("source", "").startswith("git+")]
 if gits:
-    print("warning: git crates need GIT_CRATES: " + ", ".join(p["name"] for p in gits), file=sys.stderr)
+    sys.exit("git crates need GIT_CRATES: " + ", ".join(p["name"] for p in gits))
 print('CRATES="')
 for c in crates:
     print(f'\t{c}')
 print('"')
 EOF
 
-"$here/npm-deps.py" "$src/bun.lock" "$src/packages/bun-error/bun.lock" \
+"$here/npm-deps.py" --strict "$src/bun.lock" "$src/packages/bun-error/bun.lock" \
 	"$src/src/node-fallbacks/bun.lock" >> "$tmp/blocks"
 
 if [[ -z $ebuild ]]; then
@@ -88,6 +88,8 @@ python3 - "$ebuild" "$tmp/blocks" <<'EOF'
 import re, sys
 path, blocks = sys.argv[1], open(sys.argv[2]).read()
 text = open(path).read()
+if 'NPM_STUB_PKGS="' in blocks and 'NPM_STUB_PKGS="' not in text:
+    sys.exit(f"{path}: generated NPM_STUB_PKGS needs an ebuild block")
 patterns = {
     "BUN_VENDOR": r'^BUN_VENDOR=\([^)]*\)',
     "BUN_WEBKIT_COMMIT": r'^BUN_WEBKIT_COMMIT="[^"]*"',
@@ -95,6 +97,10 @@ patterns = {
     "CRATES": r'^CRATES="[^"]*"',
     "NPM_PKGS": r'^NPM_PKGS="[^"]*"',
 }
+if 'NPM_STUB_PKGS="' in text:
+    patterns["NPM_STUB_PKGS"] = r'^NPM_STUB_PKGS="[^"]*"'
+    if 'NPM_STUB_PKGS="' not in blocks:
+        blocks += '\nNPM_STUB_PKGS="\n"\n'
 for name, pat in patterns.items():
     new = re.search(pat, blocks, re.M).group(0)
     text, n = re.subn(pat, lambda _: new, text, count=1, flags=re.M)

@@ -33,6 +33,8 @@ ap = argparse.ArgumentParser(description=__doc__,
 ap.add_argument("gradle_home", type=Path)
 ap.add_argument("--ebuild", type=Path)
 ap.add_argument("--jobs", type=int, default=16)
+ap.add_argument("--strict", action="store_true",
+                help="fail if any artifact is absent from the known repositories")
 args = ap.parse_args()
 
 cache = args.gradle_home / "caches" / "modules-2" / "files-2.1"
@@ -78,6 +80,8 @@ for dep, repo in zip(sorted(found), repos):
 
 for m in missing:
     print(f"not served by any known repository, add by hand: {m}", file=sys.stderr)
+if args.strict and (missing or not found):
+    sys.exit("unresolved or empty Gradle dependency cache")
 
 block = 'GRADLE_DEPS="\n' + "".join(f"\t{line}\n" for line in lines) + '"'
 
