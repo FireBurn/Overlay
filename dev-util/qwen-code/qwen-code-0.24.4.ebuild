@@ -249,12 +249,12 @@ NPM_PKGS="
 	@opentelemetry/sdk-trace-base@2.10.0
 	@opentelemetry/sdk-trace-node@2.10.0
 	@opentelemetry/semantic-conventions@1.36.0
-	@opentui/core@0.5.8
-	@opentui/core-linux-arm64@0.5.8|arm64
-	@opentui/core-linux-arm64-musl@0.5.8|arm64,elibc_musl
-	@opentui/core-linux-x64@0.5.8|amd64
-	@opentui/core-linux-x64-musl@0.5.8|amd64,elibc_musl
-	@opentui/react@0.5.8
+	@opentui/core@0.5.10
+	@opentui/core-linux-arm64@0.5.10|arm64
+	@opentui/core-linux-arm64-musl@0.5.10|arm64,elibc_musl
+	@opentui/core-linux-x64@0.5.10|amd64
+	@opentui/core-linux-x64-musl@0.5.10|amd64,elibc_musl
+	@opentui/react@0.5.10
 	@paralleldrive/cuid2@2.3.1
 	@pkgjs/parseargs@0.11.0
 	@playwright/test@1.61.1
@@ -1935,10 +1935,10 @@ NPM_STUB_PKGS="
 	@node-rs/jieba-win32-arm64-msvc@2.0.2
 	@node-rs/jieba-win32-ia32-msvc@2.0.2
 	@node-rs/jieba-win32-x64-msvc@2.0.2
-	@opentui/core-darwin-arm64@0.5.8
-	@opentui/core-darwin-x64@0.5.8
-	@opentui/core-win32-arm64@0.5.8
-	@opentui/core-win32-x64@0.5.8
+	@opentui/core-darwin-arm64@0.5.10
+	@opentui/core-darwin-x64@0.5.10
+	@opentui/core-win32-arm64@0.5.10
+	@opentui/core-win32-x64@0.5.10
 	@rollup/rollup-android-arm-eabi@4.62.5
 	@rollup/rollup-android-arm64@4.62.5
 	@rollup/rollup-darwin-arm64@4.62.5
