@@ -39,7 +39,9 @@ RDEPEND="
 	elibc_llvm? ( sys-libs/musl-abi )
 "
 
-IUSE="cpu_flags_x86_avx cpu_flags_x86_avx2"
+# elibc_llvm is not one of the values the gentoo profiles declare, so it is
+# named here rather than left to USE_EXPAND.
+IUSE="cpu_flags_x86_avx cpu_flags_x86_avx2 elibc_llvm"
 REQUIRED_USE="amd64? ( cpu_flags_x86_avx cpu_flags_x86_avx2 )"
 
 RESTRICT="bindist mirror strip"
