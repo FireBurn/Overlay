@@ -9,10 +9,10 @@ CRATES="
 	adler2@2.0.0
 	ahash@0.8.11
 	anstream@0.6.18
-	anstyle@1.0.10
 	anstyle-parse@0.2.6
 	anstyle-query@1.1.2
 	anstyle-wincon@3.0.7
+	anstyle@1.0.10
 	anyhow@1.0.98
 	atomic-waker@1.1.2
 	autocfg@1.4.0
@@ -34,8 +34,8 @@ CRATES="
 	clap_derive@4.5.32
 	clap_lex@0.7.4
 	colorchoice@1.0.3
-	core-foundation@0.9.4
 	core-foundation-sys@0.8.7
+	core-foundation@0.9.4
 	cpufeatures@0.2.17
 	crc32fast@1.4.2
 	crossbeam-deque@0.8.6
@@ -63,8 +63,8 @@ CRATES="
 	fixedbitset@0.5.7
 	flate2@1.1.1
 	fnv@1.0.7
-	foreign-types@0.3.2
 	foreign-types-shared@0.1.1
+	foreign-types@0.3.2
 	form_urlencoded@1.2.1
 	futures-channel@0.3.31
 	futures-core@0.3.31
@@ -77,20 +77,20 @@ CRATES="
 	getrandom@0.3.2
 	gimli@0.31.1
 	glob@0.3.3
-	guppy@0.17.18
 	guppy-workspace-hack@0.1.0
+	guppy@0.17.18
 	h2@0.4.10
 	handlebars@6.3.2
 	hashbrown@0.16.0
 	heck@0.5.0
-	http@1.3.1
-	http-body@1.0.1
 	http-body-util@0.1.3
+	http-body@1.0.1
+	http@1.3.1
 	httparse@1.10.1
-	hyper@1.6.0
 	hyper-rustls@0.27.5
 	hyper-tls@0.6.0
 	hyper-util@0.1.11
+	hyper@1.6.0
 	icu_collections@1.5.0
 	icu_locid@1.5.0
 	icu_locid_transform@1.5.0
@@ -125,10 +125,10 @@ CRATES="
 	num-order@1.2.0
 	object@0.36.7
 	once_cell@1.21.3
-	openssl@0.10.72
 	openssl-macros@0.1.1
 	openssl-probe@0.1.6
 	openssl-sys@0.9.108
+	openssl@0.10.72
 	pathdiff@0.2.3
 	percent-encoding@2.3.1
 	pest@2.8.0
@@ -144,22 +144,22 @@ CRATES="
 	proc-macro2@1.0.103
 	quote@1.0.40
 	r-efi@5.2.0
-	rayon@1.12.0
 	rayon-core@1.13.0
+	rayon@1.12.0
 	redox_syscall@0.5.12
 	reqwest@0.12.15
 	ring@0.17.14
 	rustc-demangle@0.1.24
 	rustix@1.0.7
-	rustls@0.23.27
 	rustls-pemfile@2.2.0
 	rustls-pki-types@1.12.0
 	rustls-webpki@0.103.3
+	rustls@0.23.27
 	rustversion@1.0.20
 	ryu@1.0.20
 	schannel@0.1.27
-	security-framework@2.11.1
 	security-framework-sys@2.14.0
+	security-framework@2.11.1
 	semver@1.0.26
 	serde@1.0.228
 	serde_core@1.0.228
@@ -182,19 +182,19 @@ CRATES="
 	syn@2.0.110
 	sync_wrapper@1.0.2
 	synstructure@0.13.2
-	system-configuration@0.6.1
 	system-configuration-sys@0.6.0
+	system-configuration@0.6.1
 	tar@0.4.44
 	target-lexicon@0.13.2
 	target-spec@3.4.2
 	tempfile@3.19.1
-	thiserror@2.0.12
 	thiserror-impl@2.0.12
+	thiserror@2.0.12
 	tinystr@0.7.6
-	tokio@1.44.2
 	tokio-native-tls@0.3.1
 	tokio-rustls@0.26.2
 	tokio-util@0.7.15
+	tokio@1.44.2
 	toml@0.8.22
 	toml_datetime@0.6.9
 	toml_datetime@0.7.3
@@ -203,11 +203,11 @@ CRATES="
 	toml_parser@1.0.4
 	toml_write@0.1.1
 	toml_writer@1.0.4
-	tower@0.5.2
 	tower-layer@0.3.3
 	tower-service@0.3.3
-	tracing@0.1.41
+	tower@0.5.2
 	tracing-core@0.1.33
+	tracing@0.1.41
 	try-lock@0.2.5
 	typenum@1.18.0
 	ucd-trie@0.1.7
@@ -222,12 +222,12 @@ CRATES="
 	want@0.3.1
 	wasi@0.11.0+wasi-snapshot-preview1
 	wasi@0.14.2+wasi-0.2.4
-	wasm-bindgen@0.2.100
 	wasm-bindgen-backend@0.2.100
 	wasm-bindgen-futures@0.4.50
-	wasm-bindgen-macro@0.2.100
 	wasm-bindgen-macro-support@0.2.100
+	wasm-bindgen-macro@0.2.100
 	wasm-bindgen-shared@0.2.100
+	wasm-bindgen@0.2.100
 	web-sys@0.3.77
 	windows-link@0.1.1
 	windows-registry@0.4.0
@@ -259,15 +259,15 @@ CRATES="
 	writeable@0.5.5
 	xattr@1.5.0
 	yansi@1.0.1
-	yoke@0.7.5
 	yoke-derive@0.7.5
-	zerocopy@0.7.35
+	yoke@0.7.5
 	zerocopy-derive@0.7.35
-	zerofrom@0.1.6
+	zerocopy@0.7.35
 	zerofrom-derive@0.1.6
+	zerofrom@0.1.6
 	zeroize@1.8.1
-	zerovec@0.10.4
 	zerovec-derive@0.10.3
+	zerovec@0.10.4
 "
 
 inherit cargo
