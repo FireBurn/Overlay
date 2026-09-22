@@ -48,7 +48,7 @@ S="${WORKDIR}/${MY_PN^}"
 
 LICENSE="all-rights-reserved"
 SLOT="0"
-KEYWORDS="amd64"
+KEYWORDS="~amd64"
 
 IUSE="appindicator bundled-electron +seccomp wayland"
 REQUIRED_USE="${PYTHON_REQUIRED_USE}"
