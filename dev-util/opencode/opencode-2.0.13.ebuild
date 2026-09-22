@@ -1327,10 +1327,10 @@ NPM_PKGS="
 	editorconfig@1.0.7
 	effect@4.0.0-rc.112
 	ejs@3.1.10
-	electron@42.10.1
+	electron@44.4.3
 	electron-builder@26.15.7
 	electron-builder-squirrel-windows@26.15.7
-	electron-context-menu@4.1.2
+	electron-context-menu@5.0.0
 	electron-dl@4.0.0
 	electron-is-dev@3.0.1
 	electron-log@5.4.4
