@@ -17,11 +17,6 @@ KNOWN_PKGS=(
 )
 AI_PKGS=( dev-util/codex app-editors/zed www-client/chromium )
 
-mapfile -t ALL_PKGS < <(
-    find . -mindepth 3 -maxdepth 3 -name '*.ebuild' -printf '%h\n' |
-        sed 's@^./@@' | sort -u
-)
-
 # --- CLI ------------------------------------------------------------------
 DRY_RUN=0
 PUSH=0
@@ -34,10 +29,12 @@ Check overlay ebuilds for newer upstream versions and bump them.
 
 Options:
   -n, --dry-run    Report what would change without touching anything
-      --push       Push successful bumps to origin/master
+      --push       Push successful bumps after a final rebase
   -h, --help       Show this help
 
 With no package argument, all overlay packages are checked.
+Chromium requires a separate invocation: bump-ebuilds.sh www-client/chromium
+Live runs pull --rebase --autostash from origin/master before checking packages.
 EOF
 }
 for arg in "$@"; do
@@ -50,6 +47,18 @@ for arg in "$@"; do
         *)            PKG="$arg" ;;
     esac
 done
+
+if [[ "$DRY_RUN" == 0 ]]; then
+    git pull --rebase --autostash origin master || {
+        echo 'ERROR: initial git pull --rebase --autostash failed' >&2
+        exit 1
+    }
+fi
+
+mapfile -t ALL_PKGS < <(
+    find . -mindepth 3 -maxdepth 3 -name '*.ebuild' -printf '%h\n' |
+        sed 's@^./@@' | sort -u
+)
 
 if [[ -n "$PKG" ]]; then
     if [[ "$PKG" != */* ]]; then            # accept a bare "claude-code"
@@ -66,7 +75,20 @@ if [[ -n "$PKG" ]]; then
     [[ " ${ALL_PKGS[*]} " == *" $PKG "* ]] || { echo "unknown package: $PKG" >&2; exit 2; }
     WORK=("$PKG")
 else
-    WORK=("${ALL_PKGS[@]}")
+    WORK=()
+    for p in "${ALL_PKGS[@]}"; do
+        [[ "$p" == www-client/chromium ]] || WORK+=("$p")
+    done
+    printf 'Chromium requires its own run: %s www-client/chromium\n' "$0"
+fi
+
+if [[ "$PKG" == www-client/chromium && "$DRY_RUN" == 0 ]]; then
+    exec {chromium_lock}>/tmp/fireburn-chromium-bump.lock
+    flock -n "$chromium_lock" || { echo 'ERROR: another Chromium bump is running' >&2; exit 1; }
+    if pgrep -x emerge >/dev/null; then
+        echo 'ERROR: another emerge is running; build Chromium on its own' >&2
+        exit 1
+    fi
 fi
 
 log()  { printf '\n\033[1m== %s ==\033[0m\n' "$1"; }
@@ -373,7 +395,7 @@ bump_agent() {
 
     log "agent: $pkg"
     head="$(git rev-parse HEAD)"
-    prompt="Assess $pkg in this overlay (current version $old${new:+, candidate $new}). Read AGENTS.md and the existing ebuilds. If no candidate is supplied, find and verify the latest appropriate upstream release. Determine whether a version bump is appropriate and whether it is a simple rename or requires package-specific work. Chromium and its coupled packages always require AI review. Preserve the source build and update fetched dependencies and the Manifest as needed. Run a normal emerge -1 of the new package and a relevant smoke test, then pkgcheck scan --repo FireBurn --commits. Commit only if emerge installed successfully and checks pass, using one package per commit. Leave the package unchanged and report why if there is no safe bump. Do not push."
+    prompt="Assess $pkg in this overlay (current version $old${new:+, candidate $new}). Read AGENTS.md and the existing ebuilds. If no candidate is supplied, find and verify the latest appropriate upstream release. Determine whether a version bump is appropriate and whether it is a simple rename or requires package-specific work. For Chromium, follow the three-channel instructions in .opencode/agent/ebuild-bumper.md and build exactly one Chromium version at a time with no other package builds running. Preserve the source build and update fetched dependencies and the Manifest as needed. Run a normal emerge -1 of the new package and a relevant smoke test, then pkgcheck scan --repo FireBurn --commits. Commit only if emerge installed successfully and checks pass, using one package per commit. Leave the package unchanged and report why if there is no safe bump. Do not push."
 
     if ! opencode run --agent ebuild-bumper "$prompt"; then
         echo "ERROR: agent bump failed for $pkg" >&2
@@ -432,6 +454,7 @@ for pkg in "${WORK[@]}"; do
 done
 
 if [[ "$changed" == 1 && "$PUSH" == 1 && "$DRY_RUN" == 0 ]]; then
+    git pull --rebase --autostash origin master || die "git pull --rebase --autostash failed; not pushing"
     if git push origin master; then
         info "pushed to origin/master"
     else
