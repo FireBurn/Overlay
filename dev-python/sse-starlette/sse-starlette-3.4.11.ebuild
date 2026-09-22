@@ -30,7 +30,7 @@ RDEPEND="
 BDEPEND="
 	test? (
 		>=dev-python/asgi-lifespan-2.1.0[${PYTHON_USEDEP}]
-		>=dev-python/httpx-0.28.1[${PYTHON_USEDEP}]
+		>=dev-python/httpx2-2.12.0[${PYTHON_USEDEP}]
 		>=dev-python/uvicorn-0.34.0[${PYTHON_USEDEP}]
 	)
 "
