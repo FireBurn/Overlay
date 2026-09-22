@@ -1349,17 +1349,19 @@ HOMEPAGE="https://github.com/openai/codex"
 
 SRC_URI="
 	https://github.com/openai/${PN}/archive/rust-v${PV}.tar.gz -> ${P}.tar.gz
-	amd64? (
-		https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/librusty_v8_release_x86_64-unknown-linux-musl.a.gz
-			-> rusty_v8_${RUSTY_V8_TAG}_librusty_v8_release_x86_64-unknown-linux-musl.a.gz
-		https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/src_binding_release_x86_64-unknown-linux-musl.rs
-			-> rusty_v8_${RUSTY_V8_TAG}_src_binding_release_x86_64-unknown-linux-musl.rs
-	)
-	arm64? (
-		https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/librusty_v8_release_aarch64-unknown-linux-musl.a.gz
-			-> rusty_v8_${RUSTY_V8_TAG}_librusty_v8_release_aarch64-unknown-linux-musl.a.gz
-		https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/src_binding_release_aarch64-unknown-linux-musl.rs
-			-> rusty_v8_${RUSTY_V8_TAG}_src_binding_release_aarch64-unknown-linux-musl.rs
+	code-mode? (
+		amd64? (
+			https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/librusty_v8_release_x86_64-unknown-linux-musl.a.gz
+				-> rusty_v8_${RUSTY_V8_TAG}_librusty_v8_release_x86_64-unknown-linux-musl.a.gz
+			https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/src_binding_release_x86_64-unknown-linux-musl.rs
+				-> rusty_v8_${RUSTY_V8_TAG}_src_binding_release_x86_64-unknown-linux-musl.rs
+		)
+		arm64? (
+			https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/librusty_v8_release_aarch64-unknown-linux-musl.a.gz
+				-> rusty_v8_${RUSTY_V8_TAG}_librusty_v8_release_aarch64-unknown-linux-musl.a.gz
+			https://github.com/openai/codex/releases/download/rusty-v8-v${RUSTY_V8_TAG}/src_binding_release_aarch64-unknown-linux-musl.rs
+				-> rusty_v8_${RUSTY_V8_TAG}_src_binding_release_aarch64-unknown-linux-musl.rs
+		)
 	)
 	${CARGO_CRATE_URIS}
 "
@@ -1374,6 +1376,9 @@ LICENSE+="
 "
 SLOT="0"
 KEYWORDS="-* ~amd64 ~arm64"
+# The code mode host embeds V8, which upstream ships as a library already
+# built against musl rather than as source.
+IUSE="+code-mode"
 # Tests fail due to ring crate conflicts with system OpenSSL
 RESTRICT="mirror test"
 
@@ -1450,6 +1455,11 @@ src_compile() {
 	# codex-core trait resolution overflows rustc's default 8MiB stack
 	export RUST_MIN_STACK=16777216
 
+	if ! use code-mode; then
+		cargo_src_compile --package codex-cli
+		return
+	fi
+
 	RUSTY_V8_ARCHIVE="${DISTDIR}/rusty_v8_${RUSTY_V8_TAG}_librusty_v8_release_${rusty_v8_triple}.a.gz" \
 	RUSTY_V8_SRC_BINDING_PATH="${DISTDIR}/rusty_v8_${RUSTY_V8_TAG}_src_binding_release_${rusty_v8_triple}.rs" \
 		cargo_src_compile --package codex-cli --package codex-code-mode-host
@@ -1457,6 +1467,6 @@ src_compile() {
 
 src_install() {
 	dobin "$(cargo_target_dir)/codex"
-	dobin "$(cargo_target_dir)/codex-code-mode-host"
+	use code-mode && dobin "$(cargo_target_dir)/codex-code-mode-host"
 	einstalldocs
 }

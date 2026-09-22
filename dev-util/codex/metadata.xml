@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>mike@fireburn.co.uk</email>
+		<name>Mike Lothian</name>
+	</maintainer>
+	<use>
+		<flag name="code-mode">Build codex-code-mode-host, which embeds V8.
+			Upstream ships V8 as a library already built against musl rather
+			than as source, so it needs what that was linked against</flag>
+	</use>
+	<upstream>
+		<remote-id type="github">openai/codex</remote-id>
+	</upstream>
+</pkgmetadata>
