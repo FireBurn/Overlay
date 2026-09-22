@@ -11,6 +11,9 @@
 	<use>
 		<flag name="arm64-pe">Enable the aarch64-w64-mingw32 target</flag>
 		<flag name="arm64ec-pe">Enable the arm64ec-w64-mingw32 target</flag>
+		<flag name="bin-symlinks">Install the cross tools into /usr/bin, where a
+			build system looking for <pkg>sys-devel/gcc</pkg> by its cross name
+			finds them</flag>
 		<flag name="i686-pe">Enable the i686-w64-mingw32 target</flag>
 		<flag name="x86-64-pe">Enable the x86_64-w64-mingw32 target</flag>
 	</use>

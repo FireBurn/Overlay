@@ -25,7 +25,7 @@ LICENSE="
 "
 SLOT="0"
 KEYWORDS="~amd64 ~arm64"
-IUSE="+arm64-pe +arm64ec-pe custom-cflags i686-pe +strip x86-64-pe"
+IUSE="+arm64-pe +arm64ec-pe +bin-symlinks custom-cflags i686-pe +strip x86-64-pe"
 
 REQUIRED_USE="
 	arm64ec-pe? ( arm64-pe )
@@ -44,6 +44,7 @@ RDEPEND="
 	llvm-core/clang:${LLVM_MAJOR}
 	llvm-core/llvm:${LLVM_MAJOR}
 	llvm-core/lld:${LLVM_MAJOR}
+	bin-symlinks? ( !dev-util/mingw64-toolchain[bin-symlinks] )
 "
 DEPEND="${RDEPEND}"
 
@@ -282,12 +283,33 @@ src_install() {
 	for CHOST in ${HOSTS[@]}; do
 		( per_host_install )
 	done
+
+	# The tools are kept out of the way by default, which leaves a build
+	# system that looks for ${CHOST}-gcc on PATH unable to find one.
+	if use bin-symlinks; then
+		local tool
+		for tool in "${bindir}"/*; do
+			dosym -r "/usr/lib/llvm-mingw64/bin/${tool##*/}" \
+				"/usr/bin/${tool##*/}"
+		done
+	fi
 }
 
 per_host_install() {
 	local cchost="${CHOST/mingw32/windows-gnu}"
-	for bin in clang clang++; do
-		ln -s "${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}/bin/${bin}" "${bindir}/${CHOST}-${bin}" || die
+	# Build systems commonly ask for ${CHOST}-gcc by that name. The same
+	# driver answers to it, but what it reads its settings from follows the
+	# name it was called by, so each name needs a file of its own or it
+	# loses the sysroot and the runtime choices below.
+	local bin driver
+	for bin in clang clang++ gcc g++; do
+		case ${bin} in
+			gcc) driver=clang ;;
+			g++) driver=clang++ ;;
+			*) driver=${bin} ;;
+		esac
+		ln -s "${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}/bin/${driver}" \
+			"${bindir}/${CHOST}-${bin}" || die
 		echo "@${cchost}-common.cfg" >"${ED}/etc/clang/${LLVM_MAJOR}/${cchost}-${bin}.cfg" || die
 	done
 	cat >"${ED}/etc/clang/${LLVM_MAJOR}/${cchost}-common.cfg" <<-EOF
@@ -298,9 +320,27 @@ per_host_install() {
 	-unwindlib=libunwind
 	-L${EPREFIX}/usr/lib/${PN}/${CHOST}/lib/
 	EOF
-	for bin in dlltool windres ar; do
+	for bin in dlltool windres ar ranlib nm objcopy objdump readelf size \
+			strings addr2line; do
 		ln -s "${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}/bin/llvm-${bin}" "${bindir}/${CHOST}-${bin}" || die
 	done
+
+	# llvm-strip cannot read a PE archive, and build systems hand it those
+	# in the same batch as the libraries, which fails the lot. The archives
+	# are passed over and everything else is stripped as asked.
+	cat > "${bindir}/${CHOST}-strip" <<-EOF || die
+		#!/bin/sh
+		for arg do
+			case \${arg} in
+			*.a) ;;
+			*) set -- "\$@" "\${arg}" ;;
+			esac
+			shift
+		done
+		[ \$# -gt 0 ] || exit 0
+		exec "${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}/bin/llvm-strip" "\$@"
+	EOF
+	chmod +x "${bindir}/${CHOST}-strip" || die
 	ln -s "${EPREFIX}/usr/lib/llvm/${LLVM_MAJOR}/bin/lld-link" "${bindir}/${CHOST}-ld" || die
 }
 
