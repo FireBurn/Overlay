@@ -9,6 +9,7 @@
 		<flag name="gui">Build rog-control-center, the graphical front end</flag>
 	</use>
 	<upstream>
+		<remote-id type="github">OpenGamingCollective/asusctl</remote-id>
 		<remote-id type="gitlab">asus-linux/asusctl</remote-id>
 	</upstream>
 </pkgmetadata>
