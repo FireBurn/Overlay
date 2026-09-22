@@ -338,6 +338,61 @@ NPM_PKGS="
 	zod@3.25.76
 	zod-to-json-schema@3.25.0
 "
+NPM_STUB_PKGS="
+	@biomejs/cli-darwin-arm64@2.3.5
+	@biomejs/cli-darwin-x64@2.3.5
+	@biomejs/cli-win32-arm64@2.3.5
+	@biomejs/cli-win32-x64@2.3.5
+	@earendil-works/gondolin-krun-runner-darwin-arm64@0.12.0
+	@esbuild/aix-ppc64@0.28.2
+	@esbuild/android-arm64@0.28.2
+	@esbuild/android-arm@0.28.2
+	@esbuild/android-x64@0.28.2
+	@esbuild/darwin-arm64@0.28.2
+	@esbuild/darwin-x64@0.28.2
+	@esbuild/freebsd-arm64@0.28.2
+	@esbuild/freebsd-x64@0.28.2
+	@esbuild/linux-arm@0.28.2
+	@esbuild/linux-ia32@0.28.2
+	@esbuild/linux-loong64@0.28.2
+	@esbuild/linux-mips64el@0.28.2
+	@esbuild/linux-ppc64@0.28.2
+	@esbuild/linux-riscv64@0.28.2
+	@esbuild/linux-s390x@0.28.2
+	@esbuild/netbsd-arm64@0.28.2
+	@esbuild/netbsd-x64@0.28.2
+	@esbuild/openbsd-arm64@0.28.2
+	@esbuild/openbsd-x64@0.28.2
+	@esbuild/openharmony-arm64@0.28.2
+	@esbuild/sunos-x64@0.28.2
+	@esbuild/win32-arm64@0.28.2
+	@esbuild/win32-ia32@0.28.2
+	@esbuild/win32-x64@0.28.2
+	@rolldown/binding-android-arm64@1.0.3
+	@rolldown/binding-darwin-arm64@1.0.3
+	@rolldown/binding-darwin-x64@1.0.3
+	@rolldown/binding-freebsd-x64@1.0.3
+	@rolldown/binding-linux-arm-gnueabihf@1.0.3
+	@rolldown/binding-linux-ppc64-gnu@1.0.3
+	@rolldown/binding-linux-s390x-gnu@1.0.3
+	@rolldown/binding-openharmony-arm64@1.0.3
+	@rolldown/binding-wasm32-wasi@1.0.3
+	@rolldown/binding-win32-arm64-msvc@1.0.3
+	@rolldown/binding-win32-x64-msvc@1.0.3
+	@typescript/native-preview-darwin-arm64@7.0.0-dev.20260120.1
+	@typescript/native-preview-darwin-x64@7.0.0-dev.20260120.1
+	@typescript/native-preview-linux-arm@7.0.0-dev.20260120.1
+	@typescript/native-preview-win32-arm64@7.0.0-dev.20260120.1
+	@typescript/native-preview-win32-x64@7.0.0-dev.20260120.1
+	fsevents@2.3.3
+	lightningcss-android-arm64@1.32.0
+	lightningcss-darwin-arm64@1.32.0
+	lightningcss-darwin-x64@1.32.0
+	lightningcss-freebsd-x64@1.32.0
+	lightningcss-linux-arm-gnueabihf@1.32.0
+	lightningcss-win32-arm64-msvc@1.32.0
+	lightningcss-win32-x64-msvc@1.32.0
+"
 
 inherit edo npm optfeature
 
