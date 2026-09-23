@@ -1,0 +1,19 @@
+Subject: [PATCH] Tensile: select the low half register for gfx11 FP16 conversion
+
+LLVM 23 requires an explicit half register destination for v_cvt_f16_f32
+on gfx11. Without it, gfx1103 assembly fails to compile.
+
+--- a/Tensile/KernelWriterAssembly.py
++++ b/Tensile/KernelWriterAssembly.py
+@@ -15101,7 +15101,10 @@
+           for vi in range(0, gwvw):
+             sumIdxV = ss.elementSumIdx[elementIdx] + vi
+             if kernel["ProblemType"]["DestDataType"].isHalf():
+-              kStr += inst("v_cvt_f16_f32", vgpr("ValuC+%u"%sumIdxV), vgpr("ValuC+%u"%sumIdxV), "convert C to fp16" )
++              dst = vgpr("ValuC+%u"%sumIdxV)
++              if self.version[0] == 11:
++                dst += ".l"
++              kStr += inst("v_cvt_f16_f32", dst, vgpr("ValuC+%u"%sumIdxV), "convert C to fp16" )
+               if vi%2 == 1:
+                 assert (gwvw % 2 == 0)
+                 d = ss.elementSumIdx[elementIdx] + vi//2

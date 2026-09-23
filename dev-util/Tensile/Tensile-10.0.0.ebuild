@@ -59,6 +59,8 @@ distutils_enable_tests pytest
 
 CMAKE_USE_DIR="${S}/${PN}/Source"
 
+PATCHES=( "${FILESDIR}/${P}-gfx11-true16.patch" )
+
 src_prepare() {
 	distutils-r1_src_prepare
 	sed -e "s,\@LLVM_PATH\@,$(get_llvm_prefix),g" \
