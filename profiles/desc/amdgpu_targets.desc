@@ -1,0 +1,13 @@
+# Copyright 1999-2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+# This file contains descriptions of AMDGPU_TARGETS USE_EXPAND flags added by
+# this repository. The rest are described in the gentoo repository.
+
+gfx90c - Vega APU, codename renoir, including Ryzen 4000/5000 series APUs (Renoir, Lucienne, Cezanne, Barcelo)
+gfx1032 - RDNA2 GPU, codename navi23/dimgrey cavefish, including Radeon RX 6600/6600XT/6650XT, Radeon Pro W6600
+gfx1033 - RDNA2 APU, codename van gogh, including Steam Deck
+gfx1034 - RDNA2 GPU, codename navi24/beige goby, including Radeon RX 6400/6500XT, Radeon Pro W6400
+gfx1035 - RDNA2 APU, codename rembrandt/yellow carp, including Radeon 660M/680M
+gfx1036 - RDNA2 iGPU, codename raphael, including Ryzen 7000/9000 desktop graphics
+gfx1250 - GFX12.5 Accelerator

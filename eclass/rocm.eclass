@@ -141,6 +141,20 @@ inherit flag-o-matic
 # inherit rocm
 # @CODE
 
+# @ECLASS_VARIABLE: ROCM_SUPPORTED_TARGETS
+# @DEFAULT_UNSET
+# @PRE_INHERIT
+# @DESCRIPTION:
+# Array of AMDGPU targets the package has device code for. When set, only
+# these targets from the eclass lists are offered as USE flags. For libraries
+# that ship pre-tuned kernels for a fixed set of targets, such as hipBLASLt.
+#
+# Example use:
+# @CODE
+# ROCM_SUPPORTED_TARGETS=( gfx908 gfx90a gfx942 )
+# inherit rocm
+# @CODE
+
 # @FUNCTION: _rocm_set_globals
 # @INTERNAL
 # @DESCRIPTION:
@@ -216,17 +230,35 @@ _rocm_set_globals() {
 			)
 			;;
 		10.*)
+			# https://github.com/ROCm/TheRock/blob/therock-10.0/SUPPORTED_GPUS.md
 			unofficial_amdgpu_targets=(
-				gfx803 gfx900 gfx906 gfx908 gfx90a gfx940 gfx941 gfx942 gfx950
-				gfx1010 gfx1011 gfx1012 gfx1030 gfx1031
-				gfx1100 gfx1101 gfx1102 gfx1103 gfx1150 gfx1151 gfx1200
+				gfx803 gfx900 gfx906 gfx908 gfx90a gfx90c gfx950
+				gfx1153 gfx1250
 			)
-			official_amdgpu_targets=( gfx1201 )
+			official_amdgpu_targets=(
+				gfx942
+				gfx1010 gfx1011 gfx1012
+				gfx1030 gfx1031 gfx1032 gfx1033 gfx1034 gfx1035 gfx1036
+				gfx1100 gfx1101 gfx1102 gfx1103
+				gfx1150 gfx1151 gfx1152 gfx1200 gfx1201
+			)
 			;;
 		*)
 			die "Unknown ROCm major version! Please update rocm.eclass before bumping to new ebuilds"
 			;;
 	esac
+
+	if [[ -n ${ROCM_SUPPORTED_TARGETS[*]} ]]; then
+		local t official=() unofficial=()
+		for t in "${official_amdgpu_targets[@]}"; do
+			has "${t}" "${ROCM_SUPPORTED_TARGETS[@]}" && official+=( "${t}" )
+		done
+		for t in "${unofficial_amdgpu_targets[@]}"; do
+			has "${t}" "${ROCM_SUPPORTED_TARGETS[@]}" && unofficial+=( "${t}" )
+		done
+		official_amdgpu_targets=( "${official[@]}" )
+		unofficial_amdgpu_targets=( "${unofficial[@]}" )
+	fi
 
 	local iuse_flags=(
 		"${official_amdgpu_targets[@]/#/+amdgpu_targets_}"
