@@ -99,6 +99,10 @@ src_prepare() {
 		-i tensilelite/Tensile/Toolchain/Validators.py \
 		-i tensilelite/Tensile/Tests/unit/test_MatrixInstructionConversion.py || die
 
+	# hipcc adds -lamdhip64 when linking, which breaks device code objects
+	sed -e 's:${CMAKE_CXX_COMPILER};-target;amdgcn:${TENSILELITE_ASSEMBLER};-target;amdgcn:' \
+		-i device-library/extops/CMakeLists.txt || die
+
 	# Do not install tests
 	sed -e "s/COMPONENT tests/COMPONENT tests EXCLUDE_FROM_ALL/" -i CMakeLists.txt || die
 
