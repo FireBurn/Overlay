@@ -1172,7 +1172,7 @@ chromium_configure() {
 				"linker_path=\"${EPREFIX}/usr/bin/mold\""
 			)
 		else
-			myconf_gn+=( "use_lld=true" )
+			myconf_gn+=( "use_lld=true" "use_mold=false" )
 		fi
 
 		if [[ ${LLVM_SLOT} -lt 23 ]]; then
