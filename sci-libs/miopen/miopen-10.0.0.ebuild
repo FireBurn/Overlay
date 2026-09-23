@@ -41,8 +41,6 @@ DEPEND="
 	test? ( dev-cpp/gtest )
 
 	amdgpu_targets_gfx908? ( =dev-cpp/frugally-deep-0.15* )
-	amdgpu_targets_gfx940? ( =dev-cpp/frugally-deep-0.15* )
-	amdgpu_targets_gfx941? ( =dev-cpp/frugally-deep-0.15* )
 	amdgpu_targets_gfx942? ( =dev-cpp/frugally-deep-0.15* )
 "
 BDEPEND="
@@ -68,7 +66,7 @@ src_configure() {
 	fi
 
 	local use_ai_tuning=OFF
-	if use amdgpu_targets_gfx908 || use amdgpu_targets_gfx940 || use amdgpu_targets_gfx941 \
+	if use amdgpu_targets_gfx908 \
 	|| use amdgpu_targets_gfx942; then
 		use_ai_tuning=ON
 	fi
