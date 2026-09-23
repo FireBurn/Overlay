@@ -1,3 +1,8 @@
+Subject: [PATCH] HIP: pass packed bf16 operands to LLVM 23 WMMA builtins
+
+LLVM 23 expects the gfx11 and gfx12 BF16 WMMA operands as vectors of
+16-bit integer storage, rather than vectors of __bf16 values.
+
 --- a/ggml/src/ggml-cuda/mma.cuh
 +++ b/ggml/src/ggml-cuda/mma.cuh
 @@ -1259,7 +1259,7 @@ struct mma_t<16, 16, float> {
@@ -9,3 +14,9 @@
          using floatx8_t = __attribute__((ext_vector_type(8))) float;
          floatx8_t& acc_frag = reinterpret_cast<floatx8_t&>(D.x[0]);
          const bf16x8_t& a_frag = reinterpret_cast<const bf16x8_t&>(A.x[0]);
+@@ -1328,4 +1328,4 @@ struct mma_t<16, 16, float> {
+ #elif defined(RDNA3)
+-        using bf16x16_t = __attribute__((ext_vector_type(16))) __bf16;
++        using bf16x16_t = __attribute__((ext_vector_type(16))) short;
+         using floatx8_t = __attribute__((ext_vector_type(8))) float;
+         floatx8_t& acc_frag = reinterpret_cast<floatx8_t&>(D.x[0]);
