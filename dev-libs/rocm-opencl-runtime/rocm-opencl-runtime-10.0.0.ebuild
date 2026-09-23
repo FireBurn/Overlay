@@ -32,7 +32,10 @@ BDEPEND="
 	test? ( x11-apps/mesa-progs[X] )
 "
 
-PATCHES=( "${FILESDIR}/${PN}-10.0.0-fix-lib-version.patch" )
+PATCHES=(
+	"${FILESDIR}"/${PN}-10.0.0-fix-lib-version.patch
+	"${FILESDIR}"/${PN}-10.0.0-vega-apu-xnack.patch
+)
 
 src_prepare() {
 	sed -e '/cmake_minimum_required/ s/3\.[35]/3.10/' \

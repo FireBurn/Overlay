@@ -1,0 +1,56 @@
+Match the Vega APU XNACK settings to ROCr
+
+ROCr registers gfx902, gfx909 and gfx90c with XNACK unsupported, so
+their agents report the bare target name. CLR lists them as XNACK
+capable, which trips the XNACK consistency assert in
+Isa::isCompatible() when loading code for these APUs. Mirror the ROCr
+entries, fix the gfx909 stepping, and skip the XNACK support check for
+generic code objects as is already done for SRAMECC.
+
+--- a/rocclr/device/device.cpp
++++ b/rocclr/device/device.cpp
+@@ -118,9 +118,8 @@
+       {"gfx900", true, true, 9, 0, 0, NONE, ANY, 4, 16, 1, 256, 64 * Ki, 32, 512},
+       {"gfx900:xnack-", true, true, 9, 0, 0, NONE, OFF, 4, 16, 1, 256, 64 * Ki, 32, 512},
+       {"gfx900:xnack+", true, true, 9, 0, 0, NONE, ON, 4, 16, 1, 256, 64 * Ki, 32, 512},
+-      {"gfx902", true, true, 9, 0, 2, NONE, ANY, 4, 16, 1, 256, 64 * Ki, 32, 512},
+-      {"gfx902:xnack-", true, true, 9, 0, 2, NONE, OFF, 4, 16, 1, 256, 64 * Ki, 32, 512},
+-      {"gfx902:xnack+", true, true, 9, 0, 2, NONE, ON, 4, 16, 1, 256, 64 * Ki, 32, 512},
++      {"gfx902", true, true, 9, 0, 2, NONE, NONE, 4, 16, 1, 256, 64 * Ki, 32, 512},
++      {"gfx902:xnack-", true, true, 9, 0, 2, NONE, NONE, 4, 16, 1, 256, 64 * Ki, 32, 512},
+       {"gfx904", true, true, 9, 0, 4, NONE, ANY, 4, 16, 1, 256, 64 * Ki, 32, 512},
+       {"gfx904:xnack-", true, true, 9, 0, 4, NONE, OFF, 4, 16, 1, 256, 64 * Ki, 32, 512},
+       {"gfx904:xnack+", true, true, 9, 0, 4, NONE, ON, 4, 16, 1, 256, 64 * Ki, 32, 512},
+@@ -147,9 +146,8 @@
+       {"gfx908:sramecc+:xnack-", true, false, 9, 0, 8, ON, OFF, 4, 16, 1, 256, 64 * Ki,
+        32, 512},
+       {"gfx908:sramecc+:xnack+", true, false, 9, 0, 8, ON, ON, 4, 16, 1, 256, 64 * Ki, 32, 512},
+-      {"gfx909", false, true, 9, 0, 2, NONE, ANY, 4, 16, 1, 256, 64 * Ki, 32, 512},
+-      {"gfx909:xnack-", false, true, 9, 0, 2, NONE, OFF, 4, 16, 1, 256, 64 * Ki, 32, 512},
+-      {"gfx909:xnack+", false, true, 9, 0, 2, NONE, ON, 4, 16, 1, 256, 64 * Ki, 32, 512},
++      {"gfx909", false, true, 9, 0, 9, NONE, NONE, 4, 16, 1, 256, 64 * Ki, 32, 512},
++      {"gfx909:xnack-", false, true, 9, 0, 9, NONE, NONE, 4, 16, 1, 256, 64 * Ki, 32, 512},
+       {"gfx90a", true, false, 9, 0, 10, ANY, ANY, 4, 16, 1, 256, 64 * Ki, 32, 512},
+       {"gfx90a:sramecc-", true, false, 9, 0, 10, OFF, ANY, 4, 16, 1, 256, 64 * Ki, 32, 512},
+       {"gfx90a:sramecc+", true, false, 9, 0, 10, ON, ANY, 4, 16, 1, 256, 64 * Ki, 32, 512},
+@@ -175,9 +173,8 @@
+       {"gfx942:sramecc+:xnack-", true, false, 9, 4, 2, ON, OFF, 4, 16, 1, 256, 64 * Ki,
+        32, 512},
+       {"gfx942:sramecc+:xnack+", true, false, 9, 4, 2, ON, ON, 4, 16, 1, 256, 64 * Ki, 32, 512},
+-      {"gfx90c", true, true, 9, 0, 12, NONE, ANY, 4, 16, 1, 256, 64 * Ki, 32, 512},
+-      {"gfx90c:xnack-", true, true, 9, 0, 12, NONE, OFF, 4, 16, 1, 256, 64 * Ki, 32, 512},
+-      {"gfx90c:xnack+", true, true, 9, 0, 12, NONE, ON, 4, 16, 1, 256, 64 * Ki, 32, 512},
++      {"gfx90c", true, true, 9, 0, 12, NONE, NONE, 4, 16, 1, 256, 64 * Ki, 32, 512},
++      {"gfx90c:xnack-", true, true, 9, 0, 12, NONE, NONE, 4, 16, 1, 256, 64 * Ki, 32, 512},
+       {"gfx950", true, false, 9, 5, 0, ANY, ANY, 4, 16, 1, 256, 160 * Ki, 64, 1280},
+       {"gfx950:sramecc-", true, false, 9, 5, 0, OFF, ANY, 4, 16, 1, 256, 160 * Ki, 64, 1280},
+       {"gfx950:sramecc+", true, false, 9, 5, 0, ON, ANY, 4, 16, 1, 256, 160 * Ki, 64, 1280},
+@@ -291,7 +288,7 @@
+       codeObjectIsa.sramecc() != agentIsa.sramecc())
+     return false;
+ 
+-  assert(codeObjectIsa.isXnackSupported() == agentIsa.isXnackSupported() &&
++  assert((isGeneric || codeObjectIsa.isXnackSupported() == agentIsa.isXnackSupported()) &&
+          agentIsa.xnack() != Feature::Any);
+   if ((codeObjectIsa.xnack() == Feature::Enabled || codeObjectIsa.xnack() == Feature::Disabled) &&
+       codeObjectIsa.xnack() != agentIsa.xnack())
