@@ -1,9 +1,9 @@
-# Copyright 1999-2025 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
 
-LLVM_COMPAT=( 18 19 20 21 )
+LLVM_COMPAT=( 18 19 20 21 22 23 )
 LLVM_OPTIONAL=1
 PYTHON_COMPAT=( python3_{11..14} )
 PYTHON_REQ_USE="xml(+)"
@@ -68,8 +68,8 @@ RDEPEND="
 DEPEND="${RDEPEND}"
 
 PATCHES=(
-	"${FILESDIR}/${PN}-1.9.4-link_with_pthread.patch"
-	"${FILESDIR}/${PN}-1.14.0-suppress-unused-option-libcxx.patch"
+	"${FILESDIR}/${PN}-1.18.0-link_with_pthread.patch"
+	"${FILESDIR}/${PN}-1.18.0-suppress-unused-option-libcxx.patch"
 )
 
 DOCS=( LANGUAGE.HOWTO README.md )
@@ -81,9 +81,6 @@ pkg_setup() {
 
 src_prepare() {
 	cmake_src_prepare
-
-	# Call dot with -Teps instead of -Tps for EPS generation - bug #282150
-	sed -i -e '/addJob("ps"/ s/"ps"/"eps"/g' src/dot.cpp || die
 
 	# fix pdf doc
 	sed -i.orig -e "s:g_kowal:g kowal:" \
