@@ -1,10 +1,11 @@
 #!/bin/bash
-# Check known packages directly and ask the agent to assess new or complex ones.
+# Check upstream versions with scripts/upstream-version.py, bump known packages
+# directly and ask the agent only about outdated, unknown or complex ones.
 
 set -uo pipefail
 cd "$(dirname "$0")"
 
-# Packages with known version sources and bump procedures.
+# Packages with known bump procedures (rename + dependency regeneration).
 KNOWN_PKGS=(
     dev-util/claude-code
     dev-util/antigravity-cli
@@ -35,6 +36,8 @@ Options:
 With no package argument, all overlay packages are checked.
 Chromium requires a separate invocation: bump-ebuilds.sh www-client/chromium
 Live runs pull --rebase --autostash from origin/master before checking packages.
+Upstream version sources are listed in scripts/upstream-sources.
+Logs and timings are written to ${XDG_STATE_HOME:-~/.local/state}/bump-ebuilds.
 EOF
 }
 for arg in "$@"; do
@@ -48,8 +51,41 @@ for arg in "$@"; do
     esac
 done
 
+# --- logging --------------------------------------------------------------
+# Every run writes a full console log, and appends one line per timed step to
+# timings.tsv: run, time, package, step, seconds, exit status, detail.
+LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/bump-ebuilds"
+RUN_ID="$(date +%Y%m%d-%H%M%S)$([[ "$DRY_RUN" == 1 ]] && echo -dry)"
+TIMINGS="$LOG_DIR/timings.tsv"
+RUN_LOG="$LOG_DIR/$RUN_ID.log"
+mkdir -p "$LOG_DIR"
+[[ -s "$TIMINGS" ]] || printf 'run\ttime\tpackage\tstep\tseconds\tstatus\tdetail\n' >"$TIMINGS"
+exec > >(tee -a "$RUN_LOG") 2>&1
+RUN_START=$EPOCHREALTIME
+
+log()  { printf '\n\033[1m== %s ==\033[0m\n' "$1"; }
+info() { printf '   %s\n' "$1"; }
+die()  { echo "ERROR: $*" >&2; exit 1; }
+
+elapsed() { awk -v a="$1" -v b="$EPOCHREALTIME" 'BEGIN { printf "%.1f", b - a }'; }
+
+# record PACKAGE STEP START STATUS [DETAIL]
+record() {
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$RUN_ID" "$(date -Is)" "$1" "$2" \
+        "$(elapsed "$3")" "$4" "${5:-}" >>"$TIMINGS"
+}
+
+# timed PACKAGE STEP COMMAND... -- run COMMAND and record how long it took.
+timed() {
+    local pkg="$1" step="$2" start=$EPOCHREALTIME rc
+    shift 2
+    "$@"; rc=$?
+    record "$pkg" "$step" "$start" "$rc"
+    return "$rc"
+}
+
 if [[ "$DRY_RUN" == 0 ]]; then
-    git pull --rebase --autostash origin master || {
+    timed - git-pull git pull --rebase --autostash origin master || {
         echo 'ERROR: initial git pull --rebase --autostash failed' >&2
         exit 1
     }
@@ -91,10 +127,6 @@ if [[ "$PKG" == www-client/chromium && "$DRY_RUN" == 0 ]]; then
     fi
 fi
 
-log()  { printf '\n\033[1m== %s ==\033[0m\n' "$1"; }
-info() { printf '   %s\n' "$1"; }
-die()  { echo "ERROR: $*" >&2; exit 1; }
-
 pn_of()      { echo "${1##*/}"; }
 in_list() { local item="$1" p; shift; for p; do [[ "$p" == "$item" ]] && return 0; done; return 1; }
 
@@ -102,98 +134,11 @@ package_clean() {
     [[ -z "$(git status --porcelain -- "$1")" ]]
 }
 
-# --- version helpers ------------------------------------------------------
-# vercmp A B -> prints gt / eq / lt (sufficient for stable versions).
-vercmp() {
-    local a="$1" b="$2"
-    [[ "$a" == "$b" ]] && { echo eq; return; }
-    local -a A B
-    IFS='.' read -ra A <<<"$a"; IFS='.' read -ra B <<<"$b"
-    local n=${#A[@]}; (( ${#B[@]} > n )) && n=${#B[@]}
-    local i x y xi yi xs ys
-    for ((i = 0; i < n; i++)); do
-        x="${A[i]:-0}"; y="${B[i]:-0}"
-        xi="${x%%[!0-9]*}"; yi="${y%%[!0-9]*}"
-        [[ -z "$xi" ]] && xi=0; [[ -z "$yi" ]] && yi=0
-        (( 10#$xi > 10#$yi )) && { echo gt; return; }
-        (( 10#$xi < 10#$yi )) && { echo lt; return; }
-        xs="${x#"$xi"}"; ys="${y#"$yi"}"
-        [[ -n "$xs" && -z "$ys" ]] && { echo lt; return; }
-        [[ -z "$xs" && -n "$ys" ]] && { echo gt; return; }
-    done
-    echo eq
-}
-
-# The tags to consider for a package, newest first.
-#
-# Most packages are tracked by their GitHub releases, which is what marks a
-# version as one users are meant to have. opencode is tracked by its tags
-# instead: it tags the line we follow without ever publishing a release for
-# it, so going by releases would hold us on a version we do not want.
-upstream_tags() {
-    local pkg="$1" repo="$2"
-    case "$pkg" in
-        dev-util/opencode)
-            gh api "repos/$repo/tags?per_page=100" --jq '.[].name' 2>/dev/null ;;
-        *)
-            gh release list --repo "$repo" --limit 30 \
-                --json tagName,isPrerelease \
-                --jq '.[] | select(.isPrerelease|not) | .tagName' 2>/dev/null ;;
-    esac
-}
-
-# Latest stable upstream PV ("" if it cannot be determined).
-latest_pv() {
-    local pkg="$1"
-    if [[ "$pkg" == dev-util/claude-code ]]; then
-        # The "latest" endpoint returns the version string directly.
-        curl -fsSL "https://downloads.claude.ai/claude-code-releases/latest" 2>/dev/null | tr -d '[:space:]'
-        return
-    fi
-    local repo prefix t pv best=""
-    case "$pkg" in
-        dev-util/antigravity-cli) repo=google-antigravity/antigravity-cli; prefix="" ;;
-        dev-util/codex)           repo=openai/codex;               prefix="rust-v" ;;
-        dev-util/opencode)        repo=anomalyco/opencode;         prefix="v" ;;
-        dev-util/qwen-code)       repo=QwenLM/qwen-code;           prefix="v" ;;
-        dev-util/pi)              repo=earendil-works/pi;          prefix="v" ;;
-        app-editors/zed)          repo=zed-industries/zed;         prefix="v" ;;
-        games-util/heroic)        repo=Heroic-Games-Launcher/HeroicGamesLauncher; prefix="v" ;;
-        *) return 0 ;;
-    esac
-    # Keep only versions whose tag carries this package's prefix, then take
-    # the highest PV. The prefix is what separates e.g. codex's rust-v* tags
-    # from its python-v* tags, or qwen-code's v* from sdk-typescript-v*, and
-    # a PV still has to start with a digit: opencode also carries vscode-v*
-    # tags, which share the v prefix but are a different thing entirely.
-    while IFS= read -r t; do
-        [[ -n "$t" ]] || continue
-        if [[ -n "$prefix" ]]; then
-            [[ "$t" == "$prefix"* ]] || continue
-            pv="${t#"$prefix"}"
-        else
-            pv="$t"
-        fi
-        [[ "$pv" =~ ^[0-9] ]] || continue
-        if [[ -z "$best" ]] || [[ "$(vercmp "$pv" "$best")" == gt ]]; then best="$pv"; fi
-    done < <(upstream_tags "$pkg" "$repo")
-    printf '%s' "$best"
-}
-
 # Current non-9999 ebuild file (highest version if there are several).
 current_ebuild() {
     local pkg="$1" pn
     pn="$(pn_of "$pkg")"
     ls "$pkg/$pn"-*.ebuild 2>/dev/null | grep -v -- '-9999' | sort -V | tail -n1
-}
-
-# Current PV (without revision) from the non-9999 ebuild filename.
-current_pv() {
-    local pkg="$1" pn f
-    pn="$(pn_of "$pkg")"
-    f="$(current_ebuild "$pkg")"
-    [[ -n "$f" ]] || return 1
-    basename "$f" .ebuild | sed -E "s/^$pn-//; s/-r[0-9]+$//"
 }
 
 # Upstream lockfiles (repo-relative) for packages built with npm.eclass.
@@ -320,7 +265,7 @@ retry_with_agent() {
         return 2
     fi
     info "$reason; asking agent to inspect and fix it"
-    bump_agent "$pkg" "$old" "$new" "$reason"
+    bump_agent "$pkg" "$old" "$new" "automatic attempt: $reason"
     result=$?
     [[ "$result" == 1 ]] && return 2
     return "$result"
@@ -335,7 +280,7 @@ bump_simple() {
     # A pinned old version needs package-specific review.
     if grep -qF "$old" "$oldf"; then
         info "$oldf contains a literal '$old'; asking agent"
-        bump_agent "$pkg" "$old" "$new"
+        bump_agent "$pkg" "$old" "$new" "the ebuild contains the literal old version"
         return $?
     fi
     if [[ "$DRY_RUN" == 1 ]]; then
@@ -359,30 +304,30 @@ def testing_keywords(match):
 
 path.write_text(re.sub(r'^KEYWORDS="([^"]*)"', testing_keywords, text, flags=re.M))
 PY
-    if ! update_npm_pkgs "$pkg" "$new" "$newf"; then
+    if ! timed "$pkg" npm-deps update_npm_pkgs "$pkg" "$new" "$newf"; then
         retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "dependency regeneration failed"
         return $?
     fi
-    if ! update_crates "$pkg" "$new" "$newf"; then
+    if ! timed "$pkg" cargo-crates update_crates "$pkg" "$new" "$newf"; then
         retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "Rust dependency regeneration failed"
         return $?
     fi
-    if ! ebuild "$newf" digest; then
+    if ! timed "$pkg" digest ebuild "$newf" digest; then
         retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "ebuild digest failed"
         return $?
     fi
-    if ! ebuild "$newf" manifest; then
+    if ! timed "$pkg" manifest ebuild "$newf" manifest; then
         retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "ebuild manifest failed"
         return $?
     fi
     local -a emerge_cmd=( emerge )
     (( EUID == 0 )) || emerge_cmd=( sudo -n emerge )
-    if ! "${emerge_cmd[@]}" -1 "=$pkg-$new"; then
+    if ! timed "$pkg" emerge "${emerge_cmd[@]}" -1 "=$pkg-$new"; then
         retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "emerge failed"
         return $?
     fi
-    if ! pkgcheck scan --repo FireBurn "$pkg" ||
-       ! pkgcheck scan --repo FireBurn --commits; then
+    if ! timed "$pkg" pkgcheck pkgcheck scan --repo FireBurn "$pkg" ||
+       ! timed "$pkg" pkgcheck-commits pkgcheck scan --repo FireBurn --commits; then
         revert_bump "$pkg" "$oldf" "$newf"
         echo "ERROR: pkgcheck failed for $pkg $new (reverted)" >&2
         return 2
@@ -395,19 +340,44 @@ PY
     return 0
 }
 
+AGENT_RULES="Keep one ebuild per package: rename the old ebuild to the new version (git mv) instead of adding one beside it, unless the package is slotted and the versions are in different slots. Live 9999 ebuilds stay. Record how to find upstream versions: if a package's entry in scripts/upstream-sources is missing, wrong or could not be checked, add or fix it using the methods documented at the top of that file, and add an @group when other ebuilds in this overlay share the same pattern. Leave scripts/upstream-sources uncommitted; the caller reports it for review. Run a normal emerge -1 of each new package and a relevant smoke test, then pkgcheck scan --repo FireBurn --commits. Commit only if emerge installed successfully and checks pass, one commit per package. Leave a package unchanged and report why if there is no safe bump. Do not push."
+
+# Token counts of the newest opencode session in this directory, for the log.
+agent_usage() {
+    command -v sqlite3 >/dev/null || return 0
+    sqlite3 -readonly "$HOME/.local/share/opencode/opencode.db" \
+        "select 'in=' || tokens_input || ' out=' || tokens_output || ' reasoning=' || tokens_reasoning
+         from session_v2 where directory = '$PWD' order by time_created desc limit 1" 2>/dev/null
+}
+
+# run_agent LABEL PROMPT -- returns opencode's status; output goes to its own log too.
+run_agent() {
+    local label="$1" prompt="$2" alog start rc
+    alog="$LOG_DIR/$RUN_ID-agent-${label//\//_}.log"
+    start=$EPOCHREALTIME
+    opencode run --agent ebuild-bumper "$prompt" 2>&1 | tee "$alog"
+    rc=${PIPESTATUS[0]}
+    record "$label" agent "$start" "$rc" "$(agent_usage)"
+    return "$rc"
+}
+
 # Returns 0 on a commit, 1 when no bump was needed, 2 on failure.
 bump_agent() {
-    local pkg="$1" old="$2" new="${3:-}" reason="${4:-}" head prompt
+    local pkg="$1" old="$2" new="${3:-}" reason="${4:-}" source="${5:-}" head prompt
     if [[ "$DRY_RUN" == 1 ]]; then
-        info "[dry-run] would ask agent to assess $pkg (local $old${new:+, upstream $new})"
+        info "[dry-run] would ask agent to assess $pkg (local $old${new:+, upstream $new}${reason:+; $reason})"
         return 1
     fi
 
     log "agent: $pkg"
     head="$(git rev-parse HEAD)"
-    prompt="Assess $pkg in this overlay (current version $old${new:+, candidate $new}${reason:+, automatic attempt: $reason}). Read AGENTS.md and .opencode/agent/ebuild-bumper.md and the existing ebuilds. If an automatic attempt failed, inspect its output and build log, then fix the cause. If no candidate is supplied, find and verify the latest appropriate upstream release. Determine whether a version bump is appropriate and whether it is a simple rename or requires package-specific work. For Chromium, follow the three-channel instructions and build exactly one Chromium version at a time with no other package builds running. Preserve the source build and update fetched dependencies and the Manifest as needed. Run a normal emerge -1 of the new package and a relevant smoke test, then pkgcheck scan --repo FireBurn --commits. Commit only if emerge installed successfully and checks pass, using one package per commit. Leave the package unchanged and report why if there is no safe bump. Do not push."
+    if [[ -n "$new" ]]; then
+        prompt="Bump $pkg in this overlay from $old to $new. scripts/upstream-version.py found $new${source:+ using '$source'}; do not research the latest version again unless it looks wrong.${reason:+ Note: $reason. If an automatic attempt failed, inspect its output and build log, then fix the cause.} Decide whether this is a simple rename or needs package-specific work, preserve the source build and update fetched dependencies and the Manifest as needed. $AGENT_RULES"
+    else
+        prompt="Assess $pkg in this overlay (current version $old).${reason:+ Note: $reason.} Find and verify the latest appropriate upstream release. Determine whether a bump is appropriate and whether it is a simple rename or needs package-specific work. For Chromium, follow the three-channel instructions and build exactly one Chromium version at a time with no other package builds running. Preserve the source build and update fetched dependencies and the Manifest as needed. $AGENT_RULES"
+    fi
 
-    if ! opencode run --agent ebuild-bumper "$prompt"; then
+    if ! run_agent "$pkg" "$prompt"; then
         echo "ERROR: agent bump failed for $pkg" >&2
         return 2
     fi
@@ -423,54 +393,149 @@ bump_agent() {
     return 1
 }
 
+# One agent run for all outdated members of a batch group, e.g. ROCm, which
+# share a release and must be built together in dependency order.
+# Adds committed packages to BUMPED and the rest to failed.
+bump_group() {
+    local group="$1" new="$2" pkg head prompt; shift 2
+    local -a pkgs=("$@")
+    if [[ "$DRY_RUN" == 1 ]]; then
+        info "[dry-run] would ask one agent to bump $group to $new: ${pkgs[*]}"
+        return
+    fi
+    log "agent: $group -> $new (${#pkgs[@]} packages)"
+    head="$(git rev-parse HEAD)"
+    prompt="Bump the $group group in this overlay to $new: ${pkgs[*]}. scripts/upstream-version.py found $new from the group's entry in scripts/upstream-sources; do not research the latest version again unless it looks wrong. These packages share one upstream release. Review upstream changes once for the whole group and update every ebuild. If the group has a -meta package, add any new member package to it and build the group through it with emerge --update --deep on the meta package, which is in @world; otherwise use a single emerge -1 of all the new versions so Portage orders them. If one fails, fix it and resume rather than restarting the group. Commit each package separately. $AGENT_RULES"
+    run_agent "$group" "$prompt" || echo "ERROR: agent run for $group failed" >&2
+    for pkg in "${pkgs[@]}"; do
+        if ! package_clean "$pkg"; then
+            echo "ERROR: agent left uncommitted changes in $pkg" >&2
+            failed+=("$pkg")
+        elif [[ -n "$(git log --format=%h "$head..HEAD" -- "$pkg")" ]]; then
+            changed=1
+        else
+            failed+=("$pkg")
+        fi
+    done
+}
+
+# Print ebuilds that share a slot with another non-live ebuild of the package.
+extra_ebuilds() {
+    local pkg="$1" e cpv slot
+    local -A seen=()
+    for e in "$pkg"/*.ebuild; do
+        cpv="${pkg%/*}/$(basename "$e" .ebuild)"
+        [[ "$cpv" == *9999* ]] && continue
+        slot="$(portageq metadata / ebuild "$cpv" SLOT 2>/dev/null)"
+        slot="${slot%%/*}"
+        [[ -n "${seen[$slot]:-}" ]] && echo "$cpv shares SLOT $slot with ${seen[$slot]}"
+        seen[$slot]="$cpv"
+    done
+}
+
 # --- main -----------------------------------------------------------------
+START_HEAD="$(git rev-parse HEAD)"
 changed=0
 failed=()
-for pkg in "${WORK[@]}"; do
-    log "check: $pkg"
-    if ! package_clean "$pkg"; then
-        info "skip $pkg: package has uncommitted changes"
-        continue
-    fi
-    old="$(current_pv "$pkg")" || { info "no ebuild found; skipping"; continue; }
-    if ! in_list "$pkg" "${KNOWN_PKGS[@]}"; then
-        bump_agent "$pkg" "$old"
-        case "$?" in 0) changed=1 ;; 2) failed+=("$pkg") ;; esac
-        continue
-    fi
-    new="$(latest_pv "$pkg")"
-    if [[ -z "$new" ]]; then
-        info "could not determine upstream version; skipping"
-        continue
-    fi
-    case "$(vercmp "$new" "$old")" in
-        eq) info "up to date ($old)"; continue ;;
-        lt) info "upstream $new is older than local $old; skipping"; continue ;;
-    esac
+inferred=()
+declare -A GROUP_PKGS=() GROUP_VER=()
 
-    if in_list "$pkg" "${AI_PKGS[@]}"; then
-        bump_agent "$pkg" "$old" "$new"
-    else
-        if [[ "$(http_code "$(readiness_url "$pkg" "$new")")" != 2* ]]; then
-            info "skip $pkg: $new artifact not available yet"
-            continue
-        fi
-        bump_simple "$pkg" "$old" "$new"
+log "checking upstream versions"
+VERSIONS="$LOG_DIR/$RUN_ID.versions.tsv"
+timed - version-check scripts/upstream-version.py "${WORK[@]}" >"$VERSIONS" ||
+    die "scripts/upstream-version.py failed"
+
+# A tab IFS would merge empty columns, so read with a non-whitespace separator.
+while IFS=$'\037' read -r pkg status old new group batch source note <&3; do
+    [[ "$note" == inferred* ]] && inferred+=("${note#*record as: }")
+    case "$status" in
+        live|skip)
+            continue ;;
+        current)
+            info "$pkg: up to date ($old)"; continue ;;
+        older)
+            info "$pkg: upstream $new is older than local $old; skipping"; continue ;;
+    esac
+    if ! package_clean "$pkg"; then
+        info "skip $pkg: package has uncommitted changes ($status${new:+ $old -> $new})"
+        continue
     fi
-    case "$?" in
+    if [[ "$status" == newer && -n "$batch" ]]; then
+        info "$pkg: $old -> $new, queued with $group"
+        GROUP_PKGS[$group]+="$pkg "
+        GROUP_VER[$group]="$new"
+        continue
+    fi
+    log "$pkg: $status${new:+ $old -> $new}"
+    start=$EPOCHREALTIME
+    case "$status" in
+        agent)
+            bump_agent "$pkg" "$old" "" "$note" ;;
+        error)
+            bump_agent "$pkg" "$old" "" "the upstream version lookup '$source' failed ($note); fix its scripts/upstream-sources entry" ;;
+        newer)
+            if in_list "$pkg" "${KNOWN_PKGS[@]}" && ! in_list "$pkg" "${AI_PKGS[@]}"; then
+                if [[ "$(http_code "$(readiness_url "$pkg" "$new")")" != 2* ]]; then
+                    info "skip $pkg: $new artifact not available yet"
+                    continue
+                fi
+                bump_simple "$pkg" "$old" "$new"
+            else
+                bump_agent "$pkg" "$old" "$new" "" "$source"
+            fi ;;
+        *)
+            info "unexpected status '$status' for $pkg"; continue ;;
+    esac
+    rc=$?
+    record "$pkg" total "$start" "$rc" "$status $old${new:+ -> $new}"
+    case "$rc" in
         0) changed=1 ;;
         2) failed+=("$pkg") ;;
     esac
+done 3< <(tr '\t' '\037' <"$VERSIONS")
+
+for group in "${!GROUP_PKGS[@]}"; do
+    start=$EPOCHREALTIME
+    read -r -a members <<<"${GROUP_PKGS[$group]}"
+    bump_group "$group" "${GROUP_VER[$group]}" "${members[@]}"
+    record "$group" total "$start" 0 "${#members[@]} packages -> ${GROUP_VER[$group]}"
 done
 
 if [[ "$changed" == 1 && "$PUSH" == 1 && "$DRY_RUN" == 0 ]]; then
-    git pull --rebase --autostash origin master || die "git pull --rebase --autostash failed; not pushing"
-    if git push origin master; then
+    timed - git-pull git pull --rebase --autostash origin master || die "git pull --rebase --autostash failed; not pushing"
+    if timed - git-push git push origin master; then
         info "pushed to origin/master"
     else
         die "git push failed"
     fi
 fi
+
+record - run "$RUN_START" 0
+
+mapfile -t extras < <(
+    for pkg in "${WORK[@]}"; do
+        [[ -n "$(git log --format=%h "$START_HEAD..HEAD" -- "$pkg")" ]] && extra_ebuilds "$pkg"
+    done
+)
+if (( ${#extras[@]} )); then
+    log "bumped packages with more than one ebuild per slot"
+    for line in "${extras[@]}"; do info "$line"; done
+fi
+
+if (( ${#inferred[@]} )); then
+    log "inferred sources; add these to scripts/upstream-sources"
+    for line in "${inferred[@]}"; do info "$line"; done
+fi
+if ! git diff --quiet -- scripts/upstream-sources; then
+    log "scripts/upstream-sources was updated; review and commit it"
+    git --no-pager diff -- scripts/upstream-sources
+fi
+
+log "slowest steps"
+awk -F'\t' -v run="$RUN_ID" '$1 == run && $4 != "run" && $4 != "total"' "$TIMINGS" |
+    sort -t$'\t' -k5,5gr | head -n 10 |
+    awk -F'\t' '{ printf "   %8.1fs  %-10s %s %s\n", $5, $4, $3, $7 }'
+info "run took $(elapsed "$RUN_START")s; log: $RUN_LOG"
 
 if [[ "${#failed[@]}" -gt 0 ]]; then
     log "failed"

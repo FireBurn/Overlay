@@ -1,0 +1,121 @@
+# Where bump-ebuilds.sh finds each package's latest upstream version.
+# Read by scripts/upstream-version.py.
+#
+#   category/package  METHOD ARGS... [option=value ...]
+#   @group            METHOD ARGS... [option=value ...]
+#   category/package  @group
+#
+# Methods:
+#   github-release OWNER/REPO    non-prerelease GitHub releases
+#   github-tag     OWNER/REPO    GitHub tags
+#   github-commit  OWNER/REPO    newest default-branch commit, as <base>_pYYYYMMDD
+#                                or YYYYMMDD for date-only versions
+#   gitlab-tag     GROUP/PROJECT GitLab tags (host=gitlab.com by default)
+#   git-tag        URL           tags from git ls-remote
+#   pypi           NAME
+#   npm            NAME
+#   text           URL           response body is the version
+#   json           URL KEY       dotted KEY in the JSON response
+#   page           URL REGEX...  highest REGEX group 1 match in the page; further
+#                                URL REGEX pairs may use {} for the previous match
+#   agent          NOTE...       no automatic check; the agent assesses it
+#   skip           NOTE...       never checked
+#
+# Options:
+#   prefix=  suffix=  tag text removed before and after the version
+#   sep=     separator used in place of "." (e.g. doxygen Release_1_14_0)
+#   pad=N    pad the version to N components (therock-10.0 -> 10.0.0)
+#   match=   only consider versions matching this regex
+#   pre=1    include GitHub prereleases
+#   batch=1  (groups) hand all outdated members to one agent run
+#
+# Packages built only as live ebuilds are skipped automatically.
+
+@rocm       github-release ROCm/rocm-systems prefix=therock- pad=3 batch=1
+
+dev-build/rocm-cmake              @rocm
+dev-libs/rccl                     @rocm
+dev-libs/rocm-comgr               @rocm
+dev-libs/rocm-core                @rocm
+dev-libs/rocm-device-libs         @rocm
+dev-libs/rocm-opencl-runtime      @rocm
+dev-libs/rocr-runtime             @rocm
+dev-libs/roct-thunk-interface     @rocm
+dev-util/amdsmi                   @rocm
+dev-util/aqlprofile               @rocm
+dev-util/hip                      @rocm
+dev-util/hipcc                    @rocm
+dev-util/hipify-clang             @rocm
+dev-util/rocminfo                 @rocm
+dev-util/rocprofiler              @rocm
+dev-util/roctracer                @rocm
+dev-util/rocm-meta                @rocm
+dev-util/Tensile                  @rocm
+sci-libs/hipBLAS                  @rocm
+sci-libs/hipBLAS-common           @rocm
+sci-libs/hipBLASLt                @rocm
+sci-libs/hipFFT                   @rocm
+sci-libs/miopen                   @rocm
+sci-libs/rocBLAS                  @rocm
+sci-libs/rocFFT                   @rocm
+sci-libs/rocRAND                  @rocm
+
+dev-util/claude-code              text https://downloads.claude.ai/claude-code-releases/latest
+dev-util/antigravity-cli          github-release google-antigravity/antigravity-cli
+dev-util/codex                    github-release openai/codex prefix=rust-v
+# opencode tags the line we follow without publishing releases for it.
+dev-util/opencode                 github-tag anomalyco/opencode prefix=v
+dev-util/qwen-code                github-release QwenLM/qwen-code prefix=v
+dev-util/pi                       github-release earendil-works/pi prefix=v
+app-editors/zed                   github-release zed-industries/zed prefix=v
+games-util/heroic                 github-release Heroic-Games-Launcher/HeroicGamesLauncher prefix=v
+
+app-arch/zarchive                 github-commit Exzap/ZArchive
+app-office/libreoffice            page https://download.documentfoundation.org/libreoffice/testing/ href="(\d+(?:\.\d+)+)/" https://download.documentfoundation.org/libreoffice/testing/{}/rpm/x86_64/ LibreOffice_(\d+(?:\.\d+)+)_Linux
+app-office/libreoffice-l10n       page https://download.documentfoundation.org/libreoffice/testing/ href="(\d+(?:\.\d+)+)/" https://download.documentfoundation.org/libreoffice/testing/{}/rpm/x86_64/ LibreOffice_(\d+(?:\.\d+)+)_Linux
+app-text/doxygen                  github-release doxygen/doxygen prefix=Release_ sep=_
+app-text/libetonyek               page https://dev-www.libreoffice.org/src/libetonyek/ libetonyek-(\d+(?:\.\d+)+)\.tar\.xz
+dev-build/gn                      skip Chromium-pinned gn commit position; reviewed in the www-client/chromium run
+dev-build/gnrt                    skip follows www-client/chromium; reviewed in the www-client/chromium run
+dev-cpp/cpp-jwt                   github-release arun11299/cpp-jwt prefix=v
+dev-lang/bun                      github-release oven-sh/bun prefix=bun-v
+dev-lang/rust                     github-release rust-lang/rust
+dev-libs/libixion                 gitlab-tag ixion/ixion
+dev-libs/liborcus                 gitlab-tag orcus/orcus
+dev-python/frida                  pypi frida
+dev-python/ghidrecomp             pypi ghidrecomp
+dev-python/httpx-sse              pypi httpx-sse
+dev-python/jpype                  pypi JPype1
+dev-python/mcp                    pypi mcp
+dev-python/pyghidra               pypi pyghidra
+dev-python/sse-starlette          pypi sse-starlette
+dev-util/DirectXShaderCompiler    github-release microsoft/DirectXShaderCompiler prefix=v pre=1
+dev-util/electron                 github-release electron/electron prefix=v
+dev-util/esbuild                  github-release evanw/esbuild prefix=v
+dev-util/frida-tools              pypi frida-tools
+dev-util/ghidra                   github-release NationalSecurityAgency/ghidra prefix=Ghidra_ suffix=_build
+dev-util/llvm-mingw64             git-tag https://git.code.sf.net/p/mingw-w64/mingw-w64 prefix=v
+dev-util/mdds                     gitlab-tag mdds/mdds
+dev-util/pyghidra-mcp             github-release clearbluejar/pyghidra-mcp prefix=v
+games-emulation/cemu              github-commit cemu-project/Cemu
+games-engines/box2d               github-release erincatto/box2d prefix=v
+games-util/comet                  github-release imLinguin/comet prefix=v
+games-util/gogdl                  github-release Heroic-Games-Launcher/heroic-gogdl prefix=v
+games-util/legendary              github-release legendary-gl/legendary
+games-util/nile                   github-release imLinguin/nile prefix=v
+games-util/vulkan-helper          github-commit imLinguin/vulkan-helper-rs
+llvm-runtimes/libclc              github-release llvm/llvm-project prefix=llvmorg-
+media-fonts/liberation-fonts      github-release liberationfonts/liberation-fonts
+media-gfx/renderdoc               github-release baldurk/renderdoc prefix=v
+media-gfx/reshade-shaders         github-commit crosire/reshade-shaders
+media-libs/harfbuzz               github-release harfbuzz/harfbuzz
+media-libs/vkBasalt               github-release DadSchoorse/vkBasalt prefix=v
+net-im/discord                    json https://discord.com/api/updates/stable?platform=linux name
+sci-misc/llama-cpp                github-tag ggml-org/llama.cpp prefix=v
+sys-apps/keyutils                 git-tag https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/keyutils.git prefix=v
+sys-libs/musl-abi                 skip ABI marker package
+sys-power/asusctl                 github-release OpenGamingCollective/asusctl
+sys-power/supergfxctl             gitlab-tag asus-linux/supergfxctl
+virtual/libc                      skip virtual
+www-client/chromium               agent assess the stable, beta and dev channels
+www-client/firefox                json https://product-details.mozilla.org/1.0/firefox_versions.json LATEST_FIREFOX_VERSION
