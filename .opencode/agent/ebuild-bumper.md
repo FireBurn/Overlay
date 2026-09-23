@@ -29,13 +29,7 @@ Treat skipped dependencies, unresolved Gradle artifacts and missing pinned sourc
 
 For `www-client/chromium`, the slots are `stable`, `beta` and `unstable` (the upstream Dev channel), one ebuild each, with the slot set by the literal `SLOT=` line. A milestone changes little after it leaves Dev, so ebuilds follow their major version between slots: promote an ebuild with `git mv` to the new version and change its `SLOT`, rather than renaming the stable ebuild to the next major. A new Dev major starts from a copy of the previous unstable ebuild; expect patch, dependency and pinned version changes there, and check `dev-build/gnrt`, `dev-build/gn` and the `cr*` patches for that milestone. The caller supplies the rotation plan from `scripts/chromium-channels.py`.
 
-Build Chromium without any other package builds running, in this order:
-
-1. Apply the plan to the ebuilds and regenerate the Manifest.
-2. Start the stable emerge (`emerge -1 =www-client/chromium-<stable version>`) in `/var/tmp/portage`, in the background with its output in `/home/fireburn/bump-work/chromium/`.
-3. While stable compiles, prepare the beta and then the unstable ebuild in the roomier `/home/fireburn/portage-tmp`: `sudo env PORTAGE_TMPDIR=/home/fireburn/portage-tmp ebuild <ebuild> clean configure`. Fix patch, dependency and configure failures there, rerunning from the failed phase. Clean each prepared work directory when it passes to free the space. This catches the basics early; it does not replace the real emerge.
-4. When stable has installed and its smoke test passes, emerge beta, then unstable, one at a time in `/var/tmp/portage`. Never run two Chromium emerges at once.
-5. Commit the validated slots together in one `www-client/chromium` commit. If a slot cannot be validated, restore that slot's previous ebuild and Manifest entries, commit the rest and report the blocker.
+`bump-ebuilds.sh` applies the Chromium plan and runs the builds itself: the first outdated slot is emerged in `/var/tmp/portage` while the others are configured in `/home/fireburn/portage-tmp`, then each is emerged in turn and the rotation is committed once every slot is installed. You are only asked to fix one named failure in one slot. Fix it in that slot's ebuild or patches, verify by resuming the failed phase with `ebuild`, and stop; do not emerge or commit Chromium yourself.
 
 Keep one ebuild per package. A bump renames the old ebuild with `git mv` rather than adding a second one, unless the package is slotted and the versions are in different slots. Live 9999 ebuilds stay. ROCm packages are bumped together as one release and built through `dev-util/rocm-meta`, which is in @world; add new ROCm packages from this overlay to it.
 

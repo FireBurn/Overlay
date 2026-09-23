@@ -94,8 +94,15 @@ timed() {
 STAGED="$LOG_DIR/$RUN_ID.staged.diff"
 git diff --cached --binary >"$STAGED"
 restore_index() {
+    local -a skip=()
+    local f
     cmp -s "$STAGED" <(git diff --cached --binary) && return
-    if git reset -q && git apply --cached "$STAGED"; then
+    # Paths committed by this run are no longer staged changes.
+    if [[ -n "${START_HEAD:-}" ]]; then
+        while read -r f; do skip+=(--exclude="$f"); done \
+            < <(git diff --name-only --no-renames "$START_HEAD" HEAD)
+    fi
+    if git reset -q && git apply --cached "${skip[@]}" "$STAGED"; then
         info "restored previously staged changes"
     else
         echo "ERROR: could not restore staged changes; they are saved in $STAGED" >&2
@@ -464,43 +471,157 @@ bump_agent() {
     return 1
 }
 
-# Chromium rotates ebuilds between its stable, beta and unstable slots; the
-# plan comes from scripts/chromium-channels.py and one agent run applies it.
-bump_chromium() {
-    local pkg=www-client/chromium plan rc head prompt
-    plan="$(timed "$pkg" channel-check scripts/chromium-channels.py)"; rc=$?
-    if (( rc )); then
-        info "skip $pkg: ${plan:-channel check failed}"
-        return 1
-    fi
-    if [[ -z "$plan" ]]; then
-        info "$pkg: all slots up to date"
-        return 1
-    fi
-    printf '%s\n' "$plan" | sed 's/^/   /'
-    if [[ "$DRY_RUN" == 1 ]]; then
-        info "[dry-run] would ask the agent to apply this plan"
-        return 1
-    fi
-    log "agent: $pkg"
-    head="$(git rev-parse HEAD)"
-    prompt="Rotate www-client/chromium to the current Linux channels. scripts/chromium-channels.py produced this plan, to be applied in order (move = git mv plus changing SLOT; copy = new file for a new major; remove = git rm):
-$plan
-Do not research channel versions again. Follow the Chromium build procedure in your instructions: stable is built first, beta and unstable are prepared and configured in PORTAGE_TMPDIR=/home/fireburn/portage-tmp while stable compiles, and each slot is then emerged in /var/tmp/portage one at a time. Update dev-build/gnrt and dev-build/gn if the unstable milestone needs it, each in its own commit. $AGENT_RULES"
-    run_agent "$pkg" "$prompt" || echo "ERROR: agent bump failed for $pkg" >&2
-    if ! package_clean "$pkg"; then
-        echo "ERROR: agent left uncommitted changes in $pkg" >&2
-        # A Chromium build takes hours; keep its ebuilds while one is running.
-        if pgrep -f 'emerge .*www-client/chromium' >/dev/null; then
-            info "a Chromium emerge is still running; leaving $pkg as it is"
-        else
-            restore_package "$pkg"
+# Chromium rotates ebuilds between its stable, beta and unstable slots. The
+# script applies the plan from scripts/chromium-channels.py and runs the builds
+# itself; the agent is only asked to fix a specific failure. The first slot to
+# build is emerged in /var/tmp/portage while the others are unpacked and
+# configured in the roomier PREP_TMPDIR to catch patch and configure failures
+# early. A rotation left uncommitted by an interrupted run is resumed, and a
+# slot whose version is already installed is not rebuilt.
+CHROMIUM=www-client/chromium
+CHROMIUM_LOGS=/home/fireburn/bump-work/chromium
+PREP_TMPDIR=/home/fireburn/portage-tmp
+CHROMIUM_FIX_ATTEMPTS=2
+
+chromium_ebuild() { grep -l "^SLOT=\"$1\"" "$CHROMIUM"/chromium-*.ebuild 2>/dev/null | head -n1; }
+chromium_version() { basename "$1" .ebuild | sed 's/^chromium-//'; }
+chromium_built() {
+    [[ "$(portageq best_version / "$CHROMIUM:$1")" == "$CHROMIUM-$2" ]]
+}
+chromium_bin() {
+    case "$1" in stable) echo /usr/bin/chromium ;; *) echo "/usr/bin/chromium-$1" ;; esac
+}
+
+apply_chromium_plan() {
+    local op a b c d
+    while read -r op a b c d _; do
+        case "$op" in
+            copy|move)
+                # op SLOT SRC -> DST
+                if [[ "$op" == copy ]]; then
+                    cp "$CHROMIUM/$b" "$CHROMIUM/$d" && git add "$CHROMIUM/$d"
+                else
+                    git mv "$CHROMIUM/$b" "$CHROMIUM/$d"
+                fi || return 1
+                sed -i "s/^SLOT=\".*\"/SLOT=\"$a\"/" "$CHROMIUM/$d" || return 1 ;;
+            remove) git rm -q "$CHROMIUM/$a" || return 1 ;;
+        esac
+    done <<<"$1"
+}
+
+# chromium_fix SLOT PHASE LOG TMPDIR -- ask the agent to fix one failure.
+chromium_fix() {
+    local slot="$1" phase="$2" flog="$3" tmp="$4" e v
+    e="$(chromium_ebuild "$slot")"; v="$(chromium_version "$e")"
+    [[ "$DRY_RUN" == 1 ]] && return 1
+    log "agent: $CHROMIUM $v ($slot) $phase failure"
+    run_agent "$CHROMIUM-$slot" "Chromium $v ($slot slot, $e) failed in $phase with PORTAGE_TMPDIR=$tmp. The end of the log is in $flog; the full build log is $tmp/portage/$CHROMIUM-$v/temp/build.log. Fix the cause in $e or its patches in $CHROMIUM/files; do not change the other slots' ebuilds. If the fix needs dev-build/gn or dev-build/gnrt updated, do that, emerge it and commit it on its own. Verify by resuming with 'sudo env PORTAGE_TMPDIR=$tmp ebuild $e <phase>' from the failed phase; clean first only if the fix changes patches, compilers or configure options. Stop when that phase passes, or report why it cannot be fixed. Do not run emerge for Chromium and do not commit Chromium; the caller rebuilds and commits it. Never end your turn while a job you started is running."
+}
+
+# chromium_prepare SLOT -- unpack, patch and configure in PREP_TMPDIR, with fixes.
+chromium_prepare() {
+    local slot="$1" e attempt=0 plog
+    e="$(chromium_ebuild "$slot")"
+    plog="$CHROMIUM_LOGS/$RUN_ID-prepare-$slot.log"
+    while true; do
+        info "preparing $slot ($(chromium_version "$e")) in $PREP_TMPDIR"
+        if timed "$CHROMIUM-$slot" prepare \
+            sudo -n env PORTAGE_TMPDIR="$PREP_TMPDIR" ebuild "$e" clean configure >"$plog" 2>&1; then
+            sudo -n env PORTAGE_TMPDIR="$PREP_TMPDIR" ebuild "$e" clean >/dev/null 2>&1
+            return 0
         fi
+        (( attempt++ < CHROMIUM_FIX_ATTEMPTS )) || return 1
+        chromium_fix "$slot" configure "$plog" "$PREP_TMPDIR" || return 1
+    done
+}
+
+# chromium_emerge SLOT [ATTEMPTS] -- the real emerge in /var/tmp/portage. On a
+# failure the agent fixes it and the emerge is repeated, up to ATTEMPTS times.
+# With ATTEMPTS=0 it runs once, as the background build does, so that only one
+# agent works on Chromium at a time. "resume" fixes the last failure first.
+chromium_emerge() {
+    local slot="$1" attempts="${2:-$CHROMIUM_FIX_ATTEMPTS}" e v attempt=0 elog
+    e="$(chromium_ebuild "$slot")"; v="$(chromium_version "$e")"
+    elog="$CHROMIUM_LOGS/$RUN_ID-emerge-$slot.log"
+    if [[ "$attempts" == resume ]]; then
+        attempts=$CHROMIUM_FIX_ATTEMPTS
+        (( attempt++ ))
+        chromium_fix "$slot" "the emerge" "$elog.tail" /var/tmp/portage || return 1
+    fi
+    while true; do
+        info "emerging $slot ($v) in /var/tmp/portage"
+        if timed "$CHROMIUM-$slot" emerge sudo -n emerge -1 "=$CHROMIUM-$v" >"$elog" 2>&1; then
+            timed "$CHROMIUM-$slot" smoke-test timeout 120 "$(chromium_bin "$slot")" --headless=new \
+                --no-sandbox --disable-gpu --dump-dom 'data:text/html,<p>smoke-ok</p>' 2>/dev/null |
+                grep -q smoke-ok && return 0
+            echo "ERROR: $slot ($v) installed but failed its smoke test" >&2
+            return 1
+        fi
+        tail -n 80 "$elog" >"$elog.tail"
+        (( attempt++ < attempts )) || return 1
+        chromium_fix "$slot" "the emerge" "$elog.tail" /var/tmp/portage || return 1
+    done
+}
+
+bump_chromium() {
+    local plan rc slot e v first pid ok=1
+    local -a todo=()
+    plan="$(timed "$CHROMIUM" channel-check scripts/chromium-channels.py)"; rc=$?
+    if (( rc )); then
+        info "skip $CHROMIUM: ${plan:-channel check failed}"
+        return 1
+    fi
+    if grep -qv '^keep' <<<"$plan"; then
+        printf '%s\n' "$plan" | sed 's/^/   /'
+        if [[ "$DRY_RUN" == 0 ]]; then
+            apply_chromium_plan "$plan" || { echo "ERROR: could not apply the Chromium plan" >&2; return 2; }
+            timed "$CHROMIUM" manifest ebuild "$(chromium_ebuild stable)" manifest ||
+                { echo "ERROR: Chromium manifest failed" >&2; return 2; }
+        fi
+    fi
+    for slot in stable beta unstable; do
+        e="$(chromium_ebuild "$slot")"; v="$(chromium_version "$e")"
+        if chromium_built "$slot" "$v"; then
+            info "$slot: $v already installed"
+        else
+            todo+=("$slot")
+        fi
+    done
+    if (( ${#todo[@]} == 0 )) && package_clean "$CHROMIUM"; then
+        info "$CHROMIUM: all slots up to date"
+        return 1
+    fi
+    if [[ "$DRY_RUN" == 1 ]]; then
+        info "[dry-run] would build: ${todo[*]:-nothing}, then commit $CHROMIUM"
+        return 1
+    fi
+    mkdir -p "$CHROMIUM_LOGS"
+    if (( ${#todo[@]} )); then
+        first="${todo[0]}"
+        chromium_emerge "$first" 0 &
+        pid=$!
+        for slot in "${todo[@]:1}"; do
+            chromium_prepare "$slot" || { echo "ERROR: $slot does not configure" >&2; ok=0; }
+        done
+        if ! wait "$pid"; then
+            chromium_emerge "$first" resume || { echo "ERROR: $first did not build" >&2; ok=0; }
+        fi
+        if (( ok )); then
+            for slot in "${todo[@]:1}"; do
+                chromium_emerge "$slot" || { echo "ERROR: $slot did not build" >&2; ok=0; break; }
+            done
+        fi
+    fi
+    if (( ! ok )); then
+        info "$CHROMIUM left uncommitted; the next run resumes from what is installed"
         return 2
     fi
-    [[ "$(git rev-parse HEAD)" != "$head" ]] && { info "agent committed $pkg"; return 0; }
-    info "agent made no commit for $pkg"
-    return 1
+    git add -A "$CHROMIUM"
+    timed "$CHROMIUM" pkgcheck pkgcheck scan --repo FireBurn "$CHROMIUM" || return 2
+    git commit -q --only -m "$CHROMIUM: rotate to $(for slot in stable beta unstable; do
+            chromium_version "$(chromium_ebuild "$slot")"; done | paste -sd' ')" -- "$CHROMIUM" || return 2
+    info "committed $CHROMIUM"
+    return 0
 }
 
 # One agent run for all outdated members of a batch group, e.g. ROCm, which
@@ -567,7 +688,8 @@ while IFS=$'\037' read -r pkg status old new group batch source note <&3; do
         older)
             info "$pkg: upstream $new is older than local $old; skipping"; continue ;;
     esac
-    if ! package_clean "$pkg"; then
+    # An uncommitted Chromium rotation is resumed by bump_chromium.
+    if [[ "$pkg" != www-client/chromium ]] && ! package_clean "$pkg"; then
         info "skip $pkg: package has uncommitted changes ($status${new:+ $old -> $new})"
         continue
     fi
