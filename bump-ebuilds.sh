@@ -317,8 +317,9 @@ bump_simple() {
     local pn oldf newf
     pn="$(pn_of "$pkg")"; oldf="$(current_ebuild "$pkg")"; newf="$pkg/$pn-$new.ebuild"
 
-    # A pinned old version needs package-specific review.
-    if grep -qF "$old" "$oldf"; then
+    # A pinned old version needs package-specific review. Dependency entries
+    # such as name@1.2.3 in NPM_PKGS or CRATES may share it by coincidence.
+    if grep -qP "(?<![@\\w.-])\Q$old\E(?![\\w.])" "$oldf"; then
         info "$oldf contains a literal '$old'; asking agent"
         bump_agent "$pkg" "$old" "$new" "the ebuild contains the literal old version"
         return $?
