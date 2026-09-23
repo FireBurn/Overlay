@@ -521,7 +521,10 @@ src_prepare() {
 	export CARGO_BUILD_JOBS="$(makeopts_jobs)"
 
 	# Workaround for bgo#915651
-	if ! use elibc_glibc ; then
+	if use elibc_llvm ; then
+		use amd64 || die "llvm-libc is only known here on amd64"
+		export RUST_TARGET="x86_64-unknown-linux-llvmlibc"
+	elif ! use elibc_glibc ; then
 		if use amd64 ; then
 			export RUST_TARGET="x86_64-unknown-linux-musl"
 		elif use x86 ; then
