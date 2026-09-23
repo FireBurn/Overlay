@@ -1,0 +1,46 @@
+dev-python/logfire is not in Gentoo, so make the logfire imports in the
+test suite optional and deselect the tests that need its capfire fixture.
+
+--- a/tests/conftest.py
++++ b/tests/conftest.py
+@@ -13,7 +13,10 @@
+ os.environ.setdefault("LOGFIRE_DISTRIBUTED_TRACING", "true")
+ 
+ import opentelemetry.trace  # noqa: E402  (env var must be set before logfire import below)
+-from logfire.testing import CaptureLogfire  # noqa: E402
++try:
++    from logfire.testing import CaptureLogfire  # noqa: E402
++except ImportError:
++    CaptureLogfire = None
+ 
+ import mcp.shared._otel  # noqa: E402
+ 
+--- a/tests/server/conftest.py
++++ b/tests/server/conftest.py
+@@ -3,7 +3,11 @@
+ from collections.abc import Iterator
+ 
+ import pytest
+-from logfire.testing import CaptureLogfire, TestExporter
++try:
++    from logfire.testing import CaptureLogfire, TestExporter
++except ImportError:
++    CaptureLogfire = None
++    TestExporter = None
+ from opentelemetry.sdk.trace import ReadableSpan
+ 
+ 
+--- a/tests/shared/test_otel.py
++++ b/tests/shared/test_otel.py
+@@ -2,7 +2,10 @@
+ 
+ import mcp_types as types
+ import pytest
+-from logfire.testing import CaptureLogfire
++try:
++    from logfire.testing import CaptureLogfire
++except ImportError:
++    CaptureLogfire = None
+ 
+ from mcp.client.client import Client
+ from mcp.server.mcpserver import MCPServer
