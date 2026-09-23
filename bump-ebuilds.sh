@@ -463,6 +463,44 @@ bump_agent() {
     return 1
 }
 
+# Chromium rotates ebuilds between its stable, beta and unstable slots; the
+# plan comes from scripts/chromium-channels.py and one agent run applies it.
+bump_chromium() {
+    local pkg=www-client/chromium plan rc head prompt
+    plan="$(timed "$pkg" channel-check scripts/chromium-channels.py)"; rc=$?
+    if (( rc )); then
+        info "skip $pkg: ${plan:-channel check failed}"
+        return 1
+    fi
+    if [[ -z "$plan" ]]; then
+        info "$pkg: all slots up to date"
+        return 1
+    fi
+    printf '%s\n' "$plan" | sed 's/^/   /'
+    if [[ "$DRY_RUN" == 1 ]]; then
+        info "[dry-run] would ask the agent to apply this plan"
+        return 1
+    fi
+    log "agent: $pkg"
+    head="$(git rev-parse HEAD)"
+    prompt="Rotate www-client/chromium to the current Linux channels. scripts/chromium-channels.py produced this plan, to be applied in order (move = git mv plus changing SLOT; copy = new file for a new major; remove = git rm):
+$plan
+Do not research channel versions again. Follow the Chromium build procedure in your instructions: stable is built first, beta and unstable are prepared and configured in PORTAGE_TMPDIR=/home/fireburn/portage-tmp while stable compiles, and each slot is then emerged in /var/tmp/portage one at a time. Update dev-build/gnrt and dev-build/gn if the unstable milestone needs it, each in its own commit. $AGENT_RULES"
+    if ! run_agent "$pkg" "$prompt"; then
+        echo "ERROR: agent bump failed for $pkg" >&2
+        package_clean "$pkg" || restore_package "$pkg"
+        return 2
+    fi
+    if ! package_clean "$pkg"; then
+        echo "ERROR: agent left uncommitted changes in $pkg" >&2
+        restore_package "$pkg"
+        return 2
+    fi
+    [[ "$(git rev-parse HEAD)" != "$head" ]] && { info "agent committed $pkg"; return 0; }
+    info "agent made no commit for $pkg"
+    return 1
+}
+
 # One agent run for all outdated members of a batch group, e.g. ROCm, which
 # share a release and must be built together in dependency order.
 # Adds committed packages to BUMPED and the rest to failed.
@@ -545,7 +583,11 @@ while IFS=$'\037' read -r pkg status old new group batch source note <&3; do
     start=$EPOCHREALTIME
     case "$status" in
         agent)
-            bump_agent "$pkg" "$old" "" "$note" ;;
+            if [[ "$pkg" == www-client/chromium ]]; then
+                bump_chromium
+            else
+                bump_agent "$pkg" "$old" "" "$note"
+            fi ;;
         error)
             bump_agent "$pkg" "$old" "" "the upstream version lookup '$source' failed ($note); fix its scripts/upstream-sources entry" ;;
         newer)
