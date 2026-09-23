@@ -81,6 +81,10 @@ IUSE+=" system-pipewire system-png +system-webp test wayland wifi +X"
 # Firefox-only IUSE
 IUSE+=" +gmp-autoupdate gnome-shell jpegxl +jumbo-build openh264 +telemetry valgrind wasm-sandbox"
 
+# elibc_llvm is not one of the values the gentoo profiles declare, so it is
+# named here rather than left to USE_EXPAND.
+IUSE+=" elibc_llvm"
+
 REQUIRED_USE="|| ( X wayland )
 	debug? ( !system-av1 )
 	pgo? ( jumbo-build )
