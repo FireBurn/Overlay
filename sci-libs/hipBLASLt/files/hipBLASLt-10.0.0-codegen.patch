@@ -1,0 +1,148 @@
+From: FireBurn <fireburn@users.noreply.github.com>
+Date: Sun, 20 Sep 2026 00:00:00 +0100
+Subject: [PATCH] Separate library validation and assembler selection
+
+--- a/cmake/HipBLASLtCodegen.cmake
++++ b/cmake/HipBLASLtCodegen.cmake
+@@ -6,7 +6,7 @@
+ function(hipblaslt_create_device_library)
+     set(_opts "")
+     set(_one
+-        TARGET LOGIC_PATH OUTPUT_DIR CXX_COMPILER OFFLOAD_BUNDLER JOBS LOGIC_FILTER
++        TARGET LOGIC_PATH OUTPUT_DIR CXX_COMPILER ASSEMBLER OFFLOAD_BUNDLER JOBS LOGIC_FILTER
+         ASAN YAML_FORMAT NO_COMPRESS EXPERIMENTAL LAZY_LOAD ASM_COMMENTS KEEP_BUILD_TMP ASM_DEBUG)
+     set(_multi ARCHES)
+     cmake_parse_arguments(_cdl "${_opts}" "${_one}" "${_multi}" ${ARGN})
+@@ -46,6 +46,9 @@
+ 
+     list(JOIN _cdl_ARCHES "$<SEMICOLON>" _arches_semi)
+     set(_opts_list "--architecture=${_arches_semi}" "--cxx-compiler=${_cdl_CXX_COMPILER}")
++    if(_cdl_ASSEMBLER)
++        list(APPEND _opts_list "--assembler=${_cdl_ASSEMBLER}")
++    endif()
+     if(_cdl_OFFLOAD_BUNDLER)
+         list(APPEND _opts_list "--offload-bundler=${_cdl_OFFLOAD_BUNDLER}")
+     endif()
+@@ -96,6 +99,9 @@
+         VERBATIM
+         USES_TERMINAL
+     )
++    add_custom_target(${_cdl_TARGET}-validate
++        DEPENDS "${_logic_stamp}"
++    )
+ 
+     set(_output_stamp "${CMAKE_CURRENT_BINARY_DIR}/${_cdl_TARGET}.stamp")
+     set(_tcl_command
+@@ -110,7 +116,7 @@
+         COMMENT "Building device libraries to ${_cdl_OUTPUT_DIR} ..."
+         COMMAND ${_tcl_command}
+         COMMAND ${CMAKE_COMMAND} -E touch "${_output_stamp}"
+-        DEPENDS ${HIPBLASLT_PYTHON_DEPS} "${_logic_stamp}"
++        DEPENDS ${HIPBLASLT_PYTHON_DEPS}
+         VERBATIM
+         USES_TERMINAL
+     )
+--- a/device-library/CMakeLists.txt
++++ b/device-library/CMakeLists.txt
+@@ -4,6 +4,7 @@
+ include(HipBLASLtCodegen)
+ 
+ set(TENSILELITE_BUILD_PARALLEL_LEVEL "" CACHE STRING "Number of CPU cores to use for building device libraries (will use nproc if unset).")
++set(TENSILELITE_ASSEMBLER "" CACHE FILEPATH "Assembler used to build device libraries.")
+ set(TENSILELITE_KEEP_BUILD_TMP OFF CACHE STRING "Keep temporary build directory for device libraries (turning this ON  bloat the build size).")
+ set(TENSILELITE_ASM_DEBUG "" CACHE STRING "Keep debug information for built code objects.")
+ set(TENSILELITE_LOGIC_FILTER "" CACHE STRING "Cutomsized logic filter, default is *, i.e. all logics.")
+@@ -25,6 +26,7 @@
+     OUTPUT_DIR "${HIPBLASLT_TENSILE_LIBPATH}"
+     ARCHES ${GPU_TARGETS}
+     CXX_COMPILER "${CMAKE_CXX_COMPILER}"
++    ASSEMBLER "${TENSILELITE_ASSEMBLER}"
+     OFFLOAD_BUNDLER "${TENSILELITE_OFFLOADBUNDLER}"
+     JOBS "${TENSILELITE_BUILD_PARALLEL_LEVEL}"
+     LOGIC_FILTER "${TENSILELITE_LOGIC_FILTER}"
+--- a/tensilelite/rocisa/rocisa/include/hardware_caps.hpp
++++ b/tensilelite/rocisa/rocisa/include/hardware_caps.hpp
+@@ -43,7 +43,8 @@ inline bool tryAssembler(const IsaVersion&  isaVersion,
+     std::string isastr = getGfxNameTuple(isaVersion);
+ 
+     std::vector<std::string> cmd
+-        = {assemblerPath, "-x", "assembler", "-target", "amdgcn-amdhsa", "-mcpu=" + isastr};
++        = {assemblerPath, "-x", "assembler", "-target", "amdgcn-amdhsa", "-mcpu=" + isastr,
++           "-c", "-o", "/dev/null"};
+     for(auto o : options)
+     {
+        cmd.push_back(o);
+--- a/tensilelite/rocisa/rocisa/include/instruction/extension.hpp
++++ b/tensilelite/rocisa/rocisa/include/instruction/extension.hpp
+@@ -536,12 +536,17 @@
+                      std::optional<HighBitSel>                 sel     = std::nullopt,
+                      const std::string&                        comment = "")
+     {
++        rocIsa& instance = rocIsa::getInstance();
+         if(!sel.has_value())
+         {
++            // gfx12 true16 requires a half-register destination even without packing.
++            const auto isa = instance.getKernel().isaVersion;
++            if(isa[0] == 12 && isa[1] == 0)
++                return std::make_shared<VCvtF32toF16>(
++                    dst, src, std::nullopt, std::vector<int>{0}, comment);
+             return std::make_shared<VCvtF32toF16>(
+                 dst, src, std::nullopt, std::vector<int>{}, comment);
+         }
+ 
+-        rocIsa& instance = rocIsa::getInstance();
+         if(instance.getArchCaps()["NoSDWA"])
+         {
+--- a/tensilelite/rocisa/rocisa/src/pass/macro_inline.cpp
++++ b/tensilelite/rocisa/rocisa/src/pass/macro_inline.cpp
+@@ -307,6 +307,11 @@
+                 if(branch.back())
+                     output.push_back(cloneAndSubstitute(instruction, params));
+             }
++            else if(auto text = std::dynamic_pointer_cast<TextBlock>(item))
++            {
++                if(branch.back())
++                    output.push_back(text->clone());
++            }
+             else
+             {
+                 assert(false && "macroToInstruction: unexpected item type in macro body");
+--- a/tensilelite/rocisa/rocisa/include/instruction/common.hpp
++++ b/tensilelite/rocisa/rocisa/include/instruction/common.hpp
+@@ -5333,7 +5333,16 @@
+         {
+             setInst("v_lshlrev_b16");
+         }
+ 
++        std::string getArgStr() const override
++        {
++            const auto isa = rocIsa::getInstance().getKernel().isaVersion;
++            if(isa[0] != 12 || isa[1] != 0)
++                return CommonInstruction::getArgStr();
++            return dst->toString() + ".l, " + InstructionInputToString(srcs[0])
++                   + ", " + InstructionInputToString(srcs[1]) + ".l";
++        }
++
+         VLShiftLeftB16(const VLShiftLeftB16& other)
+             : CommonInstruction(other)
+         {
+--- a/tensilelite/Tensile/TensileCreateLibrary/Run.py
++++ b/tensilelite/Tensile/TensileCreateLibrary/Run.py
+@@ -981,7 +981,7 @@
+     arguments = parseArguments()
+     setVerbosity(arguments["PrintLevel"])
+     outputPath = Path(ensurePath(os.path.abspath(arguments["OutputPath"])))
+-    cxxCompiler, _, offloadBundler, _, _ = validateToolchain(
++    cxxCompiler, _, offloadBundler, assembler, _ = validateToolchain(
+         arguments["CxxCompiler"],
+         arguments["CCompiler"],
+         arguments["OffloadBundler"],
+@@ -1001,7 +1001,7 @@
+     assignGlobalParameters(arguments, isaInfoMap)
+ 
+     asmToolchain = makeAssemblyToolchain(
+-        cxxCompiler,
++        assembler,
+         offloadBundler,
+         arguments["CodeObjectVersion"],
+         arguments["BuildIdKind"],
