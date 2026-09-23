@@ -4,13 +4,18 @@
 EAPI=8
 PYTHON_COMPAT=( python3_{11..15} )
 
-inherit edo ninja-utils python-any-r1 toolchain-funcs
+inherit edo git-r3 ninja-utils python-any-r1 toolchain-funcs
 
 DESCRIPTION="GN is a meta-build system that generates build files for Ninja"
 HOMEPAGE="https://gn.googlesource.com/"
-GN_COMMIT="7826279d0e70c08cd639db7c845b9eef56a76bdf"
-SRC_URI="https://gn.googlesource.com/gn/+archive/${GN_COMMIT}.tar.gz -> ${P}.tar.gz"
-S="${WORKDIR}"
+# The +archive tarballs this used to fetch are generated per request and
+# carry the generation time in their tar headers, so the same commit gives
+# a different file every time and no checksum can match. ::gentoo repacks
+# gn for this reason; there is no repack of this version, so the commit is
+# taken from git instead.
+EGIT_REPO_URI="https://gn.googlesource.com/gn"
+EGIT_COMMIT="5649e56e9e325ab8def3304906870ed4c5b397ca"
+S="${WORKDIR}/${P}"
 
 LICENSE="BSD"
 SLOT="0"
@@ -21,7 +26,7 @@ BDEPEND="
 	app-alternatives/ninja
 "
 
-PATCHES=( "${FILESDIR}/gn-0.2548-respect-flags.patch" )
+PATCHES=( "${FILESDIR}/gn-0.2567-respect-flags.patch" )
 
 pkg_setup() {
 	:
