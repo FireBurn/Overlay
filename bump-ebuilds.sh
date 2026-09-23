@@ -21,6 +21,7 @@ AI_PKGS=( dev-util/codex app-editors/zed www-client/chromium )
 # --- CLI ------------------------------------------------------------------
 DRY_RUN=0
 PUSH=0
+RETRY=0
 PKG=""
 usage() {
     cat <<'EOF'
@@ -31,6 +32,7 @@ Check overlay ebuilds for newer upstream versions and bump them.
 Options:
   -n, --dry-run    Report what would change without touching anything
       --push       Push successful bumps after a final rebase
+      --retry      Retry candidates the agent declined in an earlier run
   -h, --help       Show this help
 
 With no package argument, all overlay packages are checked.
@@ -38,6 +40,8 @@ Chromium requires a separate invocation: bump-ebuilds.sh www-client/chromium
 Live runs pull --rebase --autostash from origin/master before checking packages.
 Upstream version sources are listed in scripts/upstream-sources.
 Logs and timings are written to ${XDG_STATE_HOME:-~/.local/state}/bump-ebuilds.
+Candidates the agent declines are recorded in declined.tsv there. That candidate
+is skipped until --retry, and newer ones for a week.
 EOF
 }
 for arg in "$@"; do
@@ -45,6 +49,7 @@ for arg in "$@"; do
         -n|--dry-run) DRY_RUN=1 ;;
         --push)       PUSH=1 ;;
         --no-push)    PUSH=0 ;;
+        --retry)      RETRY=1 ;;
         -h|--help)    usage; exit 0 ;;
         -*)           echo "unknown option: $arg" >&2; usage >&2; exit 2 ;;
         *)            PKG="$arg" ;;
@@ -84,11 +89,28 @@ timed() {
     return "$rc"
 }
 
+# Rebasing with --autostash and pkgcheck --commits both drop staged renames,
+# so keep the caller's staged changes and put them back when we are done.
+STAGED="$LOG_DIR/$RUN_ID.staged.diff"
+git diff --cached --binary >"$STAGED"
+restore_index() {
+    cmp -s "$STAGED" <(git diff --cached --binary) && return
+    if git reset -q && git apply --cached "$STAGED"; then
+        info "restored previously staged changes"
+    else
+        echo "ERROR: could not restore staged changes; they are saved in $STAGED" >&2
+    fi
+}
+
 if [[ "$DRY_RUN" == 0 ]]; then
-    timed - git-pull git pull --rebase --autostash origin master || {
-        echo 'ERROR: initial git pull --rebase --autostash failed' >&2
-        exit 1
-    }
+    timed - git-fetch git fetch -q origin master || die "git fetch failed"
+    if ! git merge-base --is-ancestor FETCH_HEAD HEAD; then
+        timed - git-pull git pull --rebase --autostash origin master || {
+            echo 'ERROR: initial git pull --rebase --autostash failed' >&2
+            exit 1
+        }
+        restore_index
+    fi
 fi
 
 mapfile -t ALL_PKGS < <(
@@ -249,6 +271,24 @@ http_code() {
     printf '%s' "${code:-000}"
 }
 
+# Run --version on the package's installed commands; one must succeed.
+smoke_test() {
+    local bin found=0
+    case "$1" in
+        games-util/heroic) info "smoke test: heroic is GUI only; skipped"; return 0 ;;
+    esac
+    while read -r bin; do
+        found=1
+        if timeout 60 "$bin" --version </dev/null >/dev/null 2>&1; then
+            info "smoke test: $bin --version ok"
+            return 0
+        fi
+    done < <(qlist -e "$1" | grep -E '^/(usr/s?bin|opt/bin)/[^/]+$')
+    (( found )) || { info "smoke test: $1 installs no commands; skipped"; return 0; }
+    echo "ERROR: no command from $1 ran with --version" >&2
+    return 1
+}
+
 # --- bump implementations -------------------------------------------------
 # Undo a partially-applied simple bump (rename + Manifest).
 revert_bump() {
@@ -326,6 +366,10 @@ PY
         retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "emerge failed"
         return $?
     fi
+    if ! timed "$pkg" smoke-test smoke_test "$pkg"; then
+        retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "smoke test failed after emerge"
+        return $?
+    fi
     if ! timed "$pkg" pkgcheck pkgcheck scan --repo FireBurn "$pkg" ||
        ! timed "$pkg" pkgcheck-commits pkgcheck scan --repo FireBurn --commits; then
         revert_bump "$pkg" "$oldf" "$newf"
@@ -340,24 +384,46 @@ PY
     return 0
 }
 
-AGENT_RULES="Keep one ebuild per package: rename the old ebuild to the new version (git mv) instead of adding one beside it, unless the package is slotted and the versions are in different slots. Live 9999 ebuilds stay. Record how to find upstream versions: if a package's entry in scripts/upstream-sources is missing, wrong or could not be checked, add or fix it using the methods documented at the top of that file, and add an @group when other ebuilds in this overlay share the same pattern. Leave scripts/upstream-sources uncommitted; the caller reports it for review. Run a normal emerge -1 of each new package and a relevant smoke test, then pkgcheck scan --repo FireBurn --commits. Commit only if emerge installed successfully and checks pass, one commit per package. Leave a package unchanged and report why if there is no safe bump. Do not push."
+AGENT_RULES="Keep one ebuild per package: rename the old ebuild to the new version (git mv) instead of adding one beside it, unless the package is slotted and the versions are in different slots. Live 9999 ebuilds stay. Record how to find upstream versions: if a package's entry in scripts/upstream-sources is missing, wrong or could not be checked, add or fix it using the methods documented at the top of that file, and add an @group when other ebuilds in this overlay share the same pattern. Leave scripts/upstream-sources uncommitted; the caller reports it for review. Run a normal emerge -1 of each new package and a relevant smoke test, then pkgcheck scan --repo FireBurn --commits. Commit only if emerge installed successfully and checks pass, one commit per package, using git commit --only -- <package paths> so changes already staged by someone else stay out of the commit. Leave a package unchanged and report why if there is no safe bump. Do not push."
 
-# Token counts of the newest opencode session in this directory, for the log.
+# Token counts of opencode sessions in this directory since START_MS, for the log.
 agent_usage() {
     command -v sqlite3 >/dev/null || return 0
     sqlite3 -readonly "$HOME/.local/share/opencode/opencode.db" \
-        "select 'in=' || tokens_input || ' out=' || tokens_output || ' reasoning=' || tokens_reasoning
-         from session_v2 where directory = '$PWD' order by time_created desc limit 1" 2>/dev/null
+        "select 'in=' || cast(total(tokens_input) as int) || ' out=' || cast(total(tokens_output) as int)
+                || ' reasoning=' || cast(total(tokens_reasoning) as int)
+         from session_v2 where directory = '$PWD' and time_created >= $1" 2>/dev/null
+}
+
+# Save an agent's unfinished changes to the log and restore the committed package.
+restore_package() {
+    local pkg="$1" saved="$LOG_DIR/$RUN_ID-${1//\//_}.diff"
+    git add -N -- "$pkg"
+    git diff HEAD --binary -- "$pkg" >"$saved"
+    git reset -q -- "$pkg"
+    git checkout -q HEAD -- "$pkg"
+    git clean -fdq -- "$pkg"
+    info "restored $pkg; the agent's changes are in $saved"
+}
+
+# A declined candidate stays skipped; newer candidates wait a week, so a busy
+# upstream (e.g. commit snapshots) does not trigger an agent run every day.
+DECLINED="$LOG_DIR/declined.tsv"
+declined() {
+    [[ "$RETRY" == 0 && -f "$DECLINED" ]] || return 1
+    awk -F'\t' -v p="$1" -v v="$2" -v since="$(date -I -d '7 days ago')" \
+        '$1 == p && ($2 == v || $3 >= since) { found = 1 } END { exit !found }' "$DECLINED"
 }
 
 # run_agent LABEL PROMPT -- returns opencode's status; output goes to its own log too.
 run_agent() {
-    local label="$1" prompt="$2" alog start rc
+    local label="$1" prompt="$2" alog start start_ms rc
     alog="$LOG_DIR/$RUN_ID-agent-${label//\//_}.log"
     start=$EPOCHREALTIME
+    start_ms=$(date +%s%3N)
     opencode run --agent ebuild-bumper "$prompt" 2>&1 | tee "$alog"
     rc=${PIPESTATUS[0]}
-    record "$label" agent "$start" "$rc" "$(agent_usage)"
+    record "$label" agent "$start" "$rc" "$(agent_usage "$start_ms")"
     return "$rc"
 }
 
@@ -379,10 +445,12 @@ bump_agent() {
 
     if ! run_agent "$pkg" "$prompt"; then
         echo "ERROR: agent bump failed for $pkg" >&2
+        package_clean "$pkg" || restore_package "$pkg"
         return 2
     fi
     if ! package_clean "$pkg"; then
         echo "ERROR: agent left uncommitted changes in $pkg" >&2
+        restore_package "$pkg"
         return 2
     fi
     if [[ "$(git rev-parse HEAD)" != "$head" ]]; then
@@ -390,6 +458,8 @@ bump_agent() {
         return 0
     fi
     info "agent made no commit for $pkg"
+    [[ -n "$new" ]] && printf '%s\t%s\t%s\t%s\n' "$pkg" "$new" "$(date -I)" \
+        "$LOG_DIR/$RUN_ID-agent-${pkg//\//_}.log" >>"$DECLINED"
     return 1
 }
 
@@ -410,6 +480,7 @@ bump_group() {
     for pkg in "${pkgs[@]}"; do
         if ! package_clean "$pkg"; then
             echo "ERROR: agent left uncommitted changes in $pkg" >&2
+            restore_package "$pkg"
             failed+=("$pkg")
         elif [[ -n "$(git log --format=%h "$head..HEAD" -- "$pkg")" ]]; then
             changed=1
@@ -458,6 +529,10 @@ while IFS=$'\037' read -r pkg status old new group batch source note <&3; do
     esac
     if ! package_clean "$pkg"; then
         info "skip $pkg: package has uncommitted changes ($status${new:+ $old -> $new})"
+        continue
+    fi
+    if [[ "$status" == newer ]] && declined "$pkg" "$new"; then
+        info "skip $pkg: the agent declined it recently (see $DECLINED; --retry to recheck)"
         continue
     fi
     if [[ "$status" == newer && -n "$batch" ]]; then
@@ -511,6 +586,7 @@ if [[ "$changed" == 1 && "$PUSH" == 1 && "$DRY_RUN" == 0 ]]; then
 fi
 
 record - run "$RUN_START" 0
+[[ "$DRY_RUN" == 0 ]] && restore_index
 
 mapfile -t extras < <(
     for pkg in "${WORK[@]}"; do

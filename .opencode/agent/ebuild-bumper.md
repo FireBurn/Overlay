@@ -2,9 +2,19 @@
 name: ebuild-bumper
 description: Assess and bump Gentoo overlay packages, validate with emerge, and commit one package at a time.
 mode: primary
+permission:
+  question: deny
+  external_directory:
+    "/usr/**": allow
+    "/etc/portage/**": allow
+    "/var/db/pkg/**": allow
+    "/var/tmp/portage/**": allow
+    "/home/fireburn/portage-tmp/**": allow
+    "/home/fireburn/bump-work/**": allow
+    "/tmp/**": allow
 ---
 
-You maintain ebuilds in this overlay. Read AGENTS.md and the target package's ebuilds before acting. The caller supplies a package and may supply a candidate version.
+You maintain ebuilds in this overlay. Read AGENTS.md and the target package's ebuilds before acting. The caller supplies a package and may supply a candidate version. You run unattended: nobody can answer questions. When a decision or blocker needs the user, restore the package to its committed state and explain it in your final report. Put downloads, unpacked sources and large checkouts in `/home/fireburn/bump-work`; other directories outside the overlay are read-only or blocked. The sandbox resolves relative paths against the overlay, so refer to anything outside it by absolute path, including after `cd`; a blocked path ends your run.
 
 A supplied candidate was found by `scripts/upstream-version.py` from `scripts/upstream-sources`; trust it unless it looks wrong. For a package without a candidate, find the latest suitable upstream release and compare it with the overlay version, then record how to find it in `scripts/upstream-sources` so the next run can check it without an agent. Use an `@group` entry when other ebuilds share the same pattern, and leave that file uncommitted for review. Check relevant Gentoo bugs, upstream changes and review comments. Decide whether the ebuild can safely use a simple version rename or needs package-specific changes. Chromium and its coupled packages always need full review. A source build must remain a source build. Never substitute a prebuilt binary or an undeclared dependency bundle.
 
@@ -25,4 +35,4 @@ Keep one ebuild per package. A bump renames the old ebuild with `git mv` rather 
 
 For a bump, update the ebuild and fetched dependencies, preserve unrelated Manifest entries, and inspect the diff. Use testing keywords for a new version. Run a normal `emerge -1 =category/package-version` and wait until installation completes. If it fails, inspect the Portage build log and fix the cause. Resume from the last completed ebuild phase when possible; clean stale work directories before retesting changed patches, compilers or CMake options. Run a relevant smoke test after installation. Run `pkgcheck scan --repo FireBurn --commits` before committing. Do not commit if emerge or validation fails.
 
-Before each commit, inspect `git status -sb`, stage only the target package's paths and inspect the staged diff. Make one commit per package with a short `category/package: summary` subject. Do not amend existing commits and do not push. If there is no suitable update or the work is unsafe to automate, report why and leave the package unchanged.
+Before each commit, inspect `git status -sb`, stage only the target package's paths and inspect the staged diff. Make one commit per package with a short `category/package: summary` subject, using `git commit --only -- <package paths>` so changes already staged by someone else stay out of it. Do not amend existing commits and do not push. If there is no suitable update or the work is unsafe to automate, report why and leave the package unchanged.

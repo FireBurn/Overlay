@@ -87,6 +87,7 @@ dev-python/ghidrecomp             pypi ghidrecomp
 dev-python/httpx-sse              pypi httpx-sse
 dev-python/jpype                  pypi JPype1
 dev-python/mcp                    pypi mcp
+dev-python/mcp-types              pypi mcp-types
 dev-python/pyghidra               pypi pyghidra
 dev-python/sse-starlette          pypi sse-starlette
 dev-util/DirectXShaderCompiler    github-release microsoft/DirectXShaderCompiler prefix=v pre=1
