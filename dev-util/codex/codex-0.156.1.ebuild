@@ -78,8 +78,8 @@ CRATES="
 	autocfg@1.5.0
 	aws-config@1.8.12
 	aws-credential-types@1.2.11
-	aws-lc-rs@1.16.2
-	aws-lc-sys@0.39.0
+	aws-lc-rs@1.18.1
+	aws-lc-sys@0.45.0
 	aws-runtime@1.5.17
 	aws-sdk-signin@1.2.0
 	aws-sdk-sso@1.91.0
@@ -146,6 +146,7 @@ CRATES="
 	cached_proc_macro@0.25.0
 	cached_proc_macro_types@0.1.1
 	calendrical_calculations@0.2.4
+	caseless@0.2.2
 	castaway@0.2.4
 	cbc@0.1.2
 	cc@1.2.55
@@ -793,7 +794,7 @@ CRATES="
 	quick-xml@0.39.4
 	quick-xml@0.41.0
 	quickcheck@1.1.0
-	quinn-proto@0.11.14
+	quinn-proto@0.11.15
 	quinn-udp@0.5.14
 	quinn-udp@0.6.1
 	quinn@0.11.9
@@ -891,8 +892,10 @@ CRATES="
 	rustix@1.1.4
 	rustls-native-certs@0.8.3
 	rustls-pki-types@1.14.0
-	rustls-webpki@0.103.13
-	rustls@0.23.36
+	rustls-platform-verifier-android@0.1.1
+	rustls-platform-verifier@0.7.0
+	rustls-webpki@0.103.15
+	rustls@0.23.45
 	rustversion@1.0.22
 	rustyline@14.0.0
 	ryu@1.0.22
@@ -1326,12 +1329,22 @@ CRATES="
 "
 
 declare -A GIT_CRATES=(
+	[appcontainer_common]='https://github.com/microsoft/mxc;6cd3d58f05d3447e67109cfb75e042803b843ca4;mxc-%commit%/src/backends/appcontainer/common'
 	[crossterm]='https://github.com/openai-oss-forks/crossterm;45fecb9508105988f42fe6ff0441783ed3717f92;crossterm-%commit%'
-	[nucleo-matcher]='https://github.com/helix-editor/nucleo;4253de9faabb4e5c6d81d946a5e35a90f87347ee;nucleo-%commit%/matcher'
+	[h3]='https://github.com/hyperium/h3;e07e69412876f7e26f026bd75a48b2704d8c8283;h3-%commit%/h3'
+	[h3-quinn]='https://github.com/hyperium/h3;e07e69412876f7e26f026bd75a48b2704d8c8283;h3-%commit%/h3-quinn'
+	[learning_mode_core]='https://github.com/microsoft/mxc;6cd3d58f05d3447e67109cfb75e042803b843ca4;mxc-%commit%/src/core/learning_mode_core'
+	[learning_mode_windows]='https://github.com/microsoft/mxc;6cd3d58f05d3447e67109cfb75e042803b843ca4;mxc-%commit%/src/backends/learning_mode/windows'
+	[mxc_config_contract]='https://github.com/microsoft/mxc;6cd3d58f05d3447e67109cfb75e042803b843ca4;mxc-%commit%/src/core/mxc_config_contract'
+	[mxc_telemetry]='https://github.com/microsoft/mxc;6cd3d58f05d3447e67109cfb75e042803b843ca4;mxc-%commit%/src/mxc_telemetry'
 	[nucleo]='https://github.com/helix-editor/nucleo;4253de9faabb4e5c6d81d946a5e35a90f87347ee;nucleo-%commit%'
+	[nucleo-matcher]='https://github.com/helix-editor/nucleo;4253de9faabb4e5c6d81d946a5e35a90f87347ee;nucleo-%commit%/matcher'
+	[process_security_environment_spec]='https://github.com/microsoft/mxc;6cd3d58f05d3447e67109cfb75e042803b843ca4;mxc-%commit%/src/core/generated/process_security_environment_specification'
 	[runfiles]='https://github.com/dzbarsky/rules_rust;b56cbaa8465e74127f1ea216f813cd377295ad81;rules_rust-%commit%/rust/runfiles'
+	[sandbox_spec]='https://github.com/microsoft/mxc;6cd3d58f05d3447e67109cfb75e042803b843ca4;mxc-%commit%/src/core/generated/base_container_specification'
 	[tokio-tungstenite]='https://github.com/openai-oss-forks/tokio-tungstenite;0e5b2d73aa18dd9f0a50ee9ff199d5aef7594186;tokio-tungstenite-%commit%'
 	[tungstenite]='https://github.com/openai-oss-forks/tungstenite-rs;4fffad30fe373adbdcffab9545e9e9bf4f2fc19f;tungstenite-rs-%commit%'
+	[wxc_common]='https://github.com/microsoft/mxc;6cd3d58f05d3447e67109cfb75e042803b843ca4;mxc-%commit%/src/core/wxc_common'
 )
 
 RUST_MIN_VER="1.95.0"
@@ -1415,15 +1428,6 @@ gen_git_crate_dir() {
 src_prepare() {
 	default
 
-	# Remove Windows-only git dependency on mxc and its workspace member
-	sed -i -e '/"mxc-sandbox"/d' \
-		-e '/codex-mxc-sandbox/d' \
-		-e '/appcontainer_common/d' \
-		-e '/learning_mode_windows/d' \
-		-e '/wxc_common/d' \
-		"${S}/Cargo.toml" || die
-	sed -i '/codex-mxc-sandbox/d' "${S}/sandboxing/Cargo.toml" || die
-
 	# Fix tokio-tungstenite's git dependency on tungstenite
 	sed -i '/^\[dependencies\.tungstenite\]/,/^$/{
 		s|git = "https://github.com/openai-oss-forks/tungstenite-rs"|path = "'"$(gen_git_crate_dir tungstenite)"'"|
@@ -1445,6 +1449,8 @@ src_prepare() {
 
 	# Increase recursion limit to avoid query depth overflow during layout computation of cli_main
 	sed -i '1i #![recursion_limit = "512"]' "${S}/cli/src/main.rs" || die
+	# Same overflow now occurs in codex-chatgpt's connectors layout
+	sed -i '1i #![recursion_limit = "512"]' "${S}/chatgpt/src/lib.rs" || die
 }
 
 src_compile() {
