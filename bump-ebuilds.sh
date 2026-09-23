@@ -423,9 +423,29 @@ declined() {
         '$1 == p && ($2 == v || $3 >= since) { found = 1 } END { exit !found }' "$DECLINED"
 }
 
+# Whether the agent's model server answers; checked once per run.
+AGENT_UP=""
+agent_available() {
+    local url
+    if [[ -z "$AGENT_UP" ]]; then
+        url="$(python3 -c 'import json, os, sys
+c = json.load(open(os.path.expanduser("~/.config/opencode/opencode.json")))
+prov = c["model"].split("/")[0]
+print(c["provider"][prov]["options"]["baseURL"].removesuffix("/v1"))' 2>/dev/null)"
+        if [[ -z "$url" ]] || curl -sf -m 10 "$url/health" >/dev/null; then
+            AGENT_UP=1
+        else
+            AGENT_UP=0
+            echo "ERROR: the agent's model server at $url is not answering; agent steps are skipped" >&2
+        fi
+    fi
+    [[ "$AGENT_UP" == 1 ]]
+}
+
 # run_agent LABEL PROMPT -- returns opencode's status; output goes to its own log too.
 run_agent() {
     local label="$1" prompt="$2" alog start start_ms rc
+    agent_available || return 2
     alog="$LOG_DIR/$RUN_ID-agent-${label//\//_}.log"
     start=$EPOCHREALTIME
     start_ms=$(date +%s%3N)
