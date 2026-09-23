@@ -1,0 +1,24 @@
+#!/bin/sh
+# Print AMDGPU_TARGETS for the AMD GPUs visible through KFD.
+
+topology=/sys/class/kfd/kfd/topology/nodes
+
+if [ ! -d "${topology}" ]; then
+	echo "${0##*/}: ${topology} not found, is CONFIG_HSA_AMD enabled?" >&2
+	exit 1
+fi
+
+targets=$(
+	for props in "${topology}"/*/properties; do
+		v=$(awk '$1 == "gfx_target_version" { print $2 }' "${props}")
+		[ -n "${v}" ] && [ "${v}" -ne 0 ] || continue
+		printf 'gfx%d%x%x\n' $((v / 10000)) $((v / 100 % 100)) $((v % 100))
+	done | sort -u | tr '\n' ' '
+)
+
+if [ -z "${targets}" ]; then
+	echo "${0##*/}: no AMD GPUs found" >&2
+	exit 1
+fi
+
+echo "AMDGPU_TARGETS: ${targets% }"
