@@ -487,14 +487,15 @@ bump_chromium() {
     prompt="Rotate www-client/chromium to the current Linux channels. scripts/chromium-channels.py produced this plan, to be applied in order (move = git mv plus changing SLOT; copy = new file for a new major; remove = git rm):
 $plan
 Do not research channel versions again. Follow the Chromium build procedure in your instructions: stable is built first, beta and unstable are prepared and configured in PORTAGE_TMPDIR=/home/fireburn/portage-tmp while stable compiles, and each slot is then emerged in /var/tmp/portage one at a time. Update dev-build/gnrt and dev-build/gn if the unstable milestone needs it, each in its own commit. $AGENT_RULES"
-    if ! run_agent "$pkg" "$prompt"; then
-        echo "ERROR: agent bump failed for $pkg" >&2
-        package_clean "$pkg" || restore_package "$pkg"
-        return 2
-    fi
+    run_agent "$pkg" "$prompt" || echo "ERROR: agent bump failed for $pkg" >&2
     if ! package_clean "$pkg"; then
         echo "ERROR: agent left uncommitted changes in $pkg" >&2
-        restore_package "$pkg"
+        # A Chromium build takes hours; keep its ebuilds while one is running.
+        if pgrep -f 'emerge .*www-client/chromium' >/dev/null; then
+            info "a Chromium emerge is still running; leaving $pkg as it is"
+        else
+            restore_package "$pkg"
+        fi
         return 2
     fi
     [[ "$(git rev-parse HEAD)" != "$head" ]] && { info "agent committed $pkg"; return 0; }
