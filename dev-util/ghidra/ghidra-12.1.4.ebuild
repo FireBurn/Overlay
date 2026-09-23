@@ -89,8 +89,6 @@ GRADLE_DEPS="
 	commons-collections:commons-collections:3.2.2:commons-collections-3.2.2.pom
 	commons-io:commons-io:2.19.0:commons-io-2.19.0.jar
 	commons-io:commons-io:2.19.0:commons-io-2.19.0.pom
-	commons-io:commons-io:2.21.0:commons-io-2.21.0.jar
-	commons-io:commons-io:2.21.0:commons-io-2.21.0.pom
 	commons-io:commons-io:2.8.0:commons-io-2.8.0.pom
 	commons-logging:commons-logging:1.2:commons-logging-1.2.jar
 	commons-logging:commons-logging:1.2:commons-logging-1.2.pom
@@ -173,10 +171,10 @@ GRADLE_DEPS="
 	org.apache:apache:30:apache-30.pom
 	org.apache:apache:33:apache-33.pom
 	org.apache:apache:35:apache-35.pom
-	org.apache.commons:commons-collections4:4.1:commons-collections4-4.1.jar
-	org.apache.commons:commons-collections4:4.1:commons-collections4-4.1.pom
-	org.apache.commons:commons-collections4:4.4:commons-collections4-4.4.jar
+	org.apache:apache:39:apache-39.pom
 	org.apache.commons:commons-collections4:4.4:commons-collections4-4.4.pom
+	org.apache.commons:commons-collections4:4.6.0:commons-collections4-4.6.0.jar
+	org.apache.commons:commons-collections4:4.6.0:commons-collections4-4.6.0.pom
 	org.apache.commons:commons-compress:1.27.1:commons-compress-1.27.1.jar
 	org.apache.commons:commons-compress:1.27.1:commons-compress-1.27.1.pom
 	org.apache.commons:commons-dbcp2:2.9.0:commons-dbcp2-2.9.0.jar
@@ -185,8 +183,8 @@ GRADLE_DEPS="
 	org.apache.commons:commons-lang3:3.20.0:commons-lang3-3.20.0.jar
 	org.apache.commons:commons-lang3:3.20.0:commons-lang3-3.20.0.pom
 	org.apache.commons:commons-lang3:3.9:commons-lang3-3.9.pom
+	org.apache.commons:commons-parent:103:commons-parent-103.pom
 	org.apache.commons:commons-parent:34:commons-parent-34.pom
-	org.apache.commons:commons-parent:38:commons-parent-38.pom
 	org.apache.commons:commons-parent:39:commons-parent-39.pom
 	org.apache.commons:commons-parent:47:commons-parent-47.pom
 	org.apache.commons:commons-parent:48:commons-parent-48.pom
@@ -196,7 +194,6 @@ GRADLE_DEPS="
 	org.apache.commons:commons-parent:72:commons-parent-72.pom
 	org.apache.commons:commons-parent:79:commons-parent-79.pom
 	org.apache.commons:commons-parent:81:commons-parent-81.pom
-	org.apache.commons:commons-parent:91:commons-parent-91.pom
 	org.apache.commons:commons-parent:92:commons-parent-92.pom
 	org.apache.commons:commons-pool2:2.11.1:commons-pool2-2.11.1.jar
 	org.apache.commons:commons-pool2:2.11.1:commons-pool2-2.11.1.pom
@@ -257,6 +254,15 @@ GRADLE_DEPS="
 	org.hamcrest:hamcrest-core:1.3:hamcrest-core-1.3.jar
 	org.hamcrest:hamcrest-core:1.3:hamcrest-core-1.3.pom
 	org.hamcrest:hamcrest-parent:1.3:hamcrest-parent-1.3.pom
+	org.jacoco:org.jacoco.agent:0.8.14:org.jacoco.agent-0.8.14.jar
+	org.jacoco:org.jacoco.agent:0.8.14:org.jacoco.agent-0.8.14.pom
+	org.jacoco:org.jacoco.ant:0.8.14:org.jacoco.ant-0.8.14.jar
+	org.jacoco:org.jacoco.ant:0.8.14:org.jacoco.ant-0.8.14.pom
+	org.jacoco:org.jacoco.build:0.8.14:org.jacoco.build-0.8.14.pom
+	org.jacoco:org.jacoco.core:0.8.14:org.jacoco.core-0.8.14.jar
+	org.jacoco:org.jacoco.core:0.8.14:org.jacoco.core-0.8.14.pom
+	org.jacoco:org.jacoco.report:0.8.14:org.jacoco.report-0.8.14.jar
+	org.jacoco:org.jacoco.report:0.8.14:org.jacoco.report-0.8.14.pom
 	org.jdom:jdom2:2.0.6.1:jdom2-2.0.6.1.jar
 	org.jdom:jdom2:2.0.6.1:jdom2-2.0.6.1.pom
 	org.jgrapht:jgrapht:1.5.1:jgrapht-1.5.1.pom
@@ -290,6 +296,8 @@ GRADLE_DEPS="
 	org.junit:junit-bom:5.11.4:junit-bom-5.11.4.pom
 	org.junit:junit-bom:5.13.4:junit-bom-5.13.4.module
 	org.junit:junit-bom:5.13.4:junit-bom-5.13.4.pom
+	org.junit:junit-bom:5.14.3:junit-bom-5.14.3.module
+	org.junit:junit-bom:5.14.3:junit-bom-5.14.3.pom
 	org.junit:junit-bom:5.7.1:junit-bom-5.7.1.module
 	org.junit:junit-bom:5.7.1:junit-bom-5.7.1.pom
 	org.junit:junit-bom:5.8.0-M1:junit-bom-5.8.0-M1.module
@@ -314,12 +322,19 @@ GRADLE_DEPS="
 	org.ow2:ow2:1.5.1:ow2-1.5.1.pom
 	org.ow2.asm:asm:9.7.1:asm-9.7.1.jar
 	org.ow2.asm:asm:9.7.1:asm-9.7.1.pom
+	org.ow2.asm:asm:9.9:asm-9.9.jar
+	org.ow2.asm:asm:9.9:asm-9.9.pom
 	org.ow2.asm:asm-analysis:9.7.1:asm-analysis-9.7.1.jar
 	org.ow2.asm:asm-analysis:9.7.1:asm-analysis-9.7.1.pom
+	org.ow2.asm:asm-bom:9.9:asm-bom-9.9.pom
 	org.ow2.asm:asm-commons:9.7.1:asm-commons-9.7.1.jar
 	org.ow2.asm:asm-commons:9.7.1:asm-commons-9.7.1.pom
+	org.ow2.asm:asm-commons:9.9:asm-commons-9.9.jar
+	org.ow2.asm:asm-commons:9.9:asm-commons-9.9.pom
 	org.ow2.asm:asm-tree:9.7.1:asm-tree-9.7.1.jar
 	org.ow2.asm:asm-tree:9.7.1:asm-tree-9.7.1.pom
+	org.ow2.asm:asm-tree:9.9:asm-tree-9.9.jar
+	org.ow2.asm:asm-tree:9.9:asm-tree-9.9.pom
 	org.ow2.asm:asm-util:9.7.1:asm-util-9.7.1.jar
 	org.ow2.asm:asm-util:9.7.1:asm-util-9.7.1.pom
 	org.postgresql:postgresql:42.7.13:postgresql-42.7.13.jar
@@ -373,7 +388,7 @@ GHIDRA_DEP_URIS="
 	https://files.pythonhosted.org/packages/0b/2c/87f3254fd8ffd29e4c02732eee68a83a1d3c346ae39bc6822dcbcb697f2b/wheel-0.45.1-py3-none-any.whl
 	https://files.pythonhosted.org/packages/a3/dc/17031897dae0efacfea57dfd3a82fdd2a2aeb58e0ff71b77b87e44edc772/setuptools-80.9.0-py3-none-any.whl
 	https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/android4me/AXMLPrinter2.jar
-		-> ghidra-12.1.3-AXMLPrinter2.jar
+		-> ghidra-12.1.4-AXMLPrinter2.jar
 	bsim? (
 		https://ftp.postgresql.org/pub/source/v15.18/postgresql-15.18.tar.gz
 	)
@@ -387,26 +402,26 @@ GHIDRA_DEP_URIS="
 			-> PyDev-9.3.0.zip
 	)
 	fidb? (
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.3/FunctionID/vs2012_x64.fidb
-			-> ghidra-12.1.3-vs2012_x64.fidb
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.3/FunctionID/vs2012_x86.fidb
-			-> ghidra-12.1.3-vs2012_x86.fidb
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.3/FunctionID/vs2015_x64.fidb
-			-> ghidra-12.1.3-vs2015_x64.fidb
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.3/FunctionID/vs2015_x86.fidb
-			-> ghidra-12.1.3-vs2015_x86.fidb
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.3/FunctionID/vs2017_x64.fidb
-			-> ghidra-12.1.3-vs2017_x64.fidb
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.3/FunctionID/vs2017_x86.fidb
-			-> ghidra-12.1.3-vs2017_x86.fidb
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.3/FunctionID/vs2019_x64.fidb
-			-> ghidra-12.1.3-vs2019_x64.fidb
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.3/FunctionID/vs2019_x86.fidb
-			-> ghidra-12.1.3-vs2019_x86.fidb
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.3/FunctionID/vsOlder_x64.fidb
-			-> ghidra-12.1.3-vsOlder_x64.fidb
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.3/FunctionID/vsOlder_x86.fidb
-			-> ghidra-12.1.3-vsOlder_x86.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vs2012_x64.fidb
+			-> ghidra-12.1.4-vs2012_x64.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vs2012_x86.fidb
+			-> ghidra-12.1.4-vs2012_x86.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vs2015_x64.fidb
+			-> ghidra-12.1.4-vs2015_x64.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vs2015_x86.fidb
+			-> ghidra-12.1.4-vs2015_x86.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vs2017_x64.fidb
+			-> ghidra-12.1.4-vs2017_x64.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vs2017_x86.fidb
+			-> ghidra-12.1.4-vs2017_x86.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vs2019_x64.fidb
+			-> ghidra-12.1.4-vs2019_x64.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vs2019_x86.fidb
+			-> ghidra-12.1.4-vs2019_x86.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vsOlder_x64.fidb
+			-> ghidra-12.1.4-vsOlder_x64.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vsOlder_x86.fidb
+			-> ghidra-12.1.4-vsOlder_x86.fidb
 	)
 	python? (
 		https://files.pythonhosted.org/packages/0b/7d/9fdbbc1a574be43f9820735ca8df0caf8b159856201d9b21fd73932342bc/jpype1-1.5.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
@@ -423,8 +438,8 @@ GHIDRA_DEP_URIS="
 		https://files.pythonhosted.org/packages/fa/4c/e0200a6e3fed5cda79e926c2a8a610676f04948f89d7e38d93c7d4b21be9/jpype1-1.5.2-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
 	)
 	sarif? (
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.3/lib/java-sarif-2.1-modified.jar
-			-> ghidra-12.1.3-java-sarif-2.1-modified.jar
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/lib/java-sarif-2.1-modified.jar
+			-> ghidra-12.1.4-java-sarif-2.1-modified.jar
 	)
 	server? (
 		https://sourceforge.net/projects/yajsw/files/yajsw/yajsw-stable-13.18/yajsw-stable-13.18.zip
