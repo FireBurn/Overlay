@@ -1474,7 +1474,7 @@ NPM_PKGS="
 	get-tsconfig@4.14.3
 	get-tsconfig@5.0.0-beta.4
 	github-slugger@2.0.0
-	gitlab-ai-provider@6.12.1
+	gitlab-ai-provider@6.16.0
 	glob@10.5.0
 	glob@11.1.0
 	glob@13.0.5
