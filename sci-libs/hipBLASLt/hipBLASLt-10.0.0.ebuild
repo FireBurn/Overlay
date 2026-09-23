@@ -4,6 +4,11 @@
 EAPI=8
 
 ROCM_VERSION=${PV}
+ROCM_SUPPORTED_TARGETS=(
+	gfx908 gfx90a gfx942 gfx950
+	gfx1100 gfx1101 gfx1102 gfx1103 gfx1150 gfx1151 gfx1152 gfx1153
+	gfx1200 gfx1201 gfx1250
+)
 PYTHON_COMPAT=( python3_{11..14} )
 
 LLVM_COMPAT=( 23 )
@@ -26,10 +31,7 @@ SLOT="0/$(ver_cut 1-2)"
 KEYWORDS="~amd64"
 
 IUSE="benchmark roctracer test"
-REQUIRED_USE="
-	test? ( benchmark )
-	${ROCM_REQUIRED_USE}
-"
+REQUIRED_USE="test? ( benchmark )"
 RESTRICT="!test? ( test )"
 
 RDEPEND="
