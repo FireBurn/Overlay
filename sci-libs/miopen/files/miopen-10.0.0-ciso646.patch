@@ -1,0 +1,17 @@
+From: FireBurn <fireburn@users.noreply.github.com>
+Date: Wed, 23 Sep 2026 04:35:30 +0100
+Subject: [PATCH] Drop <ciso646> include
+
+Drop <ciso646>, which libstdc++ 16 warns about in C++20 and the build
+treats as an error. The alternative operator tokens are C++ keywords.
+
+--- a/src/include/miopen/serializable.hpp
++++ b/src/include/miopen/serializable.hpp
+@@ -27,7 +27,6 @@
+ #ifndef GUARD_MLOPEN_SERIALIZABLE_HPP
+ #define GUARD_MLOPEN_SERIALIZABLE_HPP
+ 
+-#include <ciso646>
+ #include <miopen/config.h>
+ #include <iostream>
+ #include <sstream>
