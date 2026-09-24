@@ -529,13 +529,29 @@ apply_chromium_plan() {
     done <<<"$1"
 }
 
+# kill_tree PID... -- stop processes and all their descendants.
+kill_tree() {
+    local p
+    for p in "$@"; do
+        # shellcheck disable=SC2046
+        kill_tree $(pgrep -P "$p")
+        sudo -n kill -9 "$p" 2>/dev/null
+    done
+}
+
 # chromium_fix SLOT PHASE LOG TMPDIR -- ask the agent to fix one failure.
 chromium_fix() {
-    local slot="$1" phase="$2" flog="$3" tmp="$4" e v
+    local slot="$1" phase="$2" flog="$3" tmp="$4" e v rc
     e="$(chromium_ebuild "$slot")"; v="$(chromium_version "$e")"
     [[ "$DRY_RUN" == 1 ]] && return 1
     log "agent: $CHROMIUM $v ($slot) $phase failure"
     run_agent "$CHROMIUM-$slot" "Chromium $v ($slot slot, $e) failed in $phase with PORTAGE_TMPDIR=$tmp. The end of the log is in $flog; the full build log is $tmp/portage/$CHROMIUM-$v/temp/build.log. Fix the cause in $e or its patches in $CHROMIUM/files; do not change the other slots' ebuilds. If the fix needs dev-build/gn or dev-build/gnrt updated, do that, emerge it and commit it on its own. Verify by resuming with 'sudo env PORTAGE_TMPDIR=$tmp ebuild $e <phase>' from the failed phase; clean first only if the fix changes patches, compilers or configure options. Stop when that phase passes, or report why it cannot be fixed. Do not run emerge for Chromium and do not commit Chromium; the caller rebuilds and commits it. Never end your turn while a job you started is running."
+    rc=$?
+    # A build the agent left running, e.g. when the model server dropped, can
+    # block on its dead terminal. Stop it; the next build resumes its work.
+    # shellcheck disable=SC2046
+    kill_tree $(pgrep -f -- "[/ ]chromium-$v([].[:space:]]|$)" | grep -vx "$$")
+    return "$rc"
 }
 
 # chromium_prepare SLOT -- unpack, patch and configure in PREP_TMPDIR, with fixes.
@@ -560,17 +576,32 @@ chromium_prepare() {
 # With ATTEMPTS=0 it runs once, as the background build does, so that only one
 # agent works on Chromium at a time. "resume" fixes the last failure first.
 chromium_emerge() {
-    local slot="$1" attempts="${2:-$CHROMIUM_FIX_ATTEMPTS}" e v attempt=0 elog
+    local slot="$1" attempts="${2:-$CHROMIUM_FIX_ATTEMPTS}" e v attempt=0 elog features=""
     e="$(chromium_ebuild "$slot")"; v="$(chromium_version "$e")"
     elog="$CHROMIUM_LOGS/$RUN_ID-emerge-$slot.log"
     if [[ "$attempts" == resume ]]; then
         attempts=$CHROMIUM_FIX_ATTEMPTS
         (( attempt++ ))
-        chromium_fix "$slot" "the emerge" "$elog.tail" /var/tmp/portage || return 1
+        chromium_fix "$slot" "the emerge" "$elog.tail" /var/tmp || return 1
+        features=keepwork
+    elif [[ -e "/var/tmp/portage/$CHROMIUM-$v/.prepared" ]]; then
+        # Left by an interrupted run or a fix that was not finished.
+        features=keepwork
     fi
     while true; do
-        info "emerging $slot ($v) in /var/tmp/portage"
-        if timed "$CHROMIUM-$slot" emerge sudo -n emerge -1 "=$CHROMIUM-$v" >"$elog" 2>&1; then
+        # After a fix, keepwork resumes from the phases the agent completed;
+        # the agent cleans the work directory when a fix needs a fresh build.
+        info "emerging $slot ($v) in /var/tmp/portage${features:+, resuming its work directory}"
+        # /var/tmp/portage is RAM; drop work directories of other versions left
+        # by interrupted runs. Only one Chromium emerge uses it at a time.
+        find /var/tmp/portage/"${CHROMIUM%/*}" -maxdepth 1 -name "${CHROMIUM#*/}-[0-9]*" \
+            ! -name "${CHROMIUM#*/}-$v" -exec sudo -n rm -rf {} + 2>/dev/null
+        # emerge replaces the saved environment in ${T}, so pkg_setup must run again.
+        [[ -n "$features" ]] && sudo -n rm -f "/var/tmp/portage/$CHROMIUM-$v/.setuped"
+        if timed "$CHROMIUM-$slot" emerge sudo -n env ${features:+FEATURES="$features"} \
+            emerge -1 "=$CHROMIUM-$v" >"$elog" 2>&1; then
+            # keepwork leaves the work directory, which fills the tmpfs.
+            [[ -n "$features" ]] && sudo -n ebuild "$e" clean >/dev/null 2>&1
             timed "$CHROMIUM-$slot" smoke-test timeout 120 "$(chromium_bin "$slot")" --headless=new \
                 --no-sandbox --disable-gpu --dump-dom 'data:text/html,<p>smoke-ok</p>' 2>/dev/null |
                 grep -q smoke-ok && return 0
@@ -579,7 +610,8 @@ chromium_emerge() {
         fi
         tail -n 80 "$elog" >"$elog.tail"
         (( attempt++ < attempts )) || return 1
-        chromium_fix "$slot" "the emerge" "$elog.tail" /var/tmp/portage || return 1
+        chromium_fix "$slot" "the emerge" "$elog.tail" /var/tmp || return 1
+        features=keepwork
     done
 }
 
@@ -591,7 +623,7 @@ bump_chromium() {
         info "skip $CHROMIUM: ${plan:-channel check failed}"
         return 1
     fi
-    if grep -qv '^keep' <<<"$plan"; then
+    if [[ -n "$plan" ]] && grep -qv '^keep' <<<"$plan"; then
         printf '%s\n' "$plan" | sed 's/^/   /'
         if [[ "$DRY_RUN" == 0 ]]; then
             apply_chromium_plan "$plan" || { echo "ERROR: could not apply the Chromium plan" >&2; return 2; }
