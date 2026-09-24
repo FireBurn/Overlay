@@ -124,14 +124,19 @@ src_compile() {
 		libc-startup libc-loader generate-libc-headers
 
 	# These are built against the library just built rather than the one
-	# installed, which may be too old to have everything they call.
+	# installed, which may be too old to have everything they call or have a
+	# different ABI. The startup files have to come from it as well.
+	local stage=${T}/stage
+	DESTDIR="${stage}" cmake --install "${BUILD_DIR}" --component libc ||
+		die "staging libc failed"
 	local libc_build=${BUILD_DIR}/libc
 	local util
 	for util in getent iconv; do
 		local src=GETENT_FILE
 		[[ ${util} == iconv ]] && src=ICONV_FILE
 		"$(tc-getCC)" ${CPPFLAGS} -isystem "${libc_build}/include" ${CFLAGS} \
-			${LDFLAGS} -L"${libc_build}/lib" -o "${T}/${util}" \
+			${LDFLAGS} -B"${stage}${EPREFIX}/usr/$(get_libdir)" \
+			-L"${stage}${EPREFIX}/usr/$(get_libdir)" -o "${T}/${util}" \
 			"${DISTDIR}/${!src}" || die "building ${util} failed"
 	done
 }
