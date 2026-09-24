@@ -1,11 +1,10 @@
 From: Gentoo Overlay <gentoo@localhost>
-Subject: [PATCH] devtools: fix isolated declaration emit for parameters
+Subject: [PATCH] devtools: fix isolated declaration emit for constructor parameters
 
-Explicitly include undefined in parameter types that require it for
-TypeScript isolated declaration emit: optional parameter properties
-(readonly/public constructor parameters) and required parameters with
-default values.
----
+Explicitly include undefined in optional and defaulted parameter types for
+TypeScript isolated declaration emit. AiAssistancePanel was fixed upstream
+for M156.
+
 --- a/third_party/devtools-frontend/src/front_end/core/host/DispatchHttpRequestClient.ts
 +++ b/third_party/devtools-frontend/src/front_end/core/host/DispatchHttpRequestClient.ts
 @@ -14,7 +14,7 @@
@@ -49,3 +48,4 @@ default values.
 +  constructor(readonly widgetClass: WidgetFactory<WidgetT>, readonly widgetParams?: Partial<WidgetT>|undefined) {
    }
  }
+ 

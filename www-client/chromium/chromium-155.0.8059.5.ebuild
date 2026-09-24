@@ -23,16 +23,15 @@ EAPI=8
 # using an external CI system that we have some control over, in case
 # issues pop up again with official tarball generation.
 
-GN_MIN_VER=0.2374
+GN_MIN_VER=0.2548
 # chromium-tools/get-chromium-toolchain-strings.py (or just use Chromicler)
-# Node for M145+ is >= 24.14.0
+# Node for M145+ should be 24.12.0 but that's not packaged in Gentoo yet. See #969145
 TEST_FONT="9c07d19d9c5ee1ff94f717e6fb17e0c8c354e6f9"
 BUNDLED_CLANG_VER="llvmorg-24-init-3796-g20e97c4b-3"
 BUNDLED_RUST_VER="0913b18e489ac1011b580e31fa5559654be12bfc-2"
 RUST_SHORT_HASH=${BUNDLED_RUST_VER:0:10}-${BUNDLED_RUST_VER##*-}
-NODE_VER="24.14.0"
-ESBUILD_VER="0.25.1"
-ROLLUP_VER="4.57.1" # currently manual.
+NODE_VER="24.12.0"
+ESBUILD_VER="0.28.2"
 VIRTUALX_REQUIRED="pgo"
 
 CHROMIUM_LANGS="af am ar bg bn ca cs da de el en-GB es es-419 et fa fi fil fr gu he
@@ -42,10 +41,10 @@ CHROMIUM_LANGS="af am ar bg bn ca cs da de el en-GB es es-419 et fa fi fil fr gu
 LLVM_COMPAT=( 21 22 23 )
 PYTHON_COMPAT=( python3_{11..14} )
 PYTHON_REQ_USE="xml(+)"
-CHROMIUM_CRUBIT_VERSION=0_pre20260811
 RUST_MIN_VER=1.98.1
 RUST_MAX_VER=${RUST_MIN_VER}
 RUST_NEEDS_LLVM="yes please"
+CHROMIUM_CRUBIT_VERSION=0_pre20260811
 RUST_OPTIONAL="yes" # Not actually optional, but we don't need system Rust (or LLVM) with USE=bundled-toolchain
 RUST_REQ_USE="rustfmt" # Upstream run rustfmt on bindgen output, so we need it to be available.
 
@@ -58,7 +57,6 @@ PPC64_HASH="a85b64f07b489b8c6fdb13ecf79c16c56c560fc6"
 PATCH_V="${PV%%\.*}"
 COPIUM_COMMIT="b00f26bb5e0781020da5f830981472a142c6baf1"
 SRC_URI="https://github.com/chromium-linux-tarballs/chromium-tarballs/releases/download/${PV}/chromium-${PV}-linux.tar.xz
-	https://deps.gentoo.zip/www-client/chromium/rollup-wasm-node-${ROLLUP_VER}.tgz
 	!bundled-toolchain? (
 		https://codeberg.org/selfisekai/copium/archive/${COPIUM_COMMIT}.tar.gz
 			-> chromium-patches-copium-${COPIUM_COMMIT:0:10}.tar.gz
@@ -87,7 +85,7 @@ LICENSE+=" IJG ISC LGPL-2 LGPL-2.1 MIT MPL-1.1 MPL-2.0 Ms-PL PSF-2 SGI-B-2.0 SSL
 LICENSE+=" Unicode-DFS-2015 Unlicense UoI-NCSA ZLIB libtiff openssl"
 LICENSE+=" rar? ( unRAR )"
 
-SLOT="stable"
+SLOT="beta"
 # Unstable in gentoo exists mostly to give devs some breathing room for beta/stable releases.
 # It shouldn't be keyworded but adventurous users are encouraged to select it;
 # there's official dev channel Google Chrome after all.
@@ -207,7 +205,6 @@ DEPEND="${COMMON_DEPEND}
 "
 
 BDEPEND="
-	dev-lang/typescript
 	${COMMON_SNAPSHOT_DEPEND}
 	${PYTHON_DEPS}
 	$(python_gen_any_dep '
@@ -242,6 +239,7 @@ BDEPEND="
 	dev-lang/perl
 	>=dev-util/gperf-3.2
 	dev-util/esbuild:${ESBUILD_VER}
+	dev-lang/typescript
 	dev-vcs/git
 	>=net-libs/nodejs-${NODE_VER}[inspector]
 	sys-apps/hwdata
@@ -446,9 +444,6 @@ src_unpack() {
 		unpack chromium-openpower-${PPC64_HASH:0:10}.tar.bz2
 	fi
 
-	# This is a dirty hack, but we need rollup to build successfully and it's proving to be challenging
-	# to build locally due to deps
-	unpack rollup-wasm-node-${ROLLUP_VER}.tgz
 }
 
 remove_compiler_builtins() {
@@ -518,14 +513,13 @@ src_prepare() {
 		"${FILESDIR}/cr138-nodejs-version-check.patch"
 		"${FILESDIR}/cr144-glibc-2.43.patch"
 		"${FILESDIR}/cr145-oauth2-client-switches.patch"
-		"${FILESDIR}/cr154-revert-to-rollup-wasm.patch"
 		"${FILESDIR}/cr148-v8-fix-cfi-sanitizer-set-death-callback.patch"
 		"${FILESDIR}/cr149-channel-aware-build.patch"
-		"${FILESDIR}/cr152-devtools-public-inputs.patch"
+		"${FILESDIR}/cr155-devtools-public-inputs.patch"
+		"${FILESDIR}/cr155-devtools-isolated-declarations.patch"
 		"${FILESDIR}/cr154-devtools-typescript-tsc-fallback.patch"
 		"${FILESDIR}/cr152-dawn-system-go.patch"
 		"${FILESDIR}/cr152-unbundle-minizip-undo-unicode.patch"
-		"${FILESDIR}/cr153-typescript-break-definitions.patch"
 		"${FILESDIR}/cross-compile.patch"
 	)
 
@@ -561,6 +555,7 @@ src_prepare() {
 		PATCHES+=(
 			"${WORKDIR}/copium/cr143-libsync-__BEGIN_DECLS.patch"
 			"${FILESDIR}/cr153-system-crubit.patch"
+			"${FILESDIR}/cr155-cbor-crubit-enable-cpp-api-from-rust.patch"
 			"${FILESDIR}/cr153-rust-wrapper-inputs-system-rust.patch"
 			"${FILESDIR}/cr153-system-clang-runtime.patch"
 			"${FILESDIR}/cr153-bytemuck-stable-simd.patch"
@@ -595,14 +590,19 @@ src_prepare() {
 			fi
 		fi
 
-	fi
+		remove_compiler_builtins
 
-	# Do this before we apply patches since (e.g.) ppc64 needs to patch rollup and it's easier in ${S}
-	einfo "Moving rollup wasm-node package into place ..."
-	mkdir -p third_party/devtools-frontend/src/node_modules/@rollup/wasm-node ||
-		die "Failed to create node_modules/@rollup/wasm-node"
-	mv "${WORKDIR}"/package/* third_party/devtools-frontend/src/node_modules/@rollup/wasm-node ||
-		die "Failed to move rollup package"
+		# We can't rely on the eselect'd Rust to actually include rustfmt, so we'll point to the selected slot specifically.
+		local suffix=""
+		if [[ "${RUST_TYPE}" == "binary" ]]; then
+			suffix="-bin-${RUST_SLOT}"
+		else
+			suffix="-${RUST_SLOT}"
+		fi
+		sed -i "s|/bin/rustfmt|/bin/rustfmt${suffix}|g" build/rust/rust_bindgen_generator.gni ||
+			die "Failed to update rustfmt path"
+
+	fi
 
 	default
 
@@ -624,7 +624,6 @@ src_prepare() {
 	${EPYTHON} "${FILESDIR}/bin-finder.py" --elf "${S}" | awk '{print $1}' | xargs rm -f ||
 		die "Failed to remove bundled binaries"
 
-	# And now we restore any that we actually need, from the host system
 	local esbuild_path="${S}/third_party/devtools-frontend/src/third_party/esbuild"
 	local clang_format_bin="${EPREFIX}/usr/lib/llvm/${LLVM_SLOT}/bin/clang-format"
 	[[ ! -x "${clang_format_bin}" ]] && clang_format_bin="${EPREFIX}/usr/bin/clang-format"
@@ -681,7 +680,6 @@ src_prepare() {
 		third_party/anonymous_tokens
 		third_party/apple_apsl
 		third_party/axe-core
-		third_party/bidimapper
 		third_party/blink
 		third_party/boringssl
 		third_party/boringssl/src/third_party/fiat
@@ -704,6 +702,7 @@ src_prepare() {
 		third_party/catapult/tracing/third_party/oboe
 		third_party/catapult/tracing/third_party/pako
 		third_party/ced
+		third_party/chromium-bidi
 		third_party/cld_3
 		third_party/closure_compiler
 		third_party/compiler-rt # Since M137 atomic is required; we could probably unbundle this as a target of opportunity.
@@ -1147,7 +1146,6 @@ chromium_configure() {
 			"system_clang_resource_dir=\"${clang_resource_dir}\""
 			"system_clang_builtin_library=\"${clang_builtin_library}\""
 			"clang_base_path=\"$(get_llvm_prefix)/\""
-			"clang_version=\"${LLVM_SLOT}\""
 			"rust_bindgen_root=\"${EPREFIX}/usr/\""
 			"rust_sysroot_absolute=\"$(get_rust_prefix)\""
 			"rustc_version=\"${RUST_SLOT}\""
