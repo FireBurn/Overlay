@@ -73,7 +73,8 @@ chromium_rust_build_crubit() (
 	rust_prefix=$(get_rust_path "${BROOT}" "${RUST_SLOT}" "${RUST_TYPE}") || die
 	llvm_prefix=$(get_llvm_prefix -b)
 	crubit_src=${WORKDIR}/crubit-${CRUBIT_COMMIT}
-	target_dir=${T}/crubit-target
+	# Not in ${T}: emerge wipes it, so a resumed build would lose the tool.
+	target_dir=${WORKDIR}/crubit-target
 	[[ -f ${crubit_src}/Cargo.toml ]] || die "Missing Crubit source"
 	export RUSTC_BOOTSTRAP=1
 	export RUSTC="${rust_prefix%/}/bin/rustc"
@@ -131,7 +132,7 @@ chromium_rust_prepare_toolchain() {
 	for tool in rustc rustfmt; do
 		ln -s "${rust_prefix%/}/bin/${tool}" "${toolchain}/bin/${tool}" || die
 	done
-	ln -s "${T}/crubit-target/release/cc_bindings_from_rs" "${toolchain}/bin/cc_bindings_from_rs" || die
+	ln -s "${WORKDIR}/crubit-target/release/cc_bindings_from_rs" "${toolchain}/bin/cc_bindings_from_rs" || die
 	ln -s "${crubit_src}" "${toolchain}/lib/third_party/crubit" || die
 	ln -s "${rust_prefix%/}/lib/rustlib/src/rust" "${toolchain}/lib/rustlib/src/rust" || die
 	printf 'rustc %s\n' "${RUST_SLOT}" > "${toolchain}/VERSION" || die
