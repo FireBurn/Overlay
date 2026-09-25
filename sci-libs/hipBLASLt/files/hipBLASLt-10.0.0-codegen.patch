@@ -81,9 +81,9 @@ Subject: [PATCH] Separate library validation and assembler selection
 +        rocIsa& instance = rocIsa::getInstance();
          if(!sel.has_value())
          {
-+            // gfx12 true16 requires a half-register destination even without packing.
++            // gfx11 and gfx12 require a half-register destination even without packing.
 +            const auto isa = instance.getKernel().isaVersion;
-+            if(isa[0] == 12 && isa[1] == 0)
++            if(isa[0] == 11 || (isa[0] == 12 && isa[1] == 0))
 +                return std::make_shared<VCvtF32toF16>(
 +                    dst, src, std::nullopt, std::vector<int>{0}, comment);
              return std::make_shared<VCvtF32toF16>(
