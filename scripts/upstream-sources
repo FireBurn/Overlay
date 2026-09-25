@@ -73,6 +73,7 @@ games-util/heroic                 github-release Heroic-Games-Launcher/HeroicGam
 app-arch/zarchive                 github-commit Exzap/ZArchive
 app-office/libreoffice            page https://download.documentfoundation.org/libreoffice/testing/ href="(\d+(?:\.\d+)+)/" https://download.documentfoundation.org/libreoffice/testing/{}/rpm/x86_64/ LibreOffice_(\d+(?:\.\d+)+)_Linux
 app-office/libreoffice-l10n       page https://download.documentfoundation.org/libreoffice/testing/ href="(\d+(?:\.\d+)+)/" https://download.documentfoundation.org/libreoffice/testing/{}/rpm/x86_64/ LibreOffice_(\d+(?:\.\d+)+)_Linux
+app-portage/amdgpu2targets        skip local script in files/; no upstream release
 app-text/doxygen                  github-release doxygen/doxygen prefix=Release_ sep=_
 app-text/libetonyek               page https://dev-www.libreoffice.org/src/libetonyek/ libetonyek-(\d+(?:\.\d+)+)\.tar\.xz
 dev-build/gn                      skip Chromium-pinned gn commit position; reviewed in the www-client/chromium run
