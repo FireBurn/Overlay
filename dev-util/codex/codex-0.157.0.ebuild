@@ -5,14 +5,6 @@ EAPI=8
 
 CRATES="
 	Inflector@0.11.4
-	actix-codec@0.5.2
-	actix-http@3.11.2
-	actix-router@0.5.3
-	actix-rt@2.11.0
-	actix-server@2.6.0
-	actix-service@2.0.3
-	actix-utils@3.0.1
-	actix-web@4.12.1
 	addr2line@0.25.1
 	adler2@2.0.1
 	aead@0.5.2
@@ -139,7 +131,6 @@ CRATES="
 	byteorder@1.5.0
 	bytes-utils@0.1.4
 	bytes@1.12.1
-	bytestring@1.5.0
 	bzip2-sys@0.1.13+1.0.8
 	bzip2@0.5.2
 	cached@0.56.0
@@ -338,7 +329,6 @@ CRATES="
 	filetime@0.2.27
 	find-crate@0.6.3
 	find-msvc-tools@0.1.9
-	findshlibs@0.10.2
 	finl_unicode@1.4.0
 	fixed_decimal@0.7.2
 	fixedbitset@0.4.2
@@ -476,7 +466,6 @@ CRATES="
 	hmac@0.12.1
 	hmac@0.13.0
 	home@0.5.12
-	hostname@0.4.2
 	http-body-util@0.1.3
 	http-body@0.4.6
 	http-body@1.0.1
@@ -522,7 +511,6 @@ CRATES="
 	image@0.25.9
 	imara-diff@0.1.8
 	imara-diff@0.2.0
-	impl-more@0.1.9
 	include_dir@0.7.4
 	include_dir_macros@0.7.4
 	indenter@0.3.4
@@ -572,7 +560,6 @@ CRATES="
 	kstring@2.0.2
 	lab@0.11.0
 	landlock@0.4.4
-	language-tags@0.3.2
 	lazy_static@1.5.0
 	leb128fmt@0.1.0
 	libc@0.2.186
@@ -583,14 +570,12 @@ CRATES="
 	libsqlite3-sys@0.37.0
 	line-clipping@0.3.7
 	link-section@0.17.2
-	linked-hash-map@0.5.6
 	linktime-proc-macro@0.1.0
 	linux-keyutils@0.2.4
 	linux-raw-sys@0.12.1
 	linux-raw-sys@0.4.15
 	litemap@0.8.1
 	litrs@1.0.0
-	local-waker@0.1.4
 	lock_api@0.4.14
 	lock_free_hashtable@0.1.4
 	log@0.4.34
@@ -926,13 +911,7 @@ CRATES="
 	self_cell@0.10.3
 	self_cell@1.2.2
 	semver@1.0.27
-	sentry-actix@0.46.1
-	sentry-backtrace@0.46.1
-	sentry-contexts@0.46.1
 	sentry-core@0.46.1
-	sentry-debug-images@0.46.1
-	sentry-panic@0.46.1
-	sentry-tracing@0.46.1
 	sentry-types@0.46.1
 	sentry@0.46.1
 	sequence_trie@0.3.6
@@ -1133,7 +1112,6 @@ CRATES="
 	typenum@1.20.0
 	ucd-trie@0.1.7
 	uds_windows@1.1.0
-	uname@0.1.1
 	unarray@0.1.4
 	unic-langid-impl@0.9.6
 	unic-langid@0.9.6
@@ -1154,8 +1132,6 @@ CRATES="
 	unsafe-libyaml@0.2.11
 	untrusted@0.7.1
 	untrusted@0.9.0
-	ureq-proto@0.5.3
-	ureq@3.1.4
 	url@2.5.8
 	urlencoding@2.1.3
 	utf-8@0.7.6
@@ -1293,7 +1269,6 @@ CRATES="
 	xdg-home@1.3.0
 	xmlparser@0.13.6
 	xz2@0.1.7
-	yaml-rust@0.4.5
 	yansi@1.0.1
 	yasna@0.6.0
 	yoke-derive@0.8.2
@@ -1330,7 +1305,7 @@ CRATES="
 
 declare -A GIT_CRATES=(
 	[appcontainer_common]='https://github.com/microsoft/mxc;6cd3d58f05d3447e67109cfb75e042803b843ca4;mxc-%commit%/src/backends/appcontainer/common'
-	[crossterm]='https://github.com/openai-oss-forks/crossterm;45fecb9508105988f42fe6ff0441783ed3717f92;crossterm-%commit%'
+	[crossterm]='https://github.com/openai-oss-forks/crossterm;efa177859fd9623d57b9fe7ae9bf491ae1ac6ec4;crossterm-%commit%'
 	[h3]='https://github.com/hyperium/h3;e07e69412876f7e26f026bd75a48b2704d8c8283;h3-%commit%/h3'
 	[h3-quinn]='https://github.com/hyperium/h3;e07e69412876f7e26f026bd75a48b2704d8c8283;h3-%commit%/h3-quinn'
 	[learning_mode_core]='https://github.com/microsoft/mxc;6cd3d58f05d3447e67109cfb75e042803b843ca4;mxc-%commit%/src/core/learning_mode_core'
