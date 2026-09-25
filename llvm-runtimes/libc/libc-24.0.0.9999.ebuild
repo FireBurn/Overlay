@@ -36,7 +36,7 @@ BDEPEND="
 		llvm-core/clang:${LLVM_MAJOR}
 		>=llvm-core/clang-23:*
 	)
-	${PYTHON_DEPS}
+	$(python_gen_any_dep 'dev-python/pyyaml[${PYTHON_USEDEP}]')
 "
 DEPEND="virtual/os-headers"
 # ldd below is a wrapper around lddtree
@@ -60,6 +60,10 @@ pkg_pretend() {
 		[[ $(readlink "${lib}") == ld-llvm-libc-*.so.1 ]] && continue
 		die "${lib#"${EROOT}"} belongs to another C library, which ${PN} would replace"
 	done
+}
+
+python_check_deps() {
+	python_has_version "dev-python/pyyaml[${PYTHON_USEDEP}]"
 }
 
 pkg_setup() {
