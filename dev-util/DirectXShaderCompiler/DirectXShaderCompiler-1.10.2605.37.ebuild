@@ -1,4 +1,4 @@
-# Copyright 1999-2025 Gentoo Authors
+# Copyright 1999-2026 Gentoo Authors
 # Distributed under the terms of the GNU General Public License v2
 
 EAPI=8
@@ -18,7 +18,7 @@ HOMEPAGE="https://github.com/microsoft/DirectXShaderCompiler"
 # properly unbundled against dev-util/spirv-headers, dev-util/spirv-tools and
 # dev-util/directx-headers.
 SPIRV_HEADERS_COMMIT="29981f65241605e08b0ede4cfeb999fe3b723c6a"
-SPIRV_TOOLS_COMMIT="b707790a898e44038547df54580022fc1cf89c3d"
+SPIRV_TOOLS_COMMIT="1c336172641682bab6e066767d09fdff1d826467"
 DIRECTX_HEADERS_COMMIT="980971e835876dc0cde415e8f9bc646e64667bf7"
 
 SRC_URI="
