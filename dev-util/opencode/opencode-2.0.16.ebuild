@@ -555,23 +555,23 @@ NPM_PKGS="
 	@opencode-ai/sdk@1.18.21
 	@opentelemetry/api@1.9.0
 	@opentelemetry/api@1.9.1
-	@opentelemetry/api-logs@0.214.0
+	@opentelemetry/api-logs@0.219.0
 	@opentelemetry/api-logs@0.220.0
-	@opentelemetry/context-async-hooks@2.6.1
+	@opentelemetry/context-async-hooks@2.8.0
 	@opentelemetry/core@2.11.0
-	@opentelemetry/core@2.6.1
-	@opentelemetry/exporter-trace-otlp-http@0.214.0
+	@opentelemetry/core@2.8.0
+	@opentelemetry/exporter-trace-otlp-http@0.219.0
 	@opentelemetry/instrumentation@0.220.0
-	@opentelemetry/otlp-exporter-base@0.214.0
-	@opentelemetry/otlp-transformer@0.214.0
+	@opentelemetry/otlp-exporter-base@0.219.0
+	@opentelemetry/otlp-transformer@0.219.0
 	@opentelemetry/resources@2.11.0
-	@opentelemetry/resources@2.6.1
-	@opentelemetry/sdk-logs@0.214.0
-	@opentelemetry/sdk-metrics@2.6.1
+	@opentelemetry/resources@2.8.0
+	@opentelemetry/sdk-logs@0.219.0
+	@opentelemetry/sdk-metrics@2.8.0
 	@opentelemetry/sdk-trace@2.11.0
 	@opentelemetry/sdk-trace-base@2.11.0
-	@opentelemetry/sdk-trace-base@2.6.1
-	@opentelemetry/sdk-trace-node@2.6.1
+	@opentelemetry/sdk-trace-base@2.8.0
+	@opentelemetry/sdk-trace-node@2.8.0
 	@opentelemetry/semantic-conventions@1.43.0
 	@opentui/core@0.5.10
 	@opentui/core-linux-arm64@0.5.10|arm64
@@ -638,15 +638,6 @@ NPM_PKGS="
 	@protobuf-ts/protoc@2.11.1
 	@protobuf-ts/runtime@2.11.1
 	@protobuf-ts/runtime-rpc@2.11.1
-	@protobufjs/aspromise@1.1.2
-	@protobufjs/base64@1.1.2
-	@protobufjs/codegen@2.0.5
-	@protobufjs/eventemitter@1.1.1
-	@protobufjs/fetch@1.1.1
-	@protobufjs/float@1.0.2
-	@protobufjs/path@1.1.2
-	@protobufjs/pool@1.1.0
-	@protobufjs/utf8@1.1.2
 	@puppeteer/browsers@3.2.1
 	@radix-ui/colors@1.0.1
 	@radix-ui/primitive@1.0.1
@@ -1474,7 +1465,7 @@ NPM_PKGS="
 	get-tsconfig@4.14.3
 	get-tsconfig@5.0.0-beta.4
 	github-slugger@2.0.0
-	gitlab-ai-provider@6.16.0
+	gitlab-ai-provider@6.18.0
 	glob@10.5.0
 	glob@11.1.0
 	glob@13.0.5
@@ -2023,7 +2014,6 @@ NPM_PKGS="
 	proper-lockfile@4.1.2
 	property-information@7.2.0
 	proto-list@1.2.4
-	protobufjs@7.6.5
 	proxy-from-env@1.1.0
 	pump@3.0.4
 	pupa@3.3.0
