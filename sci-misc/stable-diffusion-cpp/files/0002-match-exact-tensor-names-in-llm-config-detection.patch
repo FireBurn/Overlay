@@ -1,0 +1,37 @@
+Subject: [PATCH] te/llm: match exact tensor names in config detection
+
+Quantized checkpoints contain auxiliary tensors like embed_tokens.weight_scale.
+Using contains() causes embed_tokens.weight_scale to match embed_tokens.weight,
+corrupting hidden_size and vocab_size. Use ends_with() instead.
+
+--- a/src/model/te/llm.hpp
++++ b/src/model/te/llm.hpp
+@@ -283,16 +283,16 @@ namespace LLM {
+                     if (contains(name, "attn.q_proj")) {
+                         config.llama_cpp_style = true;
+                     }
+-                    if (contains(name, "visual.patch_embed.proj.1.weight")) {
++                    if (ends_with(name, "visual.patch_embed.proj.1.weight")) {
+                         config.vision.split_patch_embed = true;
+                     }
+-                    if (contains(name, "visual.patch_embed.proj.0.weight")) {
++                    if (ends_with(name, "visual.patch_embed.proj.0.weight")) {
+                         config.vision.patch_size  = static_cast<int>(tensor_storage.ne[0]);
+                         config.vision.in_channels = tensor_storage.ne[2];
+                         config.vision.hidden_size = tensor_storage.ne[3];
+                     }
+                     // HF-format checkpoints keep the patch embed unsplit under a single name.
+-                    if (contains(name, "visual.patch_embed.proj.weight")) {
++                    if (ends_with(name, "visual.patch_embed.proj.weight")) {
+                         config.vision.patch_size = static_cast<int>(tensor_storage.ne[0]);
+                     }
+                     if (contains(name, "visual.patch_embed.bias") || contains(name, "visual.patch_embed.proj.bias")) {
+@@ -332,7 +332,7 @@ namespace LLM {
+                         }
+                     }
+                 }
+-                if (contains(name, "embed_tokens.weight")) {
++                if (ends_with(name, "embed_tokens.weight")) {
+                     config.hidden_size = tensor_storage.ne[0];
+                     config.vocab_size  = tensor_storage.ne[1];
+                 }

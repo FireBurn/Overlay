@@ -91,6 +91,8 @@ BDEPEND="
 
 PATCHES=(
 	"${FILESDIR}/0001-hip-fix-gfx12-bf16-wmma-with-llvm-23.patch"
+	"${FILESDIR}/0002-match-exact-tensor-names-in-llm-config-detection.patch"
+	"${FILESDIR}/0003-model-loader-dequantize-int8-tensorwise-when-converting.patch"
 )
 
 pkg_pretend() {

@@ -1,0 +1,165 @@
+Subject: [PATCH] model_loader: dequantize int8_tensorwise when converting to float
+
+When loading INT8 tensorwise models (such as Qwen3-VL text encoders with INT8
+convrot quantization), embedding tables or tensors converted to F32/F16 need
+to be scaled by their row-wise weight_scale and un-rotated with the Hadamard
+transform instead of calling convert_tensor.
+--- a/src/model_loader.cpp
++++ b/src/model_loader.cpp
+@@ -1,4 +1,5 @@
+ #include <algorithm>
++#include <cmath>
+ #include <atomic>
+ #include <chrono>
+ #include <cinttypes>
+@@ -1276,21 +1277,137 @@ bool ModelLoader::load_tensors(on_new_tensor_cb_t on_new_tensor_cb,
+                         f8_e5m2_to_f16_vec((uint8_t*)read_buf, (uint16_t*)target_buf, tensor_storage.nelements());
+ #endif
+                     }
++                    bool converted_int8_tensorwise = false;
+                     if (tensor_storage.type != dst_tensor->type) {
+-                        if (convert_buf == nullptr) {
+-                            LOG_ERROR("read tensor data failed: too less memory for conversion");
+-                            failed = true;
+-                            return;
++                        if (tensor_storage.is_int8_tensorwise && tensor_storage.type == GGML_TYPE_I8 &&
++                            (dst_tensor->type == GGML_TYPE_F32 || dst_tensor->type == GGML_TYPE_F16)) {
++                            std::string scale_name = tensor_storage.name + "_scale";
++                            auto it = tensor_storage_map.find(scale_name);
++                            if (it == tensor_storage_map.end() && ends_with(tensor_storage.name, ".weight")) {
++                                scale_name = tensor_storage.name.substr(0, tensor_storage.name.size() - 6) + "weight_scale";
++                                it = tensor_storage_map.find(scale_name);
++                            }
++                            if (it != tensor_storage_map.end()) {
++                                std::vector<float> scales(it->second.nelements());
++                                size_t scale_bytes = it->second.nbytes_to_read();
++                                bool scale_read_ok = false;
++                                if (mmapped) {
++                                    scale_read_ok = mmapped->copy_data((char*)scales.data(), scale_bytes, it->second.offset);
++                                } else {
++                                    file.seekg(it->second.offset);
++                                    file.read((char*)scales.data(), scale_bytes);
++                                    scale_read_ok = (bool)file;
++                                }
++                                if (scale_read_ok) {
++                                    int64_t n_per_row = tensor_storage.ne[0];
++                                    int64_t nrows = tensor_storage.nelements() / n_per_row;
++                                    const int8_t* s = (const int8_t*)target_buf;
++                                    if (dst_tensor->type == GGML_TYPE_F32) {
++                                        float* d = (float*)convert_buf;
++                                        for (int64_t r = 0; r < nrows; r++) {
++                                            float sc = (r < (int64_t)scales.size()) ? scales[r] : scales[0];
++                                            for (int64_t ci = 0; ci < n_per_row; ci++) {
++                                                d[r * n_per_row + ci] = (float)s[r * n_per_row + ci] * sc;
++                                            }
++                                        }
++                                    } else {
++                                        ggml_fp16_t* d = (ggml_fp16_t*)convert_buf;
++                                        for (int64_t r = 0; r < nrows; r++) {
++                                            float sc = (r < (int64_t)scales.size()) ? scales[r] : scales[0];
++                                            for (int64_t ci = 0; ci < n_per_row; ci++) {
++                                                d[r * n_per_row + ci] = ggml_fp32_to_fp16((float)s[r * n_per_row + ci] * sc);
++                                            }
++                                        }
++                                    }
++                                    if (tensor_storage.int8_convrot && tensor_storage.int8_convrot_group_size > 0) {
++                                        const int group_size = tensor_storage.int8_convrot_group_size;
++                                        const float transform_scale = 1.0f / sqrtf((float)group_size);
++                                        if (dst_tensor->type == GGML_TYPE_F32) {
++                                            float* d = (float*)convert_buf;
++                                            for (int64_t r = 0; r < nrows; r++) {
++                                                float* row_ptr = d + r * n_per_row;
++                                                for (int64_t g = 0; g < n_per_row; g += group_size) {
++                                                    float values[256];
++                                                    for (int i = 0; i < group_size; ++i) {
++                                                        values[i] = row_ptr[g + i] * transform_scale;
++                                                    }
++                                                    for (int stride = 1; stride < group_size; stride *= 4) {
++                                                        for (int base = 0; base < group_size; base += 4 * stride) {
++                                                            for (int j = 0; j < stride; ++j) {
++                                                                const int i0 = base + j;
++                                                                const int i1 = i0 + stride;
++                                                                const int i2 = i1 + stride;
++                                                                const int i3 = i2 + stride;
++                                                                const float a = values[i0];
++                                                                const float b = values[i1];
++                                                                const float c = values[i2];
++                                                                const float d = values[i3];
++                                                                values[i0] =  a + b + c - d;
++                                                                values[i1] =  a + b - c + d;
++                                                                values[i2] =  a - b + c + d;
++                                                                values[i3] = -a + b + c + d;
++                                                            }
++                                                        }
++                                                    }
++                                                    for (int i = 0; i < group_size; ++i) {
++                                                        row_ptr[g + i] = values[i];
++                                                    }
++                                                }
++                                            }
++                                        } else {
++                                            ggml_fp16_t* d = (ggml_fp16_t*)convert_buf;
++                                            for (int64_t r = 0; r < nrows; r++) {
++                                                ggml_fp16_t* row_ptr = d + r * n_per_row;
++                                                for (int64_t g = 0; g < n_per_row; g += group_size) {
++                                                    float values[256];
++                                                    for (int i = 0; i < group_size; ++i) {
++                                                        values[i] = ggml_fp16_to_fp32(row_ptr[g + i]) * transform_scale;
++                                                    }
++                                                    for (int stride = 1; stride < group_size; stride *= 4) {
++                                                        for (int base = 0; base < group_size; base += 4 * stride) {
++                                                            for (int j = 0; j < stride; ++j) {
++                                                                const int i0 = base + j;
++                                                                const int i1 = i0 + stride;
++                                                                const int i2 = i1 + stride;
++                                                                const int i3 = i2 + stride;
++                                                                const float a = values[i0];
++                                                                const float b = values[i1];
++                                                                const float c = values[i2];
++                                                                const float d = values[i3];
++                                                                values[i0] =  a + b + c - d;
++                                                                values[i1] =  a + b - c + d;
++                                                                values[i2] =  a - b + c + d;
++                                                                values[i3] = -a + b + c + d;
++                                                            }
++                                                        }
++                                                    }
++                                                    for (int i = 0; i < group_size; ++i) {
++                                                        row_ptr[g + i] = ggml_fp32_to_fp16(values[i]);
++                                                    }
++                                                }
++                                            }
++                                        }
++                                    }
++                                    converted_int8_tensorwise = true;
++                                }
++                            }
++                        }
++                        if (!converted_int8_tensorwise) {
++                            if (convert_buf == nullptr) {
++                                LOG_ERROR("read tensor data failed: too less memory for conversion");
++                                failed = true;
++                                return;
++                            }
++                            std::string processed_name = convert_tensor_name(tensor_storage.name, imatrix_version);
++                            std::vector<float> imatrix = get_imatrix_collector().get_values(processed_name);
++                            convert_tensor((void*)target_buf,
++                                           tensor_storage.type,
++                                           convert_buf,
++                                           dst_tensor->type,
++                                           (int)tensor_storage.nelements() / (int)tensor_storage.ne[0],
++                                           (int)tensor_storage.ne[0],
++                                           std::move(imatrix));
+                         }
+-                        std::string processed_name = convert_tensor_name(tensor_storage.name, imatrix_version);
+-                        std::vector<float> imatrix = get_imatrix_collector().get_values(processed_name);
+-                        convert_tensor((void*)target_buf,
+-                                       tensor_storage.type,
+-                                       convert_buf,
+-                                       dst_tensor->type,
+-                                       (int)tensor_storage.nelements() / (int)tensor_storage.ne[0],
+-                                       (int)tensor_storage.ne[0],
+-                                       std::move(imatrix));
+                     } else {
+                         convert_buf = read_buf;
+                     }
