@@ -73,6 +73,14 @@ PATCHES=(
 	"${FILESDIR}/0005-vulkan-use-4-rows-for-legacy-quant-mat-vec-from-2-columns.patch"
 	"${FILESDIR}/0006-hip-fix-gfx12-bf16-wmma-with-llvm-23.patch"
 	"${FILESDIR}/0007-server-keep-speculative-checkpoints-on-device.patch"
+	"${FILESDIR}/0008-hip-keep-mmq-wmma-k-loops-rolled-to-avoid-vgpr-spills.patch"
+	"${FILESDIR}/0009-cuda-hip-gated-delta-net-8-lanes-per-state-column.patch"
+	"${FILESDIR}/0010-hip-fa-vec-share-kv-pass-between-gqa-heads.patch"
+	"${FILESDIR}/0011-vulkan-write-gdn-state-straight-into-recurrent-cache.patch"
+	"${FILESDIR}/0012-vulkan-rms-norm-subgroup-reduction.patch"
+	"${FILESDIR}/0013-vulkan-cm1-dual-issue-epilogue-fa-q-in-registers.patch"
+	"${FILESDIR}/0014-vulkan-tiled-fa-kv-concat-kquant-loads-bar-dma.patch"
+	"${FILESDIR}/0015-vulkan-cm1-mmq-const-codebook-lut.patch"
 )
 
 pkg_setup() {
