@@ -573,13 +573,13 @@ NPM_PKGS="
 	@opentelemetry/sdk-trace-base@2.8.0
 	@opentelemetry/sdk-trace-node@2.8.0
 	@opentelemetry/semantic-conventions@1.43.0
-	@opentui/core@0.5.10
-	@opentui/core-linux-arm64@0.5.10|arm64
-	@opentui/core-linux-arm64-musl@0.5.10|arm64
-	@opentui/core-linux-x64@0.5.10|amd64
-	@opentui/core-linux-x64-musl@0.5.10|amd64
-	@opentui/keymap@0.5.10
-	@opentui/solid@0.5.10
+	@opentui/core@0.5.12
+	@opentui/core-linux-arm64@0.5.12|arm64
+	@opentui/core-linux-arm64-musl@0.5.12|arm64
+	@opentui/core-linux-x64@0.5.12|amd64
+	@opentui/core-linux-x64-musl@0.5.12|amd64
+	@opentui/keymap@0.5.12
+	@opentui/solid@0.5.12
 	@oslojs/asn1@1.0.0
 	@oslojs/binary@1.0.0
 	@oslojs/crypto@1.0.1
@@ -1263,7 +1263,6 @@ NPM_PKGS="
 	default-browser-id@5.0.1
 	defer-to-connect@2.0.1
 	define-data-property@1.1.4
-	define-lazy-prop@2.0.0
 	define-lazy-prop@3.0.0
 	define-properties@1.2.1
 	defu@6.1.7
@@ -1597,6 +1596,7 @@ NPM_PKGS="
 	is-generator-function@1.1.2
 	is-glob@4.0.3
 	is-hexadecimal@2.0.1
+	is-in-ssh@1.0.0
 	is-inside-container@1.0.0
 	is-map@2.0.3
 	is-module@1.0.0
@@ -1904,9 +1904,7 @@ NPM_PKGS="
 	oniguruma-parser@0.12.2
 	oniguruma-to-es@2.3.0
 	oniguruma-to-es@4.3.6
-	open@10.1.2
-	open@10.2.0
-	open@8.4.2
+	open@11.0.4
 	openai@6.49.0
 	openapi-types@12.1.3
 	openid-client@5.6.4
@@ -1992,6 +1990,8 @@ NPM_PKGS="
 	postcss-value-parser@4.2.0
 	postgres@3.4.7
 	postject@1.0.0-alpha.6
+	powershell-utils@0.1.0
+	powershell-utils@0.2.1
 	preact@11.0.0-beta.0
 	preact-render-to-string@6.6.5
 	prettier@3.6.2
@@ -2472,7 +2472,7 @@ NPM_PKGS="
 	ws@8.18.0
 	ws@8.21.0
 	ws@8.21.3
-	wsl-utils@0.1.0
+	wsl-utils@1.0.0
 	xdg-basedir@5.1.0
 	xml-naming@0.3.0
 	xmlbuilder@15.1.1
@@ -2717,10 +2717,10 @@ NPM_STUB_PKGS="
 	@msgpackr-extract/msgpackr-extract-win32-x64@3.0.4
 	@opencode-ai/pty-darwin-arm64@0.1.13
 	@opencode-ai/pty-darwin-x64@0.1.13
-	@opentui/core-darwin-arm64@0.5.10
-	@opentui/core-darwin-x64@0.5.10
-	@opentui/core-win32-arm64@0.5.10
-	@opentui/core-win32-x64@0.5.10
+	@opentui/core-darwin-arm64@0.5.12
+	@opentui/core-darwin-x64@0.5.12
+	@opentui/core-win32-arm64@0.5.12
+	@opentui/core-win32-x64@0.5.12
 	@oxc-minify/binding-android-arm64@0.96.0
 	@oxc-minify/binding-darwin-arm64@0.96.0
 	@oxc-minify/binding-darwin-x64@0.96.0
