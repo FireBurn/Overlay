@@ -114,6 +114,7 @@ media-libs/harfbuzz               github-release harfbuzz/harfbuzz
 media-libs/vkBasalt               github-release DadSchoorse/vkBasalt prefix=v
 net-im/discord                    json https://discord.com/api/updates/stable?platform=linux name
 sci-misc/llama-cpp                github-tag ggml-org/llama.cpp prefix=v
+sci-misc/stable-diffusion-cpp     page https://api.github.com/repos/leejet/stable-diffusion.cpp/releases?per_page=100 master-(\d+)-[0-9a-f]{7}
 sys-apps/keyutils                 git-tag https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/keyutils.git prefix=v
 sys-libs/musl-abi                 skip ABI marker package
 sys-power/asusctl                 github-release OpenGamingCollective/asusctl
