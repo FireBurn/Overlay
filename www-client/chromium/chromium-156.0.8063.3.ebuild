@@ -1414,7 +1414,10 @@ src_configure() {
 		chromium_rust_build_crubit
 		chromium_rust_prepare_toolchain
 		export RUSTC_BOOTSTRAP=1
-		export BINDGEN_EXTRA_CLANG_ARGS="-I${EPREFIX}/usr/lib/clang/${LLVM_SLOT}/include -I$(gcc -print-file-name=include)"
+		export BINDGEN_EXTRA_CLANG_ARGS="-I${EPREFIX}/usr/lib/clang/${LLVM_SLOT}/include"
+		if type -P gcc >/dev/null; then
+			BINDGEN_EXTRA_CLANG_ARGS+=" -I$(gcc -print-file-name=include)"
+		fi
 	fi
 
 	chromium_configure $(usex pgo 1 0)
