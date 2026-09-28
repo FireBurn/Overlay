@@ -14,7 +14,7 @@ HOMEPAGE="https://gn.googlesource.com/"
 # gn for this reason; there is no repack of this version, so the commit is
 # taken from git instead.
 EGIT_REPO_URI="https://gn.googlesource.com/gn"
-EGIT_COMMIT="5649e56e9e325ab8def3304906870ed4c5b397ca"
+EGIT_COMMIT="127dd2a6d582528d6d61c4d838dc17385ef31abd"
 S="${WORKDIR}/${P}"
 
 LICENSE="BSD"
@@ -26,7 +26,7 @@ BDEPEND="
 	app-alternatives/ninja
 "
 
-PATCHES=( "${FILESDIR}/gn-0.2567-respect-flags.patch" )
+PATCHES=( "${FILESDIR}/gn-0.2574-respect-flags.patch" )
 
 pkg_setup() {
 	:
