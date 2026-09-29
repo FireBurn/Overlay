@@ -91,9 +91,16 @@ BDEPEND="
 
 PATCHES=(
 	"${FILESDIR}/0001-hip-fix-gfx12-bf16-wmma-with-llvm-23.patch"
-	"${FILESDIR}/0002-match-exact-tensor-names-in-llm-config-detection.patch"
 	"${FILESDIR}/0003-model-loader-dequantize-int8-tensorwise-when-converting.patch"
 )
+# 0002 is upstream in master, and 0004 is written for the pinned ggml, not the
+# submodule master uses.
+if [[ ${PV} != 9999 ]]; then
+	PATCHES+=(
+		"${FILESDIR}/0002-match-exact-tensor-names-in-llm-config-detection.patch"
+		"${FILESDIR}/0004-vulkan-fa-cm1-shift-last-partial-kv-block.patch"
+	)
+fi
 
 pkg_pretend() {
 	[[ ${MERGE_TYPE} != binary ]] && use openmp && tc-check-openmp
