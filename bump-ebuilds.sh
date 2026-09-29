@@ -5,17 +5,9 @@
 set -uo pipefail
 cd "$(dirname "$0")"
 
-# Packages with known bump procedures (rename + dependency regeneration).
-KNOWN_PKGS=(
-    dev-util/claude-code
-    dev-util/antigravity-cli
-    dev-util/opencode
-    dev-util/qwen-code
-    dev-util/pi
-    dev-util/codex
-    app-editors/zed
-    games-util/heroic
-)
+# Packages that always go to the agent. Everything else with a single
+# non-live ebuild is bumped mechanically (rename, digest, emerge) first and
+# only reaches the agent if a step fails.
 AI_PKGS=( dev-util/codex app-editors/zed www-client/chromium )
 
 # --- CLI ------------------------------------------------------------------
@@ -31,13 +23,14 @@ Check overlay ebuilds for newer upstream versions and bump them.
 
 Options:
   -n, --dry-run    Report what would change without touching anything
-      --push       Push successful bumps after a final rebase
+      --push       Push each bump right after its commit (rebasing if needed)
       --retry      Retry candidates the agent declined in an earlier run
   -h, --help       Show this help
 
 With no package argument, all overlay packages are checked.
-Chromium requires a separate invocation: bump-ebuilds.sh www-client/chromium
+Chromium is always handled last, one slot at a time.
 Live runs pull --rebase --autostash from origin/master before checking packages.
+With --push each commit is pushed as soon as its emerge has succeeded.
 Upstream version sources are listed in scripts/upstream-sources.
 Logs and timings are written to ${XDG_STATE_HOME:-~/.local/state}/bump-ebuilds.
 Candidates the agent declines are recorded in declined.tsv there. That candidate
@@ -69,6 +62,7 @@ exec > >(tee -a "$RUN_LOG") 2>&1
 RUN_START=$EPOCHREALTIME
 
 log()  { printf '\n\033[1m== %s ==\033[0m\n' "$1"; }
+ok()   { printf '   \033[32mok\033[0m    %s\n' "$1"; }
 info() { printf '   %s\n' "$1"; }
 die()  { echo "ERROR: $*" >&2; exit 1; }
 
@@ -86,6 +80,56 @@ timed() {
     shift 2
     "$@"; rc=$?
     record "$pkg" "$step" "$start" "$rc"
+    return "$rc"
+}
+
+# Step output (digest, emerge, pkgcheck, ...) goes to a file per step; the
+# console gets one status line, and the log tail if the step fails.
+# Under bump-work so the agent may read them.
+STEP_LOGS="/home/fireburn/bump-work/logs/$RUN_ID"
+LAST_STEP_LOG=""
+mkdir -p "$STEP_LOGS"
+
+# Print a line every few minutes while a long step or agent is running.
+# heartbeat_start LABEL [LOGFILE] sets HB_PID; heartbeat_stop ends it.
+HB_PID=""
+heartbeat_start() {
+    local label="$1" alog="${2:-}" t0=$SECONDS
+    (
+        while sleep 300; do
+            last=""
+            [[ -n "$alog" ]] && last="$(sed 's/\x1b\[[0-9;]*m//g' "$alog" 2>/dev/null |
+                grep -a '^\$ ' | tail -n1 | cut -c1-90)"
+            printf '   ...   %s: %dm%s\n' "$label" $(( (SECONDS - t0) / 60 )) "${last:+, last: $last}"
+        done
+    ) 2>/dev/null &
+    HB_PID=$!
+}
+heartbeat_stop() {
+    [[ -n "$HB_PID" ]] || return 0
+    pkill -P "$HB_PID" 2>/dev/null
+    kill "$HB_PID" 2>/dev/null
+    wait "$HB_PID" 2>/dev/null
+    HB_PID=""
+}
+
+# run_step PACKAGE STEP COMMAND... -- timed, output kept in the step log.
+run_step() {
+    local pkg="$1" step="$2" start=$EPOCHREALTIME rc slog secs
+    shift 2
+    slog="$STEP_LOGS/${pkg//\//_}-$step.log"
+    LAST_STEP_LOG="$slog"
+    heartbeat_start "$pkg $step"
+    "$@" </dev/null >"$slog" 2>&1; rc=$?
+    heartbeat_stop
+    record "$pkg" "$step" "$start" "$rc"
+    secs="$(elapsed "$start")"
+    if (( rc == 0 )); then
+        printf '   \033[32mok\033[0m    %-14s %ss\n' "$step" "$secs"
+    else
+        printf '   \033[31mFAIL\033[0m  %-14s %ss  (%s)\n' "$step" "$secs" "$slog"
+        tail -n 12 "$slog" | cut -c1-200 | sed 's/^/         | /'
+    fi
     return "$rc"
 }
 
@@ -107,6 +151,31 @@ restore_index() {
     else
         echo "ERROR: could not restore staged changes; they are saved in $STAGED" >&2
     fi
+}
+
+# Rebase onto origin/master if it moved, then push. Called after every commit
+# when --push is given, so a later failure cannot hold back finished bumps.
+push_commits() {
+    [[ "$PUSH" == 1 && "$DRY_RUN" == 0 ]] || return 0
+    if run_step - git-fetch git fetch -q origin master &&
+       ! git merge-base --is-ancestor FETCH_HEAD HEAD; then
+        run_step - git-rebase git pull --rebase --autostash origin master || return 1
+        restore_index
+    fi
+    run_step - git-push git push -q origin master
+}
+
+# pkgcheck --commits stashes the work tree and fails on a dirty one (staged
+# renames, ignored paths), so scan the committed HEAD in a separate worktree.
+PKGCHECK_WT="${XDG_CACHE_HOME:-$HOME/.cache}/bump-ebuilds/pkgcheck-wt"
+pkgcheck_head() {
+    [[ -e "$PKGCHECK_WT/.git" ]] || {
+        mkdir -p "${PKGCHECK_WT%/*}"
+        git worktree prune
+        git worktree add -q --detach "$PKGCHECK_WT" HEAD || return 1
+    }
+    git -C "$PKGCHECK_WT" checkout -q --detach "$(git rev-parse HEAD)" &&
+        (cd "$PKGCHECK_WT" && pkgcheck scan --commits)
 }
 
 if [[ "$DRY_RUN" == 0 ]]; then
@@ -140,20 +209,7 @@ if [[ -n "$PKG" ]]; then
     [[ " ${ALL_PKGS[*]} " == *" $PKG "* ]] || { echo "unknown package: $PKG" >&2; exit 2; }
     WORK=("$PKG")
 else
-    WORK=()
-    for p in "${ALL_PKGS[@]}"; do
-        [[ "$p" == www-client/chromium ]] || WORK+=("$p")
-    done
-    printf 'Chromium requires its own run: %s www-client/chromium\n' "$0"
-fi
-
-if [[ "$PKG" == www-client/chromium && "$DRY_RUN" == 0 ]]; then
-    exec {chromium_lock}>/tmp/fireburn-chromium-bump.lock
-    flock -n "$chromium_lock" || { echo 'ERROR: another Chromium bump is running' >&2; exit 1; }
-    if pgrep -x emerge >/dev/null; then
-        echo 'ERROR: another emerge is running; build Chromium on its own' >&2
-        exit 1
-    fi
+    WORK=("${ALL_PKGS[@]}")
 fi
 
 pn_of()      { echo "${1##*/}"; }
@@ -312,7 +368,7 @@ retry_with_agent() {
         return 2
     fi
     info "$reason; asking agent to inspect and fix it"
-    bump_agent "$pkg" "$old" "$new" "automatic attempt: $reason"
+    bump_agent "$pkg" "$old" "$new" "automatic attempt: $reason${LAST_STEP_LOG:+; output of the failed step is in $LAST_STEP_LOG}"
     result=$?
     [[ "$result" == 1 ]] && return 2
     return "$result"
@@ -352,42 +408,47 @@ def testing_keywords(match):
 
 path.write_text(re.sub(r'^KEYWORDS="([^"]*)"', testing_keywords, text, flags=re.M))
 PY
-    if ! timed "$pkg" npm-deps update_npm_pkgs "$pkg" "$new" "$newf"; then
+    # Regeneration is skipped for packages without a lockfile, so only the
+    # ones that need it show up as steps.
+    if [[ -n "$(npm_lockfiles "$pkg")" ]] &&
+       ! run_step "$pkg" npm-deps update_npm_pkgs "$pkg" "$new" "$newf"; then
         retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "dependency regeneration failed"
         return $?
     fi
-    if ! timed "$pkg" cargo-crates update_crates "$pkg" "$new" "$newf"; then
+    if [[ -n "$(cargo_lockfiles "$pkg")" ]] &&
+       ! run_step "$pkg" cargo-crates update_crates "$pkg" "$new" "$newf"; then
         retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "Rust dependency regeneration failed"
         return $?
     fi
-    if ! timed "$pkg" digest ebuild "$newf" digest; then
-        retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "ebuild digest failed"
-        return $?
-    fi
-    if ! timed "$pkg" manifest ebuild "$newf" manifest; then
+    # One step: digest fetches the distfiles, manifest writes the file.
+    if ! run_step "$pkg" manifest ebuild "$newf" manifest; then
         retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "ebuild manifest failed"
         return $?
     fi
     local -a emerge_cmd=( emerge )
     (( EUID == 0 )) || emerge_cmd=( sudo -n emerge )
-    if ! timed "$pkg" emerge "${emerge_cmd[@]}" -1 "=$pkg-$new"; then
+    if ! run_step "$pkg" emerge "${emerge_cmd[@]}" -1 "=$pkg-$new"; then
         retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "emerge failed"
         return $?
     fi
-    if ! timed "$pkg" smoke-test smoke_test "$pkg"; then
+    if ! run_step "$pkg" smoke-test smoke_test "$pkg"; then
         retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "smoke test failed after emerge"
         return $?
     fi
-    if ! timed "$pkg" pkgcheck pkgcheck scan --repo FireBurn "$pkg" ||
-       ! timed "$pkg" pkgcheck-commits pkgcheck scan --repo FireBurn --commits; then
+    if ! run_step "$pkg" pkgcheck pkgcheck scan --repo FireBurn "$pkg"; then
         revert_bump "$pkg" "$oldf" "$newf"
         echo "ERROR: pkgcheck failed for $pkg $new (reverted)" >&2
         return 2
     fi
     git add "$pkg"
     git diff --cached --check -- "$pkg" || { revert_bump "$pkg" "$oldf" "$newf"; return 2; }
-    git diff --cached -- "$pkg"
     git commit -q --only -m "$pkg: bump to $new" -- "$pkg" || { echo "ERROR: commit failed for $pkg" >&2; return 2; }
+    if ! run_step "$pkg" pkgcheck-commits pkgcheck_head; then
+        git reset -q --soft HEAD~1
+        revert_bump "$pkg" "$oldf" "$newf"
+        echo "ERROR: pkgcheck --commits failed for $pkg $new (reverted)" >&2
+        return 2
+    fi
     info "bumped $pkg $old -> $new"
     return 0
 }
@@ -449,9 +510,14 @@ run_agent() {
     alog="$LOG_DIR/$RUN_ID-agent-${label//\//_}.log"
     start=$EPOCHREALTIME
     start_ms=$(date +%s%3N)
-    opencode run --agent ebuild-bumper "$prompt" 2>&1 | tee "$alog"
-    rc=${PIPESTATUS[0]}
+    info "agent started; transcript: $alog"
+    heartbeat_start "agent $label" "$alog"
+    opencode run --agent ebuild-bumper "$prompt" </dev/null >"$alog" 2>&1
+    rc=$?
+    heartbeat_stop
     record "$label" agent "$start" "$rc" "$(agent_usage "$start_ms")"
+    printf '   %s  agent          %ss  %s\n' "$( ((rc)) && echo FAIL || echo ok )" \
+        "$(elapsed "$start")" "$(agent_usage "$start_ms")"
     return "$rc"
 }
 
@@ -463,7 +529,6 @@ bump_agent() {
         return 1
     fi
 
-    log "agent: $pkg"
     head="$(git rev-parse HEAD)"
     if [[ -n "$new" ]]; then
         prompt="Bump $pkg in this overlay from $old to $new. scripts/upstream-version.py found $new${source:+ using '$source'}; do not research the latest version again unless it looks wrong.${reason:+ Note: $reason. If an automatic attempt failed, inspect its output and build log, then fix the cause.} Decide whether this is a simple rename or needs package-specific work, preserve the source build and update fetched dependencies and the Manifest as needed. $AGENT_RULES"
@@ -544,7 +609,7 @@ chromium_fix() {
     local slot="$1" phase="$2" flog="$3" tmp="$4" e v rc
     e="$(chromium_ebuild "$slot")"; v="$(chromium_version "$e")"
     [[ "$DRY_RUN" == 1 ]] && return 1
-    log "agent: $CHROMIUM $v ($slot) $phase failure"
+    info "asking the agent to fix $CHROMIUM $v ($slot): $phase failed"
     run_agent "$CHROMIUM-$slot" "Chromium $v ($slot slot, $e) failed in $phase with PORTAGE_TMPDIR=$tmp. The end of the log is in $flog; the full build log is $tmp/portage/$CHROMIUM-$v/temp/build.log. Fix the cause in $e or its patches in $CHROMIUM/files; do not change the other slots' ebuilds. If the fix needs dev-build/gn or dev-build/gnrt updated, do that, emerge it and commit it on its own. Verify by resuming with 'sudo env PORTAGE_TMPDIR=$tmp ebuild $e <phase>' from the failed phase; clean first only if the fix changes patches, compilers or configure options. Stop when that phase passes, or report why it cannot be fixed. Do not run emerge for Chromium and do not commit Chromium; the caller rebuilds and commits it. Never end your turn while a job you started is running."
     rc=$?
     # A build the agent left running, e.g. when the model server dropped, can
@@ -615,9 +680,52 @@ chromium_emerge() {
     done
 }
 
+# Paths one slot's commit covers: its ebuild, the patches that ebuild names
+# in FILESDIR, the Manifest and, for the first commit, ebuilds the rotation
+# removed.
+chromium_slot_paths() {
+    local slot="$1" e f
+    e="$(chromium_ebuild "$slot")"
+    printf '%s\n' "$e" "$CHROMIUM/Manifest"
+    grep -oE '\$\{FILESDIR\}/[^"[:space:])]+' "$e" | sed "s|^\${FILESDIR}/|$CHROMIUM/files/|" |
+        while read -r f; do [[ -e "$f" ]] && echo "$f"; done
+}
+
+# chromium_commit SLOT -- commit what changed for a slot that has just built.
+chromium_commit() {
+    local slot="$1" e v line
+    local -a paths=()
+    e="$(chromium_ebuild "$slot")"; v="$(chromium_version "$e")"
+    mapfile -t paths < <(chromium_slot_paths "$slot" | sort -u)
+    # Removed ebuilds belong to the first commit made.
+    while read -r line; do paths+=("$line"); done < <(git ls-files --deleted "$CHROMIUM" |
+        grep 'chromium-[0-9].*\.ebuild$'; git diff --cached --no-renames --name-only --diff-filter=D -- "$CHROMIUM")
+    git add -A -- "${paths[@]}" 2>/dev/null
+    if git diff --cached --quiet -- "${paths[@]}"; then
+        info "$slot ($v): nothing to commit"
+        return 0
+    fi
+    run_step "$CHROMIUM-$slot" pkgcheck pkgcheck scan --repo FireBurn "$CHROMIUM" || return 1
+    git commit -q --only -m "$CHROMIUM: bump $slot to $v" -- "${paths[@]}" || return 1
+    if ! run_step "$CHROMIUM-$slot" pkgcheck-commits pkgcheck_head; then
+        git reset -q --soft HEAD~1
+        return 1
+    fi
+    info "committed $CHROMIUM $slot $v"
+    push_commits
+}
+
 bump_chromium() {
     local plan rc slot e v first pid ok=1
     local -a todo=()
+    if [[ "$DRY_RUN" == 0 ]]; then
+        exec {chromium_lock}>/tmp/fireburn-chromium-bump.lock
+        flock -n "$chromium_lock" || { echo 'ERROR: another Chromium bump is running' >&2; return 2; }
+        if pgrep -x emerge >/dev/null; then
+            echo 'ERROR: another emerge is running; build Chromium on its own' >&2
+            return 2
+        fi
+    fi
     plan="$(timed "$CHROMIUM" channel-check scripts/chromium-channels.py)"; rc=$?
     if (( rc )); then
         info "skip $CHROMIUM: ${plan:-channel check failed}"
@@ -627,7 +735,7 @@ bump_chromium() {
         printf '%s\n' "$plan" | sed 's/^/   /'
         if [[ "$DRY_RUN" == 0 ]]; then
             apply_chromium_plan "$plan" || { echo "ERROR: could not apply the Chromium plan" >&2; return 2; }
-            timed "$CHROMIUM" manifest ebuild "$(chromium_ebuild stable)" manifest ||
+            run_step "$CHROMIUM" manifest ebuild "$(chromium_ebuild stable)" manifest ||
                 { echo "ERROR: Chromium manifest failed" >&2; return 2; }
         fi
     fi
@@ -644,10 +752,16 @@ bump_chromium() {
         return 1
     fi
     if [[ "$DRY_RUN" == 1 ]]; then
-        info "[dry-run] would build: ${todo[*]:-nothing}, then commit $CHROMIUM"
+        info "[dry-run] would build and commit, one slot at a time: ${todo[*]:-nothing}"
         return 1
     fi
     mkdir -p "$CHROMIUM_LOGS"
+    changed_any=0
+    # Slots that are installed but not yet committed (an interrupted run).
+    for slot in stable beta unstable; do
+        in_list "$slot" "${todo[@]}" && continue
+        chromium_commit "$slot" && changed_any=1
+    done
     if (( ${#todo[@]} )); then
         first="${todo[0]}"
         chromium_emerge "$first" 0 &
@@ -659,21 +773,21 @@ bump_chromium() {
             chromium_emerge "$first" resume || { echo "ERROR: $first did not build" >&2; ok=0; }
         fi
         if (( ok )); then
+            chromium_commit "$first" && changed_any=1 || ok=0
+        fi
+        if (( ok )); then
             for slot in "${todo[@]:1}"; do
                 chromium_emerge "$slot" || { echo "ERROR: $slot did not build" >&2; ok=0; break; }
+                chromium_commit "$slot" && changed_any=1 || { ok=0; break; }
             done
         fi
     fi
     if (( ! ok )); then
-        info "$CHROMIUM left uncommitted; the next run resumes from what is installed"
+        info "$CHROMIUM has uncommitted slots; the next run resumes from what is installed"
         return 2
     fi
-    git add -A "$CHROMIUM"
-    timed "$CHROMIUM" pkgcheck pkgcheck scan --repo FireBurn "$CHROMIUM" || return 2
-    git commit -q --only -m "$CHROMIUM: rotate to $(for slot in stable beta unstable; do
-            chromium_version "$(chromium_ebuild "$slot")"; done | paste -sd' ')" -- "$CHROMIUM" || return 2
-    info "committed $CHROMIUM"
-    return 0
+    (( changed_any )) && return 0
+    return 1
 }
 
 # One agent run for all outdated members of a batch group, e.g. ROCm, which
@@ -686,7 +800,6 @@ bump_group() {
         info "[dry-run] would ask one agent to bump $group to $new: ${pkgs[*]}"
         return
     fi
-    log "agent: $group -> $new (${#pkgs[@]} packages)"
     head="$(git rev-parse HEAD)"
     prompt="Bump the $group group in this overlay to $new: ${pkgs[*]}. scripts/upstream-version.py found $new from the group's entry in scripts/upstream-sources; do not research the latest version again unless it looks wrong. These packages share one upstream release. Review upstream changes once for the whole group and update every ebuild. If the group has a -meta package, add any new member package to it and build the group through it with emerge --update --deep on the meta package, which is in @world; otherwise use a single emerge -1 of all the new versions so Portage orders them. If one fails, fix it and resume rather than restarting the group. Commit each package separately. $AGENT_RULES"
     run_agent "$group" "$prompt" || echo "ERROR: agent run for $group failed" >&2
@@ -729,34 +842,67 @@ VERSIONS="$LOG_DIR/$RUN_ID.versions.tsv"
 timed - version-check scripts/upstream-version.py "${WORK[@]}" >"$VERSIONS" ||
     die "scripts/upstream-version.py failed"
 
+# One ebuild per package, none live: a plain rename can bump it.
+mechanical() {
+    local pkg="$1" n
+    in_list "$pkg" "${AI_PKGS[@]}" && return 1
+    n=$(ls "$pkg"/*.ebuild 2>/dev/null | grep -vc -- '-9999')
+    (( n == 1 ))
+}
+
+# Sort candidates into queues: quick mechanical bumps first so their commits
+# land early, then agent work, then groups, and Chromium last.
+SEP=$'\037'
+Q_SIMPLE=(); Q_AGENT=(); Q_CHROMIUM=(); skipped=()
+n_current=0
 # A tab IFS would merge empty columns, so read with a non-whitespace separator.
 while IFS=$'\037' read -r pkg status old new group batch source note <&3; do
     [[ "$note" == inferred* ]] && inferred+=("${note#*record as: }")
     case "$status" in
-        live|skip)
-            continue ;;
-        current)
-            info "$pkg: up to date ($old)"; continue ;;
-        older)
-            info "$pkg: upstream $new is older than local $old; skipping"; continue ;;
+        live|skip) continue ;;
+        current)   n_current=$((n_current + 1)); continue ;;
+        older)     skipped+=("$pkg: upstream $new is older than local $old"); continue ;;
     esac
-    # An uncommitted Chromium rotation is resumed by bump_chromium.
-    if [[ "$pkg" != www-client/chromium ]] && ! package_clean "$pkg"; then
-        info "skip $pkg: package has uncommitted changes ($status${new:+ $old -> $new})"
-        continue
+    row="$pkg$SEP$status$SEP$old$SEP$new$SEP$group$SEP$batch$SEP$source$SEP$note"
+    if [[ "$pkg" == www-client/chromium ]]; then
+        Q_CHROMIUM+=("$row"); continue
+    fi
+    if ! package_clean "$pkg"; then
+        skipped+=("$pkg: uncommitted changes ($status${new:+ $old -> $new})"); continue
     fi
     if [[ "$status" == newer ]] && declined "$pkg" "$new"; then
-        info "skip $pkg: the agent declined it recently (see $DECLINED; --retry to recheck)"
-        continue
+        skipped+=("$pkg: $new declined by the agent recently (--retry to recheck)"); continue
     fi
     if [[ "$status" == newer && -n "$batch" ]]; then
-        info "$pkg: $old -> $new, queued with $group"
         GROUP_PKGS[$group]+="$pkg "
         GROUP_VER[$group]="$new"
         continue
     fi
-    log "$pkg: $status${new:+ $old -> $new}"
-    start=$EPOCHREALTIME
+    if [[ "$status" == newer ]] && mechanical "$pkg"; then
+        Q_SIMPLE+=("$row")
+    else
+        Q_AGENT+=("$row")
+    fi
+done 3< <(tr '\t' '\037' <"$VERSIONS")
+
+n_group=0
+for group in "${!GROUP_PKGS[@]}"; do n_group=$((n_group + 1)); done
+TOTAL=$(( ${#Q_SIMPLE[@]} + ${#Q_AGENT[@]} + n_group + ${#Q_CHROMIUM[@]} ))
+info "$n_current up to date; $TOTAL to process: ${#Q_SIMPLE[@]} mechanical, ${#Q_AGENT[@]} agent, $n_group group(s), ${#Q_CHROMIUM[@]} chromium"
+if (( ${#skipped[@]} )); then
+    info "skipped:"
+    for line in "${skipped[@]}"; do info "  $line"; done
+fi
+
+results=()
+IDX=0
+
+# process_row ROW -- bump one package. Sets rc: 0 committed, 1 nothing to do, 2 failed.
+process_row() {
+    local pkg status old new group batch source note start=$EPOCHREALTIME
+    IFS=$'\037' read -r pkg status old new group batch source note <<<"$1"
+    IDX=$((IDX + 1))
+    log "[$IDX/$TOTAL] $pkg: $status${new:+ $old -> $new}"
     case "$status" in
         agent)
             if [[ "$pkg" == www-client/chromium ]]; then
@@ -767,42 +913,49 @@ while IFS=$'\037' read -r pkg status old new group batch source note <&3; do
         error)
             bump_agent "$pkg" "$old" "" "the upstream version lookup '$source' failed ($note); fix its scripts/upstream-sources entry" ;;
         newer)
-            if in_list "$pkg" "${KNOWN_PKGS[@]}" && ! in_list "$pkg" "${AI_PKGS[@]}"; then
-                if [[ "$(http_code "$(readiness_url "$pkg" "$new")")" != 2* ]]; then
+            if mechanical "$pkg"; then
+                local url; url="$(readiness_url "$pkg" "$new")"
+                if [[ -n "$url" && "$(http_code "$url")" != 2* ]]; then
                     info "skip $pkg: $new artifact not available yet"
-                    continue
+                    return 1
                 fi
                 bump_simple "$pkg" "$old" "$new"
             else
                 bump_agent "$pkg" "$old" "$new" "" "$source"
             fi ;;
         *)
-            info "unexpected status '$status' for $pkg"; continue ;;
+            info "unexpected status '$status' for $pkg"; return 1 ;;
     esac
     rc=$?
     record "$pkg" total "$start" "$rc" "$status $old${new:+ -> $new}"
     case "$rc" in
-        0) changed=1 ;;
-        2) failed+=("$pkg") ;;
+        0) changed=1; results+=("$([[ "$DRY_RUN" == 1 ]] && echo would-bump || echo bumped)  $pkg ${new:+$old -> $new}"); push_commits ;;
+        2) failed+=("$pkg"); results+=("FAILED  $pkg ${new:+$old -> $new}") ;;
+        *) results+=("no-op   $pkg") ;;
     esac
-done 3< <(tr '\t' '\037' <"$VERSIONS")
+    return "$rc"
+}
+
+for row in "${Q_SIMPLE[@]}" "${Q_AGENT[@]}"; do
+    process_row "$row"
+done
 
 for group in "${!GROUP_PKGS[@]}"; do
     start=$EPOCHREALTIME
     read -r -a members <<<"${GROUP_PKGS[$group]}"
+    IDX=$((IDX + 1))
+    log "[$IDX/$TOTAL] $group -> ${GROUP_VER[$group]} (${#members[@]} packages)"
+    before=$(git rev-parse HEAD)
     bump_group "$group" "${GROUP_VER[$group]}" "${members[@]}"
     record "$group" total "$start" 0 "${#members[@]} packages -> ${GROUP_VER[$group]}"
+    [[ "$(git rev-parse HEAD)" != "$before" ]] && { results+=("bumped  $group -> ${GROUP_VER[$group]}"); push_commits; }
 done
 
-if [[ "$changed" == 1 && "$PUSH" == 1 && "$DRY_RUN" == 0 ]]; then
-    timed - git-pull git pull --rebase --autostash origin master || die "git pull --rebase --autostash failed; not pushing"
-    if timed - git-push git push origin master; then
-        info "pushed to origin/master"
-    else
-        die "git push failed"
-    fi
-fi
+for row in "${Q_CHROMIUM[@]}"; do
+    process_row "$row"
+done
 
+[[ "$changed" == 1 ]] && push_commits
 record - run "$RUN_START" 0
 [[ "$DRY_RUN" == 0 ]] && restore_index
 
@@ -823,6 +976,11 @@ fi
 if ! git diff --quiet -- scripts/upstream-sources; then
     log "scripts/upstream-sources was updated; review and commit it"
     git --no-pager diff -- scripts/upstream-sources
+fi
+
+if (( ${#results[@]} )); then
+    log "results"
+    for line in "${results[@]}"; do info "$line"; done
 fi
 
 log "slowest steps"
