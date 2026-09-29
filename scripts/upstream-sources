@@ -62,7 +62,7 @@ sci-libs/rocRAND                  @rocm
 
 dev-util/claude-code              text https://downloads.claude.ai/claude-code-releases/latest
 dev-util/antigravity-cli          github-release google-antigravity/antigravity-cli
-dev-util/codex                    github-release openai/codex prefix=rust-v
+dev-util/codex                    github-tag openai/codex prefix=rust-v match=^\d+(\.\d+)+$
 # opencode tags the line we follow without publishing releases for it.
 dev-util/opencode                 github-tag anomalyco/opencode prefix=v
 dev-util/qwen-code                github-release QwenLM/qwen-code prefix=v
