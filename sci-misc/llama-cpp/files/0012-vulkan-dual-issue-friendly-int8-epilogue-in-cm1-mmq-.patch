@@ -1,0 +1,66 @@
+From 29ef63772f4d701313abc3b4fbf942079bf3c27d Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Sun, 27 Sep 2026 13:29:32 +0100
+Subject: [PATCH 12/18] vulkan : dual-issue friendly int8 epilogue in cm1 mmq
+ on wave32
+
+Assisted-by: Claude Code (Claude Opus 5.5)
+---
+ .../src/ggml-vulkan/vulkan-shaders/mul_mmq_cm1.comp | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/mul_mmq_cm1.comp b/ggml/src/ggml-vulkan/vulkan-shaders/mul_mmq_cm1.comp
+index 7cab9a119..9f0596ce7 100644
+--- a/ggml/src/ggml-vulkan/vulkan-shaders/mul_mmq_cm1.comp
++++ b/ggml/src/ggml-vulkan/vulkan-shaders/mul_mmq_cm1.comp
+@@ -125,6 +125,9 @@ const uint CM_ELEMS = (TM * TN) / WARP;
+ #define ACC_BIAS_BITS 0x4B400000
+ #define ACC_BIAS_F    12582912.0f
+ const bool USE_MAGIC_BIAS = WARP != 32;
++// wave32: accumulators start at the bits of 2^23 + 2^22, so the int result read as float is bias + acc (|acc| < 2^22 per K block).
++// A subtract, which can dual issue unlike v_cvt_f32_i32, then gives float(acc).
++const bool USE_MAGIC_SUB = WARP == 32;
+ 
+ // Accumulator row for element e: RDNA4 blocked, RDNA3/3.5 interleaved.
+ uint cm_elem_row(uint e) {
+@@ -134,6 +137,10 @@ uint cm_elem_row(uint e) {
+ 
+ // min_term = asymmetric-quant min*b_sum correction (0 for symmetric types).
+ ACC_TYPE cm1_accumulate(ACC_TYPE prev, int acc_e, float scale_a, float nbias_a, float scale_b, float min_term) {
++    if (USE_MAGIC_SUB) {
++        const float x = intBitsToFloat(acc_e) - ACC_BIAS_F;
++        return prev + ACC_TYPE(fma(x * scale_a, scale_b, min_term));
++    }
+     if (USE_MAGIC_BIAS) {
+         const float t = fma(intBitsToFloat(acc_e), scale_a, nbias_a);
+         return ACC_TYPE(fma(t, scale_b, float(prev) + min_term));
+@@ -347,7 +354,7 @@ void main() {
+ 
+                         coopmat<int32_t, gl_ScopeSubgroup, TM, TN, gl_MatrixUseAccumulator> acc =
+                             coopmat<int32_t, gl_ScopeSubgroup, TM, TN, gl_MatrixUseAccumulator>(
+-                                USE_MAGIC_BIAS ? ACC_BIAS_BITS : 0);
++                                (USE_MAGIC_BIAS || USE_MAGIC_SUB) ? ACC_BIAS_BITS : 0);
+                         acc = coopMatMulAdd(cache_a, cache_b, acc);
+ 
+                         const uint tile_idx = r * cms_per_col + c;
+@@ -398,7 +405,7 @@ void main() {
+                 [[unroll]] for (uint c = 0; c < cms_per_col; c++) {
+                     coopmat<int32_t, gl_ScopeSubgroup, TM, TN, gl_MatrixUseAccumulator> acc =
+                         coopmat<int32_t, gl_ScopeSubgroup, TM, TN, gl_MatrixUseAccumulator>(
+-                            USE_MAGIC_BIAS ? ACC_BIAS_BITS : 0);
++                            (USE_MAGIC_BIAS || USE_MAGIC_SUB) ? ACC_BIAS_BITS : 0);
+ 
+                     [[unroll]] for (uint h = 0; h < K_SUB; h++) {
+                         acc = coopMatMulAdd(cache_a[r * K_SUB + h], cache_b[c * K_SUB + h], acc);
+@@ -446,7 +453,7 @@ void main() {
+                 [[unroll]] for (uint c = 0; c < cms_per_col; c++) {
+                     coopmat<int32_t, gl_ScopeSubgroup, TM, TN, gl_MatrixUseAccumulator> acc =
+                         coopmat<int32_t, gl_ScopeSubgroup, TM, TN, gl_MatrixUseAccumulator>(
+-                            USE_MAGIC_BIAS ? ACC_BIAS_BITS : 0);
++                            (USE_MAGIC_BIAS || USE_MAGIC_SUB) ? ACC_BIAS_BITS : 0);
+ 
+                     [[unroll]] for (uint h = 0; h < K_SUB; h++) {
+                         acc = coopMatMulAdd(cache_a[r * K_SUB + h], cache_b[c * K_SUB + h], acc);
+-- 
+2.55.0
+

@@ -1,22 +1,10 @@
-From c687089c2fdfc042f939ecdfe7239c75572cd486 Mon Sep 17 00:00:00 2001
+From b0c54beddc877111fe3513d6a630baf066045a18 Mon Sep 17 00:00:00 2001
 From: Mike Lothian <mike@fireburn.co.uk>
 Date: Sat, 26 Sep 2026 15:38:21 +0100
-Subject: [PATCH 3/3] HIP: FA vec kernel: share the K/V pass between the Q
- heads of a GQA group on RDNA
+Subject: [PATCH 09/18] hip : share the FA vec K/V pass between the Q heads of
+ a GQA group on RDNA
 
-For single-token decode with a quantized KV cache the vec kernel is used and
-processed every Q head in its own block, so K/V were streamed from VRAM
-gqa_ratio times per layer. Add an ncols2 template parameter (as in the tile
-and MMA kernels) so that one block handles up to 8 Q heads of the same KV
-head. On RDNA the packed variant uses 8 threads per KQ dot product so that
-Q for all heads fits in registers. Packing is only used once K+V exceed the
-last level cache (16 MiB); below that the re-reads hit in cache.
-
-R9700 (gfx1201), D=256, 24 Q / 4 KV heads, q8_0 K/V, decode:
-  kv=16384: 296 -> 136 us, kv=65536: 1276 -> 488 us
-Qwen3.8-27B UD-Q4_K_M tg64 @ d65536: 18.5 -> 23.7 t/s.
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Assisted-by: Claude Code (Claude Opus 5.5)
 ---
  ggml/src/ggml-cuda/fattn-vec.cuh | 128 +++++++++++++++++++++----------
  tests/test-backend-ops.cpp       |  16 ++++
@@ -291,10 +279,10 @@ index 57a285565..67e454fd4 100644
  
  #define DECL_FATTN_VEC_CASE(D, type_K, type_V)                              \
 diff --git a/tests/test-backend-ops.cpp b/tests/test-backend-ops.cpp
-index 6527049ff..1da7c1966 100644
+index 32c3f3d2a..7bb3fca89 100644
 --- a/tests/test-backend-ops.cpp
 +++ b/tests/test-backend-ops.cpp
-@@ -10960,6 +10960,17 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_eval() {
+@@ -10970,6 +10970,17 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_eval() {
          }
      }
  
@@ -312,7 +300,7 @@ index 6527049ff..1da7c1966 100644
      // asymmetric head_dim (hsk != hsv) with one or both sides not 64-aligned
      test_cases.emplace_back(new test_flash_attn_ext(72, 64, 4, {1, 1}, 256, 2, true, false, 0, 0, GGML_PREC_F32, GGML_TYPE_F16, GGML_TYPE_F16));
      test_cases.emplace_back(new test_flash_attn_ext(64, 72, 4, {1, 1}, 256, 2, true, false, 0, 0, GGML_PREC_F32, GGML_TYPE_F16, GGML_TYPE_F16));
-@@ -11251,6 +11262,11 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_eval() {
+@@ -11261,6 +11272,11 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_eval() {
  static std::vector<std::unique_ptr<test_case>> make_test_cases_perf() {
      std::vector<std::unique_ptr<test_case>> test_cases;
  

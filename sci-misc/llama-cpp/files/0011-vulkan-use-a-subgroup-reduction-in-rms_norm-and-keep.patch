@@ -1,17 +1,10 @@
-From 8e09a0fe75575ac0f04960df1d7eaa511f3aede3 Mon Sep 17 00:00:00 2001
+From 24da9240655ac2edc8cfc547d6447eeb0b0364ec Mon Sep 17 00:00:00 2001
 From: Mike Lothian <mike@fireburn.co.uk>
 Date: Sat, 26 Sep 2026 17:04:35 +0100
-Subject: [PATCH 2/2] vulkan: rms_norm: subgroup reduction and keep the row in
- registers
+Subject: [PATCH 11/18] vulkan : use a subgroup reduction in rms_norm and keep
+ the row in registers
 
-Single-row norms (the 5120-wide per-layer norms during token generation)
-run in one workgroup, so the 9-step shared memory reduction and re-reading
-the row from memory for the scaling pass were most of the cost. Use a
-subgroupAdd reduction (one barrier) when the device supports subgroup
-arithmetic, and keep up to 16 elements per thread in registers between the
-two passes.
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Assisted-by: Claude Code (Claude Opus 5.5)
 ---
  ggml/src/ggml-vulkan/ggml-vulkan.cpp          | 10 +++++--
  .../ggml-vulkan/vulkan-shaders/rms_norm.comp  | 30 +++++++++++++++++--
@@ -19,7 +12,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
  3 files changed, 36 insertions(+), 5 deletions(-)
 
 diff --git a/ggml/src/ggml-vulkan/ggml-vulkan.cpp b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
-index efdf6b03c..980ca9681 100644
+index ae295b3de..13b7f3268 100644
 --- a/ggml/src/ggml-vulkan/ggml-vulkan.cpp
 +++ b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
 @@ -3256,8 +3256,14 @@ void ggml_vk_load_shaders(vk_device& device, vk_pipeline requested) {

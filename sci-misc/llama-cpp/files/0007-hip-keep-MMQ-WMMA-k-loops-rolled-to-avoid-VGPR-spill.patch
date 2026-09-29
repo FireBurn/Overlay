@@ -1,0 +1,43 @@
+From 8dd27043216e76da0f5cc5b0765a7a5435b28b59 Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Sat, 26 Sep 2026 14:37:48 +0100
+Subject: [PATCH 07/18] hip : keep MMQ WMMA k-loops rolled to avoid VGPR spills
+ on RDNA4
+
+Assisted-by: Claude Code (Claude Opus 5.5)
+---
+ ggml/src/ggml-cuda/mmq-vec-dot.cuh | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/ggml/src/ggml-cuda/mmq-vec-dot.cuh b/ggml/src/ggml-cuda/mmq-vec-dot.cuh
+index 4ca6542d8..51ae44c67 100644
+--- a/ggml/src/ggml-cuda/mmq-vec-dot.cuh
++++ b/ggml/src/ggml-cuda/mmq-vec-dot.cuh
+@@ -162,6 +162,8 @@ static __device__ __forceinline__ void ggml_cuda_mmq_vec_dot_q8_0_q8_1_mma(
+ 
+     const int i0 = (threadIdx.y / ntx) * rows_per_warp;
+ 
++    // Keep the k01 loop rolled: unrolled, the hoisted loads exceed the VGPR budget and J >= 80 kernels spill on RDNA4.
++#pragma unroll 1
+     for (int k01 = 0; k01 < MMQ_TILE_NE_K; k01 += QI8_0) {
+         const int k0 = k00 + k01;
+ 
+@@ -495,6 +497,7 @@ template <ggml_type type, int J, bool fallback, ggml_prec prec_src1 = GGML_PREC_
+ 
+     const int i0 = (threadIdx.y / ntx) * rows_per_warp;
+ 
++#pragma unroll 1
+     for (int k01 = 0; k01 < MMQ_TILE_NE_K; k01 += 4) {
+         const int k0 = k00 + k01;
+ 
+@@ -693,6 +696,7 @@ template <ggml_type type, int J, bool fallback> static __device__ __forceinline_
+ 
+     const int i0 = (threadIdx.y / ntx) * rows_per_warp;
+ 
++#pragma unroll 1
+     for (int k01 = 0; k01 < MMQ_TILE_NE_K; k01 += 4) {
+         const int k0 = k00 + k01;
+ 
+-- 
+2.55.0
+

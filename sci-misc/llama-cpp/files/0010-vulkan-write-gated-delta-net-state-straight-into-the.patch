@@ -1,28 +1,16 @@
-From 1ea14263e0b614f357c6a33d4cb94044ad3273cc Mon Sep 17 00:00:00 2001
+From ba7ac35a9ce24947092f859fbf4f6783f00fbf31 Mon Sep 17 00:00:00 2001
 From: Mike Lothian <mike@fireburn.co.uk>
 Date: Sat, 26 Sep 2026 16:58:53 +0100
-Subject: [PATCH 1/2] vulkan: write gated delta net state snapshots straight
- into the recurrent cache
+Subject: [PATCH 10/18] vulkan : write gated delta net state straight into the
+ recurrent cache
 
-The gated delta net wrote its final state (and rollback snapshots) into the
-tail of its output, followed by a cpy of that tail into the recurrent state
-cache every token. Give the shader a separate state output binding with an
-offset and snapshot stride; when the graph has the gdn -> view -> cpy
-pattern, bind the cache view directly and skip the cpy. Graph optimization
-schedules unrelated nodes between the gdn and the cpy, so this is done as an
-elision of that cpy node instead of a contiguous fusion; it is only used if
-the nodes in between do not touch the cache view and nothing else reads the
-gdn tail. GGML_VK_DISABLE_GDN_STATE_FUSION turns it off.
-
-R9700, Qwen3.8-27B UD-Q4_K_M tg128: 33.4 -> 33.9 t/s, perplexity unchanged.
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Assisted-by: Claude Code (Claude Opus 5.5)
 ---
  .../ggml-vulkan/ggml-vulkan-push-constants.h  |   1 +
  ggml/src/ggml-vulkan/ggml-vulkan-types.h      |   4 +
- ggml/src/ggml-vulkan/ggml-vulkan.cpp          | 108 +++++++++++++++++-
+ ggml/src/ggml-vulkan/ggml-vulkan.cpp          | 106 +++++++++++++++++-
  .../vulkan-shaders/gated_delta_net.comp       |   9 +-
- 4 files changed, 113 insertions(+), 9 deletions(-)
+ 4 files changed, 111 insertions(+), 9 deletions(-)
 
 diff --git a/ggml/src/ggml-vulkan/ggml-vulkan-push-constants.h b/ggml/src/ggml-vulkan/ggml-vulkan-push-constants.h
 index f066d1064..48c060e23 100644
@@ -59,7 +47,7 @@ index 252359bf8..21cdd044e 100644
      // Bit 'i' means nodes[start_of_fusion + i] writes to memory.
      // If there's no fusion, bit 0 is still set.
 diff --git a/ggml/src/ggml-vulkan/ggml-vulkan.cpp b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
-index 9952178e8..efdf6b03c 100644
+index 11485b4e9..ae295b3de 100644
 --- a/ggml/src/ggml-vulkan/ggml-vulkan.cpp
 +++ b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
 @@ -3720,7 +3720,7 @@ void ggml_vk_load_shaders(vk_device& device, vk_pipeline requested) {
@@ -71,18 +59,17 @@ index 9952178e8..efdf6b03c 100644
                      wg_denoms, {S_V, kda, device->subgroup_size, lanes_per_column}, 1, true, use_subgroup_ops, device->subgroup_size);
              }
          }
-@@ -10177,7 +10177,9 @@ void ggml_vk_lightning_indexer(ggml_backend_vk_context * ctx, vk_context& subctx
+@@ -10176,7 +10176,8 @@ void ggml_vk_lightning_indexer(ggml_backend_vk_context * ctx, vk_context& subctx
          pc, {dispatch_x, dispatch_y, 1});
  }
  
 -void ggml_vk_gated_delta_net(ggml_backend_vk_context * ctx, vk_context& subctx, ggml_tensor * dst) {
-+// state_dst: cache view the recurrent state snapshots are written to directly (fused state copy),
-+// or nullptr to write them to the tail of dst.
++// state_dst: cache view to write the state snapshots to (fused state copy), or nullptr to write them to the tail of dst.
 +void ggml_vk_gated_delta_net(ggml_backend_vk_context * ctx, vk_context& subctx, ggml_tensor * dst, const ggml_tensor * state_dst) {
      const ggml_tensor * src_q     = dst->src[0];
      const ggml_tensor * src_v     = dst->src[2];
      const ggml_tensor * src_beta  = dst->src[4];
-@@ -10192,7 +10194,8 @@ void ggml_vk_gated_delta_net(ggml_backend_vk_context * ctx, vk_context& subctx,
+@@ -10191,7 +10192,8 @@ void ggml_vk_gated_delta_net(ggml_backend_vk_context * ctx, vk_context& subctx,
      // K (snapshot slot count) is an op param; state holds s0 only [S_v, S_v, H, n_seqs].
      const uint32_t K = (uint32_t)ggml_get_op_params_i32(dst, 0);
  
@@ -92,7 +79,7 @@ index 9952178e8..efdf6b03c 100644
  
      vk_pipeline pipeline = ggml_vk_op_get_pipeline(ctx, dst->src[0], dst->src[1], dst->src[2], dst, dst->op);
      GGML_ASSERT(pipeline != nullptr);
-@@ -10200,6 +10203,12 @@ void ggml_vk_gated_delta_net(ggml_backend_vk_context * ctx, vk_context& subctx,
+@@ -10199,6 +10201,12 @@ void ggml_vk_gated_delta_net(ggml_backend_vk_context * ctx, vk_context& subctx,
      ggml_pipeline_request_descriptor_sets(ctx, pipeline, 1);
  
      vk_subbuffer dst_buf = ggml_vk_tensor_subbuffer(ctx, dst);
@@ -105,7 +92,7 @@ index 9952178e8..efdf6b03c 100644
      vk_subbuffer src_buf[6] = {};
      for (int i = 0; i < 6; i++) {
          src_buf[i] = ggml_vk_tensor_subbuffer(ctx, dst->src[i]);
-@@ -10226,11 +10235,12 @@ void ggml_vk_gated_delta_net(ggml_backend_vk_context * ctx, vk_context& subctx,
+@@ -10225,11 +10233,12 @@ void ggml_vk_gated_delta_net(ggml_backend_vk_context * ctx, vk_context& subctx,
          sb1, sb2, sb3,
          neq1, rq3,
          scale,
@@ -120,7 +107,7 @@ index 9952178e8..efdf6b03c 100644
          pc, { H, n_seqs, S_v });
  }
  
-@@ -12155,6 +12165,9 @@ bool ggml_vk_build_graph(ggml_backend_vk_context * ctx, ggml_cgraph * cgraph, in
+@@ -12156,6 +12165,9 @@ bool ggml_vk_build_graph(ggml_backend_vk_context * ctx, ggml_cgraph * cgraph, in
      if ((node->flags & GGML_TENSOR_FLAG_COMPUTE) == 0) {
          return false;
      }
@@ -130,7 +117,7 @@ index 9952178e8..efdf6b03c 100644
  
      VK_LOG_DEBUG("ggml_vk_build_graph(" << node << ", " << ggml_op_name(node->op) << ")");
      ctx->semaphore_idx = 0;
-@@ -12664,7 +12677,7 @@ bool ggml_vk_build_graph(ggml_backend_vk_context * ctx, ggml_cgraph * cgraph, in
+@@ -12665,7 +12677,7 @@ bool ggml_vk_build_graph(ggml_backend_vk_context * ctx, ggml_cgraph * cgraph, in
          break;
  
      case GGML_OP_GATED_DELTA_NET:
@@ -139,15 +126,14 @@ index 9952178e8..efdf6b03c 100644
  
          break;
  
-@@ -13950,6 +13963,80 @@ bool ggml_vk_can_fuse_rms_norm_set_rows(ggml_backend_vk_context * ctx, const str
+@@ -13951,6 +13963,79 @@ bool ggml_vk_can_fuse_rms_norm_set_rows(ggml_backend_vk_context * ctx, const str
      return true;
  }
  
 +bool ggml_vk_tensors_overlap(const ggml_tensor * a, const ggml_tensor * b, bool elementwise);
 +
-+// gated_delta_net + the cpy that scatters its state snapshots into the recurrent cache: let the
-+// shader write the cache directly and skip the cpy. Graph optimization may schedule unrelated
-+// nodes in between, so this is not a contiguous fusion. Returns the cpy node index, 0 if none.
++// Find the cpy that scatters gated_delta_net state snapshots into the recurrent cache, so the shader writes the cache and the cpy is skipped.
++// Graph optimization can put other nodes in between, so this is not a contiguous fusion. Returns the cpy node index, or 0.
 +static int ggml_vk_find_gdn_state_cpy(const struct ggml_cgraph * cgraph, int node_idx) {
 +    const ggml_tensor * gdn = cgraph->nodes[node_idx];
 +    if (gdn->op != GGML_OP_GATED_DELTA_NET || gdn->type != GGML_TYPE_F32 || (gdn->flags & GGML_TENSOR_FLAG_OUTPUT)) {
@@ -220,7 +206,7 @@ index 9952178e8..efdf6b03c 100644
  bool ggml_vk_can_fuse_snake(ggml_backend_vk_context * ctx, const struct ggml_cgraph * cgraph, int node_idx) {
      GGML_UNUSED(ctx);
      if (!ggml_can_fuse(cgraph, node_idx, snake_pattern)) {
-@@ -14145,6 +14232,7 @@ static ggml_status ggml_backend_vk_graph_compute(ggml_backend_t backend, ggml_cg
+@@ -14146,6 +14231,7 @@ static ggml_status ggml_backend_vk_graph_compute(ggml_backend_t backend, ggml_cg
      ctx->prealloc_size_add_rms_partials_offset = 0;
      ctx->do_add_rms_partials = false;
      ctx->do_add_rms_partials_offset_calculation = false;
@@ -228,7 +214,7 @@ index 9952178e8..efdf6b03c 100644
  
      int last_node = cgraph->n_nodes - 1;
  
-@@ -14288,6 +14376,14 @@ static ggml_status ggml_backend_vk_graph_compute(ggml_backend_t backend, ggml_cg
+@@ -14289,6 +14375,14 @@ static ggml_status ggml_backend_vk_graph_compute(ggml_backend_t backend, ggml_cg
          ctx->fused_topk_qsa = false;
          ctx->fused_rms_norm_mode = RMS_NORM_COUNT;
          const char *fusion_string {};

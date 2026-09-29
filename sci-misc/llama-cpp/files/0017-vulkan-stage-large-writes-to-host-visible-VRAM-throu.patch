@@ -1,0 +1,30 @@
+From dab226628dde97abb9ce9d0d1281c0dbfaba0a3a Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Sun, 27 Sep 2026 13:29:47 +0100
+Subject: [PATCH 17/18] vulkan : stage large writes to host-visible VRAM
+ through a DMA copy
+
+Assisted-by: Claude Code (Claude Opus 5.5)
+---
+ ggml/src/ggml-vulkan/ggml-vulkan-buffers.cpp | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/ggml/src/ggml-vulkan/ggml-vulkan-buffers.cpp b/ggml/src/ggml-vulkan/ggml-vulkan-buffers.cpp
+index 4d4c84951..82571f916 100644
+--- a/ggml/src/ggml-vulkan/ggml-vulkan-buffers.cpp
++++ b/ggml/src/ggml-vulkan/ggml-vulkan-buffers.cpp
+@@ -496,8 +496,9 @@ bool ggml_vk_buffer_write_async(vk_context subctx, vk_buffer& dst, size_t offset
+ 
+ void ggml_vk_buffer_write_2d(vk_buffer& dst, size_t offset, const void * src, size_t spitch, size_t dpitch, size_t width, size_t height) {
+     VK_LOG_DEBUG("ggml_vk_buffer_write_2d(" << width << ", " << height << ")");
+-    // Buffer is already mapped
+-    if(dst->memory_property_flags & vk::MemoryPropertyFlagBits::eHostVisible) {
++    // Buffer is already mapped. Large writes to host-visible VRAM (resizable BAR) are faster as a DMA copy than CPU stores over PCIe.
++    const bool bar = (dst->memory_property_flags & vk::MemoryPropertyFlagBits::eDeviceLocal) && !dst->device->uma;
++    if ((dst->memory_property_flags & vk::MemoryPropertyFlagBits::eHostVisible) && !(bar && width * height >= (4u << 20))) {
+         GGML_ASSERT(dst->memory_property_flags & vk::MemoryPropertyFlagBits::eHostCoherent);
+ 
+         if (width == spitch && width == dpitch) {
+-- 
+2.55.0
+

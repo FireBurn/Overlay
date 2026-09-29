@@ -1,25 +1,16 @@
-From 2aefb7dc4adecba15c1035d6ffe98cf51fa9b16f Mon Sep 17 00:00:00 2001
+From f7c8377d393f36ffe6fc72affe5005e51aeebe31 Mon Sep 17 00:00:00 2001
 From: Mike Lothian <mike@fireburn.co.uk>
 Date: Sat, 26 Sep 2026 14:59:08 +0100
-Subject: [PATCH 2/3] CUDA/HIP: gated delta net: 8 lanes per state column for
- S_v >= 128
+Subject: [PATCH 08/18] cuda : use 8 lanes per state column in gated delta net
+ for S_v >= 128
 
-Each column of the recurrent state was spread over a whole warp (4 rows
-per lane for S_v = 128), so every token paid two full-warp reductions per
-column. Give each column 8 lanes (16 rows per lane) and let a warp handle
-warp_size/8 columns, as the Vulkan shader does: reductions drop from 5 to
-3 steps and cover 4 columns at once.
-
-R9700 (gfx1201), test-backend-ops H=32 S_v=128: T=512 593 -> 330 us,
-T=1 20.8 -> 5.4 us. Qwen3.8-27B pp512: GDN 845 -> 444 us per layer.
-
-Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+Assisted-by: Claude Code (Claude Opus 5.5)
 ---
  ggml/src/ggml-cuda/gated_delta_net.cu | 54 +++++++++++++++------------
  1 file changed, 31 insertions(+), 23 deletions(-)
 
 diff --git a/ggml/src/ggml-cuda/gated_delta_net.cu b/ggml/src/ggml-cuda/gated_delta_net.cu
-index 1b431a724..f046840c2 100644
+index 1b431a724..0db2ae0c9 100644
 --- a/ggml/src/ggml-cuda/gated_delta_net.cu
 +++ b/ggml/src/ggml-cuda/gated_delta_net.cu
 @@ -1,7 +1,9 @@
@@ -27,8 +18,8 @@ index 1b431a724..f046840c2 100644
  #include "ggml-cuda/common.cuh"
  
 -template <int S_v, bool KDA, bool keep_rs_t>
-+// Each column of the state is owned by lpc lanes (lpc_req == 0: the whole warp) (rows_per_lane = S_v/lpc rows each), a warp
-+// handles warp_size/lpc columns. Fewer lanes per column means shorter reductions.
++// lpc lanes own each state column (lpc_req == 0: the whole warp), each lane holds S_v/lpc rows.
++// A warp handles warp_size/lpc columns. Fewer lanes per column means shorter reductions.
 +template <int S_v, int lpc_req, bool KDA, bool keep_rs_t>
  __global__ void __launch_bounds__((ggml_cuda_get_physical_warp_size() < S_v ? ggml_cuda_get_physical_warp_size() : S_v) * 4, 2)
  gated_delta_net_cuda(const float * q,
