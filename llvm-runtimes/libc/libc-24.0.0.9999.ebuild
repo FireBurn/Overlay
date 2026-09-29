@@ -45,6 +45,9 @@ RDEPEND="app-misc/pax-utils"
 # The libc is built through the runtimes directory rather than on its own, so
 # that scudo can be taken from compiler-rt in the same configure.
 LLVM_COMPONENTS=( libc runtimes cmake llvm/cmake compiler-rt third-party/siphash )
+# Enabling tests makes the runtimes build add llvm-lit, even though check-libc
+# itself does not use it.
+LLVM_TEST_COMPONENTS=( llvm/utils )
 llvm.org_set_globals
 
 pkg_pretend() {
