@@ -23,7 +23,7 @@ EAPI=8
 # using an external CI system that we have some control over, in case
 # issues pop up again with official tarball generation.
 
-GN_MIN_VER=0.2567
+GN_MIN_VER=0.2574
 # chromium-tools/get-chromium-toolchain-strings.py (or just use Chromicler)
 # Node for M145+ should be 24.12.0 but that's not packaged in Gentoo yet. See #969145
 TEST_FONT="9c07d19d9c5ee1ff94f717e6fb17e0c8c354e6f9"
@@ -517,6 +517,7 @@ src_prepare() {
 		"${FILESDIR}/cr149-channel-aware-build.patch"
 		"${FILESDIR}/cr156-devtools-public-inputs.patch"
 		"${FILESDIR}/cr156-devtools-isolated-declarations.patch"
+		"${FILESDIR}/cr156-bidi-isolated-declarations.patch"
 		"${FILESDIR}/cr154-devtools-typescript-tsc-fallback.patch"
 		"${FILESDIR}/cr152-dawn-system-go.patch"
 		"${FILESDIR}/cr152-unbundle-minizip-undo-unicode.patch"
@@ -555,7 +556,8 @@ src_prepare() {
 		PATCHES+=(
 			"${WORKDIR}/copium/cr143-libsync-__BEGIN_DECLS.patch"
 			"${FILESDIR}/cr153-system-crubit.patch"
-			"${FILESDIR}/cr155-cbor-crubit-enable-cpp-api-from-rust.patch"
+			"${FILESDIR}/cr156-cbor-crubit-enable-cpp-api-from-rust.patch"
+			"${FILESDIR}/cr156-cbor-mapentry-from-tuple.patch"
 			"${FILESDIR}/cr153-rust-wrapper-inputs-system-rust.patch"
 			"${FILESDIR}/cr153-system-clang-runtime.patch"
 			"${FILESDIR}/cr153-bytemuck-stable-simd.patch"

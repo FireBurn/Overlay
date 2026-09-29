@@ -1,0 +1,20 @@
+From: Gentoo Overlay <gentoo@localhost>
+Subject: [PATCH] chromium-bidi: fix isolated declaration emit for defaulted parameter
+
+The CommandProcessor constructor parameter `parser` has a default value,
+so its type implicitly includes undefined. TypeScript's isolated
+declaration emit (used by the devtools build for the chromium-bidi
+.d.ts targets) does not support adding undefined implicitly, so spell
+it out.
+
+--- a/third_party/chromium-bidi/src/bidiMapper/CommandProcessor.ts
++++ b/third_party/chromium-bidi/src/bidiMapper/CommandProcessor.ts
+@@ -99,7 +99,7 @@
+     bluetoothProcessor: BluetoothProcessor,
+     digitalCredentialsProcessor: DigitalCredentialsProcessor,
+     userContextStorage: UserContextStorage,
+-    parser: BidiCommandParameterParser = new BidiNoOpParser(),
++    parser: BidiCommandParameterParser|undefined = new BidiNoOpParser(),
+     initConnection: (options: MapperOptions) => Promise<void>,
+     logger?: LoggerFn,
+   ) {

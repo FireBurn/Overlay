@@ -1,0 +1,37 @@
+From: Gentoo Overlay <gentoo@localhost>
+Subject: [PATCH] cbor: gate Rust dependencies on Crubit availability
+
+Keep the build flag, library dependencies and unit test dependencies
+conditional on enable_cpp_api_from_rust. Chromium 156 switched the
+cbor component's Rust dependencies from public_deps to deps +=, so
+the hunk from the Chromium 155 version of this patch no longer applies.
+
+--- a/components/cbor/BUILD.gn
++++ b/components/cbor/BUILD.gn
+@@ -12,7 +12,7 @@
+   # TODO(crbug.com/535682335): Remove `USE_CBOR_RUST` buildflag entirely,
+   # unconditionally enable Rust CBOR parser, and drop `is_cronet_build` check
+   # once Cronet supports Crubit dependencies.
+-  flags = [ "USE_CBOR_RUST=!$is_cronet_build" ]
++  flags = [ "USE_CBOR_RUST=!$is_cronet_build && $enable_cpp_api_from_rust" ]
+ }
+ 
+ component("cbor") {
+@@ -36,7 +36,7 @@
+     "//base",
+   ]
+ 
+-  if (!is_cronet_build) {
++  if (!is_cronet_build && enable_cpp_api_from_rust) {
+     deps += [
+       "//build/rust/crubit",
+       "//components/cbor/rust:cbor_rust_bindings",
+@@ -63,7 +63,7 @@
+     "//testing/gtest",
+     "//third_party/fuzztest",
+   ]
+-  if (!is_cronet_build) {
++  if (!is_cronet_build && enable_cpp_api_from_rust) {
+     deps += [
+       "//components/cbor/rust:cbor_rust_bindings",
+       "//components/cbor/rust:cbor_rust_unittests",
