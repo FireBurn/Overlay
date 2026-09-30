@@ -327,6 +327,9 @@ NPM_PKGS="
 	@radix-ui/react-use-size@1.1.2
 	@radix-ui/react-visually-hidden@1.2.7
 	@radix-ui/rect@1.1.2
+	@redocly/ajv@8.11.2
+	@redocly/config@0.22.0
+	@redocly/openapi-core@1.34.20
 	@rolldown/pluginutils@1.0.0-beta.27
 	@rollup/rollup-linux-arm64-gnu@4.62.5|arm64,elibc_glibc
 	@rollup/rollup-linux-arm64-musl@4.62.5|arm64,elibc_musl
@@ -646,6 +649,7 @@ NPM_PKGS="
 	chalk@2.4.2
 	chalk@4.1.2
 	chalk@5.6.2
+	change-case@5.4.4
 	character-entities@2.0.2
 	character-entities-html4@2.1.0
 	character-entities-legacy@3.0.0
@@ -679,6 +683,7 @@ NPM_PKGS="
 	color-convert@2.0.1
 	color-name@1.1.3
 	color-name@1.1.4
+	colorette@1.4.0
 	colorette@2.0.20
 	combined-stream@1.0.8
 	comma-separated-tokens@2.0.3
@@ -1117,9 +1122,11 @@ NPM_PKGS="
 	jiti@1.21.7
 	jiti@2.7.0
 	jose@6.1.3
+	js-levenshtein@1.1.6
 	js-tokens@4.0.0
 	js-tokens@9.0.1
 	js-yaml@4.3.1
+	js-yaml@4.3.2
 	jsdom@26.1.0
 	jsesc@3.1.0
 	json@11.0.0
@@ -1359,6 +1366,7 @@ NPM_PKGS="
 	open@7.4.2
 	open@8.4.2
 	openai@5.11.0
+	openapi-typescript@7.13.0
 	optionator@0.9.4
 	ora@8.2.0
 	outvariant@1.4.3
@@ -1749,6 +1757,7 @@ NPM_PKGS="
 	unpipe@1.0.0
 	update-browserslist-db@1.1.4
 	uri-js@4.4.1
+	uri-js-replace@1.0.1
 	url-join@4.0.1
 	url-parse@1.5.10
 	use-callback-ref@1.3.3
@@ -1816,6 +1825,7 @@ NPM_PKGS="
 	yallist@4.0.0
 	yallist@5.0.0
 	yaml@2.9.0
+	yaml-ast-parser@0.0.43
 	yargs@17.7.2
 	yargs-parser@21.1.1
 	yauzl@2.10.0
