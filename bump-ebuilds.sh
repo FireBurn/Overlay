@@ -32,8 +32,8 @@ Chromium is always handled last, one slot at a time.
 Live runs pull --rebase --autostash from origin/master before checking packages.
 With --push each commit is pushed as soon as its emerge has succeeded.
 Upstream version sources are listed in scripts/upstream-sources.
-Logs are written to ${XDG_STATE_HOME:-~/.local/state}/bump-ebuilds/runs/<run>/,
-timings and declined candidates to the directory above that.
+Logs are written to ~/bump-work/runs/<run>/, timings and declined candidates
+to ~/bump-work/state/. Bumps that do not finish are left uncommitted here.
 Candidates the agent declines are recorded in declined.tsv there. That candidate
 is skipped until --retry, and newer ones for a week.
 EOF
@@ -55,19 +55,21 @@ done
 # timings.tsv: run, time, package, step, seconds, exit status, detail.
 #
 # Where things live:
-#   $LOG_DIR/timings.tsv, declined.tsv   history kept between runs
-#   $LOG_DIR/runs/<run>/                  this run's console log, step logs,
-#                                         agent transcripts and saved diffs
-#   $SCRATCH/<package name>/              scratch for downloads and checkouts;
-#                                         emptied at the start and end of a run
-LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/bump-ebuilds"
+#   $BUMP_WORK/state/    timings.tsv and declined.tsv, kept between runs
+#   $BUMP_WORK/runs/     one directory per run (console log, step logs, agent
+#                        transcripts); runs older than 30 days are removed
+#   $SCRATCH/<package>/  scratch for downloads and checkouts; emptied at the
+#                        start and end of a run
+# Builds run in /var/tmp/portage with Portage's own temp/build.log. Ebuilds
+# being worked on stay in this overlay, uncommitted, if a bump does not finish.
 BUMP_WORK=/home/fireburn/bump-work
+LOG_DIR="$BUMP_WORK/state"
 SCRATCH="$BUMP_WORK/scratch"
 RUN_ID="$(date +%Y%m%d-%H%M%S)$([[ "$DRY_RUN" == 1 ]] && echo -dry)"
-RUN_DIR="$LOG_DIR/runs/$RUN_ID"
+RUN_DIR="$BUMP_WORK/runs/$RUN_ID"
 TIMINGS="$LOG_DIR/timings.tsv"
 RUN_LOG="$RUN_DIR/run.log"
-mkdir -p "$RUN_DIR" "$SCRATCH"
+mkdir -p "$RUN_DIR" "$SCRATCH" "$LOG_DIR"
 if [[ "$DRY_RUN" == 0 ]]; then
     exec 9>"$LOG_DIR/lock"
     flock -n 9 || { echo "another bump-ebuilds run is active" >&2; exit 1; }
@@ -442,8 +444,8 @@ PY
         retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "ebuild manifest failed"
         return $?
     fi
-    local -a emerge_cmd=( emerge )
-    (( EUID == 0 )) || emerge_cmd=( sudo -n emerge )
+    local -a emerge_cmd=( env PORTAGE_TMPDIR=/var/tmp emerge )
+    (( EUID == 0 )) || emerge_cmd=( sudo -n env PORTAGE_TMPDIR=/var/tmp emerge )
     if ! run_step "$pkg" emerge "${emerge_cmd[@]}" -1 "=$pkg-$new"; then
         retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "emerge failed"
         return $?
@@ -453,24 +455,24 @@ PY
         return $?
     fi
     if ! run_step "$pkg" pkgcheck pkgcheck scan --repo FireBurn "$pkg"; then
-        revert_bump "$pkg" "$oldf" "$newf"
-        echo "ERROR: pkgcheck failed for $pkg $new (reverted)" >&2
+        echo "ERROR: pkgcheck failed for $pkg $new" >&2
+        leave_package "$pkg"
         return 2
     fi
     git add "$pkg"
-    git diff --cached --check -- "$pkg" || { revert_bump "$pkg" "$oldf" "$newf"; return 2; }
+    git diff --cached --check -- "$pkg" || { leave_package "$pkg"; return 2; }
     git commit -q --only -m "$pkg: bump to $new" -- "$pkg" || { echo "ERROR: commit failed for $pkg" >&2; return 2; }
     if ! run_step "$pkg" pkgcheck-commits pkgcheck_head; then
         git reset -q --soft HEAD~1
-        revert_bump "$pkg" "$oldf" "$newf"
-        echo "ERROR: pkgcheck --commits failed for $pkg $new (reverted)" >&2
+        echo "ERROR: pkgcheck --commits failed for $pkg $new" >&2
+        leave_package "$pkg"
         return 2
     fi
     info "bumped $pkg $old -> $new"
     return 0
 }
 
-AGENT_RULES="Put downloads, unpacked sources, checkouts and build logs in $SCRATCH/<package name>/ and nowhere else outside the overlay (not /tmp); the caller empties that directory. Run builds detached with their output in a file there and block on the process until it ends. Keep one ebuild per package: rename the old ebuild to the new version (git mv) instead of adding one beside it, unless the package is slotted and the versions are in different slots. Live 9999 ebuilds stay. Record how to find upstream versions: if a package's entry in scripts/upstream-sources is missing, wrong or could not be checked, add or fix it using the methods documented at the top of that file, and add an @group when other ebuilds in this overlay share the same pattern. Leave scripts/upstream-sources uncommitted; the caller reports it for review. Run a normal emerge -1 of each new package and a relevant smoke test, then pkgcheck scan --repo FireBurn --commits. Commit only if emerge installed successfully and checks pass, one commit per package, using git commit --only -- <package paths> so changes already staged by someone else stay out of the commit. Leave a package unchanged and report why if there is no safe bump. Do not push."
+AGENT_RULES="Work only on the ebuilds in this overlay and leave them there, uncommitted, if you cannot finish. Builds run in Portage's default /var/tmp/portage; never set PORTAGE_TMPDIR. Read build failures in Portage's own /var/tmp/portage/<category>/<package>-<version>/temp/build.log and do not copy build logs elsewhere. Put downloads, unpacked sources and checkouts in $SCRATCH/<package name>/ and nowhere else outside the overlay (not /tmp); the caller empties it. Start long builds detached with their console output sent to /dev/null and block on the process until it ends. After fixing a failed build, resume with ebuild <ebuild> compile, and when the phases pass finish with sudo ebuild <ebuild> install qmerge, which installs the finished work directory without another full build; use a clean emerge only when the fix requires a fresh build. Keep one ebuild per package: rename the old ebuild to the new version (git mv) instead of adding one beside it, unless the package is slotted and the versions are in different slots. Live 9999 ebuilds stay. Record how to find upstream versions: if a package's entry in scripts/upstream-sources is missing, wrong or could not be checked, add or fix it using the methods documented at the top of that file, and add an @group when other ebuilds in this overlay share the same pattern. Leave scripts/upstream-sources uncommitted; the caller reports it for review. Run a normal emerge -1 of each new package and a relevant smoke test, then pkgcheck scan --repo FireBurn --commits. Commit only if emerge installed successfully and checks pass, one commit per package, using git commit --only -- <package paths> so changes already staged by someone else stay out of the commit. Leave a package unchanged and report why if there is no safe bump. Do not push."
 
 # Token counts of opencode sessions in this directory since START_MS, for the log.
 agent_usage() {
@@ -481,15 +483,12 @@ agent_usage() {
          from session_v2 where directory = '$PWD' and time_created >= $1" 2>/dev/null
 }
 
-# Save an agent's unfinished changes to the log and restore the committed package.
-restore_package() {
-    local pkg="$1" saved="$RUN_DIR/${1//\//_}.diff"
-    git add -N -- "$pkg"
-    git diff HEAD --binary -- "$pkg" >"$saved"
-    git reset -q -- "$pkg"
-    git checkout -q HEAD -- "$pkg"
-    git clean -fdq -- "$pkg"
-    info "restored $pkg; the agent's changes are in $saved"
+# Unfinished work stays in the overlay for the user; it is listed at the end.
+UNFINISHED=()
+leave_package() {
+    package_clean "$1" && return 0
+    in_list "$1" "${UNFINISHED[@]}" || UNFINISHED+=("$1")
+    info "left $1 uncommitted in the overlay"
 }
 
 # Scratch files and Portage work directories are removed at the start and end
@@ -500,9 +499,6 @@ cleanup() {
     trap - EXIT
     heartbeat_stop
     [[ "$DRY_RUN" == 1 ]] && return
-    if [[ -n "$CURRENT_PKG" && "$CURRENT_PKG" != "$CHROMIUM" ]] && ! package_clean "$CURRENT_PKG"; then
-        restore_package "$CURRENT_PKG"
-    fi
     restore_index
     sudo -n find "$SCRATCH" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null
     if [[ -z "$(portage_jobs)" ]]; then
@@ -512,7 +508,7 @@ cleanup() {
         find /var/tmp/portage "$HOME/portage-tmp/portage" -mindepth 2 -maxdepth 2 -type d -name '*-[0-9]*' 2>/dev/null |
             grep -Ev "$keep" | xargs -r sudo -n rm -rf
     fi
-    find "$LOG_DIR/runs" -mindepth 1 -maxdepth 1 -mtime +30 -exec rm -rf {} + 2>/dev/null
+    find "$BUMP_WORK/runs" -mindepth 1 -maxdepth 1 -mtime +30 -exec rm -rf {} + 2>/dev/null
 }
 trap cleanup EXIT
 trap 'exit 130' INT TERM HUP
@@ -556,7 +552,7 @@ run_agent() {
     local label="$1" prompt="$2" alog start start_ms rc round=0 session before
     agent_available || return 2
     alog="$RUN_DIR/agent-${label//\//_}.log"
-    session="bump-$RUN_ID-${label//[\/ ]/_}"
+    session="ses_bump${RUN_ID//[^0-9]/}${label//[^A-Za-z0-9]/}"
     before="$(portage_jobs)"
     start=$EPOCHREALTIME
     start_ms=$(date +%s%3N)
@@ -595,12 +591,12 @@ bump_agent() {
 
     if ! run_agent "$pkg" "$prompt"; then
         echo "ERROR: agent bump failed for $pkg" >&2
-        package_clean "$pkg" || restore_package "$pkg"
+        leave_package "$pkg"
         return 2
     fi
     if ! package_clean "$pkg"; then
         echo "ERROR: agent left uncommitted changes in $pkg" >&2
-        restore_package "$pkg"
+        leave_package "$pkg"
         return 2
     fi
     if [[ "$(git rev-parse HEAD)" != "$head" ]]; then
@@ -863,7 +859,7 @@ bump_group() {
     for pkg in "${pkgs[@]}"; do
         if ! package_clean "$pkg"; then
             echo "ERROR: agent left uncommitted changes in $pkg" >&2
-            restore_package "$pkg"
+            leave_package "$pkg"
             failed+=("$pkg")
         elif [[ -n "$(git log --format=%h "$head..HEAD" -- "$pkg")" ]]; then
             changed=1
@@ -1041,6 +1037,11 @@ fi
 if (( ${#results[@]} )); then
     log "results"
     for line in "${results[@]}"; do info "$line"; done
+fi
+
+if (( ${#UNFINISHED[@]} )); then
+    log "left uncommitted in $PWD"
+    for pkg in "${UNFINISHED[@]}"; do info "$pkg"; done
 fi
 
 log "slowest steps"
