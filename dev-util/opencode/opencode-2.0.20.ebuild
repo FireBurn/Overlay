@@ -623,9 +623,9 @@ NPM_PKGS="
 	@peculiar/json-schema@1.1.12
 	@peculiar/utils@2.0.3
 	@peculiar/webcrypto@1.7.1
-	@pierre/diffs@1.2.10
-	@pierre/theme@1.0.3
-	@pierre/theming@0.0.1
+	@pierre/diffs@1.5.1
+	@pierre/theme@2.0.0
+	@pierre/theming@1.0.1
 	@pierre/trees@1.0.0-beta.4
 	@pkgjs/parseargs@0.11.0
 	@planetscale/database@1.19.0
@@ -1317,7 +1317,7 @@ NPM_PKGS="
 	editorconfig@1.0.7
 	effect@4.0.0-rc.112
 	ejs@3.1.10
-	electron@44.4.3
+	electron@44.4.5
 	electron-builder@26.15.7
 	electron-builder-squirrel-windows@26.15.7
 	electron-context-menu@5.0.0
