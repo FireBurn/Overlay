@@ -379,12 +379,21 @@ revert_bump() {
     git restore --staged --worktree -- "$pkg" 2>/dev/null || true
 }
 
+# While the quick mechanical bumps run, a failure is put back and queued so the
+# remaining renames are not held up; the agent takes the queue afterwards.
+DEFER=0
+DEFERRED=()
 retry_with_agent() {
     local pkg="$1" old="$2" new="$3" oldf="$4" newf="$5" reason="$6" result
     revert_bump "$pkg" "$oldf" "$newf"
     if ! package_clean "$pkg"; then
         echo "ERROR: could not restore $pkg after $reason" >&2
         return 2
+    fi
+    if (( DEFER )); then
+        info "$reason; deferred until the quick bumps are done"
+        DEFERRED+=("$pkg$SEP" "retry$SEP$old$SEP$new$SEP$SEP$SEP$SEP" "automatic attempt: $reason${LAST_STEP_LOG:+; output of the failed step is in $LAST_STEP_LOG}")
+        return 3
     fi
     info "$reason; asking agent to inspect and fix it"
     bump_agent "$pkg" "$old" "$new" "automatic attempt: $reason${LAST_STEP_LOG:+; output of the failed step is in $LAST_STEP_LOG}"
@@ -965,6 +974,8 @@ process_row() {
             else
                 bump_agent "$pkg" "$old" "" "$note"
             fi ;;
+        retry)
+            bump_agent "$pkg" "$old" "$new" "$note" ;;
         error)
             bump_agent "$pkg" "$old" "" "the upstream version lookup '$source' failed ($note); fix its scripts/upstream-sources entry" ;;
         newer)
@@ -987,13 +998,26 @@ process_row() {
     case "$rc" in
         0) changed=1; results+=("$([[ "$DRY_RUN" == 1 ]] && echo would-bump || echo bumped)  $pkg ${new:+$old -> $new}"); push_commits ;;
         2) failed+=("$pkg"); results+=("FAILED  $pkg ${new:+$old -> $new}") ;;
+        3) results+=("deferred $pkg ${new:+$old -> $new}") ;;
         *) results+=("no-op   $pkg") ;;
     esac
     return "$rc"
 }
 
-for row in "${Q_SIMPLE[@]}" "${Q_AGENT[@]}"; do
+DEFER=1
+for row in "${Q_SIMPLE[@]}"; do
     process_row "$row"
+done
+DEFER=0
+
+for row in "${Q_AGENT[@]}"; do
+    process_row "$row"
+done
+
+# Bumps that failed their automatic attempt: the entries are pkg, fields, note.
+for (( i = 0; i < ${#DEFERRED[@]}; i += 3 )); do
+    TOTAL=$((TOTAL + 1))
+    process_row "${DEFERRED[i]}${DEFERRED[i+1]}${DEFERRED[i+2]}"
 done
 
 for group in "${!GROUP_PKGS[@]}"; do
