@@ -4,24 +4,26 @@
 EAPI=8
 
 DISTUTILS_USE_PEP517=hatchling
-PYTHON_COMPAT=( python3_{11..14} )
+PYTHON_COMPAT=( python3_{12..14} )
 
 inherit distutils-r1
 
 DESCRIPTION="Model Context Protocol (MCP) server for Ghidra via PyGhidra"
 HOMEPAGE="https://github.com/clearbluejar/pyghidra-mcp https://pypi.org/project/pyghidra-mcp/"
-SRC_URI="https://github.com/clearbluejar/pyghidra-mcp/archive/refs/tags/v${PV}.tar.gz -> ${P}.tar.gz"
+SRC_URI="https://github.com/clearbluejar/pyghidra-mcp/archive/refs/tags/v${PV}.tar.gz -> ${P}.gh.tar.gz"
 
 LICENSE="Apache-2.0"
 SLOT="0"
-KEYWORDS="~amd64 ~arm64"
+# dev-python/mcp is only keyworded for amd64
+KEYWORDS="~amd64"
 RESTRICT="test"
 
+# upstream pins mcp<2; the mcp2-compat patch ports it to the mcp 2 API
 RDEPEND="
 	>=dev-python/click-8.2.1[${PYTHON_USEDEP}]
 	>=dev-python/click-option-group-0.5.9[${PYTHON_USEDEP}]
-	>=dev-python/mcp-1.26.0[${PYTHON_USEDEP}]
-	<dev-python/mcp-2[${PYTHON_USEDEP}]
+	>=dev-python/mcp-2.0.0[${PYTHON_USEDEP}]
+	<dev-python/mcp-3[${PYTHON_USEDEP}]
 	>=dev-python/pyghidra-2.2.1[${PYTHON_USEDEP}]
 	>=dev-python/ghidrecomp-0.5.8[${PYTHON_USEDEP}]
 "
@@ -31,14 +33,15 @@ BDEPEND="
 
 PATCHES=(
 	"${FILESDIR}/${P}-optional-chromadb.patch"
+	"${FILESDIR}/${P}-mcp2-compat.patch"
 )
 
 src_prepare() {
 	default
 
 	# chromadb is optional (see the patch), and only the mcp server API is
-	# used, not the [cli] extra
+	# used, not the [cli] extra; the mcp pin follows the mcp2-compat patch
 	sed -i -e '/chromadb/d' \
-		-e 's/mcp\[cli\]/mcp/' \
+		-e 's/mcp\[cli\]>=1\.26\.0,<2/mcp>=2.0.0,<3/' \
 		pyproject.toml || die
 }

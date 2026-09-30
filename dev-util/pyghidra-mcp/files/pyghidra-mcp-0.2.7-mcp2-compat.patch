@@ -1,0 +1,217 @@
+diff -ruN a/src/pyghidra_mcp/mcp_tools.py b/src/pyghidra_mcp/mcp_tools.py
+--- a/src/pyghidra_mcp/mcp_tools.py	2026-09-25 07:20:21.000000000 +0100
++++ b/src/pyghidra_mcp/mcp_tools.py	2026-09-30 04:01:37.335638895 +0100
+@@ -9,9 +9,7 @@
+ import logging
+ from typing import Literal, cast
+ 
+-from mcp.server.fastmcp import Context
+-from mcp.shared.exceptions import McpError
+-from mcp.types import INTERNAL_ERROR, INVALID_PARAMS, ErrorData
++from mcp.server.mcpserver import Context
+ 
+ from pyghidra_mcp.context_protocol import MCPContext
+ from pyghidra_mcp.models import (
+@@ -84,11 +82,11 @@
+     action = _get_action_name(func.__name__)
+ 
+     def handle_error(e):
++        # mcp 2 turns ordinary exceptions into CallToolResult(isError=True);
++        # MCPError is reserved for JSON-RPC protocol failures.
+         if isinstance(e, ValueError):
+-            return McpError(ErrorData(code=INVALID_PARAMS, message=str(e)))
+-        if isinstance(e, McpError):
+-            return e
+-        return McpError(ErrorData(code=INTERNAL_ERROR, message=f"Error {action}: {e!s}"))
++            return RuntimeError(str(e))
++        return RuntimeError(f"Error {action}: {e!s}")
+ 
+     @functools.wraps(func)
+     async def async_wrapper(*args, **kwargs):
+@@ -395,12 +393,7 @@
+     if pyghidra_context.delete_program(binary_name):
+         return f"Successfully deleted binary: {binary_name}"
+     else:
+-        raise McpError(
+-            ErrorData(
+-                code=INVALID_PARAMS,
+-                message=f"Binary '{binary_name}' not found or could not be deleted.",
+-            )
+-        )
++        raise ValueError(f"Binary '{binary_name}' not found or could not be deleted.")
+ 
+ 
+ @mcp_error_handler
+diff -ruN a/src/pyghidra_mcp/server.py b/src/pyghidra_mcp/server.py
+--- a/src/pyghidra_mcp/server.py	2026-09-30 04:01:37.330038554 +0100
++++ b/src/pyghidra_mcp/server.py	2026-09-30 04:01:37.336850335 +0100
+@@ -13,9 +13,7 @@
+ import click
+ import pyghidra
+ from click_option_group import optgroup
+-from mcp.server import Server
+-from mcp.server.fastmcp import FastMCP
+-from mcp.server.fastmcp.server import Settings as FastMCPSettings
++from mcp.server.mcpserver import MCPServer
+ 
+ from pyghidra_mcp import __version__, mcp_tools
+ from pyghidra_mcp.context import PyGhidraContext
+@@ -119,7 +117,7 @@
+ # Init Pyghidra
+ # ---------------------------------------------------------------------------------
+ @asynccontextmanager
+-async def server_lifespan(server: Server) -> AsyncIterator[MCPContext]:
++async def server_lifespan(server: MCPServer) -> AsyncIterator[MCPContext]:
+     """Manage server startup and shutdown lifecycle."""
+     try:
+         yield server._pyghidra_context  # type: ignore
+@@ -128,14 +126,10 @@
+         pass
+ 
+ 
+-# MCP 1.x leaves Settings.lifespan as an unresolved forward reference until rebuilt.
+-# Rebuild before FastMCP constructs Settings so pydantic-settings 2.15+ can inspect it.
+-FastMCPSettings.model_rebuild()
+-mcp = FastMCP("pyghidra-mcp", lifespan=server_lifespan)  # type: ignore
+-mcp._mcp_server.version = __version__
++mcp = MCPServer("pyghidra-mcp", lifespan=server_lifespan, version=__version__)  # type: ignore
+ 
+ 
+-def register_common_tools(server: FastMCP) -> None:
++def register_common_tools(server: MCPServer) -> None:
+     server.tool()(mcp_tools.decompile_function)
+     server.tool()(mcp_tools.search_symbols_by_name)
+     server.tool()(mcp_tools.search_code)
+@@ -158,7 +152,7 @@
+     server.tool()(mcp_tools.import_binary)
+ 
+ 
+-def register_gui_tools(server: FastMCP) -> None:
++def register_gui_tools(server: MCPServer) -> None:
+     server.tool()(mcp_tools.list_open_programs)
+     server.tool()(mcp_tools.open_program_in_gui)
+     server.tool()(mcp_tools.set_current_program)
+@@ -170,7 +164,7 @@
+ 
+ 
+ def init_pyghidra_context(  # noqa: C901
+-    mcp: FastMCP,
++    mcp: MCPServer,
+     *,
+     transport: str,
+     input_paths: list[Path],
+@@ -190,7 +184,7 @@
+     delete_project_binary: str | None,
+     symbols_path: str | None,
+     sym_file_path: str | None,
+-) -> FastMCP:
++) -> MCPServer:
+     bin_paths: list[str | Path] = [Path(p) for p in input_paths]
+     logger.info(f"Project: {project_name}")
+     logger.info(f"Project: Location {project_directory}")
+@@ -274,11 +268,11 @@
+ 
+ 
+ def init_gui_context(
+-    mcp: FastMCP,
++    mcp: MCPServer,
+     *,
+     project_spec: ProjectSpec,
+     input_paths: list[Path],
+-) -> FastMCP:
++) -> MCPServer:
+     logger.info("Waiting for Ghidra GUI project...")
+     gui_context = GuiPyGhidraContext(project_spec=project_spec)
+     if input_paths:
+@@ -290,11 +284,17 @@
+     return mcp
+ 
+ 
+-def run_mcp_server(mcp: FastMCP, transport: str) -> None:
++def run_mcp_server(
++    mcp: MCPServer,
++    transport: str,
++    *,
++    host: str = "127.0.0.1",
++    port: int = 8000,
++) -> None:
+     if transport == "stdio":
+         mcp.run(transport="stdio")
+     elif transport in ["streamable-http", "http"]:
+-        mcp.run(transport="streamable-http")
++        mcp.run(transport="streamable-http", host=host, port=port)
+     elif transport == "sse":
+         import warnings
+ 
+@@ -304,7 +304,7 @@
+             DeprecationWarning,
+             stacklevel=1,
+         )
+-        mcp.run(transport="sse")
++        mcp.run(transport="sse", host=host, port=port)
+     else:
+         raise ValueError(f"Invalid transport: {transport}")
+ 
+@@ -339,9 +339,11 @@
+ 
+ 
+ def run_gui_server(
+-    mcp: FastMCP,
++    mcp: MCPServer,
+     *,
+     transport: str,
++    host: str,
++    port: int,
+     project_spec: ProjectSpec,
+     input_paths: list[Path],
+ ) -> None:
+@@ -358,7 +360,7 @@
+     def gui_server_thread() -> None:
+         try:
+             init_gui_context(mcp=mcp, project_spec=project_spec, input_paths=input_paths)
+-            run_mcp_server(mcp, transport)
++            run_mcp_server(mcp, transport, host=host, port=port)
+         except BaseException as exc:
+             gui_server_error.append(exc)
+             logger.exception("GUI MCP server failed during startup or runtime.")
+@@ -397,11 +399,11 @@
+         sys.exit(130)
+ 
+ 
+-def run_headless_server(mcp: FastMCP, transport: str) -> None:
++def run_headless_server(mcp: MCPServer, transport: str, host: str, port: int) -> None:
+     """Run the MCP server and always release the project context on exit."""
+     interrupted = False
+     try:
+-        run_mcp_server(mcp, transport)
++        run_mcp_server(mcp, transport, host=host, port=port)
+     except KeyboardInterrupt:
+         interrupted = True
+         logger.info("Interrupted; starting clean shutdown.")
+@@ -607,8 +609,6 @@
+     project_directory = str(project_spec.project_directory)
+     project_name = project_spec.project_name
+     pyghidra_mcp_dir = project_spec.pyghidra_mcp_dir
+-    mcp.settings.port = port
+-    mcp.settings.host = host
+ 
+     if gui:
+         if transport == "stdio":
+@@ -621,6 +621,8 @@
+         run_gui_server(
+             mcp,
+             transport=transport,
++            host=host,
++            port=port,
+             project_spec=project_spec,
+             input_paths=input_paths,
+         )
+@@ -648,7 +650,7 @@
+         symbols_path=symbols_path,
+     )
+ 
+-    run_headless_server(mcp, transport)
++    run_headless_server(mcp, transport, host, port)
+ 
+ 
+ if __name__ == "__main__":

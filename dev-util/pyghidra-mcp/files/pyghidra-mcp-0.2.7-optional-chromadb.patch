@@ -1,5 +1,6 @@
---- a/src/pyghidra_mcp/context.py
-+++ b/src/pyghidra_mcp/context.py
+diff -ruN a/src/pyghidra_mcp/context.py b/src/pyghidra_mcp/context.py
+--- a/src/pyghidra_mcp/context.py	2026-09-25 07:20:21.000000000 +0100
++++ b/src/pyghidra_mcp/context.py	2026-09-30 04:01:37.329592826 +0100
 @@ -9,7 +9,10 @@
  from pathlib import Path
  from typing import TYPE_CHECKING, Any, Union
@@ -21,9 +22,10 @@
      strings: list | None = None
  
      @property
---- a/src/pyghidra_mcp/indexing_mixin.py
-+++ b/src/pyghidra_mcp/indexing_mixin.py
-@@ -4,8 +4,12 @@
+diff -ruN a/src/pyghidra_mcp/indexing_mixin.py b/src/pyghidra_mcp/indexing_mixin.py
+--- a/src/pyghidra_mcp/indexing_mixin.py	2026-09-25 07:20:21.000000000 +0100
++++ b/src/pyghidra_mcp/indexing_mixin.py	2026-09-30 04:01:37.329970548 +0100
+@@ -6,8 +6,12 @@
  from pathlib import Path
  from typing import Any
  
@@ -38,7 +40,7 @@
  
  from pyghidra_mcp.tools import DEFAULT_DECOMPILE_TIMEOUT_SECONDS, GhidraTools
  
-@@ -23,6 +27,12 @@
+@@ -25,6 +29,12 @@
      programs: dict[str, Any]
  
      def _init_indexing_state(self, pyghidra_mcp_dir: Path, *, threaded: bool) -> None:
@@ -51,16 +53,16 @@
          chromadb_path = pyghidra_mcp_dir / "chromadb"
          chromadb_path.mkdir(parents=True, exist_ok=True)
          self.chroma_client = chromadb.PersistentClient(
-@@ -98,6 +108,8 @@
-             self.schedule_indexing(program_info.name)
- 
-     def _open_complete_collection(self, name: str) -> Any | None:
+@@ -148,6 +158,8 @@
+         collection on disk. Such a collection (and any legacy one lacking the
+         marker) is deleted here so the caller rebuilds it from scratch.
+         """
 +        if self.chroma_client is None:
 +            return None
-         """Return an existing, fully-indexed collection, or None.
- 
-         Completion is decided by the ``COLLECTION_COMPLETE_KEY`` marker, not by
-@@ -128,6 +140,8 @@
+         name = self._normalize_collection_name(name)
+         try:
+             collection = self.chroma_client.get_collection(name=name)
+@@ -171,6 +183,8 @@
          )
  
      def _init_chroma_code_collection_for_program(self, program_info: Any) -> None:
@@ -69,9 +71,10 @@
          from ghidra.program.model.listing import Function
  
          logger.info("Initializing Chroma code collection for %s", program_info.name)
---- a/src/pyghidra_mcp/server.py
-+++ b/src/pyghidra_mcp/server.py
-@@ -28,6 +28,17 @@
+diff -ruN a/src/pyghidra_mcp/server.py b/src/pyghidra_mcp/server.py
+--- a/src/pyghidra_mcp/server.py	2026-09-25 07:20:21.000000000 +0100
++++ b/src/pyghidra_mcp/server.py	2026-09-30 04:01:37.330038554 +0100
+@@ -36,6 +36,17 @@
  )
  logger = logging.getLogger(__name__)
  
@@ -86,3 +89,6 @@
 +        pass
 +builtins.print = _safe_mcp_print
 +
+ 
+ class _SigintShutdownHandler:
+     """Turn the first Ctrl+C into normal Python shutdown, then force-exit.
