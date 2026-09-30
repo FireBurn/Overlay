@@ -92,19 +92,18 @@ NPM_PKGS="
 	@types/retry@0.12.0
 	@types/retry@0.12.5
 	@types/semver@7.7.1
-	@typescript/native-preview@7.0.0-dev.20260120.1
-	@typescript/native-preview-linux-arm64@7.0.0-dev.20260120.1|arm64
-	@typescript/native-preview-linux-x64@7.0.0-dev.20260120.1|amd64
+	@typescript/typescript-linux-arm64@7.0.2|arm64
+	@typescript/typescript-linux-x64@7.0.2|amd64
 	@vitest-evals/core@0.15.0
 	@vitest-evals/report-ui@0.15.0
-	@vitest/coverage-v8@4.1.9
-	@vitest/expect@4.1.9
-	@vitest/mocker@4.1.9
-	@vitest/pretty-format@4.1.9
-	@vitest/runner@4.1.9
-	@vitest/snapshot@4.1.9
-	@vitest/spy@4.1.9
-	@vitest/utils@4.1.9
+	@vitest/coverage-v8@4.1.11
+	@vitest/expect@4.1.11
+	@vitest/mocker@4.1.11
+	@vitest/pretty-format@4.1.11
+	@vitest/runner@4.1.11
+	@vitest/snapshot@4.1.11
+	@vitest/spy@4.1.11
+	@vitest/utils@4.1.11
 	@xterm/headless@5.5.0
 	agent-base@7.1.4
 	agent-base@9.0.0
@@ -251,6 +250,7 @@ NPM_PKGS="
 	obug@2.1.3
 	once@1.4.0
 	openai@6.40.0
+	openai@7.19.0
 	p-finally@1.0.0
 	p-retry@4.6.2
 	partial-json@0.1.7
@@ -269,6 +269,7 @@ NPM_PKGS="
 	proxy-agent-negotiate@1.1.0
 	pump@3.0.4
 	queue-microtask@1.2.3
+	quickjs-wasi@3.6.2
 	rc@1.2.8
 	readable-stream@3.6.2
 	rechoir@0.6.2
@@ -313,20 +314,19 @@ NPM_PKGS="
 	to-regex-range@5.0.1
 	ts-algebra@2.0.0
 	tslib@2.8.1
-	tsx@4.22.1
 	tunnel-agent@0.6.0
 	tweetnacl@0.14.5
 	typebox@1.1.38
 	typebox@1.3.27
-	typescript@5.9.3
-	undici@6.28.0
+	typescript@7.0.2
+	undici@6.29.0
 	undici@8.10.2
 	undici-types@6.21.0
 	util-deprecate@1.0.2
 	validate.io-array@1.0.6
 	validate.io-function@1.0.2
 	vite@8.0.16
-	vitest@4.1.9
+	vitest@4.1.11
 	vitest-evals@0.15.0
 	web-streams-polyfill@3.3.3
 	which@1.3.1
@@ -379,11 +379,24 @@ NPM_STUB_PKGS="
 	@rolldown/binding-wasm32-wasi@1.0.3
 	@rolldown/binding-win32-arm64-msvc@1.0.3
 	@rolldown/binding-win32-x64-msvc@1.0.3
-	@typescript/native-preview-darwin-arm64@7.0.0-dev.20260120.1
-	@typescript/native-preview-darwin-x64@7.0.0-dev.20260120.1
-	@typescript/native-preview-linux-arm@7.0.0-dev.20260120.1
-	@typescript/native-preview-win32-arm64@7.0.0-dev.20260120.1
-	@typescript/native-preview-win32-x64@7.0.0-dev.20260120.1
+	@typescript/typescript-aix-ppc64@7.0.2
+	@typescript/typescript-darwin-arm64@7.0.2
+	@typescript/typescript-darwin-x64@7.0.2
+	@typescript/typescript-freebsd-arm64@7.0.2
+	@typescript/typescript-freebsd-x64@7.0.2
+	@typescript/typescript-linux-arm@7.0.2
+	@typescript/typescript-linux-loong64@7.0.2
+	@typescript/typescript-linux-mips64el@7.0.2
+	@typescript/typescript-linux-ppc64@7.0.2
+	@typescript/typescript-linux-riscv64@7.0.2
+	@typescript/typescript-linux-s390x@7.0.2
+	@typescript/typescript-netbsd-arm64@7.0.2
+	@typescript/typescript-netbsd-x64@7.0.2
+	@typescript/typescript-openbsd-arm64@7.0.2
+	@typescript/typescript-openbsd-x64@7.0.2
+	@typescript/typescript-sunos-x64@7.0.2
+	@typescript/typescript-win32-arm64@7.0.2
+	@typescript/typescript-win32-x64@7.0.2
 	fsevents@2.3.3
 	lightningcss-android-arm64@1.32.0
 	lightningcss-darwin-arm64@1.32.0
@@ -430,7 +443,7 @@ BDEPEND="
 "
 
 # Workspace packages published alongside the CLI
-PI_WORKSPACES=( chord tui telemetry ai agent coding-agent )
+PI_WORKSPACES=( chord tui telemetry codemode mcp ai agent coding-agent )
 
 src_prepare() {
 	default
@@ -462,9 +475,9 @@ src_compile() {
 
 src_install() {
 	# Install the way upstream publishes it, resolving dependencies from
-	# the offline registry. Optional dependencies are prebuilt esbuild and
-	# clipboard binaries: esbuild comes from dev-util/esbuild instead, and
-	# clipboard access falls back to wl-paste or xclip.
+	# the offline registry. The shrinkwrap pulls prebuilt esbuild binaries
+	# in regardless of --omit=optional; esbuild comes from dev-util/esbuild
+	# instead, and clipboard access falls back to wl-paste or xclip.
 	npm_registry_add "${T}"/packs/*.tgz
 	npm_with_registry npm install --global --prefix "${ED}/usr" \
 		--omit=dev --omit=optional --install-links \
@@ -477,7 +490,6 @@ src_install() {
 
 	# The shrinkwrap pulls esbuild in regardless of --omit=optional
 	rm -r "${ED}${moddir}"/@earendil-works/pi-coding-agent/node_modules/@esbuild || die
-	rm -rf "${ED}${moddir}"/@earendil-works/pi-coding-agent/node_modules/@mariozechner/clipboard-*
 
 	rm "${ED}/usr/bin/pi" || die
 	newbin - pi <<-EOT
