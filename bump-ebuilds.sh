@@ -32,7 +32,8 @@ Chromium is always handled last, one slot at a time.
 Live runs pull --rebase --autostash from origin/master before checking packages.
 With --push each commit is pushed as soon as its emerge has succeeded.
 Upstream version sources are listed in scripts/upstream-sources.
-Logs and timings are written to ${XDG_STATE_HOME:-~/.local/state}/bump-ebuilds.
+Logs are written to ${XDG_STATE_HOME:-~/.local/state}/bump-ebuilds/runs/<run>/,
+timings and declined candidates to the directory above that.
 Candidates the agent declines are recorded in declined.tsv there. That candidate
 is skipped until --retry, and newer ones for a week.
 EOF
@@ -52,11 +53,25 @@ done
 # --- logging --------------------------------------------------------------
 # Every run writes a full console log, and appends one line per timed step to
 # timings.tsv: run, time, package, step, seconds, exit status, detail.
+#
+# Where things live:
+#   $LOG_DIR/timings.tsv, declined.tsv   history kept between runs
+#   $LOG_DIR/runs/<run>/                  this run's console log, step logs,
+#                                         agent transcripts and saved diffs
+#   $SCRATCH/<package name>/              scratch for downloads and checkouts;
+#                                         emptied at the start and end of a run
 LOG_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/bump-ebuilds"
+BUMP_WORK=/home/fireburn/bump-work
+SCRATCH="$BUMP_WORK/scratch"
 RUN_ID="$(date +%Y%m%d-%H%M%S)$([[ "$DRY_RUN" == 1 ]] && echo -dry)"
+RUN_DIR="$LOG_DIR/runs/$RUN_ID"
 TIMINGS="$LOG_DIR/timings.tsv"
-RUN_LOG="$LOG_DIR/$RUN_ID.log"
-mkdir -p "$LOG_DIR"
+RUN_LOG="$RUN_DIR/run.log"
+mkdir -p "$RUN_DIR" "$SCRATCH"
+if [[ "$DRY_RUN" == 0 ]]; then
+    exec 9>"$LOG_DIR/lock"
+    flock -n 9 || { echo "another bump-ebuilds run is active" >&2; exit 1; }
+fi
 [[ -s "$TIMINGS" ]] || printf 'run\ttime\tpackage\tstep\tseconds\tstatus\tdetail\n' >"$TIMINGS"
 exec > >(tee -a "$RUN_LOG") 2>&1
 RUN_START=$EPOCHREALTIME
@@ -85,8 +100,7 @@ timed() {
 
 # Step output (digest, emerge, pkgcheck, ...) goes to a file per step; the
 # console gets one status line, and the log tail if the step fails.
-# Under bump-work so the agent may read them.
-STEP_LOGS="/home/fireburn/bump-work/logs/$RUN_ID"
+STEP_LOGS="$RUN_DIR/steps"
 LAST_STEP_LOG=""
 mkdir -p "$STEP_LOGS"
 
@@ -94,9 +108,9 @@ mkdir -p "$STEP_LOGS"
 # heartbeat_start LABEL [LOGFILE] sets HB_PID; heartbeat_stop ends it.
 HB_PID=""
 heartbeat_start() {
-    local label="$1" alog="${2:-}" t0=$SECONDS
+    local label="$1" alog="${2:-}" t0=$SECONDS parent=$$
     (
-        while sleep 300; do
+        while kill -0 "$parent" 2>/dev/null && sleep 300; do
             last=""
             [[ -n "$alog" ]] && last="$(sed 's/\x1b\[[0-9;]*m//g' "$alog" 2>/dev/null |
                 grep -a '^\$ ' | tail -n1 | cut -c1-90)"
@@ -135,9 +149,11 @@ run_step() {
 
 # Rebasing with --autostash and pkgcheck --commits both drop staged renames,
 # so keep the caller's staged changes and put them back when we are done.
-STAGED="$LOG_DIR/$RUN_ID.staged.diff"
+STAGED="$RUN_DIR/staged.diff"
 git diff --cached --binary >"$STAGED"
+RESTORED=0
 restore_index() {
+    (( RESTORED )) && return
     local -a skip=()
     local f
     cmp -s "$STAGED" <(git diff --cached --binary) && return
@@ -148,6 +164,7 @@ restore_index() {
     fi
     if git reset -q && git apply --cached "${skip[@]}" "$STAGED"; then
         info "restored previously staged changes"
+        RESTORED=1
     else
         echo "ERROR: could not restore staged changes; they are saved in $STAGED" >&2
     fi
@@ -453,7 +470,7 @@ PY
     return 0
 }
 
-AGENT_RULES="Keep one ebuild per package: rename the old ebuild to the new version (git mv) instead of adding one beside it, unless the package is slotted and the versions are in different slots. Live 9999 ebuilds stay. Record how to find upstream versions: if a package's entry in scripts/upstream-sources is missing, wrong or could not be checked, add or fix it using the methods documented at the top of that file, and add an @group when other ebuilds in this overlay share the same pattern. Leave scripts/upstream-sources uncommitted; the caller reports it for review. Run a normal emerge -1 of each new package and a relevant smoke test, then pkgcheck scan --repo FireBurn --commits. Commit only if emerge installed successfully and checks pass, one commit per package, using git commit --only -- <package paths> so changes already staged by someone else stay out of the commit. Leave a package unchanged and report why if there is no safe bump. Do not push."
+AGENT_RULES="Put downloads, unpacked sources, checkouts and build logs in $SCRATCH/<package name>/ and nowhere else outside the overlay (not /tmp); the caller empties that directory. Run builds detached with their output in a file there and block on the process until it ends. Keep one ebuild per package: rename the old ebuild to the new version (git mv) instead of adding one beside it, unless the package is slotted and the versions are in different slots. Live 9999 ebuilds stay. Record how to find upstream versions: if a package's entry in scripts/upstream-sources is missing, wrong or could not be checked, add or fix it using the methods documented at the top of that file, and add an @group when other ebuilds in this overlay share the same pattern. Leave scripts/upstream-sources uncommitted; the caller reports it for review. Run a normal emerge -1 of each new package and a relevant smoke test, then pkgcheck scan --repo FireBurn --commits. Commit only if emerge installed successfully and checks pass, one commit per package, using git commit --only -- <package paths> so changes already staged by someone else stay out of the commit. Leave a package unchanged and report why if there is no safe bump. Do not push."
 
 # Token counts of opencode sessions in this directory since START_MS, for the log.
 agent_usage() {
@@ -466,7 +483,7 @@ agent_usage() {
 
 # Save an agent's unfinished changes to the log and restore the committed package.
 restore_package() {
-    local pkg="$1" saved="$LOG_DIR/$RUN_ID-${1//\//_}.diff"
+    local pkg="$1" saved="$RUN_DIR/${1//\//_}.diff"
     git add -N -- "$pkg"
     git diff HEAD --binary -- "$pkg" >"$saved"
     git reset -q -- "$pkg"
@@ -474,6 +491,31 @@ restore_package() {
     git clean -fdq -- "$pkg"
     info "restored $pkg; the agent's changes are in $saved"
 }
+
+# Scratch files and Portage work directories are removed at the start and end
+# of a run. Portage directories are left alone while any build is running, and
+# Chromium's are kept while a rotation is waiting to be resumed.
+CURRENT_PKG=""
+cleanup() {
+    trap - EXIT
+    heartbeat_stop
+    [[ "$DRY_RUN" == 1 ]] && return
+    if [[ -n "$CURRENT_PKG" && "$CURRENT_PKG" != "$CHROMIUM" ]] && ! package_clean "$CURRENT_PKG"; then
+        restore_package "$CURRENT_PKG"
+    fi
+    restore_index
+    sudo -n find "$SCRATCH" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null
+    if [[ -z "$(portage_jobs)" ]]; then
+        local keep="^$"
+        package_clean "$CHROMIUM" || keep="/var/tmp/portage/${CHROMIUM%/*}/${CHROMIUM#*/}-|portage-tmp/portage/${CHROMIUM%/*}/${CHROMIUM#*/}-"
+        sudo -n rm -rf /var/tmp/portage/portage
+        find /var/tmp/portage "$HOME/portage-tmp/portage" -mindepth 2 -maxdepth 2 -type d -name '*-[0-9]*' 2>/dev/null |
+            grep -Ev "$keep" | xargs -r sudo -n rm -rf
+    fi
+    find "$LOG_DIR/runs" -mindepth 1 -maxdepth 1 -mtime +30 -exec rm -rf {} + 2>/dev/null
+}
+trap cleanup EXIT
+trap 'exit 130' INT TERM HUP
 
 # A declined candidate stays skipped; newer candidates wait a week, so a busy
 # upstream (e.g. commit snapshots) does not trigger an agent run every day.
@@ -503,17 +545,32 @@ print(c["provider"][prov]["options"]["baseURL"].removesuffix("/v1"))' 2>/dev/nul
     [[ "$AGENT_UP" == 1 ]]
 }
 
+# PIDs of Portage builds that are running now.
+portage_jobs() { pgrep -f 'python-exec/[^/]+/(emerge|ebuild) ' | sort; }
+
 # run_agent LABEL PROMPT -- returns opencode's status; output goes to its own log too.
+# The model sometimes ends its turn to wait for a build it started in the
+# background, which ends the run and leaves the build unattended. When that
+# happens, wait for the build here and hand the result back to the same session.
 run_agent() {
-    local label="$1" prompt="$2" alog start start_ms rc
+    local label="$1" prompt="$2" alog start start_ms rc round=0 session before
     agent_available || return 2
-    alog="$LOG_DIR/$RUN_ID-agent-${label//\//_}.log"
+    alog="$RUN_DIR/agent-${label//\//_}.log"
+    session="bump-$RUN_ID-${label//[\/ ]/_}"
+    before="$(portage_jobs)"
     start=$EPOCHREALTIME
     start_ms=$(date +%s%3N)
     info "agent started; transcript: $alog"
     heartbeat_start "agent $label" "$alog"
-    opencode run --agent ebuild-bumper "$prompt" </dev/null >"$alog" 2>&1
+    opencode run --agent ebuild-bumper --session "$session" "$prompt" </dev/null >"$alog" 2>&1
     rc=$?
+    while (( round < 4 )) && [[ -n "$(comm -13 <(echo "$before") <(portage_jobs))" ]]; do
+        round=$((round + 1))
+        info "agent ended its turn with a build still running; waiting for it (round $round)"
+        while [[ -n "$(comm -13 <(echo "$before") <(portage_jobs))" ]]; do sleep 30; done
+        opencode run --agent ebuild-bumper --session "$session" "The build you started has finished. Read the end of its log and Portage's build.log, then carry on with the task: fix any failure and resume, run the smoke test and pkgcheck, and commit as instructed. Do not end your turn while a job is running." </dev/null >>"$alog" 2>&1
+        rc=$?
+    done
     heartbeat_stop
     record "$label" agent "$start" "$rc" "$(agent_usage "$start_ms")"
     printf '   %s  agent          %ss  %s\n' "$( ((rc)) && echo FAIL || echo ok )" \
@@ -552,7 +609,7 @@ bump_agent() {
     fi
     info "agent made no commit for $pkg"
     [[ -n "$new" ]] && printf '%s\t%s\t%s\t%s\n' "$pkg" "$new" "$(date -I)" \
-        "$LOG_DIR/$RUN_ID-agent-${pkg//\//_}.log" >>"$DECLINED"
+        "$RUN_DIR/agent-${pkg//\//_}.log" >>"$DECLINED"
     return 1
 }
 
@@ -564,7 +621,7 @@ bump_agent() {
 # early. A rotation left uncommitted by an interrupted run is resumed, and a
 # slot whose version is already installed is not rebuilt.
 CHROMIUM=www-client/chromium
-CHROMIUM_LOGS=/home/fireburn/bump-work/chromium
+CHROMIUM_LOGS="$RUN_DIR/chromium"
 PREP_TMPDIR=/home/fireburn/portage-tmp
 CHROMIUM_FIX_ATTEMPTS=2
 
@@ -623,7 +680,7 @@ chromium_fix() {
 chromium_prepare() {
     local slot="$1" e attempt=0 plog
     e="$(chromium_ebuild "$slot")"
-    plog="$CHROMIUM_LOGS/$RUN_ID-prepare-$slot.log"
+    plog="$CHROMIUM_LOGS/prepare-$slot.log"
     while true; do
         info "preparing $slot ($(chromium_version "$e")) in $PREP_TMPDIR"
         if timed "$CHROMIUM-$slot" prepare \
@@ -643,7 +700,7 @@ chromium_prepare() {
 chromium_emerge() {
     local slot="$1" attempts="${2:-$CHROMIUM_FIX_ATTEMPTS}" e v attempt=0 elog features=""
     e="$(chromium_ebuild "$slot")"; v="$(chromium_version "$e")"
-    elog="$CHROMIUM_LOGS/$RUN_ID-emerge-$slot.log"
+    elog="$CHROMIUM_LOGS/emerge-$slot.log"
     if [[ "$attempts" == resume ]]; then
         attempts=$CHROMIUM_FIX_ATTEMPTS
         (( attempt++ ))
@@ -833,12 +890,13 @@ extra_ebuilds() {
 # --- main -----------------------------------------------------------------
 START_HEAD="$(git rev-parse HEAD)"
 changed=0
+[[ "$DRY_RUN" == 0 ]] && sudo -n find "$SCRATCH" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null
 failed=()
 inferred=()
 declare -A GROUP_PKGS=() GROUP_VER=()
 
 log "checking upstream versions"
-VERSIONS="$LOG_DIR/$RUN_ID.versions.tsv"
+VERSIONS="$RUN_DIR/versions.tsv"
 timed - version-check scripts/upstream-version.py "${WORK[@]}" >"$VERSIONS" ||
     die "scripts/upstream-version.py failed"
 
@@ -903,6 +961,7 @@ process_row() {
     IFS=$'\037' read -r pkg status old new group batch source note <<<"$1"
     IDX=$((IDX + 1))
     log "[$IDX/$TOTAL] $pkg: $status${new:+ $old -> $new}"
+    CURRENT_PKG="$pkg"
     case "$status" in
         agent)
             if [[ "$pkg" == www-client/chromium ]]; then
@@ -927,6 +986,7 @@ process_row() {
             info "unexpected status '$status' for $pkg"; return 1 ;;
     esac
     rc=$?
+    CURRENT_PKG=""
     record "$pkg" total "$start" "$rc" "$status $old${new:+ -> $new}"
     case "$rc" in
         0) changed=1; results+=("$([[ "$DRY_RUN" == 1 ]] && echo would-bump || echo bumped)  $pkg ${new:+$old -> $new}"); push_commits ;;
