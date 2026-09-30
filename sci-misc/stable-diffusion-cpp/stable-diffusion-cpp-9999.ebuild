@@ -11,9 +11,9 @@ if [[ ${PV} == 9999 ]]; then
 	EGIT_SUBMODULES=( 'ggml' )
 else
 	MY_BUILD="${PV#0_p}"
-	MY_COMMIT="168f7b8"
+	MY_COMMIT="3f8527a"
 	MY_PV="master-${MY_BUILD}-${MY_COMMIT}"
-	GGML_COMMIT="4bf5f6000653b7881d00963cd6ddb665ccd62a8d"
+	GGML_COMMIT="89c4413f5da6fb20cc796f16033d37f129be81fd"
 	SRC_URI="
 		https://github.com/leejet/stable-diffusion.cpp/archive/refs/tags/${MY_PV}.tar.gz -> ${P}.tar.gz
 		https://github.com/leejet/ggml/archive/${GGML_COMMIT}.tar.gz -> ${PN}-ggml-${GGML_COMMIT:0:10}.tar.gz
@@ -93,11 +93,9 @@ PATCHES=(
 	"${FILESDIR}/0001-hip-fix-gfx12-bf16-wmma-with-llvm-23.patch"
 	"${FILESDIR}/0003-model-loader-dequantize-int8-tensorwise-when-converting.patch"
 )
-# 0002 is upstream in master, and 0004 is written for the pinned ggml, not the
-# submodule master uses.
+# 0004 is written for the pinned ggml, not the submodule master uses.
 if [[ ${PV} != 9999 ]]; then
 	PATCHES+=(
-		"${FILESDIR}/0002-match-exact-tensor-names-in-llm-config-detection.patch"
 		"${FILESDIR}/0004-vulkan-fa-cm1-shift-last-partial-kv-block.patch"
 	)
 fi
