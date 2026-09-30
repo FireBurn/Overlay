@@ -13,7 +13,9 @@ EAPI=8
 # Versions come from electron's DEPS file. NPM_PKGS comes from its yarn.lock:
 #   scripts/npm-deps.py electron/yarn.lock --ebuild <this ebuild>
 
-CHROMIUM_VER="152.0.7977.78"
+# DEPS pins 152.0.7977.130, but the official tarball bucket only has .129;
+# all of Electron's patches apply cleanly to it
+CHROMIUM_VER="152.0.7977.129"
 ELECTRON_NODE_VER="24.21.0"
 ELECTRON_NAN_COMMIT="675cefebca42410733da8a454c8d9391fcebfbc2"
 
@@ -60,7 +62,7 @@ NPM_PKGS="
 	@electron/asar@3.2.13
 	@electron/asar@3.4.1
 	@electron/asar@4.0.1
-	@electron/docs-parser@3.0.1
+	@electron/docs-parser@3.0.2
 	@electron/fiddle-core@1.3.4
 	@electron/fiddle-core@2.0.1
 	@electron/fuses@2.1.2
@@ -68,21 +70,14 @@ NPM_PKGS="
 	@electron/get@3.1.0
 	@electron/get@4.0.2
 	@electron/github-app-auth@3.2.0
-	@electron/lint-roller@3.2.0
+	@electron/lint-roller@4.0.0
 	@electron/notarize@2.5.0
 	@electron/osx-sign@1.3.3
 	@electron/packager@18.4.4
 	@electron/typescript-definitions@9.2.0
 	@electron/universal@2.0.3
 	@electron/windows-sign@1.2.2
-	@eslint-community/eslint-utils@4.4.0
-	@eslint-community/regexpp@4.11.1
-	@eslint/eslintrc@2.1.4
-	@eslint/js@8.57.1
 	@fastify/busboy@2.1.1
-	@humanwhocodes/config-array@0.13.0
-	@humanwhocodes/module-importer@1.0.1
-	@humanwhocodes/object-schema@2.0.3
 	@hurdlegroup/robotjs@0.12.3
 	@isaacs/cliui@8.0.2
 	@isaacs/fs-minipass@4.0.1
@@ -92,7 +87,9 @@ NPM_PKGS="
 	@jridgewell/source-map@0.3.6
 	@jridgewell/sourcemap-codec@1.4.14
 	@jridgewell/sourcemap-codec@1.5.0
+	@jridgewell/sourcemap-codec@1.6.0
 	@jridgewell/trace-mapping@0.3.25
+	@jridgewell/trace-mapping@0.3.31
 	@keyv/serialize@1.1.1
 	@kwsites/file-exists@1.1.1
 	@kwsites/promise-deferred@1.1.1
@@ -123,18 +120,23 @@ NPM_PKGS="
 	@octokit/rest@22.0.1
 	@octokit/types@16.0.0
 	@opentelemetry/api@1.0.4
+	@oxc-project/types@0.150.0
 	@oxfmt/binding-linux-arm64-gnu@0.42.0|arm64,elibc_glibc
 	@oxfmt/binding-linux-arm64-musl@0.42.0|arm64,elibc_musl
 	@oxfmt/binding-linux-x64-gnu@0.42.0|amd64,elibc_glibc
 	@oxfmt/binding-linux-x64-musl@0.42.0|amd64,elibc_musl
-	@oxlint/binding-linux-arm64-gnu@1.57.0|arm64,elibc_glibc
-	@oxlint/binding-linux-arm64-musl@1.57.0|arm64,elibc_musl
-	@oxlint/binding-linux-x64-gnu@1.57.0|amd64,elibc_glibc
-	@oxlint/binding-linux-x64-musl@1.57.0|amd64,elibc_musl
-	@pkgjs/parseargs@0.11.0
+	@oxlint/binding-linux-arm64-gnu@1.80.0|arm64,elibc_glibc
+	@oxlint/binding-linux-arm64-musl@1.80.0|arm64,elibc_musl
+	@oxlint/binding-linux-x64-gnu@1.80.0|amd64,elibc_glibc
+	@oxlint/binding-linux-x64-musl@1.80.0|amd64,elibc_musl
 	@primer/octicons@10.0.0
 	@protobuf-ts/runtime@2.11.1
 	@protobuf-ts/runtime-rpc@2.11.1
+	@rolldown/binding-linux-arm64-gnu@1.2.9|arm64,elibc_glibc
+	@rolldown/binding-linux-arm64-musl@1.2.9|arm64,elibc_musl
+	@rolldown/binding-linux-x64-gnu@1.2.9|amd64,elibc_glibc
+	@rolldown/binding-linux-x64-musl@1.2.9|amd64,elibc_musl
+	@rolldown/pluginutils@1.0.1
 	@sec-ant/readable-stream@0.4.1
 	@sentry/cli@1.72.0
 	@simple-git/args-pathspec@1.0.3
@@ -162,6 +164,7 @@ NPM_PKGS="
 	@types/eslint@9.6.1
 	@types/eslint-scope@3.7.7
 	@types/estree@1.0.8
+	@types/estree@1.0.9
 	@types/express@4.17.23
 	@types/express-serve-static-core@4.19.7
 	@types/glob@7.2.0
@@ -172,7 +175,6 @@ NPM_PKGS="
 	@types/json-buffer@3.0.0
 	@types/json-schema@7.0.11
 	@types/json-schema@7.0.15
-	@types/json5@0.0.29
 	@types/katex@0.16.7
 	@types/keyv@3.1.4
 	@types/linkify-it@5.0.0
@@ -207,7 +209,8 @@ NPM_PKGS="
 	@types/ws@8.18.1
 	@types/yauzl@2.10.0
 	@typespec/ts-http-runtime@0.3.0
-	@ungap/structured-clone@1.2.0
+	@vitest/mocker@5.0.1
+	@vitest/spy@5.0.1
 	@vscode/l10n@0.0.10
 	@webassemblyjs/ast@1.14.1
 	@webassemblyjs/floating-point-hex-parser@1.13.2
@@ -236,10 +239,8 @@ NPM_PKGS="
 	abort-controller@3.0.0
 	abstract-socket@2.0.0
 	accepts@2.0.0
-	acorn@8.12.1
 	acorn@8.15.0
 	acorn-import-phases@1.0.4
-	acorn-jsx@5.3.2
 	agent-base@6.0.2
 	agent-base@7.1.1
 	ajv@6.12.6
@@ -247,10 +248,8 @@ NPM_PKGS="
 	ajv-formats@2.1.1
 	ajv-keywords@3.5.2
 	ajv-keywords@5.1.0
-	ansi-colors@4.1.3
 	ansi-escapes@7.0.0
 	ansi-regex@2.1.1
-	ansi-regex@3.0.1
 	ansi-regex@5.0.1
 	ansi-regex@6.0.1
 	ansi-regex@6.2.2
@@ -259,27 +258,19 @@ NPM_PKGS="
 	ansi-styles@6.2.1
 	ansi-styles@6.2.3
 	anymatch@3.0.3
-	anymatch@3.1.2
 	aproba@1.2.0
 	aproba@2.1.0
 	are-we-there-yet@1.1.7
 	are-we-there-yet@2.0.0
 	argparse@1.0.10
 	argparse@2.0.1
-	array-buffer-byte-length@1.0.0
-	array-includes@3.1.6
 	array-unique@0.3.2
-	array.prototype.flat@1.3.1
-	array.prototype.flatmap@1.3.1
-	array.prototype.tosorted@1.1.1
-	arrify@1.0.1
 	assertion-error@1.1.0
 	assertion-error@2.0.1
 	async@3.2.4
 	asynckit@0.4.0
 	at-least-node@1.0.0
 	author-regex@1.0.0
-	available-typed-arrays@1.0.5
 	balanced-match@1.0.2
 	balanced-match@3.0.1
 	balanced-match@4.0.4
@@ -288,7 +279,6 @@ NPM_PKGS="
 	basic-auth@2.0.1
 	before-after-hook@4.0.0
 	big.js@5.2.2
-	binary-extensions@2.1.0
 	bindings@1.5.0
 	bluebird@3.7.2
 	body-parser@2.3.0
@@ -298,13 +288,10 @@ NPM_PKGS="
 	brace-expansion@2.0.2
 	brace-expansion@5.0.4
 	braces@3.0.3
-	browser-stdout@1.3.1
 	browserslist@4.28.1
 	buffer@6.0.3
 	buffer-crc32@0.2.13
-	buffer-from@1.1.1
 	buffer-from@1.1.2
-	builtins@5.0.1
 	busboy@1.6.0
 	byte-counter@0.1.0
 	bytes@3.1.2
@@ -312,28 +299,22 @@ NPM_PKGS="
 	cacheable-lookup@7.0.0
 	cacheable-request@13.0.15
 	cacheable-request@7.0.2
-	call-bind@1.0.2
 	call-bind-apply-helpers@1.0.2
 	call-bound@1.0.4
-	callsites@3.1.0
-	camelcase@6.3.0
 	caniuse-lite@1.0.30001768
 	canvas@2.11.2
 	chai@4.5.0
 	chai@5.1.1
+	chai@6.2.2
 	chai-as-promised@7.1.2
 	chalk@2.4.2
-	chalk@4.1.0
-	chalk@4.1.2
 	chalk@5.3.0
 	character-entities@2.0.0
 	character-entities-legacy@3.0.0
 	character-reference-invalid@2.0.0
-	charenc@0.0.2
 	check-error@1.0.3
 	check-error@2.1.1
 	check-for-leaks@1.2.1
-	chokidar@3.6.0
 	chownr@2.0.0
 	chownr@3.0.0
 	chrome-trace-event@1.0.2
@@ -371,22 +352,18 @@ NPM_PKGS="
 	core-util-is@1.0.2
 	cross-dirname@0.1.0
 	cross-spawn@7.0.6
-	crypt@0.0.2
 	css-selector-parser@3.2.0
 	dbus-native@0.4.0
 	debug@2.6.9
-	debug@3.2.7
 	debug@4.4.0
 	debug@4.4.1
 	debug@4.4.3
-	decamelize@4.0.0
 	decode-named-character-reference@1.0.2
 	decompress-response@10.0.0
 	decompress-response@4.2.1
 	decompress-response@6.0.0
 	deep-eql@4.1.4
 	deep-eql@5.0.2
-	deep-is@0.1.3
 	defer-to-connect@2.0.1
 	define-properties@1.2.0
 	delayed-stream@1.0.0
@@ -397,13 +374,9 @@ NPM_PKGS="
 	detect-libc@2.1.2
 	detect-node@2.1.0
 	devlop@1.1.0
-	diff@3.5.1
 	diff@4.0.4
-	diff@5.2.2
 	dir-compare@4.2.0
 	dirty-chai@2.0.1
-	doctrine@2.1.0
-	doctrine@3.0.0
 	dunder-proto@1.0.1
 	duplexer@0.1.1
 	duplexer@0.1.2
@@ -426,54 +399,32 @@ NPM_PKGS="
 	environment@1.1.0
 	err-code@2.0.3
 	errno@0.1.7
-	error-ex@1.3.2
 	error-ex@1.3.4
-	es-abstract@1.21.2
 	es-define-property@1.0.1
 	es-errors@1.3.0
 	es-module-lexer@2.0.0
+	es-module-lexer@2.3.2
 	es-object-atoms@1.0.0
 	es-object-atoms@1.1.1
-	es-set-tostringtag@2.0.1
 	es-set-tostringtag@2.1.0
-	es-shim-unscopables@1.0.0
-	es-to-primitive@1.2.1
 	es6-error@4.1.1
 	escalade@3.2.0
 	escape-html@1.0.3
 	escape-string-regexp@1.0.5
 	escape-string-regexp@4.0.0
-	eslint@8.57.1
-	eslint-config-standard@17.0.0
-	eslint-config-standard-jsx@11.0.0
-	eslint-import-resolver-node@0.3.7
-	eslint-module-utils@2.8.0
-	eslint-plugin-es@4.1.0
-	eslint-plugin-import@2.27.5
-	eslint-plugin-n@15.7.0
-	eslint-plugin-promise@6.1.1
-	eslint-plugin-react@7.32.2
 	eslint-scope@5.1.1
-	eslint-scope@7.2.2
-	eslint-utils@2.1.0
-	eslint-utils@3.0.0
-	eslint-visitor-keys@1.1.0
-	eslint-visitor-keys@2.0.0
-	eslint-visitor-keys@3.4.3
-	espree@9.6.1
 	esprima@4.0.1
-	esquery@1.5.0
 	esrecurse@4.3.0
 	estraverse@4.3.0
-	estraverse@5.1.0
 	estraverse@5.3.0
-	esutils@2.0.3
+	estree-walker@3.0.3
 	etag@1.8.1
 	event-stream@4.0.1
 	event-target-shim@5.0.1
 	eventemitter3@5.0.4
 	events@3.3.0
 	events-to-array@1.1.2
+	expect-type@1.4.0
 	exponential-backoff@3.1.3
 	express@5.2.1
 	extract-zip@2.0.1
@@ -481,7 +432,6 @@ NPM_PKGS="
 	fast-deep-equal@3.1.3
 	fast-glob@3.3.3
 	fast-json-stable-stringify@2.1.0
-	fast-levenshtein@2.0.6
 	fast-uri@3.1.4
 	fast-xml-builder@1.3.0
 	fast-xml-parser@5.7.1
@@ -489,23 +439,16 @@ NPM_PKGS="
 	fastq@1.8.0
 	fd-slicer@1.1.0
 	fdir@6.5.0
-	file-entry-cache@6.0.1
 	file-uri-to-path@1.0.0
 	filename-reserved-regex@2.0.0
 	filenamify@4.3.0
 	fill-range@7.1.1
 	finalhandler@2.1.1
 	find-up@2.1.0
-	find-up@3.0.0
 	find-up@4.1.0
-	find-up@5.0.0
 	flat@5.0.2
-	flat-cache@3.0.4
-	flatted@3.4.2
 	flora-colossus@2.0.0
 	folder-hash@4.1.2
-	for-each@0.3.3
-	foreground-child@3.1.1
 	foreground-child@3.3.1
 	form-data@2.5.6
 	form-data-encoder@4.1.0
@@ -519,11 +462,8 @@ NPM_PKGS="
 	fs-extra@9.1.0
 	fs-minipass@2.1.0
 	fs.realpath@1.0.0
-	fsevents@2.3.2
-	function-bind@1.1.1
+	fsevents@2.3.3
 	function-bind@1.1.2
-	function.prototype.name@1.1.5
-	functions-have-names@1.2.3
 	galactus@1.0.0
 	gauge@2.7.4
 	gauge@3.0.2
@@ -534,38 +474,26 @@ NPM_PKGS="
 	get-intrinsic@1.3.0
 	get-package-info@1.0.0
 	get-proto@1.0.1
-	get-stdin@8.0.0
 	get-stream@5.2.0
 	get-stream@9.0.1
-	get-symbol-description@1.0.0
 	getos@3.2.1
-	glob@10.5.0
 	glob@11.1.0
 	glob@7.2.3
-	glob@8.1.0
 	glob@9.3.5
 	glob-parent@5.1.2
-	glob-parent@6.0.2
 	glob-to-regexp@0.4.1
 	global-agent@3.0.0
-	globals@13.20.0
 	globalthis@1.0.3
 	globby@14.1.0
-	gopd@1.0.1
 	gopd@1.2.0
 	got@11.8.5
 	got@14.6.4
 	graceful-fs@4.2.11
-	graphemer@1.4.0
-	has@1.0.3
-	has-bigints@1.0.2
 	has-flag@3.0.0
 	has-flag@4.0.0
 	has-property-descriptors@1.0.0
-	has-proto@1.0.1
 	has-symbols@1.0.3
 	has-symbols@1.1.0
-	has-tostringtag@1.0.0
 	has-tostringtag@1.0.2
 	has-unicode@2.0.1
 	hasown@2.0.2
@@ -574,7 +502,6 @@ NPM_PKGS="
 	hast-util-from-parse5@8.0.1
 	hast-util-parse-selector@4.0.0
 	hastscript@8.0.0
-	he@1.2.0
 	hexy@0.2.11
 	hosted-git-info@2.8.9
 	http-cache-semantics@4.1.1
@@ -589,30 +516,17 @@ NPM_PKGS="
 	husky@9.1.7
 	iconv-lite@0.7.2
 	ieee754@1.2.1
-	ignore@5.3.1
 	ignore@7.0.4
-	import-fresh@3.3.0
 	import-local@3.1.0
-	imurmurhash@0.1.4
 	inflight@1.0.6
 	inherits@2.0.4
-	internal-slot@1.0.5
 	interpret@3.1.1
 	ipaddr.js@1.9.1
 	is-alphabetical@2.0.0
 	is-alphanumerical@2.0.0
-	is-array-buffer@3.0.2
 	is-arrayish@0.2.1
-	is-bigint@1.0.4
-	is-binary-path@2.1.0
-	is-boolean-object@1.1.2
-	is-buffer@1.1.6
-	is-callable@1.2.7
-	is-core-module@2.12.1
 	is-core-module@2.15.1
 	is-core-module@2.16.1
-	is-core-module@2.9.0
-	is-date-object@1.0.5
 	is-decimal@2.0.0
 	is-extglob@2.1.1
 	is-fullwidth-code-point@1.0.0
@@ -623,87 +537,67 @@ NPM_PKGS="
 	is-glob@4.0.3
 	is-hexadecimal@2.0.0
 	is-interactive@2.0.0
-	is-negative-zero@2.0.2
 	is-number@7.0.0
-	is-number-object@1.0.7
-	is-path-inside@3.0.3
-	is-plain-obj@2.1.0
 	is-plain-object@2.0.4
 	is-promise@4.0.0
-	is-regex@1.1.4
-	is-shared-array-buffer@1.0.2
 	is-stream@4.0.1
-	is-string@1.0.7
-	is-symbol@1.0.4
-	is-typed-array@1.1.10
-	is-unicode-supported@0.1.0
 	is-unicode-supported@1.3.0
 	is-unicode-supported@2.1.0
-	is-weakref@1.0.2
 	isarray@0.0.1
 	isarray@1.0.0
 	isbinaryfile@4.0.10
 	isexe@2.0.0
 	isexe@4.0.0
 	isobject@3.0.1
-	jackspeak@3.4.3
 	jackspeak@4.1.1
 	jest-worker@27.5.1
-	js-tokens@4.0.0
 	js-yaml@3.15.0
 	js-yaml@4.1.0
-	js-yaml@4.1.1
 	json-buffer@3.0.1
-	json-parse-better-errors@1.0.2
 	json-parse-even-better-errors@2.3.1
 	json-schema-traverse@0.4.1
 	json-schema-traverse@1.0.0
-	json-stable-stringify-without-jsonify@1.0.1
 	json-stringify-safe@5.0.1
 	json5@1.0.2
 	json5@2.2.3
 	jsonc-parser@3.3.1
 	jsonfile@4.0.0
 	jsonfile@6.0.1
-	jsx-ast-utils@3.3.3
 	junk@3.1.0
 	just-extend@4.2.1
 	katex@0.16.22
 	keyv@4.3.1
 	keyv@5.5.4
 	kind-of@6.0.3
-	levn@0.4.1
+	lightningcss@1.33.0
+	lightningcss-linux-arm64-gnu@1.33.0|arm64,elibc_glibc
+	lightningcss-linux-arm64-musl@1.33.0|arm64,elibc_musl
+	lightningcss-linux-x64-gnu@1.33.0|amd64,elibc_glibc
+	lightningcss-linux-x64-musl@1.33.0|amd64,elibc_musl
 	linkify-it@5.0.2
 	lint-staged@17.0.8
 	listr2@10.2.1
 	load-json-file@2.0.0
-	load-json-file@5.3.0
 	loader-runner@4.3.1
 	loader-utils@1.4.2
 	loader-utils@2.0.4
 	locate-path@2.0.0
-	locate-path@3.0.0
 	locate-path@5.0.0
-	locate-path@6.0.0
 	lodash@4.18.1
 	lodash.camelcase@4.3.0
 	lodash.get@4.4.2
-	lodash.merge@4.6.2
-	log-symbols@4.1.0
 	log-symbols@6.0.0
 	log-update@6.1.0
 	long@4.0.0
-	loose-envify@1.4.0
 	loupe@2.3.7
 	loupe@3.1.1
 	lowercase-keys@2.0.0
 	lowercase-keys@3.0.0
-	lru-cache@10.2.2
 	lru-cache@11.2.2
 	lru-cache@6.0.0
 	lru-cache@9.1.1
+	magic-string@1.4.1
 	make-dir@3.1.0
-	make-error@1.3.5
 	map-stream@0.0.7
 	markdown-it@14.1.0
 	markdownlint@0.38.0
@@ -712,7 +606,6 @@ NPM_PKGS="
 	matcher@3.0.0
 	matcher-collection@1.1.2
 	math-intrinsics@1.1.0
-	md5@2.3.0
 	mdast-util-from-markdown@2.0.2
 	mdast-util-to-string@4.0.0
 	mdurl@2.0.0
@@ -762,7 +655,6 @@ NPM_PKGS="
 	mimic-response@4.0.0
 	minimatch@10.2.4
 	minimatch@3.1.5
-	minimatch@5.1.9
 	minimatch@7.4.9
 	minimatch@8.0.7
 	minimatch@9.0.9
@@ -772,21 +664,17 @@ NPM_PKGS="
 	minipass@4.2.8
 	minipass@5.0.0
 	minipass@6.0.2
-	minipass@7.1.0
 	minipass@7.1.2
 	minizlib@2.1.2
 	minizlib@3.1.0
 	mkdirp@0.5.5
 	mkdirp@0.5.6
 	mkdirp@1.0.4
-	mocha@10.8.2
-	mocha-junit-reporter@1.23.3
-	mocha-multi-reporters@1.5.1
 	ms@2.0.0
 	ms@2.1.3
 	nan@2.23.0
 	nan@2.26.2
-	natural-compare@1.4.0
+	nanoid@3.3.19
 	negotiator@1.0.0
 	neo-async@2.6.2
 	nise@4.1.0
@@ -811,41 +699,30 @@ NPM_PKGS="
 	null-loader@4.0.1
 	number-is-nan@1.0.1
 	object-assign@4.1.1
-	object-inspect@1.12.3
 	object-inspect@1.13.4
 	object-keys@1.1.1
-	object.assign@4.1.4
-	object.entries@1.1.6
-	object.fromentries@2.0.6
-	object.hasown@1.1.2
-	object.values@1.1.6
+	obug@2.2.1
 	on-finished@2.4.1
 	once@1.4.0
 	onetime@7.0.0
 	optimist@0.6.1
-	optionator@0.9.4
 	ora@8.1.0
 	oxfmt@0.42.0
-	oxlint@1.57.0
+	oxlint@1.80.0
 	p-cancelable@2.1.1
 	p-cancelable@4.0.1
 	p-limit@1.3.0
-	p-limit@2.2.0
 	p-limit@2.3.0
 	p-limit@3.1.0
 	p-locate@2.0.0
-	p-locate@3.0.0
 	p-locate@4.1.0
-	p-locate@5.0.0
 	p-try@1.0.0
 	p-try@2.2.0
 	package-json-from-dist@1.0.1
-	parent-module@1.0.1
 	parse-author@2.0.0
 	parse-entities@4.0.2
 	parse-gitignore@0.4.0
 	parse-json@2.2.0
-	parse-json@4.0.0
 	parse-ms@4.0.0
 	parse5@7.1.2
 	parseurl@1.3.3
@@ -856,7 +733,6 @@ NPM_PKGS="
 	path-is-absolute@1.0.1
 	path-key@3.1.1
 	path-parse@1.0.7
-	path-scurry@1.11.1
 	path-scurry@1.9.2
 	path-scurry@2.0.0
 	path-to-regexp@1.9.0
@@ -873,14 +749,13 @@ NPM_PKGS="
 	picocolors@1.1.1
 	picomatch@2.3.2
 	picomatch@4.0.4
+	picomatch@4.0.7
 	pify@2.3.0
-	pify@4.0.1
-	pkg-conf@3.1.0
 	pkg-dir@4.2.0
 	plist@3.1.0
+	postcss@8.5.28
 	postject@1.0.0-alpha.6
 	pre-flight@2.0.0
-	prelude-ls@1.2.1
 	prettier@3.6.2
 	pretty-ms@9.1.0
 	proc-log@6.1.0
@@ -888,7 +763,6 @@ NPM_PKGS="
 	process-nextick-args@2.0.1
 	progress@2.0.3
 	promise-retry@2.0.1
-	prop-types@15.8.1
 	property-information@6.5.0
 	proxy-addr@2.0.7
 	proxy-from-env@1.1.0
@@ -901,29 +775,21 @@ NPM_PKGS="
 	q@1.5.1
 	qs@6.15.3
 	quick-lru@5.1.1
-	randombytes@2.1.0
 	range-parser@1.2.1
 	raw-body@3.0.2
-	react-is@16.13.1
 	read-pkg@2.0.0
 	read-pkg-up@2.0.0
 	readable-stream@2.3.6
 	readable-stream@2.3.8
 	readable-stream@3.6.2
-	readdirp@3.6.0
 	rechoir@0.8.0
-	regexp.prototype.flags@1.5.0
-	regexpp@3.0.0
 	require-directory@2.1.1
 	require-from-string@2.0.2
 	resedit@2.0.3
 	resolve@1.22.11
-	resolve@1.22.2
 	resolve@1.22.8
-	resolve@2.0.0-next.4
 	resolve-alpn@1.2.1
 	resolve-cwd@3.0.0
-	resolve-from@4.0.0
 	resolve-from@5.0.0
 	responselike@2.0.0
 	responselike@4.0.2
@@ -935,11 +801,11 @@ NPM_PKGS="
 	rimraf@3.0.2
 	rimraf@4.4.1
 	roarr@2.15.4
+	rolldown@1.2.9
 	router@2.2.0
 	run-parallel@1.1.9
 	safe-buffer@5.1.2
 	safe-buffer@5.2.1
-	safe-regex-test@1.0.0
 	safer-buffer@2.1.2
 	sax@1.4.1
 	schema-utils@3.3.0
@@ -953,18 +819,17 @@ NPM_PKGS="
 	send@0.19.1
 	send@1.2.1
 	serialize-error@7.0.1
-	serialize-javascript@6.0.2
 	serve-static@2.2.1
 	set-blocking@2.0.0
 	setprototypeof@1.2.0
 	shallow-clone@3.0.1
 	shebang-command@2.0.0
 	shebang-regex@3.0.0
-	side-channel@1.0.4
 	side-channel@1.1.1
 	side-channel-list@1.0.1
 	side-channel-map@1.0.1
 	side-channel-weakmap@1.0.2
+	siginfo@2.0.0
 	signal-exit@3.0.7
 	signal-exit@4.1.0
 	simple-concat@1.0.1
@@ -975,7 +840,7 @@ NPM_PKGS="
 	slice-ansi@7.1.0
 	slice-ansi@8.0.0
 	source-map@0.6.1
-	source-map-support@0.5.19
+	source-map-js@1.2.1
 	source-map-support@0.5.21
 	space-separated-tokens@2.0.2
 	spdx-correct@3.2.0
@@ -985,10 +850,10 @@ NPM_PKGS="
 	split@1.0.1
 	sprintf-js@1.0.3
 	sprintf-js@1.1.2
-	standard@17.0.0
-	standard-engine@15.0.0
+	stackback@0.0.2
 	statuses@2.0.1
 	statuses@2.0.2
+	std-env@4.2.0
 	stdin-discarder@0.2.2
 	stream-chain@2.2.5
 	stream-combiner@0.2.2
@@ -1001,19 +866,13 @@ NPM_PKGS="
 	string-width@5.1.2
 	string-width@7.2.0
 	string-width@8.2.1
-	string.prototype.matchall@4.0.8
-	string.prototype.trim@1.2.7
-	string.prototype.trimend@1.0.6
-	string.prototype.trimstart@1.0.6
 	string_decoder@1.1.1
 	string_decoder@1.3.0
 	strip-ansi@3.0.1
-	strip-ansi@4.0.0
 	strip-ansi@6.0.1
 	strip-ansi@7.1.0
 	strip-ansi@7.2.0
 	strip-bom@3.0.0
-	strip-json-comments@3.1.1
 	strip-outer@1.0.1
 	strnum@2.2.3
 	sumchecker@3.0.1
@@ -1030,11 +889,13 @@ NPM_PKGS="
 	temp@0.9.4
 	terser@5.46.0
 	terser-webpack-plugin@5.4.0
-	text-table@0.2.0
 	through@2.3.8
 	through2@2.0.5
+	tinybench@6.1.4
 	tinyexec@1.2.4
+	tinyexec@1.3.0
 	tinyglobby@0.2.15
+	tinyglobby@0.2.17
 	tinypool@2.1.0
 	to-regex-range@5.0.1
 	toad-cache@3.7.0
@@ -1042,24 +903,17 @@ NPM_PKGS="
 	tr46@0.0.3
 	trim-repeated@1.0.0
 	ts-loader@8.0.2
-	ts-node@6.2.0
-	tsconfig-paths@3.14.2
 	tslib@1.10.0
 	tslib@1.14.1
 	tslib@2.8.1
 	tunnel@0.0.6
-	type-check@0.4.0
 	type-detect@4.0.8
 	type-detect@4.1.0
 	type-fest@0.13.1
-	type-fest@0.20.2
-	type-fest@0.3.1
 	type-fest@4.41.0
 	type-is@2.1.0
-	typed-array-length@1.0.4
 	typescript@5.8.3
 	uc.micro@2.1.0
-	unbox-primitive@1.0.2
 	undici@5.29.0
 	undici@6.25.0
 	undici-types@6.19.8
@@ -1087,6 +941,8 @@ NPM_PKGS="
 	vfile@6.0.2
 	vfile-location@5.0.3
 	vfile-message@4.0.2
+	vite@8.3.0
+	vitest@5.0.1
 	vscode-jsonrpc@8.1.0
 	vscode-languageserver@8.1.0
 	vscode-languageserver-protocol@3.17.3
@@ -1105,14 +961,11 @@ NPM_PKGS="
 	whatwg-url@5.0.0
 	which@2.0.2
 	which@6.0.1
-	which-boxed-primitive@1.0.2
-	which-typed-array@1.1.9
+	why-is-node-running@2.3.0
 	wide-align@1.1.5
 	wildcard@2.0.1
 	winreg@1.2.4
-	word-wrap@1.2.5
 	wordwrap@0.0.3
-	workerpool@6.5.1
 	wrap-ansi@10.0.0
 	wrap-ansi@7.0.0
 	wrap-ansi@8.1.0
@@ -1120,8 +973,6 @@ NPM_PKGS="
 	wrapper-webpack-plugin@2.2.2
 	wrappy@1.0.2
 	ws@8.21.0
-	xdg-basedir@4.0.0
-	xml@1.0.1
 	xml-naming@0.3.0
 	xml2js@0.5.0
 	xmlbuilder@11.0.1
@@ -1136,9 +987,7 @@ NPM_PKGS="
 	yargs@16.2.0
 	yargs-parser@20.2.9
 	yargs-parser@21.1.1
-	yargs-unparser@2.0.0
 	yauzl@2.10.0
-	yn@2.0.0
 	yocto-queue@0.1.0
 	zwitch@2.0.2
 "

@@ -96,7 +96,7 @@ exist in the generated platform list when that platform is built.
  #endif
  
  #if BUILDFLAG(IS_WIN)
-@@ -549,7 +551,7 @@
+@@ -553,7 +555,7 @@
  }
  
  void NativeWindowViews::SetGTKDarkThemeEnabled(bool use_dark_theme) {
@@ -105,7 +105,7 @@ exist in the generated platform list when that platform is built.
    if (x11_util::IsX11()) {
      const std::string color = use_dark_theme ? "dark" : "light";
      auto* connection = x11::Connection::Get();
-@@ -618,8 +620,10 @@
+@@ -622,8 +624,10 @@
    NotifyWindowShow();
  
  #if BUILDFLAG(IS_LINUX)
@@ -116,7 +116,7 @@ exist in the generated platform list when that platform is built.
  
    // On X11, setting Z order before showing the window doesn't take effect,
    // so we have to call it again.
-@@ -636,8 +640,10 @@
+@@ -640,8 +644,10 @@
    NotifyWindowShow();
  
  #if BUILDFLAG(IS_LINUX)
@@ -127,7 +127,7 @@ exist in the generated platform list when that platform is built.
  
    // On X11, setting Z order before showing the window doesn't take effect,
    // so we have to call it again.
-@@ -654,7 +660,7 @@
+@@ -658,7 +664,7 @@
  
    NotifyWindowHide();
  
@@ -136,27 +136,7 @@ exist in the generated platform list when that platform is built.
    if (global_menu_bar_)
      global_menu_bar_->OnWindowUnmapped();
  #endif
-@@ -686,8 +692,10 @@
- #if BUILDFLAG(IS_WIN)
-   return ::IsWindowEnabled(GetAcceleratedWidget());
- #elif BUILDFLAG(IS_LINUX)
-+#if BUILDFLAG(SUPPORTS_OZONE_X11)
-   if (x11_util::IsX11())
-     return !event_disabler_.get();
-+#endif
-   NOTIMPLEMENTED();
-   return true;
- #endif
-@@ -722,7 +730,7 @@
- 
- #if BUILDFLAG(IS_WIN)
-   ::EnableWindow(GetAcceleratedWidget(), enable);
--#else
-+#elif BUILDFLAG(SUPPORTS_OZONE_X11)
-   if (x11_util::IsX11()) {
-     views::DesktopWindowTreeHostPlatform* tree_host =
-         views::DesktopWindowTreeHostLinux::GetHostForWidget(
-@@ -1043,7 +1051,7 @@
+@@ -1039,7 +1045,7 @@
    ::SetWindowPos(GetAcceleratedWidget(), GetWindow(otherWindow, GW_HWNDPREV), 0,
                   0, 0, 0,
                   SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
@@ -165,7 +145,7 @@ exist in the generated platform list when that platform is built.
    if (x11_util::IsX11()) {
      if (!IsWindowValid(static_cast<x11::Window>(id.id)))
        return false;
-@@ -1065,7 +1073,7 @@
+@@ -1061,7 +1067,7 @@
    ::SetWindowPos(GetAcceleratedWidget(), HWND_TOP, pos.x(), pos.y(),
                   size.width(), size.height(),
                   SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
@@ -174,16 +154,22 @@ exist in the generated platform list when that platform is built.
    if (x11_util::IsX11())
      electron::MoveWindowToForeground(
          static_cast<x11::Window>(GetAcceleratedWidget()));
-@@ -1408,7 +1416,7 @@
-   } else {
-     SetForwardMouseMessages(forward);
-   }
--#else
-+#elif BUILDFLAG(SUPPORTS_OZONE_X11)
-   if (x11_util::IsX11()) {
-     auto* connection = x11::Connection::Get();
-     if (ignore) {
-@@ -1476,7 +1484,7 @@
+@@ -1415,10 +1421,13 @@
+           views::DesktopWindowTreeHostLinux::GetHostForWidget(
+               GetAcceleratedWidget()))) {
+     tree_host->UpdateFrameHints();
++#if BUILDFLAG(SUPPORTS_OZONE_X11)
+     if (x11_util::IsX11()) {
+       // Round-trip so the server has applied the input shape on return.
+       x11::Connection::Get()->Sync();
+-    } else if (auto* compositor = tree_host->compositor()) {
++    } else
++#endif
++    if (auto* compositor = tree_host->compositor()) {
+       // Wayland applies a new input region with the next surface commit; an
+       // idle window may not produce one for a while, so force a frame.
+       compositor->ScheduleFullRedraw();
+@@ -1469,7 +1478,7 @@
  }
  
  void NativeWindowViews::SetMenu(ElectronMenuModel* menu_model) {
@@ -192,7 +178,7 @@ exist in the generated platform list when that platform is built.
    // Remove global menu bar.
    bool try_global_menu_bar = true;
    if (global_menu_bar_ && menu_model == nullptr) {
-@@ -1544,7 +1552,7 @@
+@@ -1537,7 +1546,7 @@
  void NativeWindowViews::SetParentWindow(NativeWindow* parent) {
    NativeWindow::SetParentWindow(parent);
  
@@ -201,9 +187,10 @@ exist in the generated platform list when that platform is built.
    if (x11_util::IsX11()) {
      auto* connection = x11::Connection::Get();
      connection->SetProperty(
+
 --- a/electron/shell/browser/native_window_views.h
 +++ b/electron/shell/browser/native_window_views.h
-@@ -38,7 +38,7 @@
+@@ -40,7 +40,7 @@
  
  namespace electron {
  
@@ -212,15 +199,17 @@ exist in the generated platform list when that platform is built.
  class GlobalMenuBarX11;
  #endif
  
-@@ -291,7 +291,7 @@
-   // events from resizing the window.
+@@ -294,7 +294,9 @@
    extensions::SizeConstraints old_size_constraints_;
  
--#if BUILDFLAG(IS_LINUX)
+ #if BUILDFLAG(IS_LINUX)
 +#if BUILDFLAG(SUPPORTS_OZONE_X11)
    std::unique_ptr<GlobalMenuBarX11> global_menu_bar_;
- #endif
++#endif
  
+   // Set while the window is disabled; running it re-enables event dispatch.
+   base::ScopedClosureRunner enable_event_listening_;
+
 --- a/electron/shell/browser/osr/osr_host_display_client.cc
 +++ b/electron/shell/browser/osr/osr_host_display_client.cc
 @@ -102,7 +102,7 @@
