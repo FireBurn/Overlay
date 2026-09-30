@@ -1426,6 +1426,11 @@ src_prepare() {
 	sed -i '1i #![recursion_limit = "512"]' "${S}/cli/src/main.rs" || die
 	# Same overflow now occurs in codex-chatgpt's connectors layout
 	sed -i '1i #![recursion_limit = "512"]' "${S}/chatgpt/src/lib.rs" || die
+
+	# The daemon requires the upstream package layout, which is not installed
+	sed -i '/key: "daemon_auto_start",/,/default_enabled:/s/default_enabled: true/default_enabled: false/' \
+		"${S}/features/src/lib.rs" || die
+	grep -A2 'key: "daemon_auto_start",' "${S}/features/src/lib.rs" | grep -q 'default_enabled: false' || die
 }
 
 src_compile() {
