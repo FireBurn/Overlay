@@ -15,10 +15,11 @@ CRATES="
 	addr2line@0.25.1
 	addr2line@0.26.1
 	adler2@2.0.1
+	adler32@1.2.0
 	aes@0.8.4
-	agent-client-protocol-derive@2.1.0
-	agent-client-protocol-schema@1.7.0
-	agent-client-protocol@2.1.0
+	agent-client-protocol-derive@2.2.0
+	agent-client-protocol-schema@1.9.1
+	agent-client-protocol@2.2.0
 	ahash@0.7.8
 	ahash@0.8.12
 	aho-corasick@1.1.3
@@ -301,6 +302,7 @@ CRATES="
 	darling_macro@0.20.11
 	darling_macro@0.21.3
 	darling_macro@0.23.0
+	dary_heap@0.3.9
 	dashmap@6.1.0
 	dasp_sample@0.11.0
 	data-encoding@2.9.0
@@ -503,7 +505,6 @@ CRATES="
 	httpdate@1.0.3
 	human_bytes@0.4.3
 	humantime@2.3.0
-	hyper-rustls@0.24.2
 	hyper-rustls@0.27.9
 	hyper-timeout@0.5.2
 	hyper-tls@0.5.0
@@ -533,6 +534,9 @@ CRATES="
 	imagesize@0.14.0
 	imara-diff@0.2.0
 	imgref@1.12.0
+	include-flate-codegen@0.3.4
+	include-flate-compress@0.3.4
+	include-flate@0.3.4
 	indenter@0.3.4
 	indexmap@1.9.3
 	indexmap@2.14.0
@@ -598,6 +602,8 @@ CRATES="
 	libbz2-rs-sys@0.2.2
 	libc@0.2.186
 	libdbus-sys@0.2.6
+	libflate@2.3.1
+	libflate_lz77@2.3.0
 	libfuzzer-sys@0.4.10
 	libloading@0.8.9
 	libm@0.2.16
@@ -685,6 +691,7 @@ CRATES="
 	new_debug_unreachable@1.0.6
 	nix@0.28.0
 	nix@0.30.1
+	no_std_io2@0.9.4
 	nom@7.1.3
 	nom@8.0.0
 	noop_proc_macro@0.3.0
@@ -726,7 +733,9 @@ CRATES="
 	objc2-core-graphics@0.3.2
 	objc2-core-image@0.2.2
 	objc2-core-location@0.3.2
+	objc2-core-media@0.3.2
 	objc2-core-services@0.3.2
+	objc2-core-video@0.3.2
 	objc2-encode@4.1.0
 	objc2-foundation@0.2.2
 	objc2-foundation@0.3.2
@@ -842,7 +851,9 @@ CRATES="
 	pretty_assertions@1.4.1
 	prettyplease@0.2.37
 	proc-macro-crate@3.4.0
+	proc-macro-error-attr3@3.1.1
 	proc-macro-error-attr@1.0.4
+	proc-macro-error3@3.1.1
 	proc-macro-error@1.0.4
 	proc-macro2-diagnostics@0.10.1
 	proc-macro2@1.0.107
@@ -935,6 +946,7 @@ CRATES="
 	ring@0.17.14
 	rkyv@0.7.45
 	rkyv_derive@0.7.45
+	rle-decode-fast@1.0.3
 	rmp@0.8.14
 	rmpv@1.3.0
 	roughr-merman@0.12.3
@@ -962,9 +974,7 @@ CRATES="
 	rustls-pki-types@1.12.0
 	rustls-platform-verifier-android@0.1.1
 	rustls-platform-verifier@0.7.0
-	rustls-webpki@0.101.7
 	rustls-webpki@0.103.13
-	rustls@0.21.12
 	rustls@0.23.40
 	rustversion@1.0.22
 	rusty-fork@0.3.1
@@ -984,7 +994,6 @@ CRATES="
 	screencapturekit@0.2.8
 	scroll@0.12.0
 	scroll_derive@0.12.1
-	sct@0.7.1
 	sdd@4.6.2
 	sea-bae@0.2.2
 	sea-orm-macros@1.1.10
@@ -1097,17 +1106,10 @@ CRATES="
 	svg_fmt@0.4.5
 	svgtypes@0.16.1
 	swash@0.2.6
-	symphonia-bundle-flac@0.5.5
-	symphonia-bundle-mp3@0.5.5
-	symphonia-codec-aac@0.5.5
 	symphonia-codec-pcm@0.5.5
-	symphonia-codec-vorbis@0.5.5
 	symphonia-core@0.5.5
-	symphonia-format-isomp4@0.5.5
-	symphonia-format-ogg@0.5.5
 	symphonia-format-riff@0.5.5
 	symphonia-metadata@0.5.5
-	symphonia-utils-xiph@0.5.5
 	symphonia@0.5.5
 	syn@1.0.109
 	syn@2.0.117
@@ -1156,7 +1158,6 @@ CRATES="
 	tokio-io@0.1.13
 	tokio-macros@2.7.0
 	tokio-native-tls@0.3.1
-	tokio-rustls@0.24.1
 	tokio-rustls@0.26.4
 	tokio-socks@0.5.2
 	tokio-stream@0.1.17
@@ -1497,8 +1498,10 @@ CRATES="
 	zip@0.6.6
 	zmij@1.0.23
 	zstd-safe@5.0.2+zstd.1.5.2
+	zstd-safe@7.3.0
 	zstd-sys@2.0.16+zstd.1.5.7
 	zstd@0.11.2+zstd.1.5.2
+	zstd@0.13.3
 	zune-core@0.5.1
 	zune-inflate@0.2.54
 	zune-jpeg@0.5.15
