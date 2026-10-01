@@ -1,0 +1,25 @@
+Name x86_64-unknown-linux-llvmlibc as the Rust target on LLVM's libc.
+
+rustc knows that system's C library by this target and has no standard
+library for any other. It is applied only where ELIBC is llvm.
+
+--- a/build/config/rust.gni
++++ b/build/config/rust.gni
+@@ -206,7 +206,7 @@
+   } else if (current_cpu == "x86") {
+     rust_abi_target = "i686-unknown-linux-gnu"
+   } else if (current_cpu == "x64") {
+-    rust_abi_target = "x86_64-unknown-linux-gnu"
++    rust_abi_target = "x86_64-unknown-linux-llvmlibc"
+   } else if (current_cpu == "arm") {
+     if (arm_float_abi == "hard") {
+       float_suffix = "hf"
+--- a/build/rust/known-target-triples.txt
++++ b/build/rust/known-target-triples.txt
+@@ -41,5 +41,6 @@
+ x86_64-pc-windows-msvc
+ x86_64-unknown-fuchsia
+ x86_64-unknown-linux-gnu
++x86_64-unknown-linux-llvmlibc
+ powerpc64le-unknown-linux-gnu
+ s390x-unknown-linux-gnu

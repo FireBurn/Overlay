@@ -94,6 +94,8 @@ KEYWORDS="~amd64 ~arm64"
 IUSE_SYSTEM_LIBS="+system-harfbuzz +system-icu +system-zstd"
 IUSE="+X ${IUSE_SYSTEM_LIBS} bindist +bundled-toolchain cups debug ffmpeg-chromium gtk4 +hangouts headless kerberos +official pax-kernel pgo"
 IUSE+=" +proprietary-codecs pulseaudio qt6 +rar +screencast selinux test +vaapi +wayland +widevine cpu_flags_ppc_vsx3 cpu_flags_x86_avx512f"
+# Not one of the ELIBC values the Gentoo profiles declare.
+IUSE+=" elibc_llvm"
 RESTRICT="
 	!bindist? ( bindist )
 	!test? ( test )
@@ -523,6 +525,13 @@ src_prepare() {
 		"${FILESDIR}/cr152-unbundle-minizip-undo-unicode.patch"
 		"${FILESDIR}/cross-compile.patch"
 	)
+
+	if use elibc_llvm; then
+		PATCHES+=(
+			"${FILESDIR}/cr156-llvm-libc-rust-target.patch"
+			"${FILESDIR}/cr156-llvm-libc-qt-libcxx.patch"
+		)
+	fi
 
 	# https://issues.chromium.org/issues/442698344
 	# Unreleased fontconfig changed magic numbers and google have rolled to this version

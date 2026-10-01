@@ -1,0 +1,16 @@
+Link the Qt shim against libc++ on LLVM's libc.
+
+Qt there is built against libc++, which is the C++ library the shim has to
+link with. It is applied only where ELIBC is llvm.
+
+--- a/ui/qt/BUILD.gn
++++ b/ui/qt/BUILD.gn
+@@ -20,7 +20,7 @@
+ 
+   # It's OK to depend on the system libstdc++ since it's a dependency of QT, so
+   # it will get loaded into the process anyway.
+-  libs = [ "stdc++" ]
++  libs = [ "c++" ]
+ 
+   configs = [
+     "//build/config/linux:runtime_library",
