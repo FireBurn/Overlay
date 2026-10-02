@@ -573,13 +573,13 @@ NPM_PKGS="
 	@opentelemetry/sdk-trace-base@2.8.0
 	@opentelemetry/sdk-trace-node@2.8.0
 	@opentelemetry/semantic-conventions@1.43.0
-	@opentui/core@0.5.12
-	@opentui/core-linux-arm64@0.5.12|arm64
-	@opentui/core-linux-arm64-musl@0.5.12|arm64
-	@opentui/core-linux-x64@0.5.12|amd64
-	@opentui/core-linux-x64-musl@0.5.12|amd64
-	@opentui/keymap@0.5.12
-	@opentui/solid@0.5.12
+	@opentui/core@0.5.14
+	@opentui/core-linux-arm64@0.5.14|arm64
+	@opentui/core-linux-arm64-musl@0.5.14|arm64
+	@opentui/core-linux-x64@0.5.14|amd64
+	@opentui/core-linux-x64-musl@0.5.14|amd64
+	@opentui/keymap@0.5.14
+	@opentui/solid@0.5.14
 	@oslojs/asn1@1.0.0
 	@oslojs/binary@1.0.0
 	@oslojs/crypto@1.0.1
@@ -2717,10 +2717,10 @@ NPM_STUB_PKGS="
 	@msgpackr-extract/msgpackr-extract-win32-x64@3.0.4
 	@opencode-ai/pty-darwin-arm64@0.1.13
 	@opencode-ai/pty-darwin-x64@0.1.13
-	@opentui/core-darwin-arm64@0.5.12
-	@opentui/core-darwin-x64@0.5.12
-	@opentui/core-win32-arm64@0.5.12
-	@opentui/core-win32-x64@0.5.12
+	@opentui/core-darwin-arm64@0.5.14
+	@opentui/core-darwin-x64@0.5.14
+	@opentui/core-win32-arm64@0.5.14
+	@opentui/core-win32-x64@0.5.14
 	@oxc-minify/binding-android-arm64@0.96.0
 	@oxc-minify/binding-darwin-arm64@0.96.0
 	@oxc-minify/binding-darwin-x64@0.96.0
