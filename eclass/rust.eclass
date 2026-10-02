@@ -64,6 +64,7 @@ fi
 # LLVM slots supported by each Rust slot.
 declare -A -g -r _RUST_LLVM_MAP=(
 	["9999"]="23 22 21"
+	["1.99.0"]="23 22 21"
 	["1.98.1"]="23 22 21"
 	["1.98.0"]="23 22 21"
 	["1.97.1"]="22 21"
