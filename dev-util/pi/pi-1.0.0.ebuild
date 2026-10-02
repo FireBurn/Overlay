@@ -29,12 +29,7 @@ NPM_PKGS="
 	@aws-sdk/types@3.974.5
 	@aws-sdk/xml-builder@3.972.40
 	@aws/lambda-invoke-store@0.3.0
-	@babel/helper-string-parser@7.29.7
-	@babel/helper-validator-identifier@7.29.7
-	@babel/parser@7.29.8
 	@babel/runtime@7.29.2
-	@babel/types@7.29.8
-	@bcoe/v8-coverage@1.0.2
 	@biomejs/biome@2.3.5
 	@biomejs/cli-linux-arm64@2.3.5|arm64
 	@biomejs/cli-linux-arm64-musl@2.3.5|arm64
@@ -46,9 +41,7 @@ NPM_PKGS="
 	@esbuild/linux-arm64@0.28.2|arm64
 	@esbuild/linux-x64@0.28.2|amd64
 	@google/genai@2.21.0
-	@jridgewell/resolve-uri@3.1.2
 	@jridgewell/sourcemap-codec@1.5.5
-	@jridgewell/trace-mapping@0.3.31
 	@napi-rs/wasm-runtime@1.1.5
 	@nodelib/fs.scandir@2.1.5
 	@nodelib/fs.stat@2.0.5
@@ -96,7 +89,6 @@ NPM_PKGS="
 	@typescript/typescript-linux-x64@7.0.2|amd64
 	@vitest-evals/core@0.15.0
 	@vitest-evals/report-ui@0.15.0
-	@vitest/coverage-v8@4.1.11
 	@vitest/expect@4.1.11
 	@vitest/mocker@4.1.11
 	@vitest/pretty-format@4.1.11
@@ -111,7 +103,6 @@ NPM_PKGS="
 	argparse@2.0.1
 	asn1@0.2.6
 	assertion-error@2.0.1
-	ast-v8-to-istanbul@1.0.5
 	autoevals@0.3.0
 	balanced-match@4.0.4
 	base64-js@1.5.1
@@ -177,11 +168,9 @@ NPM_PKGS="
 	google-logging-utils@1.1.3
 	graceful-fs@4.2.11
 	grok-mermaid@0.2.3
-	has-flag@4.0.0
 	hasown@2.0.3
 	highlight.js@10.7.3
 	hosted-git-info@9.0.3
-	html-escaper@2.0.2
 	http-proxy-agent@9.1.0
 	https-proxy-agent@7.0.6
 	https-proxy-agent@9.1.0
@@ -198,12 +187,8 @@ NPM_PKGS="
 	is-number@7.0.0
 	is-stream@1.1.0
 	isexe@2.0.0
-	istanbul-lib-coverage@3.2.2
-	istanbul-lib-report@3.0.1
-	istanbul-reports@3.2.0
 	jiti@2.7.0
 	js-levenshtein@1.1.6
-	js-tokens@10.0.0
 	js-yaml@4.3.2
 	json-bigint@1.0.0
 	json-schema-to-ts@3.1.1
@@ -220,8 +205,6 @@ NPM_PKGS="
 	long@5.3.2
 	lru-cache@11.4.0
 	magic-string@0.30.21
-	magicast@0.5.4
-	make-dir@4.0.0
 	marked@18.0.11
 	merge2@1.4.1
 	micromatch@4.0.8
@@ -303,7 +286,6 @@ NPM_PKGS="
 	string_decoder@1.3.0
 	strip-eof@1.0.0
 	strip-json-comments@2.0.1
-	supports-color@7.2.0
 	supports-preserve-symlinks-flag@1.0.0
 	tar-fs@2.1.4
 	tar-stream@2.2.0
