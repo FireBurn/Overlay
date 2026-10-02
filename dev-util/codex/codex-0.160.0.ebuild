@@ -442,7 +442,7 @@ CRATES="
 	gstreamer-sys@0.25.2
 	gstreamer@0.25.3
 	gzip-header@1.0.0
-	h2@0.4.16
+	h2@0.4.19
 	half@2.7.1
 	hash32@0.2.1
 	hash32@0.3.1
