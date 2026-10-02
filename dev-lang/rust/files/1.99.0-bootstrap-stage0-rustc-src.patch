@@ -1,0 +1,22 @@
+Do not let the stage0 sysroot copy write through the rustc-src symlink
+
+With rustc-dev or rust-src installed in the stage0 toolchain, the stage0
+sysroot already holds symlinks to the source root when its lib directory is
+copied again. cp_link_r then replaces files in the source tree with the
+stage0 compiler sources, so the vendored crates no longer match the manifests.
+
+--- a/src/bootstrap/src/core/build_steps/compile.rs
++++ b/src/bootstrap/src/core/build_steps/compile.rs
+@@ -818,6 +818,12 @@
+                 let _ = fs::remove_dir_all(sysroot.join("lib/rustlib/src/rust"));
+             }
+ 
++            // Sysroot steps symlink these to the source root. Copying the
++            // stage0 lib over an existing symlink writes through it and
++            // replaces the source tree with the stage0 compiler sources.
++            let _ = fs::remove_dir_all(sysroot.join("lib/rustlib/rustc-src/rust"));
++            let _ = fs::remove_dir_all(sysroot.join("lib/rustlib/src/rust"));
++
+             builder.cp_link_r(&builder.initial_sysroot.join("lib"), &sysroot.join("lib"));
+         } else {
+             if builder.download_rustc() {
