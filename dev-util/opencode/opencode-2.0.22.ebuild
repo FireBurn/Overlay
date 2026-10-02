@@ -13,7 +13,7 @@ NPM_PKGS="
 	@actions/http-client@3.0.2
 	@actions/io@2.0.0
 	@adobe/css-tools@4.5.0
-	@agentclientprotocol/sdk@1.2.1
+	@agentclientprotocol/sdk@1.6.0
 	@ai-sdk/cohere@3.0.27
 	@ai-sdk/gateway@3.0.104
 	@ai-sdk/gateway@4.0.52
@@ -610,6 +610,7 @@ NPM_PKGS="
 	@oxlint/binding-linux-arm64-musl@1.60.0|arm64
 	@oxlint/binding-linux-x64-gnu@1.60.0|amd64
 	@oxlint/binding-linux-x64-musl@1.60.0|amd64
+	@oxlint/plugins@1.60.0
 	@pagefind/default-ui@1.5.2
 	@pagefind/linux-arm64@1.5.2|arm64
 	@pagefind/linux-x64@1.5.2|amd64
@@ -2966,8 +2967,10 @@ src_prepare() {
 	# Point the two non-registry dependencies at the distfiles
 	sed -i "s|\"https://pkg.pr.new/@solidjs/start@${SOLID_START_BUILD}\"|\"file:${DISTDIR}/solidjs-start-${SOLID_START_BUILD}.npm.tgz\"|" \
 		package.json || die
-	sed -i "s|\"github:anomalyco/ghostty-web#${GHOSTTY_WEB_COMMIT}\"|\"file:${WORKDIR}/ghostty-web.tgz\"|" \
-		packages/app/package.json || die
+	local f
+	for f in $(grep -rl "github:anomalyco/ghostty-web#${GHOSTTY_WEB_COMMIT}" --include=package.json .); do
+		sed -i "s|\"github:anomalyco/ghostty-web#${GHOSTTY_WEB_COMMIT}\"|\"file:${WORKDIR}/ghostty-web.tgz\"|" "$f" || die
+	done
 }
 
 src_compile() {
