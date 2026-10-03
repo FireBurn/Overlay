@@ -137,6 +137,15 @@ src_prepare() {
 		# so `libggml-xdna1.so` ends up in `/usr/$(get_libdir)/llama.cpp/` instead of `/usr/lib/`
 		sed -i -e "s|DESTINATION lib|DESTINATION $(get_libdir)/llama.cpp|g" \
 			"${WORKDIR}/ggml-xdna1/CMakeLists.txt" || die
+
+		# ggml added alloc_buffer_n and get_alloc_size_n to the buffer type
+		# interface; the backend's positional initialiser predates them.
+		if ! grep -q 'alloc_buffer_n' "${WORKDIR}/ggml-xdna1/src/ggml-xdna1.cpp"; then
+			sed -i \
+				-e '/\/\* \.alloc_buffer   = \*\/ xdna1_buft_alloc,/a\        /* .alloc_buffer_n   = */ NULL,' \
+				-e '/\/\* \.get_alloc_size = \*\/ NULL,/a\        /* .get_alloc_size_n = */ NULL,' \
+				"${WORKDIR}/ggml-xdna1/src/ggml-xdna1.cpp" || die
+		fi
 	fi
 
 	cmake_src_prepare
