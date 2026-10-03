@@ -32,6 +32,7 @@
 # Packages built only as live ebuilds are skipped automatically.
 
 @rocm       github-release ROCm/rocm-systems prefix=therock- pad=3 batch=1
+@libreoffice page https://downloadarchive.documentfoundation.org/libreoffice/old/ href="(\d+\.\d+\.(?:0\.3|[1-9]\d*\.2))/"
 
 dev-build/rocm-cmake              @rocm
 dev-libs/rccl                     @rocm
@@ -71,8 +72,8 @@ app-editors/zed                   github-release zed-industries/zed prefix=v
 games-util/heroic                 github-release Heroic-Games-Launcher/HeroicGamesLauncher prefix=v
 
 app-arch/zarchive                 github-commit Exzap/ZArchive
-app-office/libreoffice            page https://download.documentfoundation.org/libreoffice/testing/ href="(\d+(?:\.\d+)+)/" https://download.documentfoundation.org/libreoffice/testing/{}/rpm/x86_64/ LibreOffice_(\d+(?:\.\d+)+)_Linux
-app-office/libreoffice-l10n       page https://download.documentfoundation.org/libreoffice/testing/ href="(\d+(?:\.\d+)+)/" https://download.documentfoundation.org/libreoffice/testing/{}/rpm/x86_64/ LibreOffice_(\d+(?:\.\d+)+)_Linux
+app-office/libreoffice            @libreoffice
+app-office/libreoffice-l10n       @libreoffice
 app-portage/amdgpu2targets        skip local script in files/; no upstream release
 app-text/doxygen                  github-release doxygen/doxygen prefix=Release_ sep=_
 app-text/libetonyek               page https://dev-www.libreoffice.org/src/libetonyek/ libetonyek-(\d+(?:\.\d+)+)\.tar\.xz
@@ -105,6 +106,7 @@ games-util/comet                  github-release imLinguin/comet prefix=v
 games-util/gogdl                  github-release Heroic-Games-Launcher/heroic-gogdl prefix=v
 games-util/legendary              github-release legendary-gl/legendary
 games-util/nile                   github-release imLinguin/nile prefix=v
+games-util/steamrt3               page https://repo.steampowered.com/steam/archive/stable/steam_latest-stable.dsc Version:\s*1:([0-9.]+)
 games-util/vulkan-helper          github-commit imLinguin/vulkan-helper-rs
 llvm-runtimes/libclc              github-release llvm/llvm-project prefix=llvmorg-
 media-fonts/liberation-fonts      github-release liberationfonts/liberation-fonts
