@@ -3,7 +3,7 @@ test suite optional and deselect the tests that need its capfire fixture.
 
 --- a/tests/conftest.py
 +++ b/tests/conftest.py
-@@ -13,7 +13,10 @@
+@@ -15,7 +15,10 @@
  os.environ.setdefault("LOGFIRE_DISTRIBUTED_TRACING", "true")
  
  import opentelemetry.trace  # noqa: E402  (env var must be set before logfire import below)
@@ -41,6 +41,6 @@ test suite optional and deselect the tests that need its capfire fixture.
 +    from logfire.testing import CaptureLogfire
 +except ImportError:
 +    CaptureLogfire = None
+ from opentelemetry.trace import StatusCode
  
  from mcp.client.client import Client
- from mcp.server.mcpserver import MCPServer

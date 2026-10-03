@@ -24,7 +24,7 @@ KEYWORDS="~amd64"
 RDEPEND="
 	>=dev-python/anyio-4.10.0[${PYTHON_USEDEP}]
 	>=dev-python/cryptography-3.4.0[${PYTHON_USEDEP}]
-	>=dev-python/httpx2-2.5.0[${PYTHON_USEDEP}]
+	>=dev-python/httpx2-2.10.0[${PYTHON_USEDEP}]
 	>=dev-python/jsonschema-4.20.0[${PYTHON_USEDEP}]
 	~dev-python/mcp-types-${PV}[${PYTHON_USEDEP}]
 	>=dev-python/opentelemetry-api-1.28.0[${PYTHON_USEDEP}]
@@ -42,6 +42,7 @@ RDEPEND="
 BDEPEND="
 	test? (
 		dev-python/annotated-types[${PYTHON_USEDEP}]
+		>=dev-python/blockbuster-1.5.27[${PYTHON_USEDEP}]
 		>=dev-python/coverage-7.10.7[${PYTHON_USEDEP}]
 		>=dev-python/dirty-equals-0.9.0[${PYTHON_USEDEP}]
 		>=dev-python/inline-snapshot-0.23.0[${PYTHON_USEDEP}]
@@ -82,6 +83,7 @@ python_test() {
 	local EPYTEST_DESELECT=(
 		# Requires dev-python/logfire's capfire fixture
 		tests/shared/test_otel.py::test_client_and_server_spans
+		tests/shared/test_otel.py::test_client_span_records_error_status_when_peer_answers_with_jsonrpc_error
 	)
 
 	epytest
