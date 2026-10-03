@@ -100,6 +100,7 @@ dev-util/ghidra                   github-release NationalSecurityAgency/ghidra p
 dev-util/llvm-mingw64             git-tag https://git.code.sf.net/p/mingw-w64/mingw-w64 prefix=v
 dev-util/mdds                     gitlab-tag mdds/mdds
 dev-util/pyghidra-mcp             github-release clearbluejar/pyghidra-mcp prefix=v
+dev-util/radeon-developer-tool-suite skip versioned by suite release date (YYYY.MM.DD); no machine-readable source, check gpuopen.com/rgp by hand
 games-emulation/cemu              github-commit cemu-project/Cemu
 games-engines/box2d               github-release erincatto/box2d prefix=v
 games-util/comet                  github-release imLinguin/comet prefix=v
