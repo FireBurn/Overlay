@@ -10,9 +10,13 @@ cd "$(dirname "$0")"
 # only reaches the agent if a step fails.
 AI_PKGS=( dev-util/codex app-editors/zed www-client/chromium )
 
+# Slow source builds. Agent bumps of these run after every quicker bump and
+# group, in this order, and before Chromium.
+HEAVY_PKGS=( dev-lang/rust dev-lang/bun app-office/libreoffice www-client/firefox dev-util/electron )
+
 # --- CLI ------------------------------------------------------------------
 DRY_RUN=0
-PUSH=0
+PUSH=1
 RETRY=0
 PKG=""
 usage() {
@@ -23,7 +27,8 @@ Check overlay ebuilds for newer upstream versions and bump them.
 
 Options:
   -n, --dry-run    Report what would change without touching anything
-      --push       Push each bump right after its commit (rebasing if needed)
+      --push       Push each bump right after its commit (default; rebasing if needed)
+      --no-push    Keep commits local
       --retry      Retry candidates the agent declined in an earlier run
   -h, --help       Show this help
 
@@ -159,6 +164,7 @@ restore_index() {
     local -a skip=()
     local f
     cmp -s "$STAGED" <(git diff --cached --binary) && return
+    [[ -s "$STAGED" ]] || { RESTORED=1; return; }
     # Paths committed by this run are no longer staged changes.
     if [[ -n "${START_HEAD:-}" ]]; then
         while read -r f; do skip+=(--exclude="$f"); done \
@@ -504,9 +510,13 @@ leave_package() {
 # of a run. Portage directories are left alone while any build is running, and
 # Chromium's are kept while a rotation is waiting to be resumed.
 CURRENT_PKG=""
+AGENT_SESSION=""
 cleanup() {
     trap - EXIT
     heartbeat_stop
+    # opencode run attaches to the opencode service; killing it leaves the
+    # session running there and competing for the model server.
+    [[ -n "$AGENT_SESSION" ]] && timeout 60 opencode session delete "$AGENT_SESSION" >/dev/null 2>&1
     [[ "$DRY_RUN" == 1 ]] && return
     restore_index
     sudo -n find "$SCRATCH" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null
@@ -543,8 +553,8 @@ print(c["provider"][prov]["options"]["baseURL"].removesuffix("/v1"))' 2>/dev/nul
         if [[ -z "$url" ]] || curl -sf -m 10 "$url/health" >/dev/null; then
             AGENT_UP=1
         else
-            AGENT_UP=0
             echo "ERROR: the agent's model server at $url is not answering; agent steps are skipped" >&2
+            return 1
         fi
     fi
     [[ "$AGENT_UP" == 1 ]]
@@ -557,6 +567,15 @@ portage_jobs() { pgrep -f 'python-exec/[^/]+/(emerge|ebuild) ' | sort; }
 # The model sometimes ends its turn to wait for a build it started in the
 # background, which ends the run and leaves the build unattended. When that
 # happens, wait for the build here and hand the result back to the same session.
+# Seconds an agent run may take. Quick packages should finish in well under an
+# hour; a run that wanders is stopped so the queue (and Chromium) can move on.
+agent_timeout() {
+    case "$1" in
+        www-client/chromium*|dev-lang/rust|dev-util/electron|*rocm*) echo 14400 ;;
+        *) in_list "$1" "${HEAVY_PKGS[@]}" && echo 10800 || echo 2700 ;;
+    esac
+}
+
 run_agent() {
     local label="$1" prompt="$2" alog start start_ms rc round=0 session before
     agent_available || return 2
@@ -566,9 +585,11 @@ run_agent() {
     start=$EPOCHREALTIME
     start_ms=$(date +%s%3N)
     info "agent started; transcript: $alog"
+    AGENT_SESSION="$session"
     heartbeat_start "agent $label" "$alog"
-    opencode run --agent ebuild-bumper --session "$session" "$prompt" </dev/null >"$alog" 2>&1
+    timeout -k 30 "$(agent_timeout "$label")" opencode run --agent ebuild-bumper --session "$session" "$prompt" </dev/null >"$alog" 2>&1
     rc=$?
+    (( rc == 124 )) && echo "ERROR: agent for $label hit its time limit" >&2
     while (( round < 4 )) && [[ -n "$(comm -13 <(echo "$before") <(portage_jobs))" ]]; do
         round=$((round + 1))
         info "agent ended its turn with a build still running; waiting for it (round $round)"
@@ -577,15 +598,26 @@ run_agent() {
         rc=$?
     done
     heartbeat_stop
+    AGENT_SESSION=""
     record "$label" agent "$start" "$rc" "$(agent_usage "$start_ms")"
     printf '   %s  agent          %ss  %s\n' "$( ((rc)) && echo FAIL || echo ok )" \
         "$(elapsed "$start")" "$(agent_usage "$start_ms")"
     return "$rc"
 }
 
+# Extra context for the agent: the package's hints file and its last bump.
+agent_context() {
+    local pkg="$1" hints="scripts/bump-hints/${1//\//_}.md" last
+    [[ -f "$hints" ]] && printf 'Read %s first; it lists this package'"'"'s pitfalls and coupled files. ' "$hints"
+    last="$(git log -1 --format=%h -i --grep='bump\|update\|add' -- "$pkg")"
+    [[ -n "$last" ]] && printf 'The previous bump of this package is commit %s; start from git show %s and repeat what it changed. ' "$last" "$last"
+    printf 'The Gentoo tree at /usr/portage may already have this version of the package or its eclasses; diff against it before writing changes. '
+}
+
 # Returns 0 on a commit, 1 when no bump was needed, 2 on failure.
 bump_agent() {
-    local pkg="$1" old="$2" new="${3:-}" reason="${4:-}" source="${5:-}" head prompt
+    local pkg="$1" old="$2" new="${3:-}" reason="${4:-}" source="${5:-}" head prompt ctx
+    ctx="$(agent_context "$pkg")"
     if [[ "$DRY_RUN" == 1 ]]; then
         info "[dry-run] would ask agent to assess $pkg (local $old${new:+, upstream $new}${reason:+; $reason})"
         return 1
@@ -593,9 +625,9 @@ bump_agent() {
 
     head="$(git rev-parse HEAD)"
     if [[ -n "$new" ]]; then
-        prompt="Bump $pkg in this overlay from $old to $new. scripts/upstream-version.py found $new${source:+ using '$source'}; do not research the latest version again unless it looks wrong.${reason:+ Note: $reason. If an automatic attempt failed, inspect its output and build log, then fix the cause.} Decide whether this is a simple rename or needs package-specific work, preserve the source build and update fetched dependencies and the Manifest as needed. $AGENT_RULES"
+        prompt="Bump $pkg in this overlay from $old to $new. scripts/upstream-version.py found $new${source:+ using '$source'}; do not research the latest version again unless it looks wrong.${reason:+ Note: $reason. If an automatic attempt failed, inspect its output and build log, then fix the cause.} Decide whether this is a simple rename or needs package-specific work, preserve the source build and update fetched dependencies and the Manifest as needed. $ctx$AGENT_RULES"
     else
-        prompt="Assess $pkg in this overlay (current version $old).${reason:+ Note: $reason.} Find and verify the latest appropriate upstream release. Determine whether a bump is appropriate and whether it is a simple rename or needs package-specific work. For Chromium, follow the three-channel instructions and build exactly one Chromium version at a time with no other package builds running. Preserve the source build and update fetched dependencies and the Manifest as needed. $AGENT_RULES"
+        prompt="Assess $pkg in this overlay (current version $old).${reason:+ Note: $reason.} Find and verify the latest appropriate upstream release. Determine whether a bump is appropriate and whether it is a simple rename or needs package-specific work. For Chromium, follow the three-channel instructions and build exactly one Chromium version at a time with no other package builds running. Preserve the source build and update fetched dependencies and the Manifest as needed. $ctx$AGENT_RULES"
     fi
 
     if ! run_agent "$pkg" "$prompt"; then
@@ -628,7 +660,8 @@ bump_agent() {
 CHROMIUM=www-client/chromium
 CHROMIUM_LOGS="$RUN_DIR/chromium"
 PREP_TMPDIR=/home/fireburn/portage-tmp
-CHROMIUM_FIX_ATTEMPTS=2
+CHROMIUM_FIX_ATTEMPTS=20
+declare -A CHROMIUM_FIX_N=()
 
 chromium_ebuild() { grep -l "^SLOT=\"$1\"" "$CHROMIUM"/chromium-*.ebuild 2>/dev/null | head -n1; }
 chromium_version() { basename "$1" .ebuild | sed 's/^chromium-//'; }
@@ -672,7 +705,10 @@ chromium_fix() {
     e="$(chromium_ebuild "$slot")"; v="$(chromium_version "$e")"
     [[ "$DRY_RUN" == 1 ]] && return 1
     info "asking the agent to fix $CHROMIUM $v ($slot): $phase failed"
-    run_agent "$CHROMIUM-$slot" "Chromium $v ($slot slot, $e) failed in $phase with PORTAGE_TMPDIR=$tmp. The end of the log is in $flog; the full build log is $tmp/portage/$CHROMIUM-$v/temp/build.log. Fix the cause in $e or its patches in $CHROMIUM/files; do not change the other slots' ebuilds. If the fix needs dev-build/gn or dev-build/gnrt updated, do that, emerge it and commit it on its own. Verify by resuming with 'sudo env PORTAGE_TMPDIR=$tmp ebuild $e <phase>' from the failed phase; clean first only if the fix changes patches, compilers or configure options. Stop when that phase passes, or report why it cannot be fixed. Do not run emerge for Chromium and do not commit Chromium; the caller rebuilds and commits it. Never end your turn while a job you started is running."
+    local n=$(( ${CHROMIUM_FIX_N[$slot]:-0} + 1 )) prev="" alog="$RUN_DIR/agent-${CHROMIUM//\//_}-$slot.log"
+    CHROMIUM_FIX_N[$slot]=$n
+    (( n > 1 )) && prev=" This is fix attempt $n of $((CHROMIUM_FIX_ATTEMPTS + 1)) for this slot; the earlier attempt did not leave the phase passing. Read only the last 40 lines of its transcript, $alog, and the failing log, then try a different fix; do not repeat what already failed. Never conclude that no fix is needed unless the phase itself passes when you resume it."
+    run_agent "$CHROMIUM-$slot" "Chromium $v ($slot slot, $e) failed in $phase with PORTAGE_TMPDIR=$tmp. The end of the log is in $flog; the full build log is $tmp/portage/$CHROMIUM-$v/temp/build.log. Fix the cause in $e or its patches in $CHROMIUM/files; do not change the other slots' ebuilds. If the fix needs dev-build/gn or dev-build/gnrt updated, do that, emerge it and commit it on its own. Verify by resuming with 'sudo env PORTAGE_TMPDIR=$tmp ebuild $e <phase>' from the failed phase; clean first only if the fix changes patches, compilers or configure options. Keep working until that phase passes: if one fix does not work, read the new error and try the next, using as many turns as it takes; comparing against the previous unstable/beta ebuild and the patches in $CHROMIUM/files usually shows the cause. Do not run emerge for Chromium and do not commit Chromium; the caller rebuilds and commits it.$prev Never end your turn while a job you started is running."
     rc=$?
     # A build the agent left running, e.g. when the model server dropped, can
     # block on its dead terminal. Stop it; the next build resumes its work.
@@ -684,9 +720,14 @@ chromium_fix() {
 # chromium_prepare SLOT -- unpack, patch and configure in PREP_TMPDIR, with fixes.
 chromium_prepare() {
     local slot="$1" e attempt=0 plog
-    e="$(chromium_ebuild "$slot")"
     plog="$CHROMIUM_LOGS/prepare-$slot.log"
     while true; do
+        # The agent may rename or restore ebuilds, so resolve the path every time.
+        e="$(chromium_ebuild "$slot")"
+        if [[ -z "$e" ]]; then
+            echo "ERROR: no $CHROMIUM ebuild has SLOT=\"$slot\"" >&2
+            return 1
+        fi
         info "preparing $slot ($(chromium_version "$e")) in $PREP_TMPDIR"
         if timed "$CHROMIUM-$slot" prepare \
             sudo -n env PORTAGE_TMPDIR="$PREP_TMPDIR" ebuild "$e" clean configure >"$plog" 2>&1; then
@@ -791,7 +832,10 @@ bump_chromium() {
     plan="$(timed "$CHROMIUM" channel-check scripts/chromium-channels.py)"; rc=$?
     if (( rc )); then
         info "skip $CHROMIUM: ${plan:-channel check failed}"
-        return 1
+        # An unfinished rotation still has slots to build from what is here.
+        package_clean "$CHROMIUM" && return 1
+        info "continuing with the uncommitted $CHROMIUM rotation already in the tree"
+        plan=""
     fi
     if [[ -n "$plan" ]] && grep -qv '^keep' <<<"$plan"; then
         printf '%s\n' "$plan" | sed 's/^/   /'
@@ -822,7 +866,7 @@ bump_chromium() {
     # Slots that are installed but not yet committed (an interrupted run).
     for slot in stable beta unstable; do
         in_list "$slot" "${todo[@]}" && continue
-        chromium_commit "$slot" && changed_any=1
+        chromium_commit "$slot" && { changed_any=1; push_commits; }
     done
     if (( ${#todo[@]} )); then
         first="${todo[0]}"
@@ -835,12 +879,12 @@ bump_chromium() {
             chromium_emerge "$first" resume || { echo "ERROR: $first did not build" >&2; ok=0; }
         fi
         if (( ok )); then
-            chromium_commit "$first" && changed_any=1 || ok=0
+            chromium_commit "$first" && { changed_any=1; push_commits; } || ok=0
         fi
         if (( ok )); then
             for slot in "${todo[@]:1}"; do
                 chromium_emerge "$slot" || { echo "ERROR: $slot did not build" >&2; ok=0; break; }
-                chromium_commit "$slot" && changed_any=1 || { ok=0; break; }
+                chromium_commit "$slot" && { changed_any=1; push_commits; } || { ok=0; break; }
             done
         fi
     fi
@@ -914,9 +958,10 @@ mechanical() {
 }
 
 # Sort candidates into queues: quick mechanical bumps first so their commits
-# land early, then agent work, then groups, and Chromium last.
+# land early, then agent work, groups, slow source builds (HEAVY_PKGS) and
+# Chromium last.
 SEP=$'\037'
-Q_SIMPLE=(); Q_AGENT=(); Q_CHROMIUM=(); skipped=()
+Q_SIMPLE=(); Q_AGENT=(); Q_HEAVY=(); Q_CHROMIUM=(); skipped=()
 n_current=0
 # A tab IFS would merge empty columns, so read with a non-whitespace separator.
 while IFS=$'\037' read -r pkg status old new group batch source note <&3; do
@@ -943,15 +988,26 @@ while IFS=$'\037' read -r pkg status old new group batch source note <&3; do
     fi
     if [[ "$status" == newer ]] && mechanical "$pkg"; then
         Q_SIMPLE+=("$row")
+    elif in_list "$pkg" "${HEAVY_PKGS[@]}"; then
+        Q_HEAVY+=("$row")
     else
         Q_AGENT+=("$row")
     fi
 done 3< <(tr '\t' '\037' <"$VERSIONS")
 
+# Heavy packages in HEAVY_PKGS order.
+if (( ${#Q_HEAVY[@]} )); then
+    sorted=()
+    for h in "${HEAVY_PKGS[@]}"; do
+        for row in "${Q_HEAVY[@]}"; do [[ "$row" == "$h$SEP"* ]] && sorted+=("$row"); done
+    done
+    Q_HEAVY=("${sorted[@]}")
+fi
+
 n_group=0
 for group in "${!GROUP_PKGS[@]}"; do n_group=$((n_group + 1)); done
-TOTAL=$(( ${#Q_SIMPLE[@]} + ${#Q_AGENT[@]} + n_group + ${#Q_CHROMIUM[@]} ))
-info "$n_current up to date; $TOTAL to process: ${#Q_SIMPLE[@]} mechanical, ${#Q_AGENT[@]} agent, $n_group group(s), ${#Q_CHROMIUM[@]} chromium"
+TOTAL=$(( ${#Q_SIMPLE[@]} + ${#Q_AGENT[@]} + ${#Q_HEAVY[@]} + n_group + ${#Q_CHROMIUM[@]} ))
+info "$n_current up to date; $TOTAL to process: ${#Q_SIMPLE[@]} mechanical, ${#Q_AGENT[@]} agent, ${#Q_HEAVY[@]} heavy, $n_group group(s), ${#Q_CHROMIUM[@]} chromium"
 if (( ${#skipped[@]} )); then
     info "skipped:"
     for line in "${skipped[@]}"; do info "  $line"; done
@@ -1029,6 +1085,10 @@ for group in "${!GROUP_PKGS[@]}"; do
     bump_group "$group" "${GROUP_VER[$group]}" "${members[@]}"
     record "$group" total "$start" 0 "${#members[@]} packages -> ${GROUP_VER[$group]}"
     [[ "$(git rev-parse HEAD)" != "$before" ]] && { results+=("bumped  $group -> ${GROUP_VER[$group]}"); push_commits; }
+done
+
+for row in "${Q_HEAVY[@]}"; do
+    process_row "$row"
 done
 
 for row in "${Q_CHROMIUM[@]}"; do

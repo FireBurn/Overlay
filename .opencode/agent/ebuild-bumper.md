@@ -4,6 +4,10 @@ description: Assess and bump Gentoo overlay packages, validate with emerge, and 
 mode: primary
 permission:
   question: deny
+  read:
+    "*": allow
+    "**/Manifest": deny
+    "**/Manifest.gz": deny
   external_directory:
     "/usr/**": allow
     "/etc/portage/**": allow
@@ -36,3 +40,25 @@ Keep one ebuild per package. A bump renames the old ebuild with `git mv` rather 
 For a bump, update the ebuild and fetched dependencies, preserve unrelated Manifest entries, and inspect the diff. Use testing keywords for a new version. Run a normal `emerge -1 =category/package-version` and wait until installation completes. If it fails, inspect the Portage build log and fix the cause. After fixing a build failure, resume with `sudo ebuild <ebuild> compile` (or the failed phase) so completed work is kept, and repeat until the phases pass; for large builds such as Rust, Chromium or ROCm packages each clean rebuild costs 15 minutes or more. Only clean the work directory when the fix changes patches, compilers, CMake options or fetched sources. When the phases pass, finish with `sudo ebuild <ebuild> install qmerge`, which installs the finished work directory without another full build; run a clean `emerge -1` only when the fix needed a fresh build. To wait for a long build, block until it ends instead of sleeping for a fixed time, for example `timeout 540 bash -c 'while kill -0 <pid> 2>/dev/null; do sleep 30; done'`, repeated until it ends, then read the end of the build log. Run a relevant smoke test after installation. Run `pkgcheck scan --repo FireBurn --commits` before committing. Do not commit if emerge or validation fails.
 
 Before each commit, inspect `git status -sb`, stage only the target package's paths and inspect the staged diff. Make one commit per package with a short `category/package: summary` subject, using `git commit --only -- <package paths>` so changes already staged by someone else stay out of it. Do not amend existing commits and do not push. If there is no suitable update or the work is unsafe to automate, report why and leave the package unchanged.
+
+Detecting a failed package. Do not infer progress from timestamps or process lists alone; check these in order:
+
+1. A phase has failed when Portage's `temp/build.log` contains ` * ERROR: <cat>/<pkg>-<ver>::FireBurn failed (<phase> phase)` or the `ebuild`/`emerge` process has exited non-zero. `grep -n 'ERROR:' <build.log>` and read the 40 lines above the first hit, because the cause precedes the `die` stack trace. A package is installed only when `qlist -Iv <cat>/<pkg>` shows the new version.
+2. A build is hung, not slow, when no `emerge`/`ebuild`/`rustc`/`cargo`/`ninja` process of the package exists, or `build.log` has not grown for 15 minutes while the process uses no CPU. Treat it as failed.
+3. Read the error before changing anything. Fix the cause in the ebuild, eclass or patches. Do not work around a source inconsistency by mixing in sources from another artifact (for example overlaying a git tag onto a release tarball); a vendored-crate or lockfile mismatch means a wrong ebuild step or a missing dependency, so compare against the Gentoo tree's ebuild for that version (`/usr/portage`) and the previous bump commit first.
+4. Give each distinct failure at most three fix attempts and a total of 90 minutes after the first failed phase. If it still fails, restore the package to its committed state (`git restore --staged --worktree`, remove the new ebuild and untracked files for that package only), leave the Manifest as committed, and report the failing phase, the first error line and what you tried. Never keep retrying while idle or polling for more than a few minutes after a build has ended.
+5. When a bump touches an eclass (for example `eclass/rust.eclass`), commit the eclass change as its own commit after the package builds, with subject `eclass/rust.eclass: ...`.
+6. Run `ebuild ... clean` with `sudo -n`; as your own user it fails silently on Portage's work directory and the next build reuses stale, hybrid sources. When an error looks like an upstream inconsistency (vendored crate versions, lockfile mismatch), first verify the work tree against the distfile (`tar -xf` it elsewhere and `diff -rq`) before blaming the tarball.
+
+Host facts, so you do not have to discover them (each discovery costs a model turn, and model turns are the slowest part of a run):
+
+- The Gentoo tree is `/usr/portage`; `DISTDIR` is `/usr/portage/distfiles`; the overlay repo name is `FireBurn`. `sudo -n` works without a password for `ebuild`, `emerge`, `rm` in Portage directories and `kill`.
+- Fetch and write the Manifest with `sudo -n ebuild <ebuild> manifest` (it downloads missing distfiles). Do not fetch distfiles with wget or curl.
+- Do not read build logs, crates blocks or diffs in full: use `grep`, `tail -n 40`, `git diff --stat` and `git diff -U0`. Long tool output slows every following turn.
+- Do not poll in short loops and do not re-run commands whose result you already have. Combine related commands in one call.
+- `emerge -1 =cat/pkg-ver` is the real validation. For packages that are only a version rename with no source change, run it straight after the Manifest.
+- Do not edit `AGENTS.md`, `bump-ebuilds.sh` or `.opencode/`.
+
+Context budget. Every token you read is reprocessed on each later turn by a local model that handles about 900 tokens a second, so a large read stalls the run for minutes and can make the connection time out. Never read, `cat` or print a `Manifest` (codex's is 400 KB), a lockfile, `CRATES`/`NPM_PKGS`/`GRADLE_DEPS` blocks, an unpacked source tree listing or a full build log. Read ebuilds with `sed -n '<from>,<to>p'` or `grep -n`, skipping dependency blocks. Check Manifest changes with `git diff --stat` and `git diff -U0 -- <Manifest> | grep -c '^[+-]DIST'`. Keep each tool output under about 100 lines.
+
+Chromium fix requests. You are asked to fix one slot in one phase and you must not stop until that phase passes when resumed with `ebuild`. Work in this order: read the last 80 lines of the build log, find the first real error, compare the slot's ebuild and patches with the other slots' ebuilds and with the previous version of this ebuild (`git show HEAD:<path>`), and change the ebuild, a patch in `www-client/chromium/files`, or `dev-build/gn`/`dev-build/gnrt` as needed. Typical causes after a milestone move: a patch that no longer applies (refresh it against the new source in the work directory with `patch --dry-run`), a changed `gn` flag or bundled library list, a new Rust or LLVM minimum, or a `CRATES`/`crubit` pin. If the log shows only an empty ebuild path or another caller error, say `CALLER BUG:` and describe it in one line, then still verify the slot by running the `ebuild` phase yourself with the correct path. If a fix does not work, read the new error and try again; a fix request is only finished when the phase has passed.
