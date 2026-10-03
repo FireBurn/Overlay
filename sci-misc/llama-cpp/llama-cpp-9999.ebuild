@@ -85,6 +85,8 @@ PATCHES=(
 	"${FILESDIR}/0016-vulkan-load-16-values-per-thread-for-q4_K-q5_K-q6_K-.patch"
 	"${FILESDIR}/0017-vulkan-stage-large-writes-to-host-visible-VRAM-throu.patch"
 	"${FILESDIR}/0018-vulkan-index-iq4-mxfp4-codebooks-as-a-constant-array.patch"
+	"${FILESDIR}/0019-vulkan-use-the-float-mat-vec-for-single-tokens-with-.patch"
+	"${FILESDIR}/0020-vulkan-hoist-loop-invariants-in-the-Q4_K-and-Q5_K-in.patch"
 )
 
 pkg_setup() {

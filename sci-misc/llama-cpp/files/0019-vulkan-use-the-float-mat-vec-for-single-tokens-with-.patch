@@ -1,0 +1,30 @@
+From c590c9179205bc8e9a4440099579a696e6df321c Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Thu, 1 Oct 2026 09:59:47 +0100
+Subject: [PATCH] vulkan : use the float mat-vec for single tokens with q4_K,
+ q5_K and iq4_xs on RDNA4
+
+Assisted-by: Claude Code (Claude Opus 5.5)
+---
+ ggml/src/ggml-vulkan/ggml-vulkan.cpp | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/ggml/src/ggml-vulkan/ggml-vulkan.cpp b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
+index 8a89d320d..4bdec5114 100644
+--- a/ggml/src/ggml-vulkan/ggml-vulkan.cpp
++++ b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
+@@ -6581,6 +6581,11 @@ static bool ggml_vk_should_use_mmvq(const vk_device& device, uint32_t m, uint32_
+         switch (src0_type) {
+         case GGML_TYPE_Q8_0:
+             return device->architecture == vk_device_architecture::AMD_GCN;
++        // single tokens are faster with the float path on RDNA4
++        case GGML_TYPE_Q4_K:
++        case GGML_TYPE_Q5_K:
++        case GGML_TYPE_IQ4_XS:
++            return device->architecture != vk_device_architecture::AMD_RDNA4;
+         default:
+             return true;
+         }
+-- 
+2.56.0
+
