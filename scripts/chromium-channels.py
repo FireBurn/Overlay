@@ -81,8 +81,15 @@ def main():
             continue
         used.add(src)
         was = next(s for s, ev in ebuilds.items() if ev == src)
-        ops.append(f"move     {slot:8} chromium-{src}.ebuild -> chromium-{v}.ebuild "
-                   f"(SLOT {was} -> {slot})" if src != v or was != slot else "")
+        if src == v and was == slot:
+            continue
+        if any(ebuilds.get(s) == src == t for s, t in targets.items()):
+            # Another slot keeps this ebuild as it is, so the new slot gets a copy.
+            ops.insert(0, f"copy     {slot:8} chromium-{src}.ebuild -> chromium-{v}.ebuild "
+                          f"(same major as the {was} slot, which keeps its ebuild)")
+        else:
+            ops.append(f"move     {slot:8} chromium-{src}.ebuild -> chromium-{v}.ebuild "
+                       f"(SLOT {was} -> {slot})")
     for v in ebuilds.values():
         if v not in used:
             ops.append(f"remove   chromium-{v}.ebuild")
