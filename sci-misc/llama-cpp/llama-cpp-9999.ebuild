@@ -87,6 +87,7 @@ PATCHES=(
 	"${FILESDIR}/0018-vulkan-index-iq4-mxfp4-codebooks-as-a-constant-array.patch"
 	"${FILESDIR}/0019-vulkan-use-the-float-mat-vec-for-single-tokens-with-.patch"
 	"${FILESDIR}/0020-vulkan-hoist-loop-invariants-in-the-Q4_K-and-Q5_K-in.patch"
+	"${FILESDIR}/0021-vulkan-keep-P-transposed-in-shared-memory-for-the-co.patch"
 )
 
 pkg_setup() {

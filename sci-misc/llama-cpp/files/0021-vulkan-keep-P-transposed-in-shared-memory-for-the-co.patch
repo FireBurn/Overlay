@@ -1,0 +1,119 @@
+From 5fe40ed1ea4f2d41717926b62dc9866584c4e742 Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Sun, 4 Oct 2026 14:40:40 +0100
+Subject: [PATCH] vulkan : keep P transposed in shared memory for the coopmat1
+ flash attention on AMD RDNA3 and RDNA4
+
+P is the A operand of the P*V product and was stored with the query row contiguous, so every lane of
+the WMMA read its K values with a 48 byte stride, as eight 16-bit LDS loads. Storing P with the KV
+position contiguous makes each lane a contiguous run that loads as two ds_read_b64.
+
+Flash attention kernel, R9700: 5 query tokens at 34k tokens of q8_0 KV 257 -> 223 us, at 66k 486 ->
+405 us, 512 query tokens 9044 -> 8273 us; 780M 5 tokens 2718 -> 2570 us.
+
+Assisted-by: Claude Code (Claude Opus 5.5)
+---
+ ggml/src/ggml-vulkan/ggml-vulkan.cpp          |  7 ++++-
+ .../vulkan-shaders/flash_attn_base.glsl       |  2 ++
+ .../vulkan-shaders/flash_attn_cm1.comp        | 28 ++++++++++++++++---
+ 3 files changed, 32 insertions(+), 5 deletions(-)
+
+diff --git a/ggml/src/ggml-vulkan/ggml-vulkan.cpp b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
+index 4bdec5114..9ead2226b 100644
+--- a/ggml/src/ggml-vulkan/ggml-vulkan.cpp
++++ b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
+@@ -1376,13 +1376,18 @@ vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_
+     const bool old_amd_windows = device->vendor_id == VK_VENDOR_ID_AMD && device->driver_id == vk::DriverId::eAmdProprietary &&
+                                  (device->architecture == AMD_GCN || device->architecture == AMD_RDNA1 || device->architecture == AMD_RDNA2);
+ 
++    // transposed P in shared memory: contiguous WMMA operand loads on AMD RDNA3/4
++    const bool p_transposed = device->vendor_id == VK_VENDOR_ID_AMD &&
++                              (device->architecture == AMD_RDNA3 || device->architecture == AMD_RDNA4);
++
+     uint32_t flags = (use_mask_opt      ? 1 : 0) |
+                      (use_mask          ? 2 : 0) |
+                      (use_logit_softcap ? 4 : 0) |
+                      (old_amd_windows   ? 8 : 0) |
+                      (use_sparse        ? 16 : 0) |
+                      (use_mq            ? 32 : 0) |
+-                     (use_tiled_kv      ? 64 : 0);
++                     (use_tiled_kv      ? 64 : 0) |
++                     (p_transposed      ? 128 : 0);
+ 
+     const uint32_t subgroup_size = params.disable_subgroups ? 0 : params.subgroup_size;
+ 
+diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl
+index 5275a3d1c..531fbfcd4 100644
+--- a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl
++++ b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl
+@@ -31,6 +31,8 @@ const bool USE_SPARSE      = (Flags & 16) != 0;
+ const bool USE_MQ          = (Flags & 32) != 0;
+ // K/V are f16 scratch in 16x16 tiles (K row-major, V transposed): each fragment is one contiguous 512 byte load
+ const bool TILED_KV        = (Flags & 64) != 0;
++// P is kept transposed in shared memory so coopmat operand loads are contiguous (AMD WMMA)
++const bool P_TRANSPOSED    = (Flags & 128) != 0;
+ 
+ // Round up head sizes to a multiple of 16, for coopmat1/coopmat2 paths
+ const uint32_t HSK_pad = (HSK + 15) & ~15;
+diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp
+index 6df261711..2c53577cb 100644
+--- a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp
++++ b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp
+@@ -45,7 +45,11 @@ const uint32_t qstride = HSK_pad / 4 + 2;
+ shared FLOAT_TYPEV4 Qf[Br * qstride];
+ 
+ const uint psh_stride = Br / 4 + 2;
+-shared FLOAT_TYPEV4 Psh[Bc * psh_stride];
++shared FLOAT_TYPEV4 Psh[P_TRANSPOSED ? 1 : Bc * psh_stride];
++// Transposed P (K index contiguous): each lane's WMMA operand is a contiguous run, so it loads as
++// ds_read_b64 instead of eight strided 16-bit reads.
++const uint pt_stride = Bc / 4 + 2;                    // in vec4 units
++shared FLOAT_TYPEV4 PshT[P_TRANSPOSED ? Br * pt_stride : 1];
+ 
+ // Avoid padding for hsk==256 to make it fit in 48KB shmem.
+ const uint32_t sfshstride = (HSK <= 128) ? (Br / 4 + 2) : Br / 4;
+@@ -413,14 +417,26 @@ void main() {
+             [[unroll]] for (uint32_t r = 0; r < rows_per_thread; r += 4) {
+                 const uint row = tile_row(r);
+                 if (KV_bounds_check && j * Bc + col >= KV) {
+-                    Psh[col * psh_stride + row / 4] = FLOAT_TYPEV4(0.0f);
++                    if (P_TRANSPOSED) {
++                        [[unroll]] for (uint32_t vec_idx = 0; vec_idx < 4; ++vec_idx) {
++                            PshT[(row + vec_idx) * pt_stride + col / 4][col % 4] = FLOAT_TYPE(0.0f);
++                        }
++                    } else {
++                        Psh[col * psh_stride + row / 4] = FLOAT_TYPEV4(0.0f);
++                    }
+                 } else {
+                     const vec4 mfvec = vec4(Mf[r], Mf[r + 1], Mf[r + 2], Mf[r + 3]);
+                     const FLOAT_TYPEV4 Pf = FLOAT_TYPEV4(exp(vec4(sfsh[row / 4 + col * sfshstride]) - mfvec));
+                     [[unroll]] for (uint32_t vec_idx = 0; vec_idx < 4; ++vec_idx) {
+                         Lf[r + vec_idx] += Pf[vec_idx];
+                     }
+-                    Psh[col * psh_stride + row / 4] = Pf;
++                    if (P_TRANSPOSED) {
++                        [[unroll]] for (uint32_t vec_idx = 0; vec_idx < 4; ++vec_idx) {
++                            PshT[(row + vec_idx) * pt_stride + col / 4][col % 4] = Pf[vec_idx];
++                        }
++                    } else {
++                        Psh[col * psh_stride + row / 4] = Pf;
++                    }
+                 }
+             }
+         }
+@@ -509,7 +525,11 @@ void main() {
+ 
+             if (hsv_offset < HSV_pad) {
+                 [[unroll]] for (uint32_t bc_chunk = 0; bc_chunk < Bc / MatBc; ++bc_chunk) {
+-                    coopMatLoad(KMat, Psh, bc_chunk * MatBc * psh_stride, psh_stride, gl_CooperativeMatrixLayoutColumnMajor);
++                    if (P_TRANSPOSED) {
++                        coopMatLoad(KMat, PshT, bc_chunk * MatBc / 4, pt_stride, gl_CooperativeMatrixLayoutRowMajor);
++                    } else {
++                        coopMatLoad(KMat, Psh, bc_chunk * MatBc * psh_stride, psh_stride, gl_CooperativeMatrixLayoutColumnMajor);
++                    }
+ 
+                     if (SHMEM_STAGING == 0) {
+                     if (!USE_DECODE_V && !KV_bounds_check && !USE_SPARSE) {
+-- 
+2.56.0
+
