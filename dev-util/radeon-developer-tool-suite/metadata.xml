@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+  <maintainer type="person">
+    <email>mike@fireburn.co.uk</email>
+    <name>Mike Lothian</name>
+  </maintainer>
+  <longdescription>
+    The Radeon Developer Tool Suite: Radeon GPU Profiler (RGP), Radeon Memory
+    Visualizer, Radeon Raytracing Analyzer, Radeon GPU Analyzer, Radeon GPU
+    Detective and the Radeon Developer Panel and Service. Binary release only.
+  </longdescription>
+  <upstream>
+    <remote-id type="github">GPUOpen-Tools/radeon_gpu_profiler</remote-id>
+  </upstream>
+</pkgmetadata>
