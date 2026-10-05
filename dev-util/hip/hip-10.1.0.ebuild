@@ -7,7 +7,7 @@ DOCS_BUILDER="doxygen"
 DOCS_DEPEND="media-gfx/graphviz"
 ROCM_SKIP_GLOBALS=1
 
-LLVM_COMPAT=( 23 )
+LLVM_COMPAT=( 24 )
 
 inherit cmake docs flag-o-matic llvm-r2 rocm
 
@@ -23,10 +23,10 @@ if [[ ${PV} == 9999 ]]; then
 	SLOT="0/7.2"
 else
 	SRC_URI="
-		https://github.com/ROCm/rocm-systems/releases/download/therock-10.0/clr.tar.gz -> rocm-clr-${PV}.tar.gz
-		https://github.com/ROCm/rocm-systems/releases/download/therock-10.0/${PN}.tar.gz -> ${P}.tar.gz
+		https://github.com/ROCm/rocm-systems/releases/download/therock-10.1/clr.tar.gz -> rocm-clr-${PV}.tar.gz
+		https://github.com/ROCm/rocm-systems/releases/download/therock-10.1/${PN}.tar.gz -> ${P}.tar.gz
 		test? (
-			https://github.com/ROCm/rocm-systems/releases/download/therock-10.0/hip-tests.tar.gz -> hip-tests-${PV}.tar.gz
+			https://github.com/ROCm/rocm-systems/releases/download/therock-10.1/hip-tests.tar.gz -> hip-tests-${PV}.tar.gz
 		)
 	"
 	S="${WORKDIR}/clr/"
