@@ -3,16 +3,16 @@
 
 EAPI=8
 
-LLVM_COMPAT=( 23 )
+LLVM_COMPAT=( 24 )
 
 inherit cmake llvm-r2
 
-MY_P=llvm-project-therock-10.0
+MY_P=llvm-project-therock-10.1
 components=( "amd/comgr" )
 
 DESCRIPTION="Radeon Open Compute Code Object Manager"
 HOMEPAGE="https://github.com/ROCm/llvm-project/tree/amd-staging/amd/comgr"
-SRC_URI="https://github.com/ROCm/llvm-project/archive/refs/tags/therock-10.0.tar.gz -> ${MY_P}.tar.gz"
+SRC_URI="https://github.com/ROCm/llvm-project/archive/refs/tags/therock-10.1.tar.gz -> ${MY_P}.tar.gz"
 S="${WORKDIR}/${MY_P}/${components[0]}"
 
 LICENSE="MIT"
@@ -21,10 +21,6 @@ KEYWORDS="~amd64"
 
 IUSE="test"
 RESTRICT="!test? ( test )"
-
-PATCHES=(
-	"${FILESDIR}/${PN}-10.0.0-gcc-16.patch"
-)
 
 RDEPEND="
 	dev-libs/rocm-device-libs:${SLOT}
@@ -58,6 +54,10 @@ src_unpack() {
 }
 
 src_prepare() {
+	# ROCm's llvm fork keeps the legacy ArchFeatureKind bitmask API;
+	# upstream llvm-24 replaced it with the generated feature bitset.
+	patch -p1 < "${FILESDIR}"/rocm-comgr-10.1.0-llvm24-feature-bitset.patch || die
+
 	sed -e "s:\${CLANG_CMAKE_DIR}/../../../\*:${EPREFIX}/usr/lib/clang/${LLVM_SLOT}/include:" \
 		-i cmake/opencl_header.cmake || die
 
