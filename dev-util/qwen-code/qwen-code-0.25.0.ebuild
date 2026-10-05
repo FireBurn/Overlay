@@ -6,6 +6,7 @@ EAPI=8
 # Generated from pnpm-lock.yaml by scripts/npm-deps.py, plus node-pty, which
 # replaces the prebuilt @lydell/node-pty the bundle would otherwise load
 NPM_PKGS="
+	@a2a-js/sdk@1.1.0
 	@agentclientprotocol/sdk@0.14.1
 	@alcalzone/ansi-tokenize@0.3.0
 	@alloc/quick-lru@5.2.0
@@ -256,6 +257,7 @@ NPM_PKGS="
 	@opentui/core-linux-x64-musl@0.5.10|amd64,elibc_musl
 	@opentui/react@0.5.10
 	@paralleldrive/cuid2@2.3.1
+	@pinojs/redact@0.4.0
 	@pkgjs/parseargs@0.11.0
 	@playwright/test@1.61.1
 	@protobufjs/aspromise@1.1.2
@@ -349,6 +351,7 @@ NPM_PKGS="
 	@secretlint/secretlint-rule-preset-recommend@10.2.2
 	@secretlint/source-creator@10.2.2
 	@secretlint/types@10.2.2
+	@selderee/plugin-htmlparser2@0.12.0
 	@shikijs/core@1.29.2
 	@shikijs/engine-javascript@1.29.2
 	@shikijs/engine-oniguruma@1.29.2
@@ -449,6 +452,7 @@ NPM_PKGS="
 	@types/gradient-string@1.1.6
 	@types/har-format@1.2.16
 	@types/hast@3.0.5
+	@types/html-to-text@9.0.4
 	@types/http-errors@2.0.5
 	@types/istanbul-lib-coverage@2.0.6
 	@types/jsdom@28.0.3
@@ -456,6 +460,7 @@ NPM_PKGS="
 	@types/json5@0.0.29
 	@types/katex@0.16.8
 	@types/linkify-it@5.0.0
+	@types/mailparser@3.4.6
 	@types/markdown-it@14.1.2
 	@types/marked@5.0.2
 	@types/mdast@4.0.4
@@ -470,6 +475,7 @@ NPM_PKGS="
 	@types/node@20.19.1
 	@types/node@22.20.1
 	@types/node-fetch@2.6.13
+	@types/nodemailer@8.0.2
 	@types/normalize-package-data@2.4.4
 	@types/picomatch@4.0.1
 	@types/prompts@2.4.9
@@ -549,12 +555,16 @@ NPM_PKGS="
 	@xterm/headless@5.5.0
 	@xterm/xterm@6.0.0
 	@yarnpkg/lockfile@1.1.0
+	@zone-eu/mailsplit@5.4.16
+	@zone-eu/mailsplit@5.4.17
 	abbrev@3.0.1
 	abort-controller@3.0.0
 	accepts@2.0.0
 	acorn@8.15.0
+	acorn@8.18.0
 	acorn-jsx@5.3.2
 	acorn-walk@8.3.4
+	acorn-walk@8.3.5
 	agent-base@6.0.2
 	agent-base@7.1.3
 	agentkeepalive@4.6.0
@@ -600,6 +610,7 @@ NPM_PKGS="
 	async-function@1.0.0
 	async-mutex@0.5.0
 	asynckit@0.4.0
+	atomic-sleep@1.0.0
 	atomically@1.7.0
 	auto-bind@5.0.1
 	autoprefixer@10.4.22
@@ -781,6 +792,7 @@ NPM_PKGS="
 	deep-extend@0.6.0
 	deep-is@0.1.4
 	deepmerge@4.3.1
+	deepmerge-ts@8.0.2
 	default-browser@5.5.0
 	default-browser-id@5.0.0
 	define-data-property@1.1.4
@@ -827,6 +839,8 @@ NPM_PKGS="
 	emoji-regex-xs@1.0.0
 	encodeurl@2.0.0
 	encoding@0.1.13
+	encoding-japanese@2.3.0
+	encoding-japanese@2.4.0
 	encoding-sniffer@0.2.1
 	end-of-stream@1.4.5
 	enhanced-resolve@5.21.6
@@ -1008,6 +1022,7 @@ NPM_PKGS="
 	hast-util-to-text@4.0.2
 	hast-util-whitespace@3.0.0
 	hastscript@9.0.1
+	he@1.2.0
 	headers-polyfill@4.0.3
 	highlight.js@11.11.1
 	hono@4.13.3
@@ -1015,6 +1030,7 @@ NPM_PKGS="
 	hosted-git-info@8.1.0
 	html-encoding-sniffer@4.0.0
 	html-escaper@2.0.2
+	html-to-text@10.0.1
 	html-url-attributes@3.0.1
 	html-void-elements@3.0.0
 	htmlparser2@10.1.0
@@ -1031,9 +1047,11 @@ NPM_PKGS="
 	hyperdyperid@1.2.0
 	iconv-lite@0.6.3
 	iconv-lite@0.7.2
+	iconv-lite@0.7.3
 	ieee754@1.2.1
 	ignore@5.3.2
 	ignore@7.0.5
+	imapflow@1.7.8
 	import-fresh@3.3.1
 	import-in-the-middle@3.3.3
 	import-meta-resolve@4.2.0
@@ -1122,6 +1140,7 @@ NPM_PKGS="
 	jiti@1.21.7
 	jiti@2.7.0
 	jose@6.1.3
+	jose@6.2.12
 	js-levenshtein@1.1.6
 	js-tokens@4.0.0
 	js-tokens@9.0.1
@@ -1161,8 +1180,13 @@ NPM_PKGS="
 	layout-base@1.0.2
 	layout-base@2.0.1
 	lazystream@1.0.1
+	leac@0.7.0
 	leven@3.1.0
 	levn@0.4.1
+	libbase64@1.3.0
+	libmime@5.4.3
+	libmime@5.4.4
+	libqp@2.1.1
 	lightningcss@1.32.0
 	lightningcss-linux-arm64-gnu@1.32.0|arm64,elibc_glibc
 	lightningcss-linux-arm64-musl@1.32.0|arm64,elibc_musl
@@ -1208,6 +1232,7 @@ NPM_PKGS="
 	lz-string@1.5.0
 	magic-string@0.30.21
 	magicast@0.3.5
+	mailparser@3.9.28
 	make-dir@4.0.0
 	make-fetch-happen@14.0.3
 	markdown-it@14.2.0
@@ -1331,6 +1356,8 @@ NPM_PKGS="
 	node-pty@1.1.0
 	node-releases@2.0.27
 	node-sarif-builder@3.4.0
+	nodemailer@10.0.10
+	nodemailer@10.0.11
 	nopt@8.1.0
 	normalize-package-data@7.0.1
 	normalize-path@3.0.0
@@ -1355,6 +1382,7 @@ NPM_PKGS="
 	object.groupby@1.0.3
 	object.values@1.2.1
 	obliterator@2.0.5
+	on-exit-leak-free@2.1.2
 	on-finished@2.4.1
 	once@1.4.0
 	onetime@5.1.2
@@ -1394,6 +1422,7 @@ NPM_PKGS="
 	parse5@8.0.1
 	parse5-htmlparser2-tree-adapter@7.1.0
 	parse5-parser-stream@7.1.2
+	parseley@0.13.1
 	parseurl@1.3.3
 	patch-console@2.0.0
 	patch-package@8.0.1
@@ -1418,6 +1447,7 @@ NPM_PKGS="
 	pathe@2.0.3
 	pathval@1.1.1
 	pathval@2.0.1
+	peberminta@0.10.0
 	pend@1.2.0
 	picocolors@1.1.1
 	picomatch@2.3.2
@@ -1427,6 +1457,9 @@ NPM_PKGS="
 	pidtree@0.6.0
 	pify@2.3.0
 	pify@3.0.0
+	pino@10.3.1
+	pino-abstract-transport@3.0.0
+	pino-std-serializers@7.1.0
 	pirates@4.0.7
 	pkce-challenge@5.0.0
 	pkg-types@1.3.1
@@ -1461,6 +1494,7 @@ NPM_PKGS="
 	proc-log@5.0.0
 	process@0.11.10
 	process-nextick-args@2.0.1
+	process-warning@5.1.0
 	promise-retry@2.0.1
 	prompts@2.4.2
 	prop-types@15.8.1
@@ -1477,6 +1511,7 @@ NPM_PKGS="
 	qs@6.16.0
 	querystringify@2.2.0
 	queue-microtask@1.2.3
+	quick-format-unescaped@4.0.4
 	quickjs-emscripten-core@0.32.0
 	radix-ui@1.6.2
 	range-parser@1.2.1
@@ -1508,6 +1543,8 @@ NPM_PKGS="
 	readdir-glob@1.1.3
 	readdirp@3.6.0
 	readdirp@4.1.2
+	real-require@0.2.0
+	real-require@1.0.0
 	recast@0.23.11
 	reflect.getprototypeof@1.0.10
 	regex@5.1.1
@@ -1552,11 +1589,13 @@ NPM_PKGS="
 	safe-buffer@5.2.1
 	safe-push-apply@1.0.0
 	safe-regex-test@1.1.0
+	safe-stable-stringify@2.5.0
 	safer-buffer@2.1.2
 	sax@1.6.0
 	saxes@6.0.0
 	scheduler@0.27.0
 	secretlint@10.2.2
+	selderee@0.12.0
 	semver@5.7.2
 	semver@6.3.1
 	semver@7.8.5
@@ -1595,6 +1634,7 @@ NPM_PKGS="
 	smart-buffer@4.2.0
 	socks@2.8.9
 	socks-proxy-agent@8.0.5
+	sonic-boom@4.2.1
 	source-map@0.6.1
 	source-map-js@1.2.1
 	space-separated-tokens@2.0.2
@@ -1602,6 +1642,7 @@ NPM_PKGS="
 	spdx-exceptions@2.5.0
 	spdx-expression-parse@3.0.1
 	spdx-license-ids@3.0.21
+	split2@4.2.0
 	ssri@12.0.0
 	stack-utils@2.0.6
 	stackback@0.0.2
@@ -1675,6 +1716,7 @@ NPM_PKGS="
 	thenify@3.3.1
 	thenify-all@1.6.0
 	thingies@2.5.0
+	thread-stream@4.2.0
 	tiny-invariant@1.3.3
 	tinybench@2.9.0
 	tinycolor2@1.6.0
@@ -1687,6 +1729,7 @@ NPM_PKGS="
 	tinyrainbow@2.0.0
 	tinyspy@2.2.1
 	tinyspy@4.0.3
+	tlds@1.261.0
 	tldts@6.1.86
 	tldts-core@6.1.86
 	tmp@0.2.7
