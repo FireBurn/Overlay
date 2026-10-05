@@ -3,7 +3,7 @@
 
 EAPI=8
 
-LLVM_COMPAT=( 23 )
+LLVM_COMPAT=( 24 )
 
 inherit cmake flag-o-matic llvm-r2
 
@@ -12,7 +12,7 @@ if [[ ${PV} == *9999 ]] ; then
 	inherit git-r3
 	S="${WORKDIR}/${P}"
 else
-	SRC_URI="https://github.com/ROCm/rocm-systems/releases/download/therock-10.0/${PN}.tar.gz -> ${P}.tar.gz"
+	SRC_URI="https://github.com/ROCm/rocm-systems/releases/download/therock-10.1/${PN}.tar.gz -> ${P}.tar.gz"
 	S="${WORKDIR}/${PN}"
 	KEYWORDS="~amd64"
 fi
@@ -39,7 +39,7 @@ BDEPEND="app-editors/vim-core"
 	# vim-core is needed for "xxd"
 
 PATCHES=(
-	"${FILESDIR}/${PN}-10.0.0-use-system-hsakmt.patch"
+	"${FILESDIR}/${PN}-10.1.0-use-system-hsakmt.patch"
 )
 
 # skip false positive detection in samples, bug #958188
