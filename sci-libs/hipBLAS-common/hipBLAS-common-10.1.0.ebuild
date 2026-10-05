@@ -6,7 +6,7 @@ EAPI=8
 inherit cmake
 DESCRIPTION="Common files shared by hipBLAS and hipBLASLt"
 HOMEPAGE="https://github.com/ROCm/rocm-libraries/tree/develop/projects/hipblas-common"
-SRC_URI="https://github.com/ROCm/rocm-libraries/releases/download/therock-10.0/hipblas-common.tar.gz -> ${P}.tar.gz"
+SRC_URI="https://github.com/ROCm/rocm-libraries/releases/download/therock-10.1/hipblas-common.tar.gz -> ${P}.tar.gz"
 S="${WORKDIR}/hipblas-common"
 
 LICENSE="MIT"
