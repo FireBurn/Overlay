@@ -1,0 +1,29 @@
+--- a/src/device/generate.py
++++ b/src/device/generate.py
+@@ -1,5 +1,6 @@
+ #!/usr/bin/env python3
+ import os
++import re
+ import sys
+ import subprocess
+ from dataclasses import dataclass
+@@ -428,6 +429,19 @@
+       cond = "(defined(__gfx90a__) || defined(__gfx942__) || defined(__gfx950__) || defined(__gfx1250__)) && defined(ENABLE_LL128)"
+   elif fn.acc == "1":
+       cond = "defined(__gfx942__) || defined(__gfx950__) || defined(__gfx1250__)"
++
++  if fn.ty in ("f8e4m3", "f8e5m2"):
++      # The struct-based fp8 fallback trips an assertion in vanilla llvm-24's
++      # AMDGPU backend (LegalizeDAG); only build fp8 kernels on targets with
++      # hardware fp8 (see src/include/rccl_float8.h). The guard must stay a
++      # flat OR list: dl_evaluate_guard() cannot express AND.
++      fp8 = ("gfx942", "gfx950", "gfx1200", "gfx1201", "gfx1250")
++      ll128 = " && defined(ENABLE_LL128)" if (cond and "ENABLE_LL128" in cond) else ""
++      archs = [a for a in re.findall(r"__gfx[0-9a-z]+__", cond or "") if a.strip("_") in fp8]
++      if not archs:
++          cond = "defined(__gfx0000__)"  # never built for any target
++      else:
++          cond = " || ".join("defined(%s)" % a for a in archs) + ll128
+   return cond
+ 
+ # Build the mangled function symbol suffix. The user-buffer registration mode is
