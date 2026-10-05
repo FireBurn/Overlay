@@ -18,7 +18,7 @@ if [[ ${PV} == *9999 ]] ; then
 	inherit git-r3
 	S="${WORKDIR}/${P}/projects/amdsmi"
 else
-	SRC_URI="https://github.com/ROCm/rocm-systems/releases/download/therock-10.0/${PN}.tar.gz -> ${P}.tar.gz"
+	SRC_URI="https://github.com/ROCm/rocm-systems/releases/download/therock-10.1/${PN}.tar.gz -> ${P}.tar.gz"
 	S="${WORKDIR}/${PN}"
 	KEYWORDS="~amd64"
 fi
@@ -92,7 +92,7 @@ src_install() {
 	cmake_src_install
 
 	# Wrong places
-	rm "${ED}"/usr/share/amd_smi/amdsmi/{libamd_smi.so,LICENSE,README.md} || die
+	rm "${ED}"/usr/share/amd_smi/amdsmi/{LICENSE,README.md} || die
 
 	python_fix_shebang "${ED}"/usr/libexec/amdsmi_cli/amdsmi_cli.py
 	python_domodule "${ED}"/usr/libexec/amdsmi_cli
