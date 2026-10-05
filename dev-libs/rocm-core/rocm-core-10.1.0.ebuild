@@ -7,7 +7,7 @@ inherit cmake
 
 DESCRIPTION="Library that provides ROCm release version and install path information"
 HOMEPAGE="https://github.com/ROCm/rocm-systems/tree/develop/projects/rocm-core"
-SRC_URI="https://github.com/ROCm/rocm-systems/releases/download/therock-10.0/${PN}.tar.gz -> ${P}.tar.gz"
+SRC_URI="https://github.com/ROCm/rocm-systems/releases/download/therock-10.1/${PN}.tar.gz -> ${P}.tar.gz"
 S="${WORKDIR}/${PN}"
 
 LICENSE="MIT"
