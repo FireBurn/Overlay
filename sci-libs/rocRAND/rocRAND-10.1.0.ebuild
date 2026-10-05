@@ -9,7 +9,7 @@ inherit cmake rocm
 
 DESCRIPTION="Generate pseudo-random and quasi-random numbers"
 HOMEPAGE="https://github.com/ROCm/rocm-libraries/tree/develop/projects/rocrand"
-SRC_URI="https://github.com/ROCm/rocm-libraries/releases/download/therock-10.0/rocrand.tar.gz -> rocrand-${PV}.tar.gz"
+SRC_URI="https://github.com/ROCm/rocm-libraries/releases/download/therock-10.1/rocrand.tar.gz -> rocrand-${PV}.tar.gz"
 S="${WORKDIR}/rocrand"
 
 LICENSE="MIT"
