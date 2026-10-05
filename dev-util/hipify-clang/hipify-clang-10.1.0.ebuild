@@ -3,11 +3,11 @@
 
 EAPI=8
 
-LLVM_COMPAT=( 23 )
+LLVM_COMPAT=( 24 )
 
 inherit cmake llvm-r2
 
-MY_P=HIPIFY-therock-10.0
+MY_P=HIPIFY-therock-10.1
 
 DESCRIPTION="A set of tools to translate CUDA source code into portable HIP C++"
 HOMEPAGE="https://github.com/ROCm/HIPIFY"
@@ -16,7 +16,7 @@ if [[ ${PV} == *9999 ]] ; then
 	inherit git-r3
 	S="${WORKDIR}/${P}"
 else
-	SRC_URI="https://github.com/ROCm/HIPIFY/archive/refs/tags/therock-10.0.tar.gz -> ${MY_P}.tar.gz"
+	SRC_URI="https://github.com/ROCm/HIPIFY/archive/refs/tags/therock-10.1.tar.gz -> ${MY_P}.tar.gz"
 	S="${WORKDIR}/${MY_P}"
 	KEYWORDS="~amd64"
 fi
@@ -25,7 +25,7 @@ LICENSE="MIT"
 SLOT="0/$(ver_cut 1-2)"
 
 PATCHES=(
-	"${FILESDIR}/${PN}-10.0.0-link-clang-cpp.patch"
+	"${FILESDIR}/${PN}-10.1.0-link-clang-cpp.patch"
 )
 
 # upstream CMake adds a $ORIGIN/../lib RUNPATH to hipify-clang
