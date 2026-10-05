@@ -8,7 +8,7 @@ ROCM_VERSION=${PV}
 inherit cmake fortran-2 rocm
 DESCRIPTION="ROCm BLAS marshalling library"
 HOMEPAGE="https://github.com/ROCm/rocm-libraries/tree/develop/projects/hipblas"
-SRC_URI="https://github.com/ROCm/rocm-libraries/releases/download/therock-10.0/hipblas.tar.gz -> ${P}.tar.gz"
+SRC_URI="https://github.com/ROCm/rocm-libraries/releases/download/therock-10.1/hipblas.tar.gz -> ${P}.tar.gz"
 S="${WORKDIR}/hipblas"
 
 REQUIRED_USE="${ROCM_REQUIRED_USE}"
