@@ -10,7 +10,7 @@ inherit cmake check-reqs edo flag-o-matic multiprocessing python-r1 rocm
 
 DESCRIPTION="Next generation FFT implementation for ROCm"
 HOMEPAGE="https://github.com/ROCm/rocm-libraries/tree/develop/projects/rocfft"
-SRC_URI="https://github.com/ROCm/rocm-libraries/releases/download/therock-10.0/rocfft.tar.gz -> rocfft-${PV}.tar.gz"
+SRC_URI="https://github.com/ROCm/rocm-libraries/releases/download/therock-10.1/rocfft.tar.gz -> rocfft-${PV}.tar.gz"
 S="${WORKDIR}/rocfft"
 
 LICENSE="MIT"
