@@ -3,20 +3,20 @@
 
 EAPI=8
 
-LLVM_COMPAT=( 23 )
+LLVM_COMPAT=( 24 )
 inherit cmake llvm-r2
 
 DESCRIPTION="Radeon Open Compute hipcc"
 HOMEPAGE="https://github.com/ROCm/llvm-project/tree/amd-staging/amd/hipcc"
 
-MY_P=llvm-project-therock-10.0
+MY_P=llvm-project-therock-10.1
 components=( "amd/hipcc" )
 if [[ ${PV} == *9999 ]] ; then
 	EGIT_REPO_URI="https://github.com/ROCm/llvm-project"
 	inherit git-r3
 	S="${WORKDIR}/${P}/${components[0]}"
 else
-	SRC_URI="https://github.com/ROCm/llvm-project/archive/refs/tags/therock-10.0.tar.gz -> ${MY_P}.tar.gz"
+	SRC_URI="https://github.com/ROCm/llvm-project/archive/refs/tags/therock-10.1.tar.gz -> ${MY_P}.tar.gz"
 	S="${WORKDIR}/${MY_P}/${components[0]}"
 	KEYWORDS="~amd64"
 fi
