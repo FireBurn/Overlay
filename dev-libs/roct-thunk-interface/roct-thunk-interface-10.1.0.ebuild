@@ -3,7 +3,7 @@
 
 EAPI=8
 
-LLVM_COMPAT=( 23 )
+LLVM_COMPAT=( 24 )
 ROCM_SKIP_GLOBALS=1
 inherit cmake flag-o-matic linux-info llvm-r2 rocm
 
@@ -13,7 +13,7 @@ if [[ ${PV} == *9999 ]] ; then
 	inherit git-r3
 	S="${WORKDIR}/${P}/projects/rocr-runtime/libhsakmt"
 else
-	SRC_URI="https://github.com/ROCm/rocm-systems/releases/download/therock-10.0/rocr-runtime.tar.gz -> ${P}.tar.gz"
+	SRC_URI="https://github.com/ROCm/rocm-systems/releases/download/therock-10.1/rocr-runtime.tar.gz -> ${P}.tar.gz"
 	S="${WORKDIR}/rocr-runtime/libhsakmt"
 	KEYWORDS="~amd64"
 fi
@@ -40,7 +40,7 @@ RESTRICT="!test? ( test )"
 CMAKE_BUILD_TYPE=Release
 
 PATCHES=(
-	"${FILESDIR}/${PN}-10.0.0-exports.patch"
+	"${FILESDIR}/${PN}-10.1.0-exports.patch"
 )
 
 test_wrapper() {
