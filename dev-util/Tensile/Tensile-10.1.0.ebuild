@@ -6,7 +6,7 @@ EAPI=8
 PYTHON_COMPAT=( python3_{12..14} )
 DISTUTILS_USE_PEP517=setuptools
 ROCM_VERSION=${PV}
-LLVM_COMPAT=( 23 )
+LLVM_COMPAT=( 24 )
 
 inherit cmake distutils-r1 llvm-r2 prefix rocm
 
@@ -21,7 +21,7 @@ if [[ "${PV}" == 9999 ]] ; then
 	SLOT="0/9999"
 	SLOT_NOLIVE="0/7.2"
 else
-	SRC_URI="https://github.com/ROCm/rocm-libraries/releases/download/therock-10.0/tensile.tar.gz -> ${P}.tar.gz"
+	SRC_URI="https://github.com/ROCm/rocm-libraries/releases/download/therock-10.1/tensile.tar.gz -> ${P}.tar.gz"
 	S="${WORKDIR}/tensile"
 	SLOT="0/$(ver_cut 1-2)"
 	SLOT_NOLIVE=${SLOT}
@@ -69,8 +69,6 @@ src_prepare() {
 
 	pushd "${PN}" || die
 
-	sed -e "/ROCM_SMI_ROOT/s,lib,$(get_libdir)," \
-		-i Source/cmake/FindROCmSMI.cmake || die
 	sed -r -e "/TENSILE_USE_LLVM/s/ON/OFF/" \
 		-i Source/CMakeLists.txt || die
 
