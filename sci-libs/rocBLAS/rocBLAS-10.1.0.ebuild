@@ -6,7 +6,7 @@ EAPI=8
 DOCS_BUILDER="doxygen"
 DOCS_DIR="docs/doxygen"
 DOCS_DEPEND="media-gfx/graphviz"
-LLVM_COMPAT=( 23 )
+LLVM_COMPAT=( 24 )
 ROCM_VERSION=${PV}
 
 inherit cmake docs edo flag-o-matic llvm-r2 multiprocessing rocm
@@ -22,7 +22,7 @@ if [[ "${PV}" == 9999 ]] ; then
 	SLOT="0/9999"
 	SLOT_NOLIVE="0/7.2"
 else
-	SRC_URI="https://github.com/ROCm/rocm-libraries/releases/download/therock-10.0/rocblas.tar.gz -> rocblas-${PV}.tar.gz"
+	SRC_URI="https://github.com/ROCm/rocm-libraries/releases/download/therock-10.1/rocblas.tar.gz -> rocblas-${PV}.tar.gz"
 	S="${WORKDIR}/rocblas"
 	SLOT="0/$(ver_cut 1-2)"
 	SLOT_NOLIVE=${SLOT}
