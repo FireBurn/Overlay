@@ -9,9 +9,9 @@ if [[ ${PV} == *9999 ]] ; then
 	EGIT_REPO_URI="https://github.com/ROCm/rocm-cmake.git"
 	inherit git-r3
 else
-	SRC_URI="https://github.com/ROCm/rocm-cmake/archive/refs/tags/therock-10.0.tar.gz -> ${P}.tar.gz"
+	SRC_URI="https://github.com/ROCm/rocm-cmake/archive/refs/tags/therock-10.1.tar.gz -> ${P}.tar.gz"
 	KEYWORDS="~amd64"
-	S="${WORKDIR}/rocm-cmake-therock-10.0"
+	S="${WORKDIR}/rocm-cmake-therock-10.1"
 fi
 
 DESCRIPTION="Radeon Open Compute CMake Modules"
