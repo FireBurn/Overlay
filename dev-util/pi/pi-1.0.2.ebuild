@@ -6,7 +6,7 @@ EAPI=8
 # Generated from package-lock.json by scripts/npm-deps.py
 NPM_PKGS="
 	@anthropic-ai/sandbox-runtime@0.0.26
-	@anthropic-ai/sdk@0.124.0
+	@anthropic-ai/sdk@0.129.0
 	@anthropic-ai/sdk@0.52.0
 	@anthropic-ai/sdk@0.91.1
 	@aws-sdk/client-bedrock-runtime@3.1127.0
@@ -111,7 +111,7 @@ NPM_PKGS="
 	binary-search@1.3.6
 	bl@4.1.0
 	bowser@2.14.1
-	brace-expansion@5.0.9
+	brace-expansion@5.0.12
 	braces@3.0.3
 	buffer@5.7.1
 	buffer-equal-constant-time@1.0.1
@@ -445,7 +445,9 @@ src_compile() {
 	# build:offline uses the model data in the source tree instead of
 	# fetching it
 	edo npm run build:offline
-	edo node scripts/generate-coding-agent-shrinkwrap.mjs
+	# The install lockfile ships generated in the release tarball; verify
+	# it matches the root lockfile.
+	edo node scripts/generate-coding-agent-install-lock.mjs --check
 
 	local ws
 	mkdir -p "${T}/packs" || die
@@ -457,28 +459,25 @@ src_compile() {
 
 src_install() {
 	# Install the way upstream publishes it, resolving dependencies from
-	# the offline registry. The shrinkwrap pulls prebuilt esbuild binaries
-	# in regardless of --omit=optional; esbuild comes from dev-util/esbuild
-	# instead, and clipboard access falls back to wl-paste or xclip.
+	# the offline registry. The install lockfile pins the exact tree;
+	# esbuild comes from dev-util/esbuild instead of the npm package's
+	# platform binaries, and clipboard access falls back to wl-paste or xclip.
 	npm_registry_add "${T}"/packs/*.tgz
-	npm_with_registry npm install --global --prefix "${ED}/usr" \
-		--omit=dev --omit=optional --install-links \
-		"@earendil-works/pi-coding-agent@${PV}"
+	mkdir -p "${T}/install" || die
+	cp packages/coding-agent/install-lock/package.json \
+		packages/coding-agent/install-lock/package-lock.json \
+		"${T}/install/" || die
+	npm_with_registry npm ci --prefix "${T}/install" \
+		--omit=dev --omit=optional --install-links
 
-	local moddir
-	moddir=$(find "${ED}"/usr/lib* -maxdepth 1 -name node_modules -print -quit) || die
-	[[ -n ${moddir} ]] || die "npm global install produced no node_modules"
-	moddir=${moddir#"${ED}"}
+	mkdir -p "${ED}/usr/lib" || die
+	mv "${T}/install/node_modules" "${ED}/usr/lib/node_modules" || die
 
-	# The shrinkwrap pulls esbuild in regardless of --omit=optional
-	rm -r "${ED}${moddir}"/@earendil-works/pi-coding-agent/node_modules/@esbuild || die
-
-	rm "${ED}/usr/bin/pi" || die
 	newbin - pi <<-EOT
 	#!/bin/sh
 	export ESBUILD_BINARY_PATH="\${ESBUILD_BINARY_PATH:-${EPREFIX}/usr/bin/esbuild-${ESBUILD_SLOT}}"
 	export PI_SKIP_VERSION_CHECK=1
-	exec node "${EPREFIX}${moddir}/@earendil-works/pi-coding-agent/dist/bundle/cli.js" "\$@"
+	exec node "${EPREFIX}/usr/lib/node_modules/@earendil-works/pi-coding-agent/dist/bundle/cli.js" "\$@"
 	EOT
 
 	dodoc README.md
