@@ -2,6 +2,7 @@ From: FireBurn <fireburn@users.noreply.github.com>
 Date: Sun, 20 Sep 2026 00:00:00 +0100
 Subject: [PATCH] Separate library validation and assembler selection
 
+diff -ru a/cmake/HipBLASLtCodegen.cmake b/cmake/HipBLASLtCodegen.cmake
 --- a/cmake/HipBLASLtCodegen.cmake
 +++ b/cmake/HipBLASLtCodegen.cmake
 @@ -6,7 +6,7 @@
@@ -10,10 +11,10 @@ Subject: [PATCH] Separate library validation and assembler selection
      set(_one
 -        TARGET LOGIC_PATH OUTPUT_DIR CXX_COMPILER OFFLOAD_BUNDLER JOBS LOGIC_FILTER
 +        TARGET LOGIC_PATH OUTPUT_DIR CXX_COMPILER ASSEMBLER OFFLOAD_BUNDLER JOBS LOGIC_FILTER
-         ASAN YAML_FORMAT NO_COMPRESS EXPERIMENTAL LAZY_LOAD ASM_COMMENTS KEEP_BUILD_TMP ASM_DEBUG)
+         ASAN YAML_FORMAT NO_COMPRESS EXPERIMENTAL LAZY_LOAD ASM_COMMENTS KEEP_BUILD_TMP ASM_DEBUG
+         REQUIRE_GFX1250V0_OVERLAY)
      set(_multi ARCHES)
-     cmake_parse_arguments(_cdl "${_opts}" "${_one}" "${_multi}" ${ARGN})
-@@ -46,6 +46,9 @@
+@@ -47,6 +47,9 @@
  
      list(JOIN _cdl_ARCHES "$<SEMICOLON>" _arches_semi)
      set(_opts_list "--architecture=${_arches_semi}" "--cxx-compiler=${_cdl_CXX_COMPILER}")
@@ -23,7 +24,7 @@ Subject: [PATCH] Separate library validation and assembler selection
      if(_cdl_OFFLOAD_BUNDLER)
          list(APPEND _opts_list "--offload-bundler=${_cdl_OFFLOAD_BUNDLER}")
      endif()
-@@ -96,6 +99,9 @@
+@@ -110,6 +113,9 @@
          VERBATIM
          USES_TERMINAL
      )
@@ -33,7 +34,7 @@ Subject: [PATCH] Separate library validation and assembler selection
  
      set(_output_stamp "${CMAKE_CURRENT_BINARY_DIR}/${_cdl_TARGET}.stamp")
      set(_tcl_command
-@@ -110,7 +116,7 @@
+@@ -124,7 +130,7 @@
          COMMENT "Building device libraries to ${_cdl_OUTPUT_DIR} ..."
          COMMAND ${_tcl_command}
          COMMAND ${CMAKE_COMMAND} -E touch "${_output_stamp}"
@@ -42,6 +43,7 @@ Subject: [PATCH] Separate library validation and assembler selection
          VERBATIM
          USES_TERMINAL
      )
+diff -ru a/device-library/CMakeLists.txt b/device-library/CMakeLists.txt
 --- a/device-library/CMakeLists.txt
 +++ b/device-library/CMakeLists.txt
 @@ -4,6 +4,7 @@
@@ -52,17 +54,18 @@ Subject: [PATCH] Separate library validation and assembler selection
  set(TENSILELITE_KEEP_BUILD_TMP OFF CACHE STRING "Keep temporary build directory for device libraries (turning this ON  bloat the build size).")
  set(TENSILELITE_ASM_DEBUG "" CACHE STRING "Keep debug information for built code objects.")
  set(TENSILELITE_LOGIC_FILTER "" CACHE STRING "Cutomsized logic filter, default is *, i.e. all logics.")
-@@ -25,6 +26,7 @@
-     OUTPUT_DIR "${HIPBLASLT_TENSILE_LIBPATH}"
-     ARCHES ${GPU_TARGETS}
+@@ -66,6 +67,7 @@
+     ARCHES ${_main_arches}
+     REQUIRE_GFX1250V0_OVERLAY ${_main_requires_gfx1250v0_overlay}
      CXX_COMPILER "${CMAKE_CXX_COMPILER}"
 +    ASSEMBLER "${TENSILELITE_ASSEMBLER}"
      OFFLOAD_BUNDLER "${TENSILELITE_OFFLOADBUNDLER}"
      JOBS "${TENSILELITE_BUILD_PARALLEL_LEVEL}"
      LOGIC_FILTER "${TENSILELITE_LOGIC_FILTER}"
+diff -ru a/tensilelite/rocisa/rocisa/include/hardware_caps.hpp b/tensilelite/rocisa/rocisa/include/hardware_caps.hpp
 --- a/tensilelite/rocisa/rocisa/include/hardware_caps.hpp
 +++ b/tensilelite/rocisa/rocisa/include/hardware_caps.hpp
-@@ -43,7 +43,8 @@ inline bool tryAssembler(const IsaVersion&  isaVersion,
+@@ -43,7 +43,8 @@
      std::string isastr = getGfxNameTuple(isaVersion);
  
      std::vector<std::string> cmd
@@ -71,10 +74,30 @@ Subject: [PATCH] Separate library validation and assembler selection
 +           "-c", "-o", "/dev/null"};
      for(auto o : options)
      {
-        cmd.push_back(o);
+         cmd.push_back(o);
+diff -ru a/tensilelite/rocisa/rocisa/include/instruction/common.hpp b/tensilelite/rocisa/rocisa/include/instruction/common.hpp
+--- a/tensilelite/rocisa/rocisa/include/instruction/common.hpp
++++ b/tensilelite/rocisa/rocisa/include/instruction/common.hpp
+@@ -5536,6 +5536,15 @@
+             setInst("v_lshlrev_b16");
+         }
+ 
++        std::string getArgStr() const override
++        {
++            const auto isa = rocIsa::getInstance().getKernel().isaVersion;
++            if(isa[0] != 12 || isa[1] != 0)
++                return CommonInstruction::getArgStr();
++            return dst->toString() + ".l, " + InstructionInputToString(srcs[0])
++                   + ", " + InstructionInputToString(srcs[1]) + ".l";
++        }
++
+         VLShiftLeftB16(const VLShiftLeftB16& other)
+             : CommonInstruction(other)
+         {
+diff -ru a/tensilelite/rocisa/rocisa/include/instruction/extension.hpp b/tensilelite/rocisa/rocisa/include/instruction/extension.hpp
 --- a/tensilelite/rocisa/rocisa/include/instruction/extension.hpp
 +++ b/tensilelite/rocisa/rocisa/include/instruction/extension.hpp
-@@ -536,12 +536,17 @@
+@@ -535,13 +535,18 @@
                       std::optional<HighBitSel>                 sel     = std::nullopt,
                       const std::string&                        comment = "")
      {
@@ -91,11 +114,13 @@ Subject: [PATCH] Separate library validation and assembler selection
          }
  
 -        rocIsa& instance = rocIsa::getInstance();
-         if(instance.getArchCaps()["NoSDWA"])
+         if(capOrDefault(instance.getArchCaps(), "NoSDWA"))
          {
+             return std::make_shared<VCvtF32toF16>(
+diff -ru a/tensilelite/rocisa/rocisa/src/pass/macro_inline.cpp b/tensilelite/rocisa/rocisa/src/pass/macro_inline.cpp
 --- a/tensilelite/rocisa/rocisa/src/pass/macro_inline.cpp
 +++ b/tensilelite/rocisa/rocisa/src/pass/macro_inline.cpp
-@@ -307,6 +307,11 @@
+@@ -310,6 +310,11 @@
                  if(branch.back())
                      output.push_back(cloneAndSubstitute(instruction, params));
              }
@@ -107,28 +132,10 @@ Subject: [PATCH] Separate library validation and assembler selection
              else
              {
                  assert(false && "macroToInstruction: unexpected item type in macro body");
---- a/tensilelite/rocisa/rocisa/include/instruction/common.hpp
-+++ b/tensilelite/rocisa/rocisa/include/instruction/common.hpp
-@@ -5333,7 +5333,16 @@
-         {
-             setInst("v_lshlrev_b16");
-         }
- 
-+        std::string getArgStr() const override
-+        {
-+            const auto isa = rocIsa::getInstance().getKernel().isaVersion;
-+            if(isa[0] != 12 || isa[1] != 0)
-+                return CommonInstruction::getArgStr();
-+            return dst->toString() + ".l, " + InstructionInputToString(srcs[0])
-+                   + ", " + InstructionInputToString(srcs[1]) + ".l";
-+        }
-+
-         VLShiftLeftB16(const VLShiftLeftB16& other)
-             : CommonInstruction(other)
-         {
+diff -ru a/tensilelite/Tensile/TensileCreateLibrary/Run.py b/tensilelite/Tensile/TensileCreateLibrary/Run.py
 --- a/tensilelite/Tensile/TensileCreateLibrary/Run.py
 +++ b/tensilelite/Tensile/TensileCreateLibrary/Run.py
-@@ -981,7 +981,7 @@
+@@ -1016,7 +1016,7 @@
      arguments = parseArguments()
      setVerbosity(arguments["PrintLevel"])
      outputPath = Path(ensurePath(os.path.abspath(arguments["OutputPath"])))
@@ -137,8 +144,8 @@ Subject: [PATCH] Separate library validation and assembler selection
          arguments["CxxCompiler"],
          arguments["CCompiler"],
          arguments["OffloadBundler"],
-@@ -1001,7 +1001,7 @@
-     assignGlobalParameters(arguments, isaInfoMap)
+@@ -1046,7 +1046,7 @@
+     globalParameters["StinkyTofuArchName"] = "gfx1250v0" if any(baseArchName(a) == "gfx1250v0" for a in archs) else ""
  
      asmToolchain = makeAssemblyToolchain(
 -        cxxCompiler,

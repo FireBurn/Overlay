@@ -11,16 +11,16 @@ ROCM_SUPPORTED_TARGETS=(
 )
 PYTHON_COMPAT=( python3_{11..14} )
 
-LLVM_COMPAT=( 23 )
+LLVM_COMPAT=( 24 )
 
 inherit cmake flag-o-matic llvm-r2 multiprocessing python-any-r1 rocm
 
 DESCRIPTION="General matrix-matrix operations library for AMD Instinct accelerators"
 HOMEPAGE="https://github.com/ROCm/rocm-libraries/tree/develop/projects/hipblaslt"
 SRC_URI="
-	https://github.com/ROCm/rocm-libraries/releases/download/therock-10.0/hipblaslt.tar.gz -> hipblaslt-${PV}.tar.gz
-	https://github.com/ROCm/rocm-libraries/releases/download/therock-10.0/origami.tar.gz -> origami-${PV}.tar.gz
-	https://github.com/ROCm/rocm-libraries/releases/download/therock-10.0/stinkytofu.tar.gz -> stinkytofu-${PV}.tar.gz
+	https://github.com/ROCm/rocm-libraries/releases/download/therock-10.1/hipblaslt.tar.gz -> hipblaslt-${PV}.tar.gz
+	https://github.com/ROCm/rocm-libraries/releases/download/therock-10.1/origami.tar.gz -> origami-${PV}.tar.gz
+	https://github.com/ROCm/rocm-libraries/releases/download/therock-10.1/stinkytofu.tar.gz -> stinkytofu-${PV}.tar.gz
 "
 
 S="${WORKDIR}/hipblaslt"
@@ -66,7 +66,7 @@ BDEPEND="
 "
 
 PATCHES=(
-	"${FILESDIR}/${PN}-10.0.0-codegen.patch"
+	"${FILESDIR}/${PN}-10.1.0-codegen.patch"
 )
 
 python_check_deps() {
