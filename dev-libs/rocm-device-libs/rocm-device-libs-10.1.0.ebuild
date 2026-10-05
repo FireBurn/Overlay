@@ -3,10 +3,10 @@
 
 EAPI=8
 
-LLVM_COMPAT=( 23 )
+LLVM_COMPAT=( 24 )
 inherit cmake flag-o-matic llvm-r2
 
-MY_P=llvm-project-therock-10.0
+MY_P=llvm-project-therock-10.1
 components=( "amd/device-libs" )
 
 if [[ ${PV} == *9999 ]] ; then
@@ -14,7 +14,7 @@ if [[ ${PV} == *9999 ]] ; then
 	inherit git-r3
 	S="${WORKDIR}/${P}/${components[0]}"
 else
-	SRC_URI="https://github.com/ROCm/llvm-project/archive/refs/tags/therock-10.0.tar.gz -> ${MY_P}.tar.gz"
+	SRC_URI="https://github.com/ROCm/llvm-project/archive/refs/tags/therock-10.1.tar.gz -> ${MY_P}.tar.gz"
 	S="${WORKDIR}/${MY_P}/${components[0]}"
 	KEYWORDS="~amd64"
 fi
@@ -76,7 +76,7 @@ src_configure() {
 src_install() {
 	cmake_src_install
 	# install symlink, so that clang won't ask for "--rocm-device-lib-path" flag anymore
-	local bitcodedir="$(clang -print-resource-dir)/$(get_libdir)/amdgcn/bitcode"
+	local bitcodedir="$( $(get_llvm_prefix)/bin/clang -print-resource-dir )/$(get_libdir)/amdgcn/bitcode"
 	dosym -r "/usr/lib/amdgcn/bitcode" "${bitcodedir#"${EPREFIX}"}"
 }
 
