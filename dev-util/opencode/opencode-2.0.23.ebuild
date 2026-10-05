@@ -16,20 +16,12 @@ NPM_PKGS="
 	@agentclientprotocol/sdk@1.6.0
 	@ai-sdk/cohere@3.0.27
 	@ai-sdk/gateway@3.0.104
-	@ai-sdk/gateway@4.0.52
 	@ai-sdk/openai-compatible@2.0.37
 	@ai-sdk/openai-compatible@2.0.41
-	@ai-sdk/openai-compatible@2.0.69
 	@ai-sdk/perplexity@3.0.26
-	@ai-sdk/provider@3.0.14
-	@ai-sdk/provider@3.0.15
 	@ai-sdk/provider@3.0.8
-	@ai-sdk/provider@4.0.7
 	@ai-sdk/provider-utils@4.0.21
 	@ai-sdk/provider-utils@4.0.23
-	@ai-sdk/provider-utils@4.0.40
-	@ai-sdk/provider-utils@4.0.46
-	@ai-sdk/provider-utils@5.0.27
 	@ai-sdk/vercel@2.0.39
 	@alloc/quick-lru@5.2.0
 	@ampproject/remapping@2.3.0
@@ -546,11 +538,11 @@ NPM_PKGS="
 	@openauthjs/openauth@0.0.0-20250322224806
 	@opencode-ai/client@0.0.0-beta-18050
 	@opencode-ai/protocol@0.0.0-beta-18050
-	@opencode-ai/pty@0.1.13
-	@opencode-ai/pty-linux-arm64-gnu@0.1.13|arm64
-	@opencode-ai/pty-linux-arm64-musl@0.1.13|arm64
-	@opencode-ai/pty-linux-x64-gnu@0.1.13|amd64
-	@opencode-ai/pty-linux-x64-musl@0.1.13|amd64
+	@opencode-ai/pty@0.2.0
+	@opencode-ai/pty-linux-arm64-gnu@0.2.0|arm64
+	@opencode-ai/pty-linux-arm64-musl@0.2.0|arm64
+	@opencode-ai/pty-linux-x64-gnu@0.2.0|amd64
+	@opencode-ai/pty-linux-x64-musl@0.2.0|amd64
 	@opencode-ai/schema@0.0.0-beta-18050
 	@opencode-ai/sdk@1.18.21
 	@opentelemetry/api@1.9.0
@@ -981,7 +973,6 @@ NPM_PKGS="
 	@vscode/l10n@0.0.18
 	@webcontainer/env@1.1.1
 	@webgpu/types@0.1.54
-	@workflow/serde@4.1.0
 	@xmldom/xmldom@0.8.14
 	@yuuang/ffi-rs-linux-arm64-gnu@1.3.2|arm64
 	@yuuang/ffi-rs-linux-arm64-gnu@1.3.7|arm64
@@ -1001,7 +992,6 @@ NPM_PKGS="
 	agent-base@6.0.2
 	agent-base@7.1.4
 	agentkeepalive@4.6.0
-	ai@7.0.66
 	ajv@8.20.0
 	ajv-draft-04@1.0.0
 	ajv-i18n@4.2.0
@@ -1103,7 +1093,7 @@ NPM_PKGS="
 	builder-util@26.15.3
 	builder-util-runtime@9.7.0
 	bun-ffi-structs@0.3.1
-	bun-pty@0.4.8
+	bun-pty@0.4.9
 	bun-types@1.4.2
 	bundle-name@4.1.0
 	bytestreamjs@2.0.1
@@ -2379,7 +2369,6 @@ NPM_PKGS="
 	util-deprecate@1.0.2
 	uuid@14.0.2
 	validate-npm-package-name@7.0.2
-	venice-ai-sdk-provider@2.1.1
 	vfile@6.0.3
 	vfile-location@5.0.3
 	vfile-message@4.0.3
@@ -2716,8 +2705,8 @@ NPM_STUB_PKGS="
 	@msgpackr-extract/msgpackr-extract-darwin-x64@3.0.4
 	@msgpackr-extract/msgpackr-extract-linux-arm@3.0.4
 	@msgpackr-extract/msgpackr-extract-win32-x64@3.0.4
-	@opencode-ai/pty-darwin-arm64@0.1.13
-	@opencode-ai/pty-darwin-x64@0.1.13
+	@opencode-ai/pty-darwin-arm64@0.2.0
+	@opencode-ai/pty-darwin-x64@0.2.0
 	@opentui/core-darwin-arm64@0.5.14
 	@opentui/core-darwin-x64@0.5.14
 	@opentui/core-win32-arm64@0.5.14
