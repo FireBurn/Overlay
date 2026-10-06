@@ -4,7 +4,7 @@
 EAPI=8
 
 ROCM_VERSION=${PV}
-LLVM_COMPAT=( 24 )
+LLVM_COMPAT=( 23 24 )
 
 inherit cmake flag-o-matic llvm-r2 rocm
 
@@ -55,6 +55,15 @@ src_prepare() {
 	# arch-specific builtins (target-feature check). The _1k bf16 MFMA
 	# builtins take i16 vectors, so cast the __bf16x4 operands explicitly.
 	patch -p1 < "${FILESDIR}/miopen-10.1.0-hipconv-vanilla-llvm.patch" || die
+
+	if (( LLVM_SLOT < 24 )); then
+		# llvm-23's AMDGPU backend aborts on the gfx950 kernels ("illegal VGPR
+		# to SGPR copy"); leave out the arch libraries that were not asked for
+		local arch
+		for arch in cdna4:gfx950 cdna5:gfx1250; do
+			use amdgpu_targets_${arch#*:} || rm -r src/hipconv/src/arch/${arch%:*} || die
+		done
+	fi
 }
 
 src_configure() {
@@ -89,6 +98,9 @@ src_configure() {
 		# /usr/lib64), so no C++ standard is passed for HIP sources; hipconv
 		# requires C++20.
 		-DCMAKE_HIP_FLAGS="-std=c++20 -fconstexpr-steps=33554432"
+		# ... and without the compiler id CMake also omits -x hip, so the
+		# .cpp kernels would be compiled as plain C++
+		-DCMAKE_HIP_COMPILE_OBJECT="<CMAKE_HIP_COMPILER> -x hip <DEFINES> <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>"
 		-DGPU_TARGETS="$(get_amdgpu_flags)"
 		-DCMAKE_INSTALL_PREFIX="${EPREFIX}/usr"
 		-DMIOPEN_BACKEND=HIP
