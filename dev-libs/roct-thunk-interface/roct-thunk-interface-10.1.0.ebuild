@@ -3,7 +3,7 @@
 
 EAPI=8
 
-LLVM_COMPAT=( 24 )
+LLVM_COMPAT=( 23 24 )
 ROCM_SKIP_GLOBALS=1
 inherit cmake flag-o-matic linux-info llvm-r2 rocm
 
