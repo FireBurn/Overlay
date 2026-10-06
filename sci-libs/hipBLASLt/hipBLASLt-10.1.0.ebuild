@@ -11,7 +11,7 @@ ROCM_SUPPORTED_TARGETS=(
 )
 PYTHON_COMPAT=( python3_{11..14} )
 
-LLVM_COMPAT=( 24 )
+LLVM_COMPAT=( 23 24 )
 
 inherit cmake flag-o-matic llvm-r2 multiprocessing python-any-r1 rocm
 
