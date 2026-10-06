@@ -6,7 +6,7 @@ EAPI=8
 PYTHON_COMPAT=( python3_{12..14} )
 DISTUTILS_USE_PEP517=setuptools
 ROCM_VERSION=${PV}
-LLVM_COMPAT=( 24 )
+LLVM_COMPAT=( 23 24 )
 
 inherit cmake distutils-r1 llvm-r2 prefix rocm
 
