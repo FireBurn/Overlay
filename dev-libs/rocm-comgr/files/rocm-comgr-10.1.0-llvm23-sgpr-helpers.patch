@@ -1,0 +1,43 @@
+--- a/src/comgr-metadata.cpp	2026-10-06 17:54:47.088632298 +0100
++++ b/src/comgr-metadata.cpp	2026-10-06 17:54:47.104985731 +0100
+@@ -482,6 +482,24 @@
+           (ArchAttr & AMDGPU::FEATURE_SRAMECC));
+ }
+ 
++// LLVM 23 has no SGPR helpers in AMDGPUTargetParser.h. These follow the AMDGPU
++// backend's IsaInfo rules, which depend only on the major GFX version.
++static unsigned gfxMajor(const char *Processor) {
++  unsigned Digits = 0, Value = 0;
++  for (const char *C = Processor + 3; *C >= '0' && *C <= '9'; ++C, ++Digits)
++    Value = Value * 10 + (*C - '0');
++  return Digits >= 3 ? Value / 100 : Value;
++}
++static unsigned sgprAllocGranule(const char *Processor) {
++  return gfxMajor(Processor) >= 8 ? 16 : 8;
++}
++static unsigned totalNumSGPRs(const char *Processor) {
++  return gfxMajor(Processor) >= 8 ? 800 : 512;
++}
++static unsigned addressableNumSGPRs(const char *Processor) {
++  return gfxMajor(Processor) >= 8 ? 102 : 104;
++}
++
+ const char *getIsaName(size_t Index) { return IsaInfos[Index].IsaName; }
+ 
+ amd_comgr_status_t getIsaMetadata(StringRef IsaName,
+@@ -554,12 +572,12 @@
+   Root["MaxFlatWorkGroupSize"] =
+       Doc.getNode(std::to_string(Info.MaxFlatWorkGroupSize), /*Copy=*/true);
+   Root["SGPRAllocGranule"] =
+-      Doc.getNode(std::to_string(AMDGPU::getSGPRAllocGranule(Kind)),
++      Doc.getNode(std::to_string(sgprAllocGranule(IsaInfos[IsaIndex].Processor)),
+                   /*Copy=*/true);
+   Root["TotalNumSGPRs"] = Doc.getNode(
+-      std::to_string(AMDGPU::getTotalNumSGPRs(Kind)), /*Copy=*/true);
++      std::to_string(totalNumSGPRs(IsaInfos[IsaIndex].Processor)), /*Copy=*/true);
+   Root["AddressableNumSGPRs"] = Doc.getNode(
+-      std::to_string(AMDGPU::getAddressableNumSGPRs(Kind)), /*Copy=*/true);
++      std::to_string(addressableNumSGPRs(IsaInfos[IsaIndex].Processor)), /*Copy=*/true);
+   Root["VGPRAllocGranule"] =
+       Doc.getNode(std::to_string(Info.VGPRAllocGranule), /*Copy=*/true);
+   Root["TotalNumVGPRs"] =

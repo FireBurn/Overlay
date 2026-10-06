@@ -3,7 +3,7 @@
 
 EAPI=8
 
-LLVM_COMPAT=( 24 )
+LLVM_COMPAT=( 23 24 )
 
 inherit cmake llvm-r2
 
@@ -56,7 +56,18 @@ src_unpack() {
 src_prepare() {
 	# ROCm's llvm fork keeps the legacy ArchFeatureKind bitmask API;
 	# upstream llvm-24 replaced it with the generated feature bitset.
-	patch -p1 < "${FILESDIR}"/rocm-comgr-10.1.0-llvm24-feature-bitset.patch || die
+	if (( LLVM_SLOT >= 24 )); then
+		patch -p1 < "${FILESDIR}"/rocm-comgr-10.1.0-llvm24-feature-bitset.patch || die
+	else
+		# llvm-23 has no SGPR helpers in AMDGPUTargetParser.h
+		patch -p1 < "${FILESDIR}"/rocm-comgr-10.1.0-llvm23-sgpr-helpers.patch || die
+
+		# Drop ISA entries whose ELF machine value llvm-23 does not know yet
+		local def=src/comgr-isa-metadata.def elf="$(get_llvm_prefix)/include/llvm/BinaryFormat/ELF.h" mach
+		for mach in $(grep -o 'EF_AMDGPU_MACH_AMDGCN_[A-Z0-9_]*' "${def}" | sort -u); do
+			grep -q "${mach}\b" "${elf}" || sed -i "/${mach}\b/d" "${def}" || die
+		done
+	fi
 
 	sed -e "s:\${CLANG_CMAKE_DIR}/../../../\*:${EPREFIX}/usr/lib/clang/${LLVM_SLOT}/include:" \
 		-i cmake/opencl_header.cmake || die
