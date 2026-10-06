@@ -7,7 +7,7 @@ DOCS_BUILDER="doxygen"
 DOCS_DEPEND="media-gfx/graphviz"
 ROCM_SKIP_GLOBALS=1
 
-LLVM_COMPAT=( 24 )
+LLVM_COMPAT=( 23 24 )
 
 inherit cmake docs flag-o-matic llvm-r2 rocm
 
