@@ -3,7 +3,7 @@
 
 EAPI=8
 
-LLVM_COMPAT=( 24 )
+LLVM_COMPAT=( 23 24 )
 inherit cmake flag-o-matic llvm-r2
 
 MY_P=llvm-project-therock-10.1
