@@ -4,6 +4,13 @@
 
 declare -a discord_parameters
 
+# Discord has no --version mode that exits; it prints the version at
+# startup and keeps running. Answer it from the installed build info.
+if [[ "${1:-}" == "--version" ]]; then
+	echo "Discord $(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "@@DESTDIR@@/resources/build_info.json" | head -n 1)"
+	exit 0
+fi
+
 # Variables set during ebuild configuration
 EBUILD_SECCOMP=false
 EBUILD_WAYLAND=false
