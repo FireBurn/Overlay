@@ -3,7 +3,7 @@
 
 EAPI=8
 
-LLVM_COMPAT=( 24 )
+LLVM_COMPAT=( 23 24 )
 # Ninja rejects duplicate library name-link rules from the V1/V2 libraries.
 CMAKE_MAKEFILE_GENERATOR=emake
 
