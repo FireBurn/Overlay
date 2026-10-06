@@ -6,7 +6,7 @@ EAPI=8
 DOCS_BUILDER="doxygen"
 DOCS_DIR="docs/doxygen"
 DOCS_DEPEND="media-gfx/graphviz"
-LLVM_COMPAT=( 24 )
+LLVM_COMPAT=( 23 24 )
 ROCM_VERSION=${PV}
 
 inherit cmake docs edo flag-o-matic llvm-r2 multiprocessing rocm
