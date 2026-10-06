@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+  <maintainer type="person">
+    <email>mike@fireburn.co.uk</email>
+    <name>Mike Lothian</name>
+  </maintainer>
+  <longdescription>
+    Decodes AMD SQTT thread traces from Mesa radv (.rgp) and Radeon Data Files
+    (AMD_RDF) for RDNA2, RDNA3 and RDNA4 into waves, dispatches, kernels and
+    occupancy, with a command line tool and an optional Qt GUI.
+  </longdescription>
+  <use>
+    <flag name="gui">Build the Qt6 graphical viewer</flag>
+  </use>
+  <upstream>
+    <remote-id type="github">FireBurn/OpenRGP</remote-id>
+  </upstream>
+</pkgmetadata>
