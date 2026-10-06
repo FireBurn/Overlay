@@ -88,6 +88,7 @@ PATCHES=(
 	"${FILESDIR}/0019-vulkan-use-the-float-mat-vec-for-single-tokens-with-.patch"
 	"${FILESDIR}/0020-vulkan-hoist-loop-invariants-in-the-Q4_K-and-Q5_K-in.patch"
 	"${FILESDIR}/0021-vulkan-keep-P-transposed-in-shared-memory-for-the-co.patch"
+	"${FILESDIR}/0022-hip-allow-host-constexpr-use-of-physical-warp-size.patch"
 )
 
 pkg_setup() {

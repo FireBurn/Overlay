@@ -1,0 +1,20 @@
+Subject: [PATCH] hip : allow host constexpr use of the physical warp size
+
+Clang 24 (ROCm 10.1) rejects a reference to a __device__ function in a
+host constant initializer, e.g. the scrambled tile's "ne" member in
+mma.cuh. The value only depends on target macros, so drop the __device__
+qualifier; constexpr functions are implicitly host and device.
+
+diff --git a/ggml/src/ggml-cuda/common.cuh b/ggml/src/ggml-cuda/common.cuh
+index 928607c..dfbb489 100644
+--- a/ggml/src/ggml-cuda/common.cuh
++++ b/ggml/src/ggml-cuda/common.cuh
+@@ -387,7 +387,7 @@ static bool ggml_cuda_is_aligned(const ggml_tensor * tensor, const size_t alignm
+            tensor->nb[3] % alignment == 0;
+ }
+ 
+-static constexpr __device__ int ggml_cuda_get_physical_warp_size() {
++static constexpr int ggml_cuda_get_physical_warp_size() {
+ #if defined(GGML_USE_HIP) && (defined(__GFX9__) || defined(__GFX8__))
+     return 64;
+ #else

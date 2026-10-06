@@ -944,7 +944,7 @@ else
 		tabbable@6.4.0
 		tagged-tag@1.0.0
 		tailwind-merge@3.6.0
-		tailwind-variants@3.2.2
+		tailwind-variants@3.3.1
 		tailwindcss@4.1.11
 		tailwindcss@4.3.0
 		tapable@2.3.3
@@ -1248,7 +1248,30 @@ RDEPEND="${CDEPEND}
 	vulkan? ( media-libs/vulkan-loader )
 "
 
-PATCHES=( "${FILESDIR}/0006-hip-fix-gfx12-bf16-wmma-with-llvm-23.patch" )
+PATCHES=(
+	"${FILESDIR}/0001-vulkan-handle-IQ4_XS-mat-vec-with-more-than-2-column.patch"
+	"${FILESDIR}/0002-vulkan-share-the-K-V-pass-between-query-rows-in-coop.patch"
+	"${FILESDIR}/0003-qwen35-optional-reduced-vocab-LM-head-for-MTP-drafti.patch"
+	"${FILESDIR}/0004-vulkan-use-4-rows-for-legacy-quant-mat-vec-from-2-co.patch"
+	"${FILESDIR}/0005-hip-use-short-vectors-for-bf16-WMMA-builtins-with-LL.patch"
+	"${FILESDIR}/0006-server-keep-speculative-checkpoints-on-device.patch"
+	"${FILESDIR}/0007-hip-keep-MMQ-WMMA-k-loops-rolled-to-avoid-VGPR-spill.patch"
+	"${FILESDIR}/0008-cuda-use-8-lanes-per-state-column-in-gated-delta-net.patch"
+	"${FILESDIR}/0009-hip-share-the-FA-vec-K-V-pass-between-the-Q-heads-of.patch"
+	"${FILESDIR}/0010-vulkan-write-gated-delta-net-state-straight-into-the.patch"
+	"${FILESDIR}/0011-vulkan-use-a-subgroup-reduction-in-rms_norm-and-keep.patch"
+	"${FILESDIR}/0012-vulkan-dual-issue-friendly-int8-epilogue-in-cm1-mmq-.patch"
+	"${FILESDIR}/0013-vulkan-keep-Q-fragments-in-registers-in-coopmat1-fla.patch"
+	"${FILESDIR}/0014-vulkan-store-the-flash-attention-quantized-K-V-scrat.patch"
+	"${FILESDIR}/0015-vulkan-concat-with-a-transposed-src1-through-shared-.patch"
+	"${FILESDIR}/0016-vulkan-load-16-values-per-thread-for-q4_K-q5_K-q6_K-.patch"
+	"${FILESDIR}/0017-vulkan-stage-large-writes-to-host-visible-VRAM-throu.patch"
+	"${FILESDIR}/0018-vulkan-index-iq4-mxfp4-codebooks-as-a-constant-array.patch"
+	"${FILESDIR}/0019-vulkan-use-the-float-mat-vec-for-single-tokens-with-.patch"
+	"${FILESDIR}/0020-vulkan-hoist-loop-invariants-in-the-Q4_K-and-Q5_K-in.patch"
+	"${FILESDIR}/0021-vulkan-keep-P-transposed-in-shared-memory-for-the-co.patch"
+	"${FILESDIR}/0022-hip-allow-host-constexpr-use-of-physical-warp-size.patch"
+)
 
 pkg_setup() {
 	if use hip || use xdna; then
@@ -1298,6 +1321,15 @@ src_prepare() {
 		# so `libggml-xdna1.so` ends up in `/usr/$(get_libdir)/llama.cpp/` instead of `/usr/lib/`
 		sed -i -e "s|DESTINATION lib|DESTINATION $(get_libdir)/llama.cpp|g" \
 			"${WORKDIR}/ggml-xdna1/CMakeLists.txt" || die
+
+		# ggml added alloc_buffer_n and get_alloc_size_n to the buffer type
+		# interface; the backend's positional initialiser predates them.
+		if ! grep -q 'alloc_buffer_n' "${WORKDIR}/ggml-xdna1/src/ggml-xdna1.cpp"; then
+			sed -i \
+				-e '/\/\* \.alloc_buffer   = \*\/ xdna1_buft_alloc,/a\        /* .alloc_buffer_n   = */ NULL,' \
+				-e '/\/\* \.get_alloc_size = \*\/ NULL,/a\        /* .get_alloc_size_n = */ NULL,' \
+				"${WORKDIR}/ggml-xdna1/src/ggml-xdna1.cpp" || die
+		fi
 	fi
 
 	cmake_src_prepare
