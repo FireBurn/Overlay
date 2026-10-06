@@ -3,7 +3,7 @@
 
 EAPI=8
 
-LLVM_COMPAT=( 24 )
+LLVM_COMPAT=( 23 24 )
 
 inherit cmake llvm-r2
 
