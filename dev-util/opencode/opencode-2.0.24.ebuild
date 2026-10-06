@@ -15,7 +15,6 @@ NPM_PKGS="
 	@adobe/css-tools@4.5.0
 	@agentclientprotocol/sdk@1.6.0
 	@ai-sdk/cohere@3.0.27
-	@ai-sdk/gateway@3.0.104
 	@ai-sdk/openai-compatible@2.0.37
 	@ai-sdk/openai-compatible@2.0.41
 	@ai-sdk/perplexity@3.0.26
@@ -950,7 +949,6 @@ NPM_PKGS="
 	@ungap/structured-clone@1.3.3
 	@upsetjs/venn.js@2.0.0
 	@upstash/redis@1.38.0
-	@vercel/oidc@3.2.0
 	@vitejs/plugin-react@4.7.0
 	@vitest/expect@3.2.4
 	@vitest/expect@4.1.11
@@ -1455,7 +1453,7 @@ NPM_PKGS="
 	get-tsconfig@4.14.3
 	get-tsconfig@5.0.0-beta.4
 	github-slugger@2.0.0
-	gitlab-ai-provider@6.18.0
+	gitlab-ai-provider@6.19.0
 	glob@10.5.0
 	glob@11.1.0
 	glob@13.0.5
