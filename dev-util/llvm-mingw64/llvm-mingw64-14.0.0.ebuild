@@ -318,6 +318,7 @@ per_host_install() {
 	-stdlib=libc++
 	-rtlib=compiler-rt
 	-unwindlib=libunwind
+	-fuse-ld=lld
 	-L${EPREFIX}/usr/lib/${PN}/${CHOST}/lib/
 	EOF
 	for bin in dlltool windres ar ranlib nm objcopy objdump readelf size \
