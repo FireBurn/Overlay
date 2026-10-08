@@ -1,0 +1,73 @@
+Link the image straight to PE with the compiler and lld when
+-Defi-pe-libdir names a directory holding a COFF libefi.a. This needs
+neither objcopy with PE support nor the ELF linker script and crt0.
+
+--- a/meson.build
++++ b/meson.build
+@@ -10,7 +10,7 @@
+ 
+ cc = meson.get_compiler('c')
+ cc_ld = find_program(cc.get_linker_id())
+-objcopy = find_program('objcopy')
++objcopy = find_program('objcopy', 'llvm-objcopy')
+ objcopy_version = run_command(objcopy, '--version', check: true).stdout().split('\n')[0].split(' ')[-1]
+ 
+ gnuefi = dependency('gnu-efi', version: '>= 3.0.18')
+--- a/meson_options.txt
++++ b/meson_options.txt
+@@ -1,4 +1,5 @@
+ option('efi-libdir', type : 'string', description : 'path to the EFI lib directory')
++option('efi-pe-libdir', type : 'string', description : 'directory with a PE/COFF libefi.a; links the image directly with the compiler and lld, without objcopy')
+ option('efi-ldsdir', type : 'string', description : 'path to the EFI lds directory')
+ option('efi-includedir', type : 'string', value : '/usr/include/efi', description : 'path to the EFI header directory')
+ option('efi_sbat_fwupd_generation', type : 'integer', value : 1, description : 'SBAT fwupd generation')
+--- a/efi/meson.build
++++ b/efi/meson.build
+@@ -203,6 +203,19 @@
+ # no special cases for aarch64 or arm
+ endif
+ 
++efi_pe_libdir = get_option('efi-pe-libdir')
++if efi_pe_libdir != ''
++  pe_args = ['--target=x86_64-w64-mingw32', '-fno-exceptions',
++             '-fno-unwind-tables', '-fno-asynchronous-unwind-tables',
++             '-D_text=__ImageBase', '-D_data=__ImageBase']
++  foreach a : compile_args
++    if a not in ['-fpic', '-fexceptions', '--param=ssp-buffer-size=4']
++      pe_args += a
++    endif
++  endforeach
++  compile_args = pe_args
++endif
++
+ efi_ldflags = ['-T',
+                join_paths(efi_ldsdir, arch_lds),
+                '-shared',
+@@ -308,6 +321,22 @@
+   fwupd_so_deps += [o_crt0]
+ endif
+ 
++if efi_pe_libdir != ''
++  app = custom_target(efi_name,
++                      input : o_files,
++                      output : efi_name,
++                      command : [cc.cmd_array(), '--target=x86_64-w64-mingw32',
++                                 '-nostdlib', '-fuse-ld=lld',
++                                 '-Wl,-dll', '-Wl,--subsystem,efi_application',
++                                 '-Wl,--entry,efi_main', '-Wl,--image-base,0',
++                                 '-Wl,--file-alignment,512',
++                                 '-Wl,-s',
++                                 '-o', '@OUTPUT@', '@INPUT@',
++                                 join_paths(efi_pe_libdir, 'libefi.a')],
++                      depends: fwupd_so_deps,
++                      install : true,
++                      install_dir : efi_app_location)
++else
+ so = custom_target('fwup.so',
+                    input : o_files,
+                    output : 'fwup.so',
+@@ -350,3 +379,4 @@
+                                ['@INPUT@', '@OUTPUT@'],
+                     install : false,
+                     install_dir : debugdir)
++endif
