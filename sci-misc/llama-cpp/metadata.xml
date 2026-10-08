@@ -9,6 +9,7 @@
 		<flag name="hip">Build the AMD ROCm/HIP GPU backend</flag>
 		<flag name="openblas">Build an OpenBLAS backend</flag>
 		<flag name="opencl">Build an OpenCL backend, so far only works on Adreno and Intel GPUs</flag>
+		<flag name="webui">Build the web UI served by llama-server, which needs Node and the sharp image library</flag>
 		<flag name="xdna">Build the external AMD Ryzen AI XDNA1 NPU backend plugin</flag>
 	</use>
 	<maintainer type="person">
