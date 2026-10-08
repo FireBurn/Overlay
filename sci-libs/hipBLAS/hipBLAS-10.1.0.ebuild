@@ -5,7 +5,7 @@ EAPI=8
 
 ROCM_VERSION=${PV}
 
-inherit cmake fortran-2 rocm
+inherit cmake rocm
 DESCRIPTION="ROCm BLAS marshalling library"
 HOMEPAGE="https://github.com/ROCm/rocm-libraries/tree/develop/projects/hipblas"
 SRC_URI="https://github.com/ROCm/rocm-libraries/releases/download/therock-10.1/hipblas.tar.gz -> ${P}.tar.gz"
@@ -33,6 +33,7 @@ src_configure() {
 		# currently hipBLAS is a wrapper of rocBLAS which has tests, so no need to perform test here
 		-DBUILD_CLIENTS_TESTS=OFF
 		-DBUILD_CLIENTS_BENCHMARKS=OFF
+		-DBUILD_FORTRAN_CLIENTS=OFF
 		-DROCM_SYMLINK_LIBS=OFF
 		-DBUILD_WITH_SOLVER=OFF
 	)
