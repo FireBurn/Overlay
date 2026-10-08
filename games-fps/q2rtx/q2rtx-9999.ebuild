@@ -128,6 +128,7 @@ src_install() {
 	[[ -f ${game_root}/baseq2/fsr4_shaders/LICENSE-FSR4-v07.txt ]] || die "FSR4 v07 asset notice was not installed"
 
 	# FSR3 and analytical FSR3 frame generation are compiled into the client.
+	# Intel XeSS (U-Net) and DLSS/d4r (Swin Transformer) compute shaders are built in.
 	# The complete older source-v07 FSR4 graph/model set is installed above.
 }
 
@@ -135,6 +136,12 @@ pkg_postinst() {
 	elog "The shareware data is installed. Retail PAKs, players, and music are optional."
 	elog "On first launch, choose the retail import prompt or copy them to:"
 	elog "  \${XDG_DATA_HOME:-\${HOME}/.local/share}/quake2rtx/baseq2"
-	elog "Native Vulkan FSR3 upscaling and analytical FSR3 frame generation are built in."
+	elog "Native Vulkan temporal upscalers are built in:"
+	elog "  - AMD FidelityFX Super Resolution 3.1.4 (flt_upscaler 1) & FSR 3.1.5 (flt_upscaler 3)"
+	elog "  - Intel XeSS (DP4a / U-Net reconstruction, flt_upscaler 4)"
+	elog "  - NVIDIA DLSS / AMD d4r (Swin Transformer attention, flt_upscaler 5)"
+	elog "  - Unified Super Resolution (Automatic hardware optimal selector, flt_upscaler 6)"
+	elog "  - Analytical FSR3 frame generation (flt_frame_generation 1)"
 	ewarn "Experimental FSR4 v07 is installed with its source-v07 model assets; it is not AMD FSR 4.1.1."
 }
+
