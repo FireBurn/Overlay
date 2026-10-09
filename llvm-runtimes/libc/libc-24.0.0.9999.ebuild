@@ -10,7 +10,9 @@ DESCRIPTION="LLVM's implementation of the C standard library"
 HOMEPAGE="https://libc.llvm.org/"
 # getent and iconv are the ones Alpine wrote for musl, the same files
 # sys-libs/musl installs. The library has iconv itself; this is the utility
-# which goes with it. llvm.org_set_globals adds the LLVM sources further down.
+# which goes with it. getconf is written for this library, which does not have
+# every name musl's getconf asks for. llvm.org_set_globals adds the LLVM
+# sources further down.
 MUSL_UTIL_COMMIT="93a08815f8598db442d8b766b463d0150ed8e2ab"
 GETENT_FILE="musl-getent-${MUSL_UTIL_COMMIT}.c"
 ICONV_FILE="musl-iconv-${MUSL_UTIL_COMMIT}.c"
@@ -138,13 +140,14 @@ src_compile() {
 		die "staging libc failed"
 	local libc_build=${BUILD_DIR}/libc
 	local util
-	for util in getent iconv; do
-		local src=GETENT_FILE
-		[[ ${util} == iconv ]] && src=ICONV_FILE
+	for util in getent iconv getconf; do
+		local src=${DISTDIR}/${GETENT_FILE}
+		[[ ${util} == iconv ]] && src=${DISTDIR}/${ICONV_FILE}
+		[[ ${util} == getconf ]] && src=${FILESDIR}/getconf.c
 		"$(tc-getCC)" ${CPPFLAGS} -isystem "${libc_build}/include" ${CFLAGS} \
 			${LDFLAGS} -B"${stage}${EPREFIX}/usr/$(get_libdir)" \
 			-L"${stage}${EPREFIX}/usr/$(get_libdir)" -o "${T}/${util}" \
-			"${DISTDIR}/${!src}" || die "building ${util} failed"
+			"${src}" || die "building ${util} failed"
 	done
 }
 
@@ -169,7 +172,7 @@ src_install() {
 	[[ ${arch} == riscv* ]] && arch=riscv
 	dosym ld.so.conf "/etc/ld-llvm-libc-${arch}.path"
 
-	dobin "${T}"/getent "${T}"/iconv
+	dobin "${T}"/getent "${T}"/iconv "${T}"/getconf
 
 	# The loader has no trace mode for glibc's ldd to drive, so this reads the
 	# dependencies out of the ELF files instead of by loading them.
