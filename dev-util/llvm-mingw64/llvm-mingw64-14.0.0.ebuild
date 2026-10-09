@@ -107,7 +107,6 @@ src_compile() {
 	use custom-cflags || filter-flags '-fstack-protector*' #931512
 
 	filter-flags '-Wl,-z,*'
-	append-flags -mno-avx
 
 	filter-lto # requires setting up, and may be messy with mingw static libs
 	use custom-cflags || strip-flags # fancy flags are not realistic here
@@ -216,6 +215,8 @@ per_host_compile() {
 		-DCMAKE_SYSTEM_NAME=Windows
 		-DCMAKE_C_COMPILER_WORKS=1
 		-DCMAKE_CXX_COMPILER_WORKS=1
+		# cmake 4 passes --dependency-file to the linker, which lld's MinGW driver lacks
+		-DCMAKE_LINK_DEPENDS_USE_LINKER=OFF
 		-DCMAKE_C_COMPILER_TARGET="${CHOST}"
 		-DCMAKE_ASM_COMPILER_TARGET="${CHOST}"
 		-DCMAKE_CXX_COMPILER_TARGET="${CHOST}"
