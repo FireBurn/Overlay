@@ -43,9 +43,6 @@ NPM_PKGS="
 	@google/genai@2.21.0
 	@jridgewell/sourcemap-codec@1.5.5
 	@napi-rs/wasm-runtime@1.1.5
-	@nodelib/fs.scandir@2.1.5
-	@nodelib/fs.stat@2.0.5
-	@nodelib/fs.walk@1.2.8
 	@oxc-project/types@0.133.0
 	@pondwader/socks5-server@1.0.10
 	@protobufjs/aspromise@1.1.2
@@ -104,6 +101,7 @@ NPM_PKGS="
 	asn1@0.2.6
 	assertion-error@2.0.1
 	autoevals@0.3.0
+	balanced-match@1.0.2
 	balanced-match@4.0.4
 	base64-js@1.5.1
 	bcrypt-pbkdf@1.0.2
@@ -111,8 +109,8 @@ NPM_PKGS="
 	binary-search@1.3.6
 	bl@4.1.0
 	bowser@2.14.1
+	brace-expansion@1.1.21
 	brace-expansion@5.0.12
-	braces@3.0.3
 	buffer@5.7.1
 	buffer-equal-constant-time@1.0.1
 	buildcheck@0.0.7
@@ -126,9 +124,9 @@ NPM_PKGS="
 	compute-cosine-similarity@1.1.0
 	compute-dot@1.1.0
 	compute-l2norm@1.1.0
+	concat-map@0.0.1
 	convert-source-map@2.0.0
 	cpu-features@0.0.10
-	cross-spawn@6.0.6
 	cross-spawn@7.0.6
 	data-uri-to-buffer@4.0.1
 	debug@4.4.3
@@ -142,33 +140,29 @@ NPM_PKGS="
 	es-module-lexer@2.3.1
 	esbuild@0.28.2
 	estree-walker@3.0.3
-	execa@1.0.0
 	expand-template@2.0.3
 	expect-type@1.3.0
 	extend@3.0.2
 	fast-deep-equal@3.1.3
-	fast-glob@3.3.3
 	fast-sha256@1.3.0
 	fast-uri@3.1.8
-	fastq@1.20.1
 	fdir@6.5.0
 	fetch-blob@3.2.0
 	fft.js@4.0.4
-	fill-range@7.1.1
 	formdata-polyfill@4.0.10
 	fs-constants@1.0.0
+	fs.realpath@1.0.0
 	function-bind@1.1.2
 	gaxios@7.1.4
 	gcp-metadata@8.1.2
 	get-east-asian-width@1.6.0
-	get-stream@4.1.0
 	github-from-package@0.0.0
-	glob-parent@5.1.2
+	glob@7.2.3
 	google-auth-library@10.6.2
 	google-logging-utils@1.1.3
 	graceful-fs@4.2.11
 	grok-mermaid@0.2.3
-	hasown@2.0.3
+	hasown@2.0.4
 	highlight.js@10.7.3
 	hosted-git-info@9.0.3
 	http-proxy-agent@9.1.0
@@ -177,15 +171,12 @@ NPM_PKGS="
 	husky@9.1.7
 	ieee754@1.2.1
 	ignore@7.0.8
+	inflight@1.0.6
 	inherits@2.0.4
 	ini@1.3.8
 	interpret@1.4.0
 	is-any-array@3.0.0
-	is-core-module@2.16.2
-	is-extglob@2.1.1
-	is-glob@4.0.3
-	is-number@7.0.0
-	is-stream@1.1.0
+	is-core-module@2.17.0
 	isexe@2.0.0
 	jiti@2.7.0
 	js-levenshtein@1.1.6
@@ -206,10 +197,9 @@ NPM_PKGS="
 	lru-cache@11.4.0
 	magic-string@0.30.21
 	marked@18.0.11
-	merge2@1.4.1
-	micromatch@4.0.8
 	mimic-response@3.1.0
 	minimatch@10.2.6
+	minimatch@3.1.5
 	minimist@1.2.8
 	mkdirp-classic@0.5.3
 	ml-array-max@2.0.0
@@ -223,35 +213,31 @@ NPM_PKGS="
 	nan@2.27.0
 	nanoid@3.3.18
 	napi-build-utils@2.0.0
-	nice-try@1.0.5
 	node-abi@3.92.0
 	node-addon-api@7.1.1
 	node-domexception@1.0.0
 	node-fetch@3.3.2
 	node-forge@1.4.0
-	npm-run-path@2.0.2
 	obug@2.1.3
 	once@1.4.0
 	openai@6.40.0
 	openai@7.19.0
-	p-finally@1.0.0
 	p-retry@4.6.2
 	partial-json@0.1.7
-	path-key@2.0.1
+	path-is-absolute@1.0.1
 	path-key@3.1.1
 	path-parse@1.0.7
 	pathe@2.0.3
 	picocolors@1.1.1
-	picomatch@2.3.2
 	picomatch@4.0.4
 	picomatch@4.0.5
+	pnpm@11.15.1
 	postcss@8.5.24
 	prebuild-install@7.1.3
 	proper-lockfile@4.1.2
 	protobufjs@7.6.6
 	proxy-agent-negotiate@1.1.0
 	pump@3.0.4
-	queue-microtask@1.2.3
 	quickjs-wasi@3.6.2
 	rc@1.2.8
 	readable-stream@3.6.2
@@ -260,31 +246,25 @@ NPM_PKGS="
 	resolve@1.22.12
 	retry@0.12.0
 	retry@0.13.1
-	reusify@1.1.0
 	rolldown@1.0.3
-	run-parallel@1.2.0
 	safe-buffer@5.2.1
 	safer-buffer@2.1.2
-	semver@5.7.2
 	semver@7.8.5
-	shebang-command@1.2.0
 	shebang-command@2.0.0
-	shebang-regex@1.0.0
 	shebang-regex@3.0.0
-	shell-quote@1.10.0
-	shelljs@0.9.2
-	shx@0.4.0
+	shell-quote@1.12.0
+	shelljs@0.8.5
+	shx@0.3.4
 	siginfo@2.0.0
 	signal-exit@3.0.7
 	simple-concat@1.0.1
 	simple-get@4.0.1
-	source-map-js@1.2.1
+	source-map-js@1.2.2
 	ssh2@1.17.0
 	stackback@0.0.2
 	standardwebhooks@1.1.1
 	std-env@4.2.0
 	string_decoder@1.3.0
-	strip-eof@1.0.0
 	strip-json-comments@2.0.1
 	supports-preserve-symlinks-flag@1.0.0
 	tar-fs@2.1.4
@@ -293,7 +273,6 @@ NPM_PKGS="
 	tinyexec@1.2.4
 	tinyglobby@0.2.17
 	tinyrainbow@3.1.0
-	to-regex-range@5.0.1
 	ts-algebra@2.0.0
 	tslib@2.8.1
 	tunnel-agent@0.6.0
@@ -311,7 +290,6 @@ NPM_PKGS="
 	vitest@4.1.11
 	vitest-evals@0.15.0
 	web-streams-polyfill@3.3.3
-	which@1.3.1
 	which@2.0.2
 	why-is-node-running@2.3.0
 	wrappy@1.0.2
