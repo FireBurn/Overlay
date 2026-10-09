@@ -84,9 +84,10 @@ src_configure() {
 	# performance, GPU does the actual work)
 	filter-lto
 
-	# -mavx and mingw-gcc do not mix safely here
+	# mingw-gcc does not realign the stack for 256 bit spills under the 16 byte
+	# alignment of the Windows ABI, clang does
 	# https://github.com/doitsujin/dxvk/issues/4746#issuecomment-2708869202
-	append-flags -mno-avx
+	[[ $(x86_64-w64-mingw32-gcc --version 2>/dev/null) == *clang* ]] || append-flags -mno-avx
 
 	if [[ ${CHOST} != *-mingw* ]]; then
 		if [[ ! -v MINGW_BYPASS ]]; then
