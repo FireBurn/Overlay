@@ -164,7 +164,6 @@ NPM_PKGS="
 	@babel/code-frame@7.27.1
 	@babel/code-frame@7.29.7
 	@babel/compat-data@7.29.7
-	@babel/core@7.28.0
 	@babel/core@7.29.7
 	@babel/generator@7.29.8
 	@babel/helper-annotate-as-pure@7.29.7
@@ -261,6 +260,10 @@ NPM_PKGS="
 	@babel/template@7.29.7
 	@babel/traverse@7.29.8
 	@babel/types@7.29.8
+	@betteroffice/docx@0.4.3
+	@betteroffice/fonts@0.4.0
+	@betteroffice/pptx@0.2.0
+	@betteroffice/xlsx@0.3.0
 	@braintree/sanitize-url@7.1.2
 	@brendonovich/vite-plugin-opencode@0.1.3
 	@bruits/satteri-linux-arm64-gnu@0.9.5|arm64
@@ -448,6 +451,7 @@ NPM_PKGS="
 	@jsx-email/section@1.0.2
 	@jsx-email/tailwind@2.4.4
 	@jsx-email/text@1.0.2
+	@kitlangton/solid-motion@0.2.2
 	@kobalte/core@0.13.13
 	@kobalte/utils@0.9.2
 	@kurkle/color@0.3.4
@@ -564,13 +568,15 @@ NPM_PKGS="
 	@opentelemetry/sdk-trace-base@2.8.0
 	@opentelemetry/sdk-trace-node@2.8.0
 	@opentelemetry/semantic-conventions@1.43.0
-	@opentui/core@0.5.14
-	@opentui/core-linux-arm64@0.5.14|arm64
-	@opentui/core-linux-arm64-musl@0.5.14|arm64
-	@opentui/core-linux-x64@0.5.14|amd64
-	@opentui/core-linux-x64-musl@0.5.14|amd64
-	@opentui/keymap@0.5.14
-	@opentui/solid@0.5.14
+	@opentui/core@0.5.17
+	@opentui/core-linux-arm64@0.5.17|arm64
+	@opentui/core-linux-arm64-musl@0.5.17|arm64
+	@opentui/core-linux-x64@0.5.17|amd64
+	@opentui/core-linux-x64-musl@0.5.17|amd64
+	@opentui/keymap@0.5.17
+	@opentui/solid@0.5.17
+	@opentunnel/client@0.2.0
+	@opentunnel/protocol@0.2.0
 	@oslojs/asn1@1.0.0
 	@oslojs/binary@1.0.0
 	@oslojs/crypto@1.0.1
@@ -1540,7 +1546,6 @@ NPM_PKGS="
 	idb@7.1.1
 	ieee754@1.2.1
 	ignore@5.3.2
-	ignore@7.0.5
 	ignore-walk@8.0.0
 	image-ssim@0.2.0
 	immer@11.1.4
@@ -1832,7 +1837,9 @@ NPM_PKGS="
 	module-details-from-path@1.0.4
 	motion@12.34.5
 	motion-dom@12.43.0
+	motion-dom@14.0.0
 	motion-utils@12.39.0
+	motion-utils@14.0.0
 	mrmime@2.0.1
 	ms@2.1.3
 	msgpackr@2.0.5
@@ -2705,10 +2712,10 @@ NPM_STUB_PKGS="
 	@msgpackr-extract/msgpackr-extract-win32-x64@3.0.4
 	@opencode-ai/pty-darwin-arm64@0.2.0
 	@opencode-ai/pty-darwin-x64@0.2.0
-	@opentui/core-darwin-arm64@0.5.14
-	@opentui/core-darwin-x64@0.5.14
-	@opentui/core-win32-arm64@0.5.14
-	@opentui/core-win32-x64@0.5.14
+	@opentui/core-darwin-arm64@0.5.17
+	@opentui/core-darwin-x64@0.5.17
+	@opentui/core-win32-arm64@0.5.17
+	@opentui/core-win32-x64@0.5.17
 	@oxc-minify/binding-android-arm64@0.96.0
 	@oxc-minify/binding-darwin-arm64@0.96.0
 	@oxc-minify/binding-darwin-x64@0.96.0
