@@ -26,6 +26,7 @@ CRATES="
 	aliasable@0.1.3
 	aligned-vec@0.6.4
 	aligned@0.4.3
+	alloca@0.4.0
 	allocator-api2@0.2.21
 	alsa-sys@0.3.1
 	alsa@0.10.0
@@ -165,6 +166,7 @@ CRATES="
 	bzip2-sys@0.1.13+1.0.8
 	bzip2@0.4.4
 	bzip2@0.6.1
+	c-enum@0.2.3
 	cached@0.56.0
 	cached_proc_macro@0.25.0
 	cached_proc_macro_types@0.1.1
@@ -186,7 +188,6 @@ CRATES="
 	cexpr@0.6.0
 	cfg-expr@0.20.9
 	cfg-if@1.0.4
-	cfg_aliases@0.1.1
 	cfg_aliases@0.2.1
 	cgl@0.3.2
 	chacha20@0.10.1
@@ -270,14 +271,13 @@ CRATES="
 	crc-fast@1.9.0
 	crc32fast@1.5.0
 	crc@3.3.0
-	criterion-plot@0.5.0
-	criterion@0.5.1
+	criterion-plot@0.8.2
+	criterion@0.8.2
 	crossbeam-channel@0.5.15
 	crossbeam-deque@0.8.6
 	crossbeam-epoch@0.9.18
 	crossbeam-queue@0.3.12
 	crossbeam-utils@0.8.21
-	crossbeam@0.8.4
 	crunchy@0.2.4
 	crypto-bigint@0.4.9
 	crypto-bigint@0.5.5
@@ -464,7 +464,7 @@ CRATES="
 	guppy-workspace-hack@0.1.0
 	guppy@0.18.0
 	h2@0.3.27
-	h2@0.4.12
+	h2@0.4.19
 	half@2.7.1
 	handlebars@4.5.0
 	handlebars@5.1.2
@@ -510,7 +510,7 @@ CRATES="
 	hyper-tls@0.5.0
 	hyper-util@0.1.17
 	hyper@0.14.32
-	hyper@1.7.0
+	hyper@1.11.1
 	iana-time-zone-haiku@0.1.2
 	iana-time-zone@0.1.64
 	icu_collator@2.3.0
@@ -562,7 +562,7 @@ CRATES="
 	is_executable@1.0.5
 	is_terminal_polyfill@1.70.1
 	itertools@0.10.5
-	itertools@0.11.0
+	itertools@0.13.0
 	itertools@0.14.0
 	itertools@0.15.0
 	itoa@1.0.18
@@ -579,7 +579,6 @@ CRATES="
 	jobserver@0.1.34
 	js-sys@0.3.97
 	json5@1.3.1
-	json_dotpath@1.1.0
 	jsonschema-regex@0.51.0
 	jsonschema-value@0.51.0
 	jsonschema@0.51.0
@@ -689,7 +688,6 @@ CRATES="
 	ndk@0.9.0
 	nested@0.1.1
 	new_debug_unreachable@1.0.6
-	nix@0.28.0
 	nix@0.30.1
 	no_std_io2@0.9.4
 	nom@7.1.3
@@ -801,6 +799,9 @@ CRATES="
 	pem-rfc7468@0.7.0
 	pem@3.0.6
 	percent-encoding@2.3.2
+	perf-event-data@0.1.8
+	perf-event-open-sys2@5.0.6
+	perf-event2@0.7.4
 	pest@2.8.3
 	pest_derive@2.8.3
 	pest_generator@2.8.3
@@ -840,7 +841,6 @@ CRATES="
 	pori@0.0.0
 	portable-atomic-util@0.2.4
 	portable-atomic@1.11.1
-	portable-pty@0.9.0
 	postage@0.5.0
 	postcard@1.1.3
 	potential_utf@0.1.3
@@ -1009,6 +1009,7 @@ CRATES="
 	selectors@0.37.0
 	self_cell@1.2.2
 	semver@1.0.28
+	send_wrapper@0.6.0
 	serde@1.0.229
 	serde_bytes@0.11.19
 	serde_core@1.0.229
@@ -1026,14 +1027,12 @@ CRATES="
 	serde_with_macros@3.22.0
 	serde_yaml@0.9.34+deprecated
 	serde_yaml_ng@0.10.0
-	serial2@0.2.33
 	servo_arc@0.4.3
 	sha-1@0.10.1
 	sha1@0.10.6
 	sha1_smol@1.0.1
 	sha2@0.10.9
 	sharded-slab@0.1.7
-	shared_library@0.1.9
 	shell-words@1.1.0
 	shellexpand@3.1.1
 	shingles@0.1.1
@@ -1128,7 +1127,6 @@ CRATES="
 	system-deps@7.0.7
 	taffy@0.13.0
 	tagptr@0.2.0
-	take-until@0.2.0
 	tao-core-video-sys@0.2.0
 	tap@1.0.1
 	target-lexicon@0.13.5
@@ -1305,7 +1303,6 @@ CRATES="
 	wasmtime-wasi-io@48.0.1
 	wasmtime-wasi@48.0.1
 	wasmtime@48.0.1
-	wast@35.0.2
 	wax@0.7.0
 	wayland-backend@0.3.15
 	wayland-client@0.31.11
@@ -1333,9 +1330,6 @@ CRATES="
 	wgpu@29.0.4
 	which@8.0.5
 	whoami@1.6.1
-	wiggle-generate@48.0.1
-	wiggle-macro@48.0.1
-	wiggle@48.0.1
 	winapi-i686-pc-windows-gnu@0.4.0
 	winapi-util@0.1.11
 	winapi-x86_64-pc-windows-gnu@0.4.0
@@ -1422,7 +1416,6 @@ CRATES="
 	windows_x86_64_msvc@0.53.1
 	winnow@0.7.13
 	winnow@1.0.2
-	winreg@0.10.1
 	winreg@0.50.0
 	winreg@0.55.0
 	winresource@0.1.23
@@ -1451,11 +1444,9 @@ CRATES="
 	wit-parser@0.227.1
 	wit-parser@0.244.0
 	wit-parser@0.254.0
-	witx@0.9.1
 	write16@1.0.0
 	writeable@0.6.4
 	wyz@0.5.1
-	x11-clipboard@0.9.3
 	x11@2.21.0
 	x11rb-protocol@0.13.2
 	x11rb@0.13.2
@@ -1472,6 +1463,7 @@ CRATES="
 	y4m@0.8.0
 	yaml-rust2@0.8.1
 	yansi@1.0.1
+	yawc@0.4.2
 	yazi@0.2.1
 	yeslogic-fontconfig-sys@6.0.0
 	yoke-derive@0.8.2
@@ -1577,7 +1569,6 @@ declare -A GIT_CRATES=(
 	[wprcontrol]='https://github.com/zed-industries/wprcontrol;cd811f7d744f65291e13131b1d907fda63ed91a1;wprcontrol-%commit%'
 	[xim-ctext]='https://github.com/zed-industries/xim-rs;16f35a2c881b815a2b6cdfd6687988e84f8447d8;xim-rs-%commit%/xim-ctext'
 	[xim-parser]='https://github.com/zed-industries/xim-rs;16f35a2c881b815a2b6cdfd6687988e84f8447d8;xim-rs-%commit%/xim-parser'
-	[yawc]='https://github.com/zed-industries/yawc;71a452f551cac178367eaac5d7418a09afa1f3a2;yawc-%commit%'
 	[zed-font-kit]='https://github.com/zed-industries/font-kit;94b0f28166665e8fd2f53ff6d268a14955c82269;font-kit-%commit%'
 	[zed-reqwest]='https://github.com/zed-industries/reqwest;33bc764aa15ff7b200bf7c93bd96e24878d53e14;reqwest-%commit%'
 	[zed-scap]='https://github.com/zed-industries/scap;4afea48c3b002197176fb19cd0f9b180dd36eaac;scap-%commit%'
@@ -1611,8 +1602,9 @@ LICENSE="GPL-3+"
 LICENSE+=" BSD"
 # Dependent crate licenses
 LICENSE+="
-	Apache-2.0 Apache-2.0-with-LLVM-exceptions BSD-2 BSD Boost-1.0
-	CC0-1.0 ISC LGPL-3 MIT MIT-0 MPL-2.0 UoI-NCSA Unicode-3.0 ZLIB BZIP2
+	0BSD Apache-2.0 Apache-2.0-with-LLVM-exceptions BSD BSD-2 BZIP2 Boost-1.0
+	CC0-1.0 CDLA-Permissive-2.0 GPL-2 ISC LGPL-2.1+ MIT MIT-0 MPL-2.0 Unlicense
+	UoI-NCSA Unicode-3.0 ZLIB
 "
 SLOT="0"
 KEYWORDS="~amd64 ~arm64"
