@@ -353,7 +353,10 @@ multilib_src_configure() {
 		vulkan_enable video_cards_v3d broadcom
 		vulkan_enable video_cards_vc4 broadcom
 		vulkan_enable video_cards_virgl virtio
-		emesonargs+=(-Dvulkan-layers=anti-lag,device-select,overlay)
+		# Upstream dropped the anti-lag layer
+		local layers=device-select,overlay
+		grep -q anti-lag "${S}/meson.options" && layers=anti-lag,${layers}
+		emesonargs+=(-Dvulkan-layers=${layers})
 	fi
 
 	driver_list() {
