@@ -74,7 +74,6 @@ PATCHES=(
 	"${FILESDIR}/0005-hip-use-short-vectors-for-bf16-WMMA-builtins-with-LL.patch"
 	"${FILESDIR}/0006-server-keep-speculative-checkpoints-on-device.patch"
 	"${FILESDIR}/0007-hip-keep-MMQ-WMMA-k-loops-rolled-to-avoid-VGPR-spill.patch"
-	"${FILESDIR}/0008-cuda-use-8-lanes-per-state-column-in-gated-delta-net.patch"
 	"${FILESDIR}/0009-hip-share-the-FA-vec-K-V-pass-between-the-Q-heads-of.patch"
 	"${FILESDIR}/0010-vulkan-write-gated-delta-net-state-straight-into-the.patch"
 	"${FILESDIR}/0011-vulkan-use-a-subgroup-reduction-in-rms_norm-and-keep.patch"
