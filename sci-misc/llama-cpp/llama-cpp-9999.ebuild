@@ -30,7 +30,7 @@ else
 			https://github.com/FireBurn/ggml-xdna1/archive/${XDNA_COMMIT}.tar.gz
 				-> ggml-xdna1-${XDNA_COMMIT:0:10}.gh.tar.gz
 		)
-		${NPM_PKG_URIS}
+		webui? ( ${NPM_PKG_URIS} )
 	"
 	S="${WORKDIR}/llama.cpp-${PV}"
 fi
@@ -40,11 +40,11 @@ LICENSE="MIT"
 LICENSE+=" 0BSD Apache-2.0 BSD BSD-2 CC0-1.0 ISC MIT MPL-2.0 Unlicense"
 SLOT="0"
 [[ ${PV} == 9999 ]] || KEYWORDS="~amd64"
-IUSE="curl openblas +openmp blis hip cuda opencl vulkan xdna"
+IUSE="curl openblas +openmp blis hip cuda opencl vulkan xdna +webui"
 RESTRICT="mirror"
 
 BDEPEND="
-	${NPM_NODE_DEPEND}
+	webui? ( ${NPM_NODE_DEPEND} )
 	virtual/pkgconfig
 "
 
@@ -117,13 +117,19 @@ src_unpack() {
 			git-r3_checkout "${xdna_uri}" "${WORKDIR}/ggml-xdna1"
 		fi
 
-		# A live ebuild may use the network here; the build then runs offline
-		pushd "${S}/tools/ui" >/dev/null || die
-		HOME="${T}/npm-home" npm ci --ignore-scripts --no-audit --no-fund \
-			--cache "${T}/npm-cache" || die "npm ci failed"
-		popd >/dev/null || die
+		if use webui; then
+			# A live ebuild may use the network here; the build then runs offline
+			pushd "${S}/tools/ui" >/dev/null || die
+			HOME="${T}/npm-home" npm ci --ignore-scripts --no-audit --no-fund \
+				--cache "${T}/npm-cache" || die "npm ci failed"
+			popd >/dev/null || die
+		fi
 	else
-		npm_src_unpack
+		if use webui; then
+			npm_src_unpack
+		else
+			default
+		fi
 		if use xdna; then
 			mv "${WORKDIR}/ggml-xdna1-${XDNA_COMMIT}" "${WORKDIR}/ggml-xdna1" || die
 		fi
@@ -153,13 +159,15 @@ src_prepare() {
 }
 
 src_configure() {
-	# Force enable the Web UI macros
-	append-cppflags -DLLAMA_BUILD_UI=1 -DLLAMA_BUILD_WEBUI=1
+	if use webui; then
+		# Force enable the Web UI macros
+		append-cppflags -DLLAMA_BUILD_UI=1 -DLLAMA_BUILD_WEBUI=1
+	fi
 
 	local mycmakeargs=(
 		-DLLAMA_BUILD_TESTS=OFF
 		-DLLAMA_BUILD_SERVER=ON
-		-DLLAMA_BUILD_UI=ON
+		-DLLAMA_BUILD_UI=$(usex webui ON OFF)
 		# Point CMake to the directory where we will build the UI assets
 		-DUI_SOURCE_DIR="${S}/tools/ui"
 		-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
@@ -215,18 +223,20 @@ src_configure() {
 }
 
 src_compile() {
-	# 1. Build the Web UI assets from source
-	einfo "Building Web UI assets using npm..."
-	pushd "${S}/tools/ui" > /dev/null || die
+	if use webui; then
+		# 1. Build the Web UI assets from source
+		einfo "Building Web UI assets using npm..."
+		pushd "${S}/tools/ui" > /dev/null || die
 
-	# Releases install the UI's dependencies from the offline registry
-	if [[ ${PV} != 9999 ]]; then
-		npm_with_registry npm ci --ignore-scripts
+		# Releases install the UI's dependencies from the offline registry
+		if [[ ${PV} != 9999 ]]; then
+			npm_with_registry npm ci --ignore-scripts
+		fi
+		# Generates the dist/ directory CMake embeds
+		HOME="${T}/npm-home" npm run build --offline || die
+
+		popd > /dev/null || die
 	fi
-	# Generates the dist/ directory CMake embeds
-	HOME="${T}/npm-home" npm run build --offline || die
-
-	popd > /dev/null || die
 
 	# 2. Run the standard C++ build for llama.cpp
 	local CMAKE_USE_DIR="${S}"
