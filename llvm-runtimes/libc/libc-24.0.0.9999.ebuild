@@ -107,6 +107,11 @@ src_configure() {
 		# needs from it today.
 		-DLLVM_LIBC_ENABLE_EXPERIMENTAL_ENTRYPOINTS=ON
 
+		# Wide character classification and case mapping follow Unicode, as
+		# they do in glibc's UTF-8 locales. The default knows only ASCII, so a
+		# program matching or folding the case of anything else is wrong.
+		-DLIBC_CONF_WCTYPE_MODE=LIBC_WCTYPE_MODE_UTF8
+
 		-DLLVM_INCLUDE_TESTS=$(usex test)
 
 		# Of compiler-rt, only scudo is wanted.
