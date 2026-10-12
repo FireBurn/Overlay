@@ -47,6 +47,11 @@ src_unpack() {
 
 src_prepare() {
 	cmake_src_prepare
+
+	# The ffx-vulkan C sources use bool without including stdbool.h, which
+	# only works where the compiler defaults to C23.
+	sed -i '/#include <stdint.h>/a #include <stdbool.h>' \
+		"${S}"/extern/ffx-vulkan/include/ffx_vk_portable.h || die
 	einfo "${P}"
 	einfo "${S}"
 
