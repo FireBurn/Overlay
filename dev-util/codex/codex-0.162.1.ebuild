@@ -10,8 +10,8 @@ CRATES="
 	aead@0.5.2
 	aes-gcm@0.10.3
 	aes@0.8.4
-	age-core@0.11.0
-	age@0.11.2
+	age-core@0.12.0
+	age@0.12.1
 	ahash@0.8.12
 	aho-corasick@1.1.4
 	allocative@0.3.6
@@ -95,12 +95,11 @@ CRATES="
 	backtrace@0.3.76
 	base16ct@0.2.0
 	base64-simd@0.8.0
-	base64@0.21.7
 	base64@0.22.1
 	base64@0.23.0
 	base64ct@1.8.3
 	basic-toml@0.1.10
-	bech32@0.9.1
+	bech32@0.11.1
 	beef@0.5.2
 	bincode@1.3.3
 	bindgen@0.72.1
@@ -325,6 +324,7 @@ CRATES="
 	fdeflate@0.3.7
 	ff@0.13.1
 	fiat-crypto@0.2.9
+	file-id@0.2.3
 	filedescriptor@0.8.3
 	filetime@0.2.27
 	find-crate@0.6.3
@@ -336,11 +336,11 @@ CRATES="
 	flatbuffers@25.12.19
 	flate2@1.1.8
 	float-cmp@0.10.0
-	fluent-bundle@0.15.3
+	fluent-bundle@0.16.0
 	fluent-langneg@0.13.1
-	fluent-syntax@0.11.1
+	fluent-syntax@0.12.0
 	fluent-uri@0.1.4
-	fluent@0.16.1
+	fluent@0.17.0
 	flume@0.12.0
 	fnv@1.0.7
 	foldhash@0.1.5
@@ -466,6 +466,7 @@ CRATES="
 	hmac@0.12.1
 	hmac@0.13.0
 	home@0.5.12
+	hpke@0.12.0
 	http-body-util@0.1.3
 	http-body@0.4.6
 	http-body@1.0.1
@@ -482,9 +483,9 @@ CRATES="
 	hyper-util@0.1.20
 	hyper@1.8.1
 	i18n-config@0.4.8
-	i18n-embed-fl@0.9.4
+	i18n-embed-fl@0.10.1
 	i18n-embed-impl@0.8.4
-	i18n-embed@0.15.4
+	i18n-embed@0.16.0
 	iana-time-zone-haiku@0.1.2
 	iana-time-zone@0.1.65
 	icu_calendar@2.2.1
@@ -748,10 +749,10 @@ CRATES="
 	prettyplease@0.2.37
 	primeorder@0.13.6
 	proc-macro-crate@3.4.0
-	proc-macro-error-attr2@2.0.0
-	proc-macro-error2@2.0.1
+	proc-macro-error-attr3@3.1.1
+	proc-macro-error3@3.1.1
 	proc-macro2@1.0.106
-	process-wrap@9.0.1
+	process-wrap@10.0.0
 	prodash@31.0.0
 	proptest@1.9.0
 	prost-build@0.14.3
@@ -845,8 +846,6 @@ CRATES="
 	ring@0.17.14
 	rkyv@0.8.18
 	rkyv_derive@0.8.18
-	rmcp-macros@3.2.0
-	rmcp@3.2.0
 	rtc-datachannel@0.20.3
 	rtc-dtls@0.20.3
 	rtc-ice@0.20.3
@@ -869,7 +868,6 @@ CRATES="
 	rust-embed@8.11.0
 	rust-stemmers@1.2.0
 	rustc-demangle@0.1.27
-	rustc-hash@1.1.0
 	rustc-hash@2.1.1
 	rustc_version@0.4.1
 	rusticata-macros@4.1.0
@@ -908,7 +906,6 @@ CRATES="
 	security-framework-sys@2.15.0
 	security-framework@2.11.1
 	security-framework@3.5.1
-	self_cell@0.10.3
 	self_cell@1.2.2
 	semver@1.0.27
 	sentry-core@0.46.1
@@ -1305,7 +1302,7 @@ CRATES="
 
 declare -A GIT_CRATES=(
 	[appcontainer_common]='https://github.com/microsoft/mxc;6cd3d58f05d3447e67109cfb75e042803b843ca4;mxc-%commit%/src/backends/appcontainer/common'
-	[crossterm]='https://github.com/openai-oss-forks/crossterm;efa177859fd9623d57b9fe7ae9bf491ae1ac6ec4;crossterm-%commit%'
+	[crossterm]='https://github.com/openai-oss-forks/crossterm;ed1cdab335221515706178d68495bba2aed1924f;crossterm-%commit%'
 	[h3]='https://github.com/hyperium/h3;e07e69412876f7e26f026bd75a48b2704d8c8283;h3-%commit%/h3'
 	[h3-quinn]='https://github.com/hyperium/h3;e07e69412876f7e26f026bd75a48b2704d8c8283;h3-%commit%/h3-quinn'
 	[learning_mode_core]='https://github.com/microsoft/mxc;6cd3d58f05d3447e67109cfb75e042803b843ca4;mxc-%commit%/src/core/learning_mode_core'
@@ -1315,6 +1312,8 @@ declare -A GIT_CRATES=(
 	[nucleo]='https://github.com/helix-editor/nucleo;4253de9faabb4e5c6d81d946a5e35a90f87347ee;nucleo-%commit%'
 	[nucleo-matcher]='https://github.com/helix-editor/nucleo;4253de9faabb4e5c6d81d946a5e35a90f87347ee;nucleo-%commit%/matcher'
 	[process_security_environment_spec]='https://github.com/microsoft/mxc;6cd3d58f05d3447e67109cfb75e042803b843ca4;mxc-%commit%/src/core/generated/process_security_environment_specification'
+	[rmcp]='https://github.com/modelcontextprotocol/rust-sdk;3e636cab26c013eca5131103c03d20237f12c4df;rust-sdk-%commit%/crates/rmcp'
+	[rmcp-macros]='https://github.com/modelcontextprotocol/rust-sdk;3e636cab26c013eca5131103c03d20237f12c4df;rust-sdk-%commit%/crates/rmcp-macros'
 	[runfiles]='https://github.com/dzbarsky/rules_rust;b56cbaa8465e74127f1ea216f813cd377295ad81;rules_rust-%commit%/rust/runfiles'
 	[sandbox_spec]='https://github.com/microsoft/mxc;6cd3d58f05d3447e67109cfb75e042803b843ca4;mxc-%commit%/src/core/generated/base_container_specification'
 	[tokio-tungstenite]='https://github.com/openai-oss-forks/tokio-tungstenite;0e5b2d73aa18dd9f0a50ee9ff199d5aef7594186;tokio-tungstenite-%commit%'
