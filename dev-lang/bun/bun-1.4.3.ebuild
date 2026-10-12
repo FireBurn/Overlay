@@ -7,34 +7,34 @@ EAPI=8
 
 # Vendored libraries fetched by Bun's build, as "name repo commit"
 BUN_VENDOR=(
-	"picohttpparser h2o/picohttpparser 066d2b1e9ab820703db0837a7255d92d30f0c9f5"
+	"picohttpparser h2o/picohttpparser f4d94b48b31e0abae029ebeafcfd9ca0680ede58"
 	"zlib zlib-ng/zlib-ng 12731092979c6d07f42da27da673a9f6c7b13586"
 	"zstd facebook/zstd f8745da6ff1ad1e7bab384bd1f9d742439278e99"
-	"brotli google/brotli v1.1.0"
-	"libdeflate ebiggers/libdeflate c8c56a20f8f621e6a966b716b31f1dedab6a41e3"
-	"libarchive libarchive/libarchive ded82291ab41d5e355831b96b0e1ff49e24d8939"
-	"libjpeg-turbo libjpeg-turbo/libjpeg-turbo e352b02f794f701407b39af08576035ba3360d60"
+	"brotli google/brotli 028fb5a23661f123017c060daa546b55cf4bde29"
+	"libdeflate ebiggers/libdeflate 92e6a0db9fa848d742f9eb286c92afc60f2c3dda"
+	"libarchive libarchive/libarchive 27cbc7827172698143e440801fc0ba39ccb4f1f5"
+	"libjpeg-turbo libjpeg-turbo/libjpeg-turbo c85e6b905bf237038faa936dab160ebfc5da0344"
 	"libspng randy408/libspng fb768002d4288590083a476af628e51c3f1d47cd"
 	"libwebp webmproject/libwebp b7e29b9d75bd31422b00c2a446d49d7af06c328d"
 	"cares c-ares/c-ares c7a3138dcfe3bb0eaaf10c0c24c36dc66dc790ab"
-	"hdrhistogram HdrHistogram/HdrHistogram_c be60a9987ee48d0abf0d7b6a175bad8d6c1585d1"
+	"hdrhistogram HdrHistogram/HdrHistogram_c 18c7a324383dded1451d15621cd018b0048057d0"
 	"highway google/highway 2607d3b5b0113992fe84d3848859eae13b3b52c1"
 	"lolhtml oven-sh/lol-html 725ce499aa9b71e38b7a2d0a9fbb6d7294a4079e"
 	"rust-argon2 sru-systems/rust-argon2 ed81866f163f0c7026aa6fd8388adf37242eb32a"
-	"lshpack litespeedtech/ls-hpack 8905c024b6d052f083a3d11d0a169b3c2735c8a1"
-	"lsqpack litespeedtech/ls-qpack 1e9c5b8e59f8161c54f168a570c8bfdc59ded0c3"
-	"mimalloc oven-sh/mimalloc 6a64e1ba7f5b2130d4efccb67ec87fd0003f0f6a"
+	"lshpack litespeedtech/ls-hpack cf0f70dd10b352194c97448eb5d00b4aa484f531"
+	"lsqpack litespeedtech/ls-qpack 91567706c41c0d97ab8dc576873ecd472d7869fa"
+	"mimalloc oven-sh/mimalloc 92ef6587c57b262f6e6abf513f7776a2f8d12aeb"
 	"tinycc oven-sh/tinycc 05f0fafaa3be31e31d7b4b5c17dc60f62c991171"
 	"boringssl oven-sh/boringssl 41bf9b59c2ebf277a7aa427e1ecad5cc80dd4d4f"
-	"lsquic litespeedtech/lsquic 3181911301b1aa4f54c1ed690901abc674ee08fb"
+	"lsquic litespeedtech/lsquic f812ceb9529e26717df78c6064a2ff648b949f3e"
 )
-BUN_WEBKIT_COMMIT="2e2aa2290fac856d6f451ceacb58f7f5b44dd057"
+BUN_WEBKIT_COMMIT="0c06faadf65bf8e8c8ad3a5a8aca83e1e9ed653f"
 BUN_NODEJS_HEADERS="https://nodejs.org/dist/v26.3.0/node-v26.3.0-headers.tar.gz"
 # Commit of the bun-v${PV} tag, reported by "bun --revision"
 BUN_GIT_SHA="744846f844374847c902b5e7fd59b4342a51ef99"
 
 CRATES="
-	addr2line@0.25.1
+	addr2line@0.27.1
 	adler2@2.0.1
 	aho-corasick@1.1.4
 	allocator-api2@0.2.21
@@ -84,7 +84,7 @@ CRATES="
 	derive_more-impl@2.1.1
 	derive_more@2.1.1
 	digest@0.10.7
-	dlmalloc@0.2.13
+	dlmalloc@0.2.14
 	dtoa-short@0.3.5
 	dtoa@1.0.11
 	either@1.15.0
@@ -106,7 +106,7 @@ CRATES="
 	generic-array@0.14.7
 	getopts@0.2.24
 	getrandom@0.4.2
-	gimli@0.32.3
+	gimli@0.34.0
 	half@2.7.1
 	hashbrown@0.15.5
 	hashbrown@0.16.1
@@ -126,18 +126,18 @@ CRATES="
 	konst@0.2.20
 	konst_macro_rules@0.2.19
 	leb128fmt@0.1.0
-	libc@0.2.185
 	libc@0.2.186
+	libc@0.2.189
 	linux-raw-sys@0.4.15
 	log@0.4.29
-	memchr@2.7.6
 	memchr@2.8.0
+	memchr@2.8.3
 	mime@0.3.17
-	miniz_oxide@0.8.9
-	moto-rt@0.16.0
+	miniz_oxide@0.9.1
+	moto-rt@0.16.4
 	new_debug_unreachable@1.0.6
 	num-traits@0.2.19
-	object@0.37.3
+	object@0.39.1
 	once_cell@1.21.4
 	oorandom@11.1.5
 	paste@1.0.15
@@ -158,8 +158,8 @@ CRATES="
 	r-efi-alloc@2.1.0
 	r-efi@5.3.0
 	r-efi@6.0.0
-	rand@0.9.2
-	rand_core@0.9.3
+	rand@0.9.5
+	rand_core@0.9.5
 	rand_xorshift@0.4.0
 	rayon-core@1.13.0
 	rayon@1.12.0
@@ -167,7 +167,7 @@ CRATES="
 	regex-syntax@0.8.10
 	regex@1.12.3
 	roxmltree@0.20.0
-	rustc-demangle@0.1.27
+	rustc-demangle@0.1.28
 	rustc-hash@2.1.2
 	rustc-literal-escaper@0.0.8
 	rustc_version@0.4.1
@@ -195,18 +195,18 @@ CRATES="
 	thiserror-impl@2.0.18
 	thiserror@2.0.18
 	tinytemplate@1.2.1
-	typed-arena@2.0.2
 	typenum@1.20.0
 	unicode-ident@1.0.24
 	unicode-xid@0.2.6
-	unwinding@0.2.8
+	unwinding@0.2.10
 	version_check@0.9.5
 	vex-sdk@0.27.1
 	walkdir@2.5.0
 	wasip1@1.0.0
 	wasip2@1.0.3+wasi-0.2.9
+	wasip2@1.0.4+wasi-0.2.12
 	wasip3@0.4.0+wasi-0.3.0-rc-2026-01-06
-	wasip3@0.6.0+wasi-0.3.0-rc-2026-03-15
+	wasip3@0.7.0+wasi-0.3.0
 	wasm-bindgen-macro-support@0.2.121
 	wasm-bindgen-macro@0.2.121
 	wasm-bindgen-shared@0.2.121
@@ -254,6 +254,9 @@ NPM_PKGS="
 	@oxlint/binding-linux-x64-gnu@1.70.0|amd64
 	@oxlint/binding-linux-x64-musl@1.70.0|amd64
 	@types/node@26.2.0
+	@types/prop-types@15.7.15
+	@types/react@18.3.31
+	@types/react-dom@18.3.7
 	abort-controller@3.0.0
 	asn1.js@4.10.1
 	assert@2.1.0
@@ -281,6 +284,7 @@ NPM_PKGS="
 	create-hash@1.2.0
 	create-hmac@1.1.7
 	crypto-browserify@3.12.1
+	csstype@3.2.3
 	define-data-property@1.1.4
 	define-properties@1.2.1
 	des.js@1.1.0
@@ -372,12 +376,51 @@ NPM_PKGS="
 	xtend@4.0.2
 "
 
+NPM_STUB_PKGS="
+	@esbuild/aix-ppc64@0.21.5
+	@esbuild/android-arm64@0.21.5
+	@esbuild/android-arm@0.21.5
+	@esbuild/android-x64@0.21.5
+	@esbuild/darwin-arm64@0.21.5
+	@esbuild/darwin-x64@0.21.5
+	@esbuild/freebsd-arm64@0.21.5
+	@esbuild/freebsd-x64@0.21.5
+	@esbuild/linux-arm@0.21.5
+	@esbuild/linux-ia32@0.21.5
+	@esbuild/linux-loong64@0.21.5
+	@esbuild/linux-mips64el@0.21.5
+	@esbuild/linux-ppc64@0.21.5
+	@esbuild/linux-riscv64@0.21.5
+	@esbuild/linux-s390x@0.21.5
+	@esbuild/netbsd-x64@0.21.5
+	@esbuild/openbsd-x64@0.21.5
+	@esbuild/sunos-x64@0.21.5
+	@esbuild/win32-arm64@0.21.5
+	@esbuild/win32-ia32@0.21.5
+	@esbuild/win32-x64@0.21.5
+	@oxlint/binding-android-arm-eabi@1.70.0
+	@oxlint/binding-android-arm64@1.70.0
+	@oxlint/binding-darwin-arm64@1.70.0
+	@oxlint/binding-darwin-x64@1.70.0
+	@oxlint/binding-freebsd-x64@1.70.0
+	@oxlint/binding-linux-arm-gnueabihf@1.70.0
+	@oxlint/binding-linux-arm-musleabihf@1.70.0
+	@oxlint/binding-linux-ppc64-gnu@1.70.0
+	@oxlint/binding-linux-riscv64-gnu@1.70.0
+	@oxlint/binding-linux-riscv64-musl@1.70.0
+	@oxlint/binding-linux-s390x-gnu@1.70.0
+	@oxlint/binding-openharmony-arm64@1.70.0
+	@oxlint/binding-win32-arm64-msvc@1.70.0
+	@oxlint/binding-win32-ia32-msvc@1.70.0
+	@oxlint/binding-win32-x64-msvc@1.70.0
+"
+
 LLVM_COMPAT=( 21 22 23 )
 PYTHON_COMPAT=( python3_{11..14} )
 # JavaScriptCore's offlineasm, same range as net-libs/webkit-gtk
 USE_RUBY="ruby32 ruby33 ruby34 ruby40"
 # CRATES includes std's own crates for -Zbuild-std, which are per Rust version
-RUST_MIN_VER="1.98.1"
+RUST_MIN_VER="1.99.0"
 RUST_MAX_VER="${RUST_MIN_VER}"
 RUST_NEEDS_LLVM=1
 NPM_OPTIONAL=1
@@ -503,7 +546,7 @@ src_unpack() {
 src_prepare() {
 	default
 
-	eapply "${FILESDIR}/${P}-clang-23.patch"
+	eapply "${FILESDIR}/${P}-type-info.patch"
 
 	# Use the CPU target from CFLAGS instead of upstream's portable baseline.
 	# The same table feeds WebKit's flags and rustc's -Ctarget-cpu.
