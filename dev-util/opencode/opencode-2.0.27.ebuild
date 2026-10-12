@@ -73,9 +73,7 @@ NPM_PKGS="
 	@aws-crypto/sha256-js@5.2.0
 	@aws-crypto/supports-web-crypto@5.2.0
 	@aws-crypto/util@5.2.0
-	@aws-sdk/client-athena@3.933.0
 	@aws-sdk/client-cognito-identity@3.1057.0
-	@aws-sdk/client-firehose@3.933.0
 	@aws-sdk/client-lambda@3.1111.0
 	@aws-sdk/client-s3@3.933.0
 	@aws-sdk/client-sso@3.782.0
@@ -307,10 +305,10 @@ NPM_PKGS="
 	@dnd-kit/state@0.5.0
 	@dot/log@0.1.5
 	@drizzle-team/brocli@0.12.0
-	@effect/opentelemetry@4.0.0-rc.112
-	@effect/platform-node@4.0.0-rc.112
-	@effect/platform-node-shared@4.0.0-rc.112
-	@effect/sql-sqlite-bun@4.0.0-rc.112
+	@effect/opentelemetry@4.0.1
+	@effect/platform-node@4.0.1
+	@effect/platform-node-shared@4.0.1
+	@effect/sql-sqlite-bun@4.0.1
 	@electron-internal/extract-zip@1.0.5
 	@electron/asar@3.4.1
 	@electron/fuses@1.8.0
@@ -472,8 +470,6 @@ NPM_PKGS="
 	@motionone/generators@10.18.0
 	@motionone/types@10.17.1
 	@motionone/utils@10.18.0
-	@msgpackr-extract/msgpackr-extract-linux-arm64@3.0.4|arm64
-	@msgpackr-extract/msgpackr-extract-linux-x64@3.0.4|amd64
 	@napi-rs/lzma-linux-x64-gnu@1.5.1|amd64
 	@napi-rs/wasm-runtime@0.2.12
 	@napi-rs/wasm-runtime@1.2.3
@@ -575,8 +571,8 @@ NPM_PKGS="
 	@opentui/core-linux-x64-musl@0.5.17|amd64
 	@opentui/keymap@0.5.17
 	@opentui/solid@0.5.17
-	@opentunnel/client@0.2.0
-	@opentunnel/protocol@0.2.0
+	@opentunnel/client@0.4.0
+	@opentunnel/protocol@0.4.0
 	@oslojs/asn1@1.0.0
 	@oslojs/binary@1.0.0
 	@oslojs/crypto@1.0.1
@@ -939,8 +935,6 @@ NPM_PKGS="
 	@types/semver@7.7.1
 	@types/semver@7.8.0
 	@types/ssri@7.1.5
-	@types/topojson-client@3.1.5
-	@types/topojson-specification@1.0.5
 	@types/trusted-types@2.0.7
 	@types/unist@2.0.11
 	@types/unist@3.0.3
@@ -954,7 +948,6 @@ NPM_PKGS="
 	@typespec/ts-http-runtime@0.3.8
 	@ungap/structured-clone@1.3.3
 	@upsetjs/venn.js@2.0.0
-	@upstash/redis@1.38.0
 	@vitejs/plugin-react@4.7.0
 	@vitest/expect@3.2.4
 	@vitest/expect@4.1.11
@@ -1310,7 +1303,7 @@ NPM_PKGS="
 	eastasianwidth@0.2.0
 	ecdsa-sig-formatter@1.0.11
 	editorconfig@1.0.7
-	effect@4.0.0-rc.112
+	effect@4.0.1
 	ejs@3.1.10
 	electron@44.4.5
 	electron-builder@26.15.7
@@ -1366,6 +1359,7 @@ NPM_PKGS="
 	escape-string-regexp@1.0.5
 	escape-string-regexp@4.0.0
 	escape-string-regexp@5.0.0
+	esm-env@1.2.2
 	esprima@4.0.1
 	estree-util-attach-comments@3.0.0
 	estree-util-build-jsx@3.0.1
@@ -1805,7 +1799,6 @@ NPM_PKGS="
 	micromatch@4.0.8
 	mime@2.6.0
 	mime@3.0.0
-	mime@4.1.0
 	mime-db@1.52.0
 	mime-db@1.54.0
 	mime-types@2.1.35
@@ -1842,8 +1835,6 @@ NPM_PKGS="
 	motion-utils@14.0.0
 	mrmime@2.0.1
 	ms@2.1.3
-	msgpackr@2.0.5
-	msgpackr-extract@3.0.4
 	muggle-string@0.4.1
 	mustache@4.2.0
 	mysql2@3.14.4
@@ -1868,7 +1859,6 @@ NPM_PKGS="
 	node-fetch-native@1.6.7
 	node-gyp@12.4.0
 	node-gyp-build@4.8.4
-	node-gyp-build-optional-packages@5.2.2
 	node-html-parser@7.1.0
 	node-int64@0.4.0
 	node-mock-http@1.0.5
@@ -1885,6 +1875,7 @@ NPM_PKGS="
 	npm-pick-manifest@11.0.3
 	npm-registry-fetch@19.1.1
 	nth-check@2.1.1
+	number-flow@0.6.2
 	object-assign@4.1.1
 	object-hash@2.2.0
 	object-hash@3.0.0
@@ -2286,7 +2277,6 @@ NPM_PKGS="
 	to-regex-range@5.0.1
 	toad-cache@3.7.4
 	toolbeam-docs-theme@0.4.8
-	topojson-client@3.1.0
 	tr46@0.0.3
 	traverse@0.3.9
 	tree-sitter-bash@0.25.0
@@ -2331,6 +2321,7 @@ NPM_PKGS="
 	undici@7.28.0
 	undici@7.29.0
 	undici@8.10.0
+	undici@8.11.2
 	undici-types@7.16.0
 	unenv@2.0.0-rc.24
 	unicode-canonical-property-names-ecmascript@2.0.1
@@ -2454,7 +2445,6 @@ NPM_PKGS="
 	workerd@1.20251118.0
 	workerd@1.20260708.1
 	workerd@1.20260811.1
-	world-atlas@2.0.2
 	wrangler@4.110.0
 	wrangler@4.123.0
 	wrangler@4.50.0
@@ -2467,6 +2457,7 @@ NPM_PKGS="
 	ws@8.18.0
 	ws@8.21.0
 	ws@8.21.3
+	ws@8.22.0
 	wsl-utils@1.0.0
 	xdg-basedir@5.1.0
 	xml-naming@0.3.0
@@ -2706,10 +2697,6 @@ NPM_STUB_PKGS="
 	@lydell/node-pty-darwin-x64@1.2.0-beta.12
 	@lydell/node-pty-win32-arm64@1.2.0-beta.12
 	@lydell/node-pty-win32-x64@1.2.0-beta.12
-	@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4
-	@msgpackr-extract/msgpackr-extract-darwin-x64@3.0.4
-	@msgpackr-extract/msgpackr-extract-linux-arm@3.0.4
-	@msgpackr-extract/msgpackr-extract-win32-x64@3.0.4
 	@opencode-ai/pty-darwin-arm64@0.2.0
 	@opencode-ai/pty-darwin-x64@0.2.0
 	@opentui/core-darwin-arm64@0.5.17
