@@ -1,0 +1,70 @@
+--- a/build/config/clang/clang.gni
++++ b/build/config/clang/clang.gni
+@@ -53,2 +53,5 @@
+ declare_args() {
++  system_clang_resource_dir = ""
++  system_clang_builtin_library = ""
++
+   # Indicates if the build should use the Chrome-specific plugins for enforcing
+--- a/build/config/clang/BUILD.gn
++++ b/build/config/clang/BUILD.gn
+@@ -239,3 +239,8 @@
+       _lib_file = "${_prefix}clang_rt.${_libname}${_suffix}.${_ext}"
+-      libs = [ "$_clang_lib_dir/$_dir/$_lib_file" ]
++      if (_libname == "builtins" && system_clang_builtin_library != "") {
++        not_needed([ "_clang_lib_dir", "_lib_file", "_dir" ])
++        libs = [ system_clang_builtin_library ]
++      } else {
++        libs = [ "$_clang_lib_dir/$_dir/$_lib_file" ]
++      }
+     }
+--- a/build/rust/gni_impl/libclang_args.gni
++++ b/build/rust/gni_impl/libclang_args.gni
+@@ -37,8 +37,12 @@
+ # make it behave consistently with our other command line flags and allows
+ # system headers to be found.
++_libclang_resource_dir = clang_base_path + "/lib/clang/" + clang_version
++if (system_clang_resource_dir != "") {
++  _libclang_resource_dir = system_clang_resource_dir
++}
+ _libclang_extra_args += [
+   "-resource-dir",
+-  rebase_path(clang_base_path + "/lib/clang/" + clang_version, root_build_dir),
++  rebase_path(_libclang_resource_dir, root_build_dir),
+ ]
+ 
+ if (is_win) {
+--- a/v8/BUILD.gn
++++ b/v8/BUILD.gn
+@@ -2510,6 +2510,9 @@
+   # The clang toolchain's resource dir contains builting headers
+   # include/{stddef.h,stdarg.h,...}.
+   _metagen_clang_resource_dir = "$clang_base_path/lib/clang/$clang_version"
++  if (system_clang_resource_dir != "") {
++    _metagen_clang_resource_dir = system_clang_resource_dir
++  }
+ 
+   # The headers are parsed with v8_base_without_compiler's flags.
+   _metagen_flags_target = ":v8_base_without_compiler"
+--- a/build/rust/rust_api_from_cpp.gni
++++ b/build/rust/rust_api_from_cpp.gni
+@@ -6,4 +6,9 @@
+ import("//build/config/rust.gni")
+ import("//build/config/sysroot.gni")
+ import("//build/rust/mixed_static_library.gni")
++
++_clang_resource_dir = clang_base_path + "/lib/clang/" + clang_version
++if (system_clang_resource_dir != "") {
++  _clang_resource_dir = system_clang_resource_dir
++}
+ 
+ # Template to generate and build Rust bindings for a set of C++ headers using
+ # Crubit's `rs_bindings_from_cc` tool.
+@@ -290,8 +295,6 @@
+       # Add it last so includes from deps and configs take precedence.
+       "-isystem" + rebase_path(
+-              clang_base_path + "/lib/clang/" + clang_version + "/include",
++              _clang_resource_dir + "/include",
+               root_build_dir),
+ 
+       # Passes C comments through as rustdoc attributes.

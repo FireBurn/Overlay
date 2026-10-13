@@ -521,6 +521,7 @@ src_prepare() {
 		"${FILESDIR}/cr156-devtools-isolated-declarations.patch"
 		"${FILESDIR}/cr156-bidi-isolated-declarations.patch"
 		"${FILESDIR}/cr154-devtools-typescript-tsc-fallback.patch"
+		"${FILESDIR}/cr156-devtools-tsc-native.patch"
 		"${FILESDIR}/cr152-dawn-system-go.patch"
 		"${FILESDIR}/cr152-unbundle-minizip-undo-unicode.patch"
 		"${FILESDIR}/cross-compile.patch"
@@ -566,9 +567,9 @@ src_prepare() {
 			"${WORKDIR}/copium/cr143-libsync-__BEGIN_DECLS.patch"
 			"${FILESDIR}/cr153-system-crubit.patch"
 			"${FILESDIR}/cr156-cbor-crubit-enable-cpp-api-from-rust.patch"
-			"${FILESDIR}/cr156-cbor-mapentry-from-tuple.patch"
+			"${FILESDIR}/cr157-cbor-mapentry-from-tuple.patch"
 			"${FILESDIR}/cr153-rust-wrapper-inputs-system-rust.patch"
-			"${FILESDIR}/cr153-system-clang-runtime.patch"
+			"${FILESDIR}/cr157-system-clang-runtime.patch"
 			"${FILESDIR}/cr153-bytemuck-stable-simd.patch"
 		)
 
@@ -898,6 +899,7 @@ src_prepare() {
 		third_party/selenium-atoms
 		third_party/sentencepiece
 		third_party/sentencepiece/src/third_party/darts_clone
+		third_party/sframe
 		third_party/shell-encryption
 		third_party/simdutf
 		third_party/simplejson
@@ -1167,7 +1169,7 @@ chromium_configure() {
 			"use_system_crubit=true"
 			# metagen parses V8 headers with the bundled clang's libclang and
 			# builtin headers; generate the instance types with Torque instead.
-			"v8_use_metagen_instance_types=false"
+			"v8_use_metagen=false"
 		)
 
 		if tc-ld-is-mold; then
