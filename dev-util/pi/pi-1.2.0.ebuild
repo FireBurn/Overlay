@@ -35,6 +35,7 @@ NPM_PKGS="
 	@biomejs/cli-linux-arm64-musl@2.3.5|arm64
 	@biomejs/cli-linux-x64@2.3.5|amd64
 	@biomejs/cli-linux-x64-musl@2.3.5|amd64
+	@biomejs/wasm-nodejs@2.3.5
 	@cto.af/wtf8@0.0.5
 	@earendil-works/gondolin@0.12.0
 	@earendil-works/gondolin-krun-runner-linux-x64@0.12.0|amd64
@@ -59,6 +60,7 @@ NPM_PKGS="
 	@rolldown/binding-linux-x64-gnu@1.0.3|amd64
 	@rolldown/binding-linux-x64-musl@1.0.3|amd64
 	@rolldown/pluginutils@1.0.1
+	@silvia-odwyer/photon@0.3.3
 	@silvia-odwyer/photon-node@0.3.4
 	@smithy/core@3.33.3
 	@smithy/credential-provider-imds@4.5.2
@@ -82,6 +84,7 @@ NPM_PKGS="
 	@types/retry@0.12.0
 	@types/retry@0.12.5
 	@types/semver@7.7.1
+	@types/ws@8.18.2
 	@typescript/typescript-linux-arm64@7.0.2|arm64
 	@typescript/typescript-linux-x64@7.0.2|amd64
 	@vitest-evals/core@0.15.0
@@ -416,6 +419,8 @@ src_prepare() {
 
 src_configure() {
 	export ESBUILD_BINARY_PATH="${BROOT}/usr/bin/esbuild-${ESBUILD_SLOT}"
+	# canvas builds from source offline and misses <new> with current Node headers
+	export CXXFLAGS="${CXXFLAGS} -include new"
 	npm_with_registry npm ci
 }
 
