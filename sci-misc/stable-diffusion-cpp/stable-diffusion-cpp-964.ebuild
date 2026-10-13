@@ -11,7 +11,7 @@ if [[ ${PV} == 9999 ]]; then
 	EGIT_SUBMODULES=( 'ggml' )
 else
 	MY_BUILD="${PV#0_p}"
-	MY_COMMIT="f89d9b1"
+	MY_COMMIT="1d0a58a"
 	MY_PV="master-${MY_BUILD}-${MY_COMMIT}"
 	GGML_COMMIT="d25b121ce1d6ae0c7e62ad080460d9fc1e46dd93"
 	SRC_URI="
@@ -97,6 +97,7 @@ PATCHES=(
 if [[ ${PV} != 9999 ]]; then
 	PATCHES+=(
 		"${FILESDIR}/0004-vulkan-fa-cm1-shift-last-partial-kv-block.patch"
+		"${FILESDIR}/0005-vulkan-include-functional.patch"
 	)
 fi
 

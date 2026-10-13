@@ -1,0 +1,16 @@
+Subject: [PATCH] ggml-vulkan: include <functional> for std::function
+
+ggml-vulkan-types.h uses std::function without including <functional>,
+which fails with libc++ releases that no longer pull it in transitively.
+
+--- a/ggml/src/ggml-vulkan/ggml-vulkan-types.h
++++ b/ggml/src/ggml-vulkan/ggml-vulkan-types.h
+@@ -2,6 +2,8 @@
+ 
+ #include "ggml-vulkan.h"
+ 
++#include <functional>
++
+ #include <vulkan/vulkan_core.h>
+ 
+ #if defined(GGML_VULKAN_RUN_TESTS) || defined(GGML_VULKAN_CHECK_RESULTS)
