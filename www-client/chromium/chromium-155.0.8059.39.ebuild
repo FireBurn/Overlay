@@ -23,16 +23,15 @@ EAPI=8
 # using an external CI system that we have some control over, in case
 # issues pop up again with official tarball generation.
 
-GN_MIN_VER=0.2374
+GN_MIN_VER=0.2574
 # chromium-tools/get-chromium-toolchain-strings.py (or just use Chromicler)
 # Node for M145+ should be 24.12.0 but that's not packaged in Gentoo yet. See #969145
 TEST_FONT="9c07d19d9c5ee1ff94f717e6fb17e0c8c354e6f9"
-BUNDLED_CLANG_VER="llvmorg-24-init-3796-g20e97c4b-5"
-BUNDLED_RUST_VER="0913b18e489ac1011b580e31fa5559654be12bfc-2"
+BUNDLED_CLANG_VER="llvmorg-24-init-7747-g62397f8b-29"
+BUNDLED_RUST_VER="1edd55dcfcd573872c727fa3e086369a71661ee0-2"
 RUST_SHORT_HASH=${BUNDLED_RUST_VER:0:10}-${BUNDLED_RUST_VER##*-}
 NODE_VER="24.12.0"
-ESBUILD_VER="0.25.1"
-ROLLUP_VER="4.57.1" # currently manual.
+ESBUILD_VER="0.28.2"
 VIRTUALX_REQUIRED="pgo"
 
 CHROMIUM_LANGS="af am ar bg bn ca cs da de el en-GB es es-419 et fa fi fil fr gu he
@@ -58,7 +57,6 @@ PPC64_HASH="a85b64f07b489b8c6fdb13ecf79c16c56c560fc6"
 PATCH_V="${PV%%\.*}"
 COPIUM_COMMIT="b00f26bb5e0781020da5f830981472a142c6baf1"
 SRC_URI="https://github.com/chromium-linux-tarballs/chromium-tarballs/releases/download/${PV}/chromium-${PV}-linux.tar.xz
-	https://deps.gentoo.zip/www-client/chromium/rollup-wasm-node-${ROLLUP_VER}.tgz
 	!bundled-toolchain? (
 		https://codeberg.org/selfisekai/copium/archive/${COPIUM_COMMIT}.tar.gz
 			-> chromium-patches-copium-${COPIUM_COMMIT:0:10}.tar.gz
@@ -94,8 +92,10 @@ SLOT="stable"
 KEYWORDS="~amd64 ~arm64"
 
 IUSE_SYSTEM_LIBS="+system-harfbuzz +system-icu +system-zstd"
-IUSE="+X ${IUSE_SYSTEM_LIBS} bindist bundled-toolchain cups debug ffmpeg-chromium gtk4 +hangouts headless kerberos +official pax-kernel pgo"
+IUSE="+X ${IUSE_SYSTEM_LIBS} bindist +bundled-toolchain cups debug ffmpeg-chromium gtk4 +hangouts headless kerberos +official pax-kernel pgo"
 IUSE+=" +proprietary-codecs pulseaudio qt6 +rar +screencast selinux test +vaapi +wayland +widevine cpu_flags_ppc_vsx3 cpu_flags_x86_avx512f"
+# Not one of the ELIBC values the Gentoo profiles declare.
+IUSE+=" elibc_llvm"
 RESTRICT="
 	!bindist? ( bindist )
 	!test? ( test )
@@ -446,9 +446,6 @@ src_unpack() {
 		unpack chromium-openpower-${PPC64_HASH:0:10}.tar.bz2
 	fi
 
-	# This is a dirty hack, but we need rollup to build successfully and it's proving to be challenging
-	# to build locally due to deps
-	unpack rollup-wasm-node-${ROLLUP_VER}.tgz
 }
 
 remove_compiler_builtins() {
@@ -518,16 +515,22 @@ src_prepare() {
 		"${FILESDIR}/cr138-nodejs-version-check.patch"
 		"${FILESDIR}/cr144-glibc-2.43.patch"
 		"${FILESDIR}/cr145-oauth2-client-switches.patch"
-		"${FILESDIR}/cr154-revert-to-rollup-wasm.patch"
 		"${FILESDIR}/cr148-v8-fix-cfi-sanitizer-set-death-callback.patch"
 		"${FILESDIR}/cr149-channel-aware-build.patch"
-		"${FILESDIR}/cr154-devtools-public-inputs.patch"
+		"${FILESDIR}/cr155-devtools-public-inputs.patch"
+		"${FILESDIR}/cr155-devtools-isolated-declarations.patch"
 		"${FILESDIR}/cr154-devtools-typescript-tsc-fallback.patch"
-		"${FILESDIR}/cr154-devtools-dispatch-http-request-client.patch"
 		"${FILESDIR}/cr152-dawn-system-go.patch"
 		"${FILESDIR}/cr152-unbundle-minizip-undo-unicode.patch"
 		"${FILESDIR}/cross-compile.patch"
 	)
+
+	if use elibc_llvm; then
+		PATCHES+=(
+			"${FILESDIR}/cr156-llvm-libc-rust-target.patch"
+			"${FILESDIR}/cr156-llvm-libc-qt-libcxx.patch"
+		)
+	fi
 
 	# https://issues.chromium.org/issues/442698344
 	# Unreleased fontconfig changed magic numbers and google have rolled to this version
@@ -561,7 +564,7 @@ src_prepare() {
 		PATCHES+=(
 			"${WORKDIR}/copium/cr143-libsync-__BEGIN_DECLS.patch"
 			"${FILESDIR}/cr153-system-crubit.patch"
-			"${FILESDIR}/cr152-cbor-crubit-enable-cpp-api-from-rust.patch"
+			"${FILESDIR}/cr155-cbor-crubit-enable-cpp-api-from-rust.patch"
 			"${FILESDIR}/cr153-rust-wrapper-inputs-system-rust.patch"
 			"${FILESDIR}/cr153-system-clang-runtime.patch"
 			"${FILESDIR}/cr153-bytemuck-stable-simd.patch"
@@ -610,13 +613,6 @@ src_prepare() {
 
 	fi
 
-	# Do this before we apply patches since (e.g.) ppc64 needs to patch rollup and it's easier in ${S}
-	einfo "Moving rollup wasm-node package into place ..."
-	mkdir -p third_party/devtools-frontend/src/node_modules/@rollup/wasm-node ||
-		die "Failed to create node_modules/@rollup/wasm-node"
-	mv "${WORKDIR}"/package/* third_party/devtools-frontend/src/node_modules/@rollup/wasm-node ||
-		die "Failed to move rollup package"
-
 	default
 
 	# Sanity check esbuild version before we start removing files.
@@ -634,7 +630,10 @@ src_prepare() {
 	elog "Removing bundled binaries from source tree ..."
 	# Purge bundled ELF files: These are non-portable and will cause issues if used instead of system versions.
 	# Use `--wasm` to also remove WebAssembly binaries, if desired - they're portable so shouldn't break builds.
-	${EPYTHON} "${FILESDIR}/bin-finder.py" --elf "${S}" | awk '{print $1}' | xargs rm -f ||
+	# The native TypeScript compiler is a statically linked Go binary with no
+	# system equivalent (dev-lang/typescript is the JS-based compiler), so keep it.
+	local native_tsc="${S}/third_party/typescript/linux-amd64/src/lib/tsc"
+	${EPYTHON} "${FILESDIR}/bin-finder.py" --elf "${S}" | awk '{print $1}' | grep -v "^${native_tsc}$" | xargs -r rm -f ||
 		die "Failed to remove bundled binaries"
 
 	local esbuild_path="${S}/third_party/devtools-frontend/src/third_party/esbuild"
@@ -693,7 +692,6 @@ src_prepare() {
 		third_party/anonymous_tokens
 		third_party/apple_apsl
 		third_party/axe-core
-		third_party/bidimapper
 		third_party/blink
 		third_party/boringssl
 		third_party/boringssl/src/third_party/fiat
@@ -926,6 +924,7 @@ src_prepare() {
 		third_party/tflite/src/third_party/xla/xla/tsl/platform
 		third_party/tflite/src/third_party/xla/xla/tsl/protobuf
 		third_party/tflite/src/third_party/xla/xla/tsl/util
+		third_party/typescript
 		third_party/ukey2
 		third_party/utf
 		third_party/vulkan
@@ -1164,6 +1163,9 @@ chromium_configure() {
 			"rust_sysroot_absolute=\"$(get_rust_prefix)\""
 			"rustc_version=\"${RUST_SLOT}\""
 			"use_system_crubit=true"
+			# metagen parses V8 headers with the bundled clang's libclang and
+			# builtin headers; generate the instance types with Torque instead.
+			"v8_use_metagen_instance_types=false"
 		)
 
 		if tc-ld-is-mold; then
@@ -1421,9 +1423,10 @@ src_configure() {
 		chromium_rust_build_crubit
 		chromium_rust_prepare_toolchain
 		export RUSTC_BOOTSTRAP=1
-		export BINDGEN_EXTRA_CLANG_ARGS="-I${EPREFIX}/usr/lib/clang/${LLVM_SLOT}/include -I$(gcc -print-file-name=include)"
-		mkdir -p third_party/typescript/linux-amd64/src/lib || die
-		ln -sf /usr/bin/tsc third_party/typescript/linux-amd64/src/lib/tsc || die
+		export BINDGEN_EXTRA_CLANG_ARGS="-I${EPREFIX}/usr/lib/clang/${LLVM_SLOT}/include"
+		if type -P gcc >/dev/null; then
+			BINDGEN_EXTRA_CLANG_ARGS+=" -I$(gcc -print-file-name=include)"
+		fi
 	fi
 
 	chromium_configure $(usex pgo 1 0)
