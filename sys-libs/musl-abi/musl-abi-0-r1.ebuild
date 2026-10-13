@@ -24,11 +24,12 @@ src_compile() {
 	# it needs, so a name defined here takes the place of libc's and a name
 	# left out reaches libc untouched. musl keeps the maths in libc, so
 	# libm has to be pulled in here for those names to be reachable too.
+	# It is not referenced by the shim itself, so --as-needed would drop it.
 	$(tc-getCC) ${CFLAGS} ${LDFLAGS} -shared -fPIC \
 		-Wl,-soname,"${SONAME}" \
 		-o "${SONAME}" \
 		"${FILESDIR}"/musl-abi.c "${FILESDIR}"/musl-setjmp.S \
-		-lm || die
+		-Wl,--no-as-needed -lm -Wl,--as-needed || die
 }
 
 src_install() {
