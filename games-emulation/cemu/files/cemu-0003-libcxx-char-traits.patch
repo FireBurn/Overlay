@@ -1,0 +1,17 @@
+libc++ 19 removed the generic std::char_traits, which basic_string<uint16be>
+needs. Take the definition already here for Apple Clang 17 on libc++ too.
+
+--- a/src/util/helpers/StringHelpers.h
++++ b/src/util/helpers/StringHelpers.h
+@@ -2,8 +2,9 @@
+ #include "boost/nowide/convert.hpp"
+ #include <charconv>
+ 
+-// Definition for removed templates in Apple Clang 17
+-#if defined(__apple_build_version__) && (__apple_build_version__ >= 17000000)
++// Definition for removed templates in Apple Clang 17 and libc++ 19
++#if (defined(__apple_build_version__) && (__apple_build_version__ >= 17000000)) || \
++	(defined(_LIBCPP_VERSION) && _LIBCPP_VERSION >= 190000)
+ namespace std {
+ 	template<>
+ 	struct char_traits<uint16be> {
