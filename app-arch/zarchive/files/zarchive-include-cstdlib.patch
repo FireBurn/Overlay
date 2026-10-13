@@ -1,0 +1,15 @@
+Subject: [PATCH] zarchivewriter: include <cstdlib> for malloc and free
+
+The file uses malloc and free without including <cstdlib>, which fails
+with libc++ releases that no longer provide it transitively.
+
+--- a/src/zarchivewriter.cpp
++++ b/src/zarchivewriter.cpp
+@@ -10,6 +10,7 @@
+ #include "sha_256.h"
+ 
+ #include <cassert>
++#include <cstdlib>
+ #include <algorithm>
+ 
+ ZArchiveWriter::ZArchiveWriter(CB_NewOutputFile cbNewOutputFile, CB_WriteOutputData cbWriteOutputData, void* ctx) : m_cbCtx(ctx), m_cbNewOutputFile(cbNewOutputFile), m_cbWriteOutputData(cbWriteOutputData)

@@ -18,3 +18,5 @@ KEYWORDS="~amd64"
 DEPEND="app-arch/zstd"
 
 S="${WORKDIR}/${MY_PN}-${SHA}"
+
+PATCHES=( "${FILESDIR}/${PN}-include-cstdlib.patch" )
