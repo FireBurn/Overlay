@@ -1,0 +1,15 @@
+Define StackTrace::OutputToStreamWithPrefixImpl when execinfo.h is unavailable.
+
+--- a/base/debug/stack_trace_posix.cc
++++ b/base/debug/stack_trace_posix.cc
+@@ -1083,6 +1083,10 @@
+   StreamBacktraceOutputHandler handler(os);
+   ProcessBacktrace(addresses(), prefix_string, &handler);
+ }
++#else
++void StackTrace::OutputToStreamWithPrefixImpl(
++    std::ostream* os,
++    cstring_view prefix_string) const {}
+ #endif
+ 
+ namespace internal {

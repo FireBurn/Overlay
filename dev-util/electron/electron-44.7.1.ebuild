@@ -1027,6 +1027,8 @@ SLOT="$(ver_cut 1)"
 KEYWORDS="~amd64 ~arm64"
 IUSE="+X cups custom-cflags debug kerberos +official pax-kernel +proprietary-codecs pulseaudio"
 IUSE+=" +screencast selinux system-harfbuzz +system-zstd +vaapi +wayland cpu_flags_x86_avx512f"
+# Not one of the ELIBC values the Gentoo profiles declare.
+IUSE+=" elibc_llvm"
 RESTRICT="mirror test"
 REQUIRED_USE="
 	|| ( X wayland )
@@ -1358,6 +1360,15 @@ src_prepare() {
 		)
 	fi
 
+	if use elibc_llvm; then
+		PATCHES+=(
+			"${FILESDIR}/cr152-llvm-libc-rust-target.patch"
+			"${FILESDIR}/cr152-llvm-libc-strerror.patch"
+			"${FILESDIR}/cr152-llvm-libc-stack-trace.patch"
+			"${FILESDIR}/cr152-llvm-libc-file-dialog-stdint.patch"
+		)
+	fi
+
 	remove_compiler_builtins
 
 	# We can't rely on the eselect'd Rust to actually include rustfmt
@@ -1371,6 +1382,12 @@ src_prepare() {
 	mv "${WORKDIR}"/package/* third_party/devtools-frontend/src/node_modules/@rollup/wasm-node || die
 
 	default
+
+	if use elibc_llvm; then
+		# The bundled libc++ needs to know this is llvm-libc to pick a ctype table
+		sed -i 's/^#define _LIBCPP_LIBC_LLVM_LIBC 0$/#define _LIBCPP_LIBC_LLVM_LIBC 1/' \
+			buildtools/third_party/libc++/__config_site || die
+	fi
 
 	local esbuild_js="${S}/third_party/devtools-frontend/src/node_modules/esbuild/lib/main.js"
 	local found

@@ -1,0 +1,13 @@
+Include <cstdint> instead of the glibc-internal bits/stdint-uintn.h.
+
+--- a/electron/shell/browser/ui/file_dialog.h
++++ b/electron/shell/browser/ui/file_dialog.h
+@@ -14,7 +14,7 @@
+ #include "base/memory/raw_ptr_exclusion.h"
+ 
+ #if BUILDFLAG(IS_LINUX)
+-#include <bits/stdint-uintn.h>
++#include <cstdint>
+ #endif
+ 
+ namespace electron {
