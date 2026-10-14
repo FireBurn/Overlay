@@ -146,7 +146,8 @@ pkg_postinst() {
 	elog "  - Intel XeSS (DP4a / U-Net reconstruction, flt_upscaler 4)"
 	elog "  - NVIDIA DLSS / AMD d4r (Swin Transformer attention, flt_upscaler 5)"
 	elog "  - Unified Super Resolution (Automatic hardware optimal selector, flt_upscaler 6)"
-	elog "  - Analytical FSR3 frame generation (flt_frame_generation 1)"
+	elog "  - Multi-frame generation 2x/3x/4x (flt_frame_generation 1, flt_frame_generation_multiplier 2..4)"
+	elog "  - In-engine Vulkan hardware video recording (videorecord_start, videorecord_stop)"
 	ewarn "Experimental FSR4 v07 is installed with its source-v07 model assets; it is not AMD FSR 4.1.1."
 }
 
