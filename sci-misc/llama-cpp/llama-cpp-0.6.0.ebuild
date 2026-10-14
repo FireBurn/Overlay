@@ -1226,7 +1226,10 @@ IUSE="curl openblas +openmp blis hip cuda opencl vulkan xdna +webui"
 RESTRICT="mirror"
 
 BDEPEND="
-	webui? ( ${NPM_NODE_DEPEND} )
+	webui? (
+		${NPM_NODE_DEPEND}
+		media-libs/vips
+	)
 	virtual/pkgconfig
 "
 
@@ -1340,6 +1343,9 @@ src_prepare() {
 }
 
 src_configure() {
+	# the Gentoo build type does not define it, and the asserts slow inference
+	append-cppflags -DNDEBUG
+
 	if use webui; then
 		# Force enable the Web UI macros
 		append-cppflags -DLLAMA_BUILD_UI=1 -DLLAMA_BUILD_WEBUI=1
@@ -1403,6 +1409,19 @@ src_configure() {
 	fi
 }
 
+# sharp's prebuilt libvips needs libstdc++ and glibc, so it is built against
+# the system's
+_llama_build_sharp() {
+	local npm_modules="${BROOT}/usr/$(get_libdir)/node_modules/npm/node_modules"
+	[[ -d ${npm_modules} ]] || npm_modules="${BROOT}/usr/lib/node_modules/npm/node_modules"
+
+	pushd node_modules/sharp >/dev/null || die
+	HOME="${T}/npm-home" SHARP_FORCE_GLOBAL_LIBVIPS=1 \
+		npm_config_nodedir="${BROOT}/usr" NODE_PATH="${npm_modules}" \
+		npm run build || die "Failed to build sharp"
+	popd >/dev/null || die
+}
+
 src_compile() {
 	if use webui; then
 		# 1. Build the Web UI assets from source
@@ -1413,6 +1432,7 @@ src_compile() {
 		if [[ ${PV} != 9999 ]]; then
 			npm_with_registry npm ci --ignore-scripts
 		fi
+		_llama_build_sharp
 		# Generates the dist/ directory CMake embeds
 		HOME="${T}/npm-home" npm run build --offline || die
 
