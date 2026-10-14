@@ -26,15 +26,17 @@ EBUILD_NO_VOICE=false
 )
 
 
-# discord_voice.node needs libstdc++ and libatomic, which this libc does not
-# have. The stub turns the module into no-ops, so the client starts without
-# voice instead of failing.
+# discord_voice.node and discord_krisp.node need libstdc++ and libatomic,
+# which this libc does not have. The stubs turn the modules into no-ops, so
+# the client starts without voice instead of failing.
 if "${EBUILD_NO_VOICE}"; then
-	for index in "${XDG_CONFIG_HOME:-${HOME}/.config}"/discord/*/modules/discord_voice/index.js; do
-		[[ -f ${index} ]] || continue
-		grep -q 'Voice engine disabled' "${index}" && continue
-		[[ -e ${index}.orig ]] || cp -- "${index}" "${index}.orig"
-		cp -- "@@DESTDIR@@/voice-stub.js" "${index}"
+	for module in voice krisp; do
+		for index in "${XDG_CONFIG_HOME:-${HOME}/.config}"/discord/*/modules/discord_${module}/index.js; do
+			[[ -f ${index} ]] || continue
+			grep -q 'disabled on this libc' "${index}" && continue
+			[[ -e ${index}.orig ]] || cp -- "${index}" "${index}.orig"
+			cp -- "@@DESTDIR@@/${module}-stub.js" "${index}"
+		done
 	done
 fi
 

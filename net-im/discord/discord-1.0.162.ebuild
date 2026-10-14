@@ -258,6 +258,7 @@ src_install() {
 	if use elibc_llvm; then
 		insinto "${DESTDIR}"
 		doins "${FILESDIR}/voice-stub.js"
+		doins "${FILESDIR}/krisp-stub.js"
 	fi
 
 	exeinto "/usr/bin"
