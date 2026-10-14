@@ -555,6 +555,23 @@ src_prepare() {
 	sed -i -e "s|^export const cpuTargetFlags: Flag\[\] = \[\$|export const cpuTargetFlags: Flag[] = ${table}|" \
 		scripts/build/flags.ts || die
 	grep -q BUN_GENTOO_CPU_FLAGS scripts/build/flags.ts || die "failed to patch CPU target flags"
+
+	# The libc crate versions its termios symbols for glibc targets, and an
+	# unversioned libc has nothing for @GLIBC_x to bind to
+	local crate
+	for crate in "${ECARGO_HOME}/gentoo"/libc-0.2.*/src/unix/mod.rs; do
+		[[ -f ${crate} ]] && sed -i -E \
+			's/link_name = "([A-Za-z0-9_]+)@GLIBC_[0-9.]+"/link_name = "\1"/' "${crate}" || die
+	done
+
+	# Bun picks libstdc++ names for the V8 entry points that take std::
+	# types on Linux, but this C++ is built against libc++ (std::__1::)
+	if [[ $(tc-get-cxx-stdlib) == libc++ ]]; then
+		sed -i \
+			-e 's/EmSt8functionIFNS_10MaybeLocalINS_5ValueEEEvEE/EmNSt3__18functionIFNS_10MaybeLocalINS_5ValueEEEvEEE/' \
+			-e 's/ESt8optionalImE/ENSt3__18optionalImEE/' \
+			src/runtime/napi/napi_body.rs || die
+	fi
 }
 
 src_compile() {
