@@ -63,6 +63,9 @@ pkg_pretend() {
 		# sys-libs/musl-abi puts this library's own loader under the name a
 		# musl binary asks for. That is this library, not another one.
 		[[ $(readlink "${lib}") == ld-llvm-libc-*.so.1 ]] && continue
+		# sys-libs/glibc-abi is libc.so.6 on top of this library, for the
+		# programs built for glibc.
+		[[ ${lib##*/} == libc.so.6 ]] && has_version sys-libs/glibc-abi && continue
 		die "${lib#"${EROOT}"} belongs to another C library, which ${PN} would replace"
 	done
 }
