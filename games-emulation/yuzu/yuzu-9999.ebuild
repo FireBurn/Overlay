@@ -3,7 +3,7 @@
 
 EAPI=8
 
-inherit cmake git-r3 toolchain-funcs xdg
+inherit cmake flag-o-matic git-r3 toolchain-funcs xdg
 
 DESCRIPTION="An emulator for Nintendo Switch"
 HOMEPAGE="https://yuzu-emu.org"
@@ -145,6 +145,10 @@ src_prepare() {
 }
 
 src_configure() {
+	# Dynarmic is built without it, which leaves Boost's asserts on, and
+	# one of them fires as soon as a game starts
+	append-cppflags -DNDEBUG
+
 	local -a mycmakeargs=(
 		# Libraries are private and rely on circular dependency resolution.
 		-DBUILD_SHARED_LIBS=OFF # dynarmic
