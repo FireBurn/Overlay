@@ -14,6 +14,7 @@ fi
 # Variables set during ebuild configuration
 EBUILD_SECCOMP=false
 EBUILD_WAYLAND=false
+EBUILD_NO_VOICE=false
 
 "${EBUILD_SECCOMP}" || discord_parameters+=( --disable-seccomp-filter-sandbox )
 
@@ -24,6 +25,18 @@ EBUILD_WAYLAND=false
 	--enable-wayland-ime
 )
 
+
+# discord_voice.node needs libstdc++ and libatomic, which this libc does not
+# have. The stub turns the module into no-ops, so the client starts without
+# voice instead of failing.
+if "${EBUILD_NO_VOICE}"; then
+	for index in "${XDG_CONFIG_HOME:-${HOME}/.config}"/discord/*/modules/discord_voice/index.js; do
+		[[ -f ${index} ]] || continue
+		grep -q 'Voice engine disabled' "${index}" && continue
+		[[ -e ${index}.orig ]] || cp -- "${index}" "${index}.orig"
+		cp -- "@@DESTDIR@@/voice-stub.js" "${index}"
+	done
+fi
 
 # Read by the app.asar shipped with the system Electron, in place of
 # process.resourcesPath, which points at Electron's own installation

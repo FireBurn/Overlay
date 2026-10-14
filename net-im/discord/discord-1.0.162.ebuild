@@ -50,7 +50,7 @@ LICENSE="all-rights-reserved"
 SLOT="0"
 KEYWORDS="~amd64"
 
-IUSE="appindicator bundled-electron +seccomp wayland"
+IUSE="appindicator bundled-electron elibc_llvm +seccomp wayland"
 REQUIRED_USE="${PYTHON_REQUIRED_USE}"
 RESTRICT="bindist mirror strip test"
 BDEPEND="app-arch/brotli
@@ -175,6 +175,12 @@ src_prepare() {
 			"${T}/launcher.sh" || die "sed failed for seccomp"
 	fi
 
+	# No voice engine on llvm-libc
+	if use elibc_llvm; then
+		sed --in-place --expression '/^EBUILD_NO_VOICE=/s/false/true/' \
+			"${T}/launcher.sh" || die "sed failed for the voice stub"
+	fi
+
 	# USE wayland in launcher
 	if use wayland; then
 		sed --in-place --expression '/^EBUILD_WAYLAND=/s/false/true/' \
@@ -248,6 +254,11 @@ src_install() {
 	insopts -m0755
 	newins "${DISTDIR}/discord-disable-breaking-updates-${UPDATE_DISABLER_COMMIT}.py" disable-breaking-updates.py
 	python_fix_shebang "${ED}/${DESTDIR}/disable-breaking-updates.py"
+
+	if use elibc_llvm; then
+		insinto "${DESTDIR}"
+		doins "${FILESDIR}/voice-stub.js"
+	fi
 
 	exeinto "/usr/bin"
 	newexe "${T}/launcher.sh" "discord" || die "failing to install launcher"
