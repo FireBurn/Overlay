@@ -1731,6 +1731,20 @@ src_prepare() {
 		-e "s#${WIN_CAP_GIT}#${WIN_CAP_PATH}#" \
 		-e "s#${TREE_SITTER_LANGUAGE_GIT}#${TREE_SITTER_LANGUAGE_PATH}#" \
 		-i "${S}/Cargo.toml" || die "Cargo fetch workaround failed"
+
+	if [[ $(tc-get-cxx-stdlib) == libc++ ]]; then
+		# Build without livekit, as upstream does for FreeBSD. The prebuilt
+		# libwebrtc is built against libstdc++ and glibc, which this
+		# system does not have.
+		sed -i 's/target_os = "freebsd"/any(target_os = "freebsd", zed_no_livekit)/' \
+			crates/audio/Cargo.toml \
+			crates/audio/src/audio_pipeline/echo_canceller.rs \
+			crates/livekit_client/Cargo.toml \
+			crates/livekit_client/src/lib.rs \
+			crates/call/src/call_impl/diagnostics.rs ||
+			die "Failed to build without livekit"
+		export RUSTFLAGS+=" --cfg zed_no_livekit"
+	fi
 }
 
 src_compile() {
