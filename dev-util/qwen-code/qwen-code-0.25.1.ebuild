@@ -131,14 +131,14 @@ NPM_PKGS="
 	@iconify/types@2.0.0
 	@iconify/utils@3.1.3
 	@img/colour@1.1.0
-	@img/sharp-libvips-linux-arm64@1.3.3|arm64,elibc_glibc
-	@img/sharp-libvips-linux-x64@1.3.3|amd64,elibc_glibc
-	@img/sharp-libvips-linuxmusl-arm64@1.3.3|arm64,elibc_musl
-	@img/sharp-libvips-linuxmusl-x64@1.3.3|amd64,elibc_musl
-	@img/sharp-linux-arm64@0.35.4|arm64,elibc_glibc
-	@img/sharp-linux-x64@0.35.4|amd64,elibc_glibc
-	@img/sharp-linuxmusl-arm64@0.35.4|arm64,elibc_musl
-	@img/sharp-linuxmusl-x64@0.35.4|amd64,elibc_musl
+	@img/sharp-libvips-linux-arm64@1.3.3|arm64
+	@img/sharp-libvips-linux-x64@1.3.3|amd64
+	@img/sharp-libvips-linuxmusl-arm64@1.3.3|arm64
+	@img/sharp-libvips-linuxmusl-x64@1.3.3|amd64
+	@img/sharp-linux-arm64@0.35.4|arm64
+	@img/sharp-linux-x64@0.35.4|amd64
+	@img/sharp-linuxmusl-arm64@0.35.4|arm64
+	@img/sharp-linuxmusl-x64@0.35.4|amd64
 	@img/sharp-wasm32@0.35.4
 	@inquirer/confirm@5.1.14
 	@inquirer/core@10.1.15
@@ -186,15 +186,15 @@ NPM_PKGS="
 	@modelcontextprotocol/sdk@1.26.0
 	@modelcontextprotocol/sdk@1.30.0
 	@mswjs/interceptors@0.39.5
-	@napi-rs/lzma-linux-x64-gnu@1.5.1|amd64,elibc_glibc
+	@napi-rs/lzma-linux-x64-gnu@1.5.1|amd64
 	@napi-rs/wasm-runtime@1.2.4
 	@noble/hashes@1.8.0
 	@nodable/entities@2.2.0
 	@node-rs/jieba@2.0.2
-	@node-rs/jieba-linux-arm64-gnu@2.0.2|arm64,elibc_glibc
-	@node-rs/jieba-linux-arm64-musl@2.0.2|arm64,elibc_musl
-	@node-rs/jieba-linux-x64-gnu@2.0.2|amd64,elibc_glibc
-	@node-rs/jieba-linux-x64-musl@2.0.2|amd64,elibc_musl
+	@node-rs/jieba-linux-arm64-gnu@2.0.2|arm64
+	@node-rs/jieba-linux-arm64-musl@2.0.2|arm64
+	@node-rs/jieba-linux-x64-gnu@2.0.2|amd64
+	@node-rs/jieba-linux-x64-musl@2.0.2|amd64
 	@node-rs/jieba-wasm32-wasi@2.0.2
 	@nodelib/fs.scandir@2.1.5
 	@nodelib/fs.stat@2.0.5
@@ -252,9 +252,9 @@ NPM_PKGS="
 	@opentelemetry/semantic-conventions@1.36.0
 	@opentui/core@0.5.10
 	@opentui/core-linux-arm64@0.5.10|arm64
-	@opentui/core-linux-arm64-musl@0.5.10|arm64,elibc_musl
+	@opentui/core-linux-arm64-musl@0.5.10|arm64
 	@opentui/core-linux-x64@0.5.10|amd64
-	@opentui/core-linux-x64-musl@0.5.10|amd64,elibc_musl
+	@opentui/core-linux-x64-musl@0.5.10|amd64
 	@opentui/react@0.5.10
 	@paralleldrive/cuid2@2.3.1
 	@pinojs/redact@0.4.0
@@ -333,10 +333,10 @@ NPM_PKGS="
 	@redocly/config@0.22.0
 	@redocly/openapi-core@1.34.20
 	@rolldown/pluginutils@1.0.0-beta.27
-	@rollup/rollup-linux-arm64-gnu@4.62.5|arm64,elibc_glibc
-	@rollup/rollup-linux-arm64-musl@4.62.5|arm64,elibc_musl
-	@rollup/rollup-linux-x64-gnu@4.62.5|amd64,elibc_glibc
-	@rollup/rollup-linux-x64-musl@4.62.5|amd64,elibc_musl
+	@rollup/rollup-linux-arm64-gnu@4.62.5|arm64
+	@rollup/rollup-linux-arm64-musl@4.62.5|arm64
+	@rollup/rollup-linux-x64-gnu@4.62.5|amd64
+	@rollup/rollup-linux-x64-musl@4.62.5|amd64
 	@rtsao/scc@1.1.0
 	@sec-ant/readable-stream@0.4.1
 	@secretlint/config-creator@10.2.2
@@ -369,18 +369,18 @@ NPM_PKGS="
 	@stylistic/eslint-plugin@3.1.0
 	@tailwindcss/node@4.3.2
 	@tailwindcss/oxide@4.3.2
-	@tailwindcss/oxide-linux-arm64-gnu@4.3.2|arm64,elibc_glibc
-	@tailwindcss/oxide-linux-arm64-musl@4.3.2|arm64,elibc_musl
-	@tailwindcss/oxide-linux-x64-gnu@4.3.2|amd64,elibc_glibc
-	@tailwindcss/oxide-linux-x64-musl@4.3.2|amd64,elibc_musl
+	@tailwindcss/oxide-linux-arm64-gnu@4.3.2|arm64
+	@tailwindcss/oxide-linux-arm64-musl@4.3.2|arm64
+	@tailwindcss/oxide-linux-x64-gnu@4.3.2|amd64
+	@tailwindcss/oxide-linux-x64-musl@4.3.2|amd64
 	@tailwindcss/vite@4.3.2
 	@tanstack/react-table@8.21.3
 	@tanstack/react-virtual@3.14.2
 	@tanstack/table-core@8.21.3
 	@tanstack/virtual-core@3.17.0
 	@teddyzhu/clipboard@0.0.5
-	@teddyzhu/clipboard-linux-arm64-gnu@0.0.5|arm64,elibc_glibc
-	@teddyzhu/clipboard-linux-x64-gnu@0.0.5|amd64,elibc_glibc
+	@teddyzhu/clipboard-linux-arm64-gnu@0.0.5|arm64
+	@teddyzhu/clipboard-linux-x64-gnu@0.0.5|amd64
 	@tencent-connect/qqbot-connector@1.1.0
 	@testing-library/dom@10.4.1
 	@testing-library/react@16.3.0
@@ -1188,10 +1188,10 @@ NPM_PKGS="
 	libmime@5.4.4
 	libqp@2.1.1
 	lightningcss@1.32.0
-	lightningcss-linux-arm64-gnu@1.32.0|arm64,elibc_glibc
-	lightningcss-linux-arm64-musl@1.32.0|arm64,elibc_musl
-	lightningcss-linux-x64-gnu@1.32.0|amd64,elibc_glibc
-	lightningcss-linux-x64-musl@1.32.0|amd64,elibc_musl
+	lightningcss-linux-arm64-gnu@1.32.0|arm64
+	lightningcss-linux-arm64-musl@1.32.0|arm64
+	lightningcss-linux-x64-gnu@1.32.0|amd64
+	lightningcss-linux-x64-musl@1.32.0|amd64
 	lilconfig@3.1.3
 	lines-and-columns@1.2.4
 	linkify-it@5.0.2
@@ -2072,6 +2072,11 @@ src_prepare() {
 	default
 
 	npm_clean_npmrc
+
+	# keytar is only an optional dependency of vsce, and the napi.h it builds
+	# with does not compile with current clang
+	sed -i 's/^  keytar: true$/  keytar: false/' pnpm-workspace.yaml ||
+		die "Failed to skip building keytar"
 
 	# The HTML export build enforces a size budget that upstream meets with
 	# their own minifier build; ours comes out a couple of percent larger
