@@ -92,6 +92,12 @@ ln -sfn "${STEAMROOT}/steamrt64" "${HOME}/.steam/sdk64"
 # Valve's reaper, which starts games, is still 32-bit.
 install -m 755 "${LIBDIR}/reaper" "${STEAMROOT}/steamrt64/reaper"
 
+# The launch wrapper puts a game in a systemd scope through libsystemd, which
+# it opens by name. The only one here is built for this system's libc, and
+# loaded into the wrapper's glibc process it never returns.
+mkdir -p "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/steam/env"
+echo 0 > "${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/steam/env/STEAM_LAUNCH_WRAPPER_SCOPE"
+
 # The client may bring these back when it updates. Nothing here runs them.
 rm -rf "${STEAMROOT}/steamrt32" "${STEAMROOT}/ubuntu12_32" "${STEAMROOT}/linux32"
 
@@ -102,4 +108,6 @@ if [[ -z ${PRESSURE_VESSEL_GRAPHICS_PROVIDER+set} && -d /opt/steamrt3-glibc ]]; 
 	export PRESSURE_VESSEL_GRAPHICS_PROVIDER=/opt/steamrt3-glibc
 fi
 
-exec "${STEAMROOT}/steam.sh" "$@"
+# The update check puts Valve's 32-bit reaper back over the one above, and
+# nothing here can run it, so it is told to leave the files alone.
+exec "${STEAMROOT}/steam.sh" -noverifyfiles "$@"
