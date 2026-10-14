@@ -1,0 +1,71 @@
+From a89ae6baa8b435b39387e16c7cc76d7658e70d3a Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Sun, 27 Sep 2026 08:15:37 +0100
+Subject: [PATCH] core/tools: Fix build with renderdoc 1.7 headers
+
+renderdoc_app.h 1.7 declares RENDERDOC_API_1_6_0 as a typedef of
+RENDERDOC_API_1_7_0, which conflicts with the forward declaration of
+struct RENDERDOC_API_1_6_0. Store the API pointer as void* instead.
+---
+ src/core/tools/renderdoc.cpp | 9 +++++----
+ src/core/tools/renderdoc.h   | 4 +---
+ 2 files changed, 6 insertions(+), 7 deletions(-)
+
+diff --git a/src/core/tools/renderdoc.cpp b/src/core/tools/renderdoc.cpp
+index 947fa6cb3..515b766e7 100644
+--- a/src/core/tools/renderdoc.cpp
++++ b/src/core/tools/renderdoc.cpp
+@@ -20,7 +20,7 @@ RenderdocAPI::RenderdocAPI() {
+     if (HMODULE mod = GetModuleHandleA("renderdoc.dll")) {
+         const auto RENDERDOC_GetAPI =
+             reinterpret_cast<pRENDERDOC_GetAPI>(GetProcAddress(mod, "RENDERDOC_GetAPI"));
+-        const s32 ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_6_0, (void**)&rdoc_api);
++        const s32 ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_6_0, &rdoc_api);
+         ASSERT(ret == 1);
+     }
+ #else
+@@ -32,7 +32,7 @@ RenderdocAPI::RenderdocAPI() {
+     if (void* mod = dlopen(RENDERDOC_LIB, RTLD_NOW | RTLD_NOLOAD)) {
+         const auto RENDERDOC_GetAPI =
+             reinterpret_cast<pRENDERDOC_GetAPI>(dlsym(mod, "RENDERDOC_GetAPI"));
+-        const s32 ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_6_0, (void**)&rdoc_api);
++        const s32 ret = RENDERDOC_GetAPI(eRENDERDOC_API_Version_1_6_0, &rdoc_api);
+         ASSERT(ret == 1);
+     }
+ #endif
+@@ -44,10 +44,11 @@ void RenderdocAPI::ToggleCapture() {
+     if (!rdoc_api) [[unlikely]] {
+         return;
+     }
++    auto* const api = static_cast<RENDERDOC_API_1_6_0*>(rdoc_api);
+     if (!is_capturing) {
+-        rdoc_api->StartFrameCapture(NULL, NULL);
++        api->StartFrameCapture(NULL, NULL);
+     } else {
+-        rdoc_api->EndFrameCapture(NULL, NULL);
++        api->EndFrameCapture(NULL, NULL);
+     }
+     is_capturing = !is_capturing;
+ }
+diff --git a/src/core/tools/renderdoc.h b/src/core/tools/renderdoc.h
+index 0e5e43da5..bdd41add6 100644
+--- a/src/core/tools/renderdoc.h
++++ b/src/core/tools/renderdoc.h
+@@ -3,8 +3,6 @@
+ 
+ #pragma once
+ 
+-struct RENDERDOC_API_1_6_0;
+-
+ namespace Tools {
+ 
+ class RenderdocAPI {
+@@ -15,7 +13,7 @@ public:
+     void ToggleCapture();
+ 
+ private:
+-    RENDERDOC_API_1_6_0* rdoc_api{};
++    void* rdoc_api{};
+     bool is_capturing{false};
+ };
+ 

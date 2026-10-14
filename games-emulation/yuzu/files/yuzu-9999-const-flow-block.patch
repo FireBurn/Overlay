@@ -1,0 +1,16 @@
+Value initialise the const member of TranslatePass.
+
+Clang rejects a const member without an initialiser when Flow::Block has no
+user provided constructor.
+
+--- a/src/shader_recompiler/frontend/maxwell/structured_control_flow.cpp
++++ b/src/shader_recompiler/frontend/maxwell/structured_control_flow.cpp
+@@ -976,7 +976,7 @@
+     Environment& env;
+     IR::AbstractSyntaxList& syntax_list;
+     bool uses_demote_to_helper{};
+-    const Flow::Block dummy_flow_block;
++    const Flow::Block dummy_flow_block{};
+ };
+ } // Anonymous namespace
+ 
