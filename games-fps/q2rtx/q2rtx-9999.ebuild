@@ -18,6 +18,7 @@ SRC_URI="
 LICENSE="GPL-2 MIT all-rights-reserved"
 SLOT="0"
 KEYWORDS="~amd64"
+IUSE="+fsr +xess +dlss"
 RESTRICT="bindist mirror"
 
 DEPEND="
@@ -90,10 +91,14 @@ src_configure() {
 		-DCONFIG_LINUX_PACKAGING_SKIP_PKZ=OFF
 		-DCONFIG_BUILD_GLSLANG=OFF
 		-DCONFIG_VKPT_RENDERER=ON
-		-DCONFIG_VKPT_FSR3=ON
-		# The complete older source-v07 FSR4 graph and model asset pairs are
-		# versioned with manifest hashes and an upstream MIT asset notice.
-		-DCONFIG_VKPT_INSTALL_FSR4_V07_ASSETS=ON
+		-DCONFIG_VKPT_FSR1=$(usex fsr ON OFF)
+		-DCONFIG_VKPT_FSR2=$(usex fsr ON OFF)
+		-DCONFIG_VKPT_FSR3=$(usex fsr ON OFF)
+		-DCONFIG_VKPT_FSR4=$(usex fsr ON OFF)
+		-DCONFIG_VKPT_XESS=$(usex xess ON OFF)
+		-DCONFIG_VKPT_DLSS=$(usex dlss ON OFF)
+		-DCONFIG_VKPT_UNIFIED_SR=ON
+		-DCONFIG_VKPT_INSTALL_FSR4_V07_ASSETS=$(usex fsr ON OFF)
 		-DFFX_VK_PORTABLE_BUILD_FSR3_3_1_5_SCAFFOLD=ON
 		-DUSE_SYSTEM_ZLIB=ON
 		-DUSE_SYSTEM_OPENAL=ON
@@ -119,18 +124,20 @@ src_install() {
 	[[ -f ${game_root}/baseq2/blue_noise.pkz ]] || die "blue-noise asset was not installed"
 	[[ -f ${game_root}/baseq2/pak0.pak ]] || die "shareware PAK was not installed"
 	[[ -d ${game_root}/baseq2/players ]] || die "shareware player models were not installed"
-	for fsr4_model in native quality balanced performance ultraperf drs; do
-		local fsr4_prefix=${game_root}/baseq2/fsr4_shaders/fsr4_model_v07_i8_${fsr4_model}
-		[[ -f ${fsr4_prefix}_initializers.bin ]] ||
-			die "FSR4 v07 ${fsr4_model} initializer was not installed"
-		[[ -f ${fsr4_prefix}_pre_weights.bin ]] ||
-			die "FSR4 v07 ${fsr4_model} pre-pass weights were not installed"
-		[[ -f ${fsr4_prefix}_shader_manifest.json ]] ||
-			die "FSR4 v07 ${fsr4_model} shader manifest was not installed"
-		compgen -G "${fsr4_prefix}_*.spv" >/dev/null ||
-			die "FSR4 v07 ${fsr4_model} SPIR-V modules were not installed"
-	done
-	[[ -f ${game_root}/baseq2/fsr4_shaders/LICENSE-FSR4-v07.txt ]] || die "FSR4 v07 asset notice was not installed"
+	if use fsr; then
+		for fsr4_model in native quality balanced performance ultraperf drs; do
+			local fsr4_prefix=${game_root}/baseq2/fsr4_shaders/fsr4_model_v07_i8_${fsr4_model}
+			[[ -f ${fsr4_prefix}_initializers.bin ]] ||
+				die "FSR4 v07 ${fsr4_model} initializer was not installed"
+			[[ -f ${fsr4_prefix}_pre_weights.bin ]] ||
+				die "FSR4 v07 ${fsr4_model} pre-pass weights were not installed"
+			[[ -f ${fsr4_prefix}_shader_manifest.json ]] ||
+				die "FSR4 v07 ${fsr4_model} shader manifest was not installed"
+			compgen -G "${fsr4_prefix}_*.spv" >/dev/null ||
+				die "FSR4 v07 ${fsr4_model} SPIR-V modules were not installed"
+		done
+		[[ -f ${game_root}/baseq2/fsr4_shaders/LICENSE-FSR4-v07.txt ]] || die "FSR4 v07 asset notice was not installed"
+	fi
 
 	# FSR3 and analytical FSR3 frame generation are compiled into the client.
 	# Intel XeSS (U-Net) and DLSS/d4r (Swin Transformer) compute shaders are built in.
@@ -141,13 +148,13 @@ pkg_postinst() {
 	elog "The shareware data is installed. Retail PAKs, players, and music are optional."
 	elog "On first launch, choose the retail import prompt or copy them to:"
 	elog "  \${XDG_DATA_HOME:-\${HOME}/.local/share}/quake2rtx/baseq2"
-	elog "Native Vulkan temporal upscalers are built in:"
-	elog "  - AMD FidelityFX Super Resolution 3.1.4 (flt_upscaler 1) & FSR 3.1.5 (flt_upscaler 3)"
-	elog "  - Intel XeSS (DP4a / U-Net reconstruction, flt_upscaler 4)"
-	elog "  - NVIDIA DLSS / AMD d4r (Swin Transformer attention, flt_upscaler 5)"
-	elog "  - Unified Super Resolution (Automatic hardware optimal selector, flt_upscaler 6)"
+	elog "All native Vulkan multi-vendor upscalers (working on AMD, Intel, and NVIDIA):"
+	elog "  - AMD FSR 3.1 (FidelityFX Super Resolution 3.1.5, flt_upscaler 1 or 3)"
+	elog "  - AMD FSR 4   (AMD Neural INT8 ML Super Resolution, flt_upscaler 2)"
+	elog "  - Intel XeSS  (Intel Xe Super Sampling DP4a / U-Net, flt_upscaler 4)"
+	elog "  - NVIDIA DLSS (Deep Learning Super Sampling / d4r Swin, flt_upscaler 5)"
+	elog "  - Unified SR  (Automatic optimal hardware selector with DRS, flt_upscaler 6)"
 	elog "  - Multi-frame generation 2x/3x/4x (flt_frame_generation 1, flt_frame_generation_multiplier 2..4)"
 	elog "  - In-engine Vulkan hardware video recording (videorecord_start, videorecord_stop)"
-	ewarn "Experimental FSR4 v07 is installed with its source-v07 model assets; it is not AMD FSR 4.1.1."
 }
 
