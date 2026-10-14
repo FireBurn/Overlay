@@ -28,14 +28,15 @@ diff --git a/ggml/src/ggml-vulkan/ggml-vulkan-types.h b/ggml/src/ggml-vulkan/ggm
 index 252359bf8..21cdd044e 100644
 --- a/ggml/src/ggml-vulkan/ggml-vulkan-types.h
 +++ b/ggml/src/ggml-vulkan/ggml-vulkan-types.h
-@@ -74,6 +74,7 @@ typedef struct VkPhysicalDeviceCooperativeMatrixDecodeVectorFeaturesNV {
+@@ -62,7 +62,8 @@ typedef struct VkPhysicalDeviceCooperativeMatrixDecodeVectorFeaturesNV {
+ #include <limits>
+ #include <map>
  #include <set>
- 
  #include <unordered_map>
 +#include <unordered_set>
- 
  #include <shared_mutex>
- 
+ #include <mutex>
+ #include <future>
 @@ -1276,6 +1277,9 @@ struct ggml_backend_vk_context {
      // number of additional consecutive nodes that are being fused with the
      // node currently being processed
