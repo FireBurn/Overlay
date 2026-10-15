@@ -1578,7 +1578,6 @@ declare -A GIT_CRATES=(
 LLVM_COMPAT=( 22 23 )
 RUST_MIN_VER="1.98.1"
 RUST_NEEDS_LLVM=1
-WEBRTC_COMMIT="0001d84-4"
 
 inherit cargo check-reqs desktop flag-o-matic llvm-r2 toolchain-funcs xdg
 
@@ -1586,14 +1585,6 @@ DESCRIPTION="The fast, collaborative code editor"
 HOMEPAGE="https://zed.dev https://github.com/zed-industries/zed"
 SRC_URI="
 	https://github.com/zed-industries/zed/archive/refs/tags/v${PV/_/-}.tar.gz -> ${P}.tar.gz
-	amd64? (
-		https://github.com/zed-industries/livekit-rust-sdks/releases/download/webrtc-${WEBRTC_COMMIT}/webrtc-linux-x64-release.zip ->
-			webrtc-${WEBRTC_COMMIT}-linux-x64-release.zip
-	)
-	arm64? (
-		https://github.com/zed-industries/livekit-rust-sdks/releases/download/webrtc-${WEBRTC_COMMIT}/webrtc-linux-arm64-release.zip ->
-			webrtc-${WEBRTC_COMMIT}-linux-arm64-release.zip
-	)
 	${CARGO_CRATE_URIS}"
 
 S="${WORKDIR}/${PN}-${PV/_/-}"
@@ -1608,6 +1599,8 @@ LICENSE+="
 "
 SLOT="0"
 KEYWORDS="~amd64 ~arm64"
+IUSE="collab"
+REQUIRED_USE="collab? ( amd64 )"
 RESTRICT="mirror"
 CHECKREQS_DISK_BUILD="20G"
 CHECKREQS_MEMORY="8G"
@@ -1634,6 +1627,7 @@ DEPEND="
 	x11-libs/libxkbcommon[X]
 "
 RDEPEND="${DEPEND}"
+DEPEND+=" amd64? ( collab? ( net-libs/libwebrtc ) )"
 BDEPEND="
 	app-arch/unzip
 	dev-build/cmake
@@ -1732,10 +1726,9 @@ src_prepare() {
 		-e "s#${TREE_SITTER_LANGUAGE_GIT}#${TREE_SITTER_LANGUAGE_PATH}#" \
 		-i "${S}/Cargo.toml" || die "Cargo fetch workaround failed"
 
-	if [[ $(tc-get-cxx-stdlib) == libc++ ]]; then
-		# Build without livekit, as upstream does for FreeBSD. The prebuilt
-		# libwebrtc is built against libstdc++ and glibc, which this
-		# system does not have.
+	if ! use collab; then
+		# Build without livekit, as upstream does for FreeBSD: no calls or
+		# screen sharing, and no WebRTC
 		sed -i 's/target_os = "freebsd"/any(target_os = "freebsd", zed_no_livekit)/' \
 			crates/audio/Cargo.toml \
 			crates/audio/src/audio_pipeline/echo_canceller.rs \
@@ -1750,10 +1743,10 @@ src_prepare() {
 src_compile() {
 	export RELEASE_VERSION="${PV}"
 	export ZED_UPDATE_EXPLANATION='Updates are handled by portage'
-	if use arm64; then
-		export LK_CUSTOM_WEBRTC="${WORKDIR}/linux-arm64-release"
-	elif use amd64; then
-		export LK_CUSTOM_WEBRTC="${WORKDIR}/linux-x64-release"
+	if use collab; then
+		export LK_CUSTOM_WEBRTC="${EPREFIX}/usr/lib/libwebrtc"
+		# libwebrtc's portal headers include GIO's
+		append-cxxflags $($(tc-getPKG_CONFIG) --cflags gio-2.0)
 	fi
 	cargo_src_compile --package zed --package cli
 }

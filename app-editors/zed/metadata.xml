@@ -9,6 +9,9 @@
 		<email>proxy-maint@gentoo.org</email>
 		<name>Proxy Maintainers</name>
 	</maintainer>
+	<use>
+		<flag name="collab">Build the real-time calling and screen sharing support, which needs <pkg>net-libs/libwebrtc</pkg></flag>
+	</use>
 	<upstream>
 		<remote-id type="github">zed-industries/zed</remote-id>
 	</upstream>
