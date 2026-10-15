@@ -11,39 +11,39 @@ GE_TAG=GE-Proton${PV/./-}
 # the commit Proton's prep script reverts to bring back the configure files
 WINE_REVERT_COMMIT=e813ca5771658b00875924ab88d525322e50d39f
 
-VKD3D_PROTON_COMMIT=af89350cc2eacd9da2293fbae96bd9ab4987c9bb
+VKD3D_PROTON_COMMIT=2230755878b01993b4b82d0ac0c0624f3ab4d333
 
-# Proton's submodules at the commits the GE-Proton11-7 tag pins, and theirs
+# Proton's submodules at the commits the GE-Proton11-9 tag pins, and theirs
 # in turn: "path repository commit". Parents come before what lives under them.
 PROTON_TREES=(
-	"wine ValveSoftware/wine 46b29104e3741fe23bf5e2547196a253aab88c89"
+	"wine ValveSoftware/wine 981e2f0b9007fd70a6e0ed6119cb18f4164e26f9"
 	"wine-staging wine-staging/wine-staging 6cc805ea57132eeaf44764e9213823c9b8d0d300"
-	"dxvk doitsujin/dxvk 601930949d111edbbcf9dd463948426d9f8f6ddd"
-	"vkd3d-proton HansKristian-Work/vkd3d-proton af89350cc2eacd9da2293fbae96bd9ab4987c9bb"
-	"d7vk WinterSnowfall/d7vk d6faa06439eb097783dee27fb2b5d1cf3bb1b335"
-	"dxvk-nvapi jp7677/dxvk-nvapi fd105c0d07f4531169eba4d1d1eaa25f78a416a2"
+	"dxvk doitsujin/dxvk 71ec7b5be6c517db39bcca4d38f38a63f6ddbc56"
+	"vkd3d-proton HansKristian-Work/vkd3d-proton 2230755878b01993b4b82d0ac0c0624f3ab4d333"
+	"d7vk WinterSnowfall/d7vk d8363d1a690894dd01ca72da24d2f4c045a4f2b3"
+	"dxvk-nvapi jp7677/dxvk-nvapi 0f26995d8126617d4d99f62c9571715fc7765da1"
 	"Vulkan-Headers KhronosGroup/Vulkan-Headers 36872f9062b17b1a30b8ed1d81ca5ea6bb608a72"
 	"openvr ValveSoftware/openvr 91825305130f446f82054c1ec3d416321ace0072"
-	"protonfixes open-wine-components/umu-protonfixes 27f5c708ec4d4150fbff97acb30a5b21ad893994"
+	"protonfixes open-wine-components/umu-protonfixes e89ce7b43800b0df4c37015239d64952fb42ed8b"
 	"vklayers/low_latency_layer Korthos-Software/low_latency_layer 4e7fe12b797d89be07919acf3d2df5cda3f4d89f"
 	"dxvk/include/native/directx Joshua-Ashton/mingw-directx-headers 9df86f2341616ef1888ae59919feaa6d4fad693d"
 	"dxvk/include/spirv KhronosGroup/SPIRV-Headers 04f10f650d514df88b76d25e83db360142c7b174"
-	"dxvk/include/vulkan KhronosGroup/Vulkan-Headers 8864cdc896bbc2a9b6eb36b3218fc9ef57908d77"
-	"dxvk/subprojects/dxbc-spirv doitsujin/dxbc-spirv bf14419e5fa7eacb817b7b632f03cb61d61bbad7"
+	"dxvk/include/vulkan KhronosGroup/Vulkan-Headers 6802bb4733b63ed5efd3adb308a6c885ef180ea1"
+	"dxvk/subprojects/dxbc-spirv doitsujin/dxbc-spirv ecb8308fe03fcad695a6ebdacbef6e7f61e77484"
 	"dxvk/subprojects/dxbc-spirv/submodules/spirv_headers KhronosGroup/SPIRV-Headers c8ad050fcb29e42a2f57d9f59e97488f465c436d"
 	"dxvk/subprojects/libdisplay-info doitsujin/libdisplay-info 275e6459c7ab1ddd4b125f28d0440716e4888078"
 	"vkd3d-proton/khronos/SPIRV-Headers KhronosGroup/SPIRV-Headers f88a2d766840fc825af1fc065977953ba1fa4a91"
 	"vkd3d-proton/khronos/Vulkan-Headers KhronosGroup/Vulkan-Headers ee2ec5fd83dafce291024683b50dc89219333076"
-	"vkd3d-proton/subprojects/dxil-spirv HansKristian-Work/dxil-spirv bed30ff2115d845fb6bf8752bcbe1c681efb0e01"
-	"vkd3d-proton/subprojects/dxil-spirv/subprojects/dxbc-spirv doitsujin/dxbc-spirv 37a97745bddaf56d717253b0e4565904ce5eb06c"
+	"vkd3d-proton/subprojects/dxil-spirv HansKristian-Work/dxil-spirv ab47c3df1a4746f36c958f0262bc9e314eb566eb"
+	"vkd3d-proton/subprojects/dxil-spirv/subprojects/dxbc-spirv doitsujin/dxbc-spirv 8dae2d8573af08378c6059aca3d5987da99d20b5"
 	"vkd3d-proton/subprojects/dxil-spirv/subprojects/dxbc-spirv/submodules/spirv_headers KhronosGroup/SPIRV-Headers c8ad050fcb29e42a2f57d9f59e97488f465c436d"
 	"vkd3d-proton/subprojects/dxil-spirv/third_party/SPIRV-Cross KhronosGroup/SPIRV-Cross be71ee8c12cd7dc5ca8fa9581f708c2e8561fe2a"
 	"vkd3d-proton/subprojects/dxil-spirv/third_party/SPIRV-Tools KhronosGroup/SPIRV-Tools 199cb207b911501ddd76dcddf100a6e21c15ef23"
 	"vkd3d-proton/subprojects/dxil-spirv/third_party/spirv-headers KhronosGroup/SPIRV-Headers c63848ecf2200425511319fd8bf2c17b751e501e"
 	"d7vk/include/native/directx Joshua-Ashton/mingw-directx-headers 9df86f2341616ef1888ae59919feaa6d4fad693d"
 	"d7vk/include/spirv KhronosGroup/SPIRV-Headers 04f10f650d514df88b76d25e83db360142c7b174"
-	"d7vk/include/vulkan KhronosGroup/Vulkan-Headers 8864cdc896bbc2a9b6eb36b3218fc9ef57908d77"
-	"d7vk/subprojects/dxbc-spirv doitsujin/dxbc-spirv bf14419e5fa7eacb817b7b632f03cb61d61bbad7"
+	"d7vk/include/vulkan KhronosGroup/Vulkan-Headers 6802bb4733b63ed5efd3adb308a6c885ef180ea1"
+	"d7vk/subprojects/dxbc-spirv doitsujin/dxbc-spirv ecb8308fe03fcad695a6ebdacbef6e7f61e77484"
 	"d7vk/subprojects/dxbc-spirv/submodules/spirv_headers KhronosGroup/SPIRV-Headers c8ad050fcb29e42a2f57d9f59e97488f465c436d"
 	"d7vk/subprojects/libdisplay-info doitsujin/libdisplay-info 275e6459c7ab1ddd4b125f28d0440716e4888078"
 	"dxvk-nvapi/external/DirectX-Headers microsoft/DirectX-Headers ea2799ce66647c69710a81338e828b19973e0370"
@@ -454,8 +454,10 @@ _proton_install_dist() {
 	echo "$(date +%s) ${GE_TAG}" > "${dist}"/version || die
 
 	# the prefix new ones are copied from, made by the tree that is shipped
+	# libsandbox links no libc, and wine-preloader has none for it to find, so
+	# wine runs with the sandbox off
 	WINEDLLOVERRIDES="mscoree,mshtml=" WINEDEBUG=-all \
-		edo "${PYTHON}" "${PROTON_S}"/default_pfx.py \
+		edo env -u LD_PRELOAD SANDBOX_ON=0 "${PYTHON}" "${PROTON_S}"/default_pfx.py \
 		"${dist}"/files/share/default_pfx "${dist}"/files 0
 
 	insinto /usr/share/${PN}
