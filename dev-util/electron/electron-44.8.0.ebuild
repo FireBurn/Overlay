@@ -15,8 +15,8 @@ EAPI=8
 
 # DEPS pins 152.0.7977.130, but the official tarball bucket only has .129;
 # all of Electron's patches apply cleanly to it
-CHROMIUM_VER="152.0.7977.129"
-ELECTRON_NODE_VER="24.21.0"
+CHROMIUM_VER="152.0.7977.132"
+ELECTRON_NODE_VER="24.22.0"
 ELECTRON_NAN_COMMIT="675cefebca42410733da8a454c8d9391fcebfbc2"
 
 GN_MIN_VER=0.2374
@@ -1278,8 +1278,19 @@ remove_compiler_builtins() {
 # @USAGE: <repo dir> <patch>
 # The -lite Chromium tarball has no tests or test data; skip the parts of a
 # patch that touch files it does not ship (but never files the patch adds).
+# Cherry-picks for changes newer than the Chromium tarball, which is the newest
+# one Google published and is behind the version Electron pins. These are
+# Windows-only and do not apply to the older code.
+ELECTRON_SKIP_PATCHES=(
+	cherry-pick-007113ee5866.patch	# ipcz handle validation, uses DuplicateHandle
+)
+
 electron_apply_patch() {
 	local repo=${1} patch=${2} file
+	if has "${patch##*/}" "${ELECTRON_SKIP_PATCHES[@]}"; then
+		einfo "  ${patch##*/}: skipped, see ELECTRON_SKIP_PATCHES"
+		return
+	fi
 	local git=( git -C "${repo}" apply --whitespace=nowarn -p1 )
 	if ! "${git[@]}" --check "${patch}" 2>/dev/null; then
 		local -a excludes=() created=()
@@ -1288,6 +1299,14 @@ electron_apply_patch() {
 		done < <("${git[@]}" --summary "${patch}" | awk '$1 == "create" { print $NF }')
 		while IFS=$'\t' read -r _ _ file; do
 			[[ -e ${repo}/${file} ]] || has "${file}" "${created[@]}" ||
+				excludes+=( --exclude="${file}" )
+		done < <("${git[@]}" --numstat "${patch}")
+		# the tarball is a different Chromium build from the one Electron
+		# pins, so a hunk against a test file that has moved is dropped; a
+		# source file that does not apply is still an error
+		while IFS=$'\t' read -r _ _ file; do
+			[[ ${file} == *test*.cc || ${file} == *test*.h || ${file} == */test/* ]] || continue
+			"${git[@]}" --check "${excludes[@]}" --include="${file}" "${patch}" 2>/dev/null ||
 				excludes+=( --exclude="${file}" )
 		done < <("${git[@]}" --numstat "${patch}")
 		[[ ${#excludes[@]} -gt 0 ]] &&
@@ -1347,6 +1366,11 @@ src_prepare() {
 		"${FILESDIR}/cr153-bytemuck-stable-simd.patch"
 		"${FILESDIR}/electron-44-optional-x11.patch"
 	)
+
+	# Electron 44.8 passes the initiator origin to a Chromium that has
+	# CreateWebUIURLLoaderFactory(..., origin); the 152.0.7977.132 tarball
+	# predates it.
+	PATCHES+=( "${FILESDIR}/electron-44.8-chromium-152.0.7977.132-web-ui-loader.patch" )
 
 	if has_version "<=media-libs/fontconfig-2.17.1"; then
 		PATCHES+=( "${FILESDIR}/chromium-142-work-with-old-fontconfig.patch" )
