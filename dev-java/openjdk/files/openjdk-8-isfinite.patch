@@ -1,0 +1,13 @@
+--- a/hotspot/src/share/vm/utilities/globalDefinitions_gcc.hpp	2026-10-16 22:54:21.750644636 +0100
++++ b/hotspot/src/share/vm/utilities/globalDefinitions_gcc.hpp	2026-10-16 22:54:21.751707623 +0100
+@@ -249,8 +249,8 @@
+ 
+ // Checking for finiteness
+ 
+-inline int g_isfinite(jfloat  f)                 { return finite(f); }
+-inline int g_isfinite(jdouble f)                 { return finite(f); }
++inline int g_isfinite(jfloat  f)                 { return isfinite(f); }
++inline int g_isfinite(jdouble f)                 { return isfinite(f); }
+ 
+ 
+ // Wide characters

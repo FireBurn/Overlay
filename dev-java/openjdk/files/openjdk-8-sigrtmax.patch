@@ -1,0 +1,25 @@
+--- a/jdk/src/solaris/native/sun/nio/ch/NativeThread.c	2026-10-16 23:11:22.456685548 +0100
++++ b/jdk/src/solaris/native/sun/nio/ch/NativeThread.c	2026-10-16 23:11:22.467902490 +0100
+@@ -35,6 +35,9 @@
+ #ifdef __linux__
+   #include <pthread.h>
+   #include <sys/signal.h>
++  #ifndef __SIGRTMAX
++    #define __SIGRTMAX SIGRTMAX
++  #endif
+   /* Also defined in net/linux_close.c */
+   #define INTERRUPT_SIGNAL (__SIGRTMAX - 2)
+ #elif __solaris__
+--- a/jdk/src/solaris/native/java/net/linux_close.c	2026-10-16 23:11:22.459183025 +0100
++++ b/jdk/src/solaris/native/java/net/linux_close.c	2026-10-16 23:11:22.467997266 +0100
+@@ -39,6 +39,10 @@
+ #include <sys/poll.h>
+ #include "jvm.h"
+ 
++#ifndef __SIGRTMAX
++#define __SIGRTMAX SIGRTMAX
++#endif
++
+ /*
+  * Stack allocated by thread when doing blocking operation
+  */

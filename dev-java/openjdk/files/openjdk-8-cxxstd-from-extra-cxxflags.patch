@@ -1,0 +1,22 @@
+--- a/common/autoconf/flags.m4	2026-10-16 22:52:43.837543041 +0100
++++ b/common/autoconf/flags.m4	2026-10-16 22:52:43.839824913 +0100
+@@ -414,6 +414,8 @@
+       LEGACY_TARGET_LDFLAGS="$LEGACY_TARGET_LDFLAGS -Wl,-z,relro"
+     fi
+     $2CXXSTD_CXXFLAG="-std=gnu++98"
++    # A language standard in --with-extra-cxxflags takes precedence
++    case " $with_extra_cxxflags " in *" -std="*) $2CXXSTD_CXXFLAG="" ;; esac
+     FLAGS_CXX_COMPILER_CHECK_ARGUMENTS([[$]$2CXXSTD_CXXFLAG -Werror],
+                                        [], [$2CXXSTD_CXXFLAG=""])
+     $2CXXFLAGS_JDK="${$2CXXFLAGS_JDK} ${$2CXXSTD_CXXFLAG}"
+--- a/common/autoconf/generated-configure.sh	2026-10-16 22:52:43.838629646 +0100
++++ b/common/autoconf/generated-configure.sh	2026-10-16 22:52:43.854824747 +0100
+@@ -42656,6 +42656,8 @@
+       LEGACY_TARGET_LDFLAGS="$LEGACY_TARGET_LDFLAGS -Wl,-z,relro"
+     fi
+     CXXSTD_CXXFLAG="-std=gnu++98"
++    # A language standard in --with-extra-cxxflags takes precedence
++    case " $with_extra_cxxflags " in *" -std="*) CXXSTD_CXXFLAG="" ;; esac
+ 
+   { $as_echo "$as_me:${as_lineno-$LINENO}: checking if the C++ compiler supports \"$CXXSTD_CXXFLAG -Werror\"" >&5
+ $as_echo_n "checking if the C++ compiler supports \"$CXXSTD_CXXFLAG -Werror\"... " >&6; }

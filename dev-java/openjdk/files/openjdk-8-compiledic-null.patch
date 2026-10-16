@@ -1,0 +1,11 @@
+--- a/hotspot/src/share/vm/code/compiledIC.cpp	2026-10-16 22:56:42.948111081 +0100
++++ b/hotspot/src/share/vm/code/compiledIC.cpp	2026-10-16 22:56:42.948111081 +0100
+@@ -222,7 +222,7 @@
+     assert(bytecode == Bytecodes::_invokeinterface, "");
+     int itable_index = call_info->itable_index();
+     entry = VtableStubs::find_itable_stub(itable_index);
+-    if (entry == false) {
++    if (entry == NULL) {
+       return false;
+     }
+ #ifdef ASSERT

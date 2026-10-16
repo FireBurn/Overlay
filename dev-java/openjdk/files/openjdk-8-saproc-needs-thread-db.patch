@@ -1,0 +1,33 @@
+--- a/hotspot/make/linux/makefiles/defs.make	2026-10-16 23:05:25.981471837 +0100
++++ b/hotspot/make/linux/makefiles/defs.make	2026-10-16 23:10:02.240012747 +0100
+@@ -331,6 +331,12 @@
+ 
+ -include $(HS_ALT_MAKE)/linux/makefiles/defs.make
+ 
+-EXPORT_LIST += $(ADD_SA_BINARIES/$(HS_ARCH))
++# libsaproc needs thread_db.h, which not every C library provides
++SA_HAS_THREAD_DB ?= $(shell $(if $(CC),$(CC),cc) -E -include thread_db.h -x c /dev/null >/dev/null 2>&1 && echo yes)
++ifeq ($(SA_HAS_THREAD_DB),yes)
++  EXPORT_LIST += $(ADD_SA_BINARIES/$(HS_ARCH))
++else
++  EXPORT_LIST += $(filter-out %/libsaproc.$(LIBRARY_SUFFIX) %/libsaproc.diz %/libsaproc.debuginfo,$(ADD_SA_BINARIES/$(HS_ARCH)))
++endif
+ 
+ 
+--- a/hotspot/make/linux/makefiles/saproc.make	2026-10-16 23:05:25.981562506 +0100
++++ b/hotspot/make/linux/makefiles/saproc.make	2026-10-16 23:10:02.240910112 +0100
+@@ -67,11 +67,14 @@
+ # if $(AGENT_DIR) does not exist, we don't build SA
+ # also, we don't build SA on Itanium or zero.
+ 
++SA_HAS_THREAD_DB ?= $(shell $(CC) -E -include thread_db.h -x c /dev/null >/dev/null 2>&1 && echo yes)
+ ifneq ($(wildcard $(AGENT_DIR)),)
+ ifneq ($(filter-out ia64 zero,$(SRCARCH)),)
++ifeq ($(SA_HAS_THREAD_DB),yes)
+   BUILDLIBSAPROC = $(LIBSAPROC)
+ endif
+ endif
++endif
+ 
+ ifneq ($(ALT_SASRCDIR),)
+ ALT_SAINCDIR=-I$(ALT_SASRCDIR) -DALT_SASRCDIR

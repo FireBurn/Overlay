@@ -1,0 +1,11 @@
+--- a/jdk/src/solaris/native/common/jdk_util_md.h	2026-10-16 23:13:15.357221617 +0100
++++ b/jdk/src/solaris/native/common/jdk_util_md.h	2026-10-16 23:13:15.366602170 +0100
+@@ -37,7 +37,7 @@
+ #define ISNAND(d) isnan(d)
+ #elif defined(__linux__) || defined(_ALLBSD_SOURCE)
+ #include <math.h>
+-#define ISNANF(f) isnanf(f)
++#define ISNANF(f) isnan(f)
+ #define ISNAND(d) isnan(d)
+ #elif defined(_AIX)
+ #include <math.h>
