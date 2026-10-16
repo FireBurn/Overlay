@@ -65,7 +65,7 @@ index d4e280f..2993e90 100644
      bool use_mask_opt = mask && !use_sparse && gqa_nq == 1 && nem1 >= 32 && nem0 * nem1 > 32768 && nem0 >= tuning_params.block_cols * 16
                          && (ctx->device->architecture != vk_device_architecture::AMD_GCN || HSK > 256 || HSV > 256);
 +    // coopmat1 reads the f16 scratch as 16x16 tiles, one contiguous fragment per load
-+    const bool use_tiled_kv = use_dequant_kv && !use_sparse && aligned && gqa_nq == 1 &&
++    const bool use_tiled_kv = use_dequant_kv && !kv_raw_strided && !use_sparse && aligned && gqa_nq == 1 &&
 +                              tuning_params.path == FA_COOPMAT1 && !tuning_params.shmem_staging &&
 +                              HSK % 16 == 0 && HSV % 16 == 0 && KV % 16 == 0 &&
 +                              ctx->device->pipeline_dequant_ktile[k->type] != nullptr &&
@@ -77,17 +77,16 @@ index d4e280f..2993e90 100644
  
      vk_pipeline pipeline = nullptr;
  
-@@ -8428,8 +8437,8 @@ void ggml_vk_flash_attn(ggml_backend_vk_context * ctx, vk_context& subctx, const
-             ctx->prealloc_size_x = k_f16_sz + v_f16_sz;
-             ggml_vk_preallocate_buffers(ctx, subctx);
-         }
--        vk_pipeline tr_k = ctx->device->pipeline_dequant_transpose[k->type];
--        vk_pipeline tr_v = ctx->device->pipeline_dequant_transpose[v->type];
-+        vk_pipeline tr_k = use_tiled_kv ? ctx->device->pipeline_dequant_ktile[k->type] : ctx->device->pipeline_dequant_transpose[k->type];
-+        vk_pipeline tr_v = use_tiled_kv ? ctx->device->pipeline_dequant_vtile[v->type] : ctx->device->pipeline_dequant_transpose[v->type];
-         ggml_pipeline_request_descriptor_sets(ctx, tr_k, 1);
-         ggml_pipeline_request_descriptor_sets(ctx, tr_v, 1);
-         if (ctx->prealloc_x_need_sync) {
+@@ -8497,7 +8506,7 @@ void ggml_vk_flash_attn(ggml_backend_vk_context * ctx, vk_context& subctx, const
+                 make_pc((uint32_t)HSV, (uint32_t)nev2, (uint32_t)KV, v_nel), cpy_elems(v_nel));
+         } else {
+-            vk_pipeline tr_k = ctx->device->pipeline_dequant_transpose[k->type];
+-            vk_pipeline tr_v = ctx->device->pipeline_dequant_transpose[v->type];
++            vk_pipeline tr_k = use_tiled_kv ? ctx->device->pipeline_dequant_ktile[k->type] : ctx->device->pipeline_dequant_transpose[k->type];
++            vk_pipeline tr_v = use_tiled_kv ? ctx->device->pipeline_dequant_vtile[v->type] : ctx->device->pipeline_dequant_transpose[v->type];
+             ggml_pipeline_request_descriptor_sets(ctx, tr_k, 1);
+             ggml_pipeline_request_descriptor_sets(ctx, tr_v, 1);
+             if (ctx->prealloc_x_need_sync) {
 diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q8_0.comp b/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q8_0.comp
 index 3b3fbbe..764d0c6 100644
 --- a/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q8_0.comp
