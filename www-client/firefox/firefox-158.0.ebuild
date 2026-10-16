@@ -980,6 +980,12 @@ src_configure() {
 	# System-av1 fix
 	use system-av1 && append-ldflags "-Wl,--undefined-version"
 
+	# Skia's PDF font subsetting calls hb-subset. The bundled harfbuzz has it,
+	# but configure only asks pkg-config for harfbuzz itself.
+	if use system-harfbuzz; then
+		append-ldflags "-Wl,--no-as-needed $($(tc-getPKG_CONFIG) --libs harfbuzz-subset) -Wl,--as-needed"
+	fi
+
 	# Make revdep-rebuild.sh happy; Also required for musl
 	append-ldflags -Wl,-rpath="${MOZILLA_FIVE_HOME}",--enable-new-dtags
 
