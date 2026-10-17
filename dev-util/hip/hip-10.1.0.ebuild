@@ -41,6 +41,7 @@ LICENSE="MIT"
 PATCHES=(
 	"${FILESDIR}"/${P}-no-noinline-macro.patch
 	"${FILESDIR}"/${P}-vega-apu-xnack.patch
+	"${FILESDIR}"/${P}-aligned-objects.patch
 )
 
 IUSE="debug +hip opencl test video_cards_amdgpu"

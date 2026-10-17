@@ -1,0 +1,83 @@
+Allocate reference counted objects with the alignment their members need
+
+ReferenceCountedObject and Command declare operator new(size_t) and
+operator delete(void*), and a class that declares them uses them even for
+types that need more than the default alignment. VirtualGPU has alignas(64)
+packets, so it landed at 16 byte alignment, and a build with AVX-512 stores
+to them with aligned moves and faults on the first hipMemset. Add the
+aligned overloads, which are chosen for such types.
+
+--- a/rocclr/platform/command.cpp
++++ b/rocclr/platform/command.cpp
+@@ -369,6 +369,26 @@
+ }
+ 
+ // ================================================================================================
++// A command may hold members that need more than the default alignment, which
++// the overload above would not give them.
++void* Command::operator new(size_t size, std::align_val_t alignment) {
++  if (DEBUG_CLR_SYSMEM_POOL) {
++    return command_pool_->Alloc(size);
++  } else {
++    return ::operator new(size, alignment);
++  }
++}
++
++// ================================================================================================
++void Command::operator delete(void* ptr, std::align_val_t alignment) {
++  if (DEBUG_CLR_SYSMEM_POOL) {
++    command_pool_->Free(ptr);
++  } else {
++    ::operator delete(ptr, alignment);
++  }
++}
++
++// ================================================================================================
+ void Command::releaseResources() {
+   const Command::EventWaitList& events = eventWaitList();
+ 
+--- a/rocclr/platform/command.hpp
++++ b/rocclr/platform/command.hpp
+@@ -8,6 +8,7 @@
+ #define COMMAND_HPP_
+ 
+ #include "top.hpp"
++#include <new>
+ #include "thread/monitor.hpp"
+ #include "thread/thread.hpp"
+ #include "platform/agent.hpp"
+@@ -426,7 +427,9 @@
+ 
+   //! Overload new/delete for fast commands allocation/destruction
+   void* operator new(size_t size);
++  void* operator new(size_t size, std::align_val_t alignment);
+   void operator delete(void* ptr);
++  void operator delete(void* ptr, std::align_val_t alignment);
+ 
+   //! Return the queue this command is enqueued into.
+   HostQueue* queue() const { return queue_; }
+--- a/rocclr/include/top.hpp
++++ b/rocclr/include/top.hpp
+@@ -27,6 +27,7 @@
+ #define WIN32_LEAN_AND_MEAN 1
+ #endif /*_WIN32*/
+ 
++#include <new>
+ #include "utils/macros.hpp"
+ #include "CL/opencl.h"
+ 
+@@ -164,6 +165,14 @@
+ 
+   void* operator new(size_t size) { return ::operator new(size); }
+   void operator delete(void* p) { return ::operator delete(p); }
++  // Derived classes can hold members that need more than the default
++  // alignment, and without these the overload above is chosen for them
++  void* operator new(size_t size, std::align_val_t alignment) {
++    return ::operator new(size, alignment);
++  }
++  void operator delete(void* p, std::align_val_t alignment) {
++    return ::operator delete(p, alignment);
++  }
+   void* operator new(size_t size, size_t extSize) {
+     return ReferenceCountedObject::operator new(size + extSize);
+   };
