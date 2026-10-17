@@ -251,6 +251,9 @@ src_configure() {
 		--mandir="${EPREFIX}"/usr/lib/${P}/share/man
 	)
 
+	# Wine's PE modules, DXVK and the rest all want one compiler, and that is
+	# llvm-mingw's clang, not whichever mingw gcc a host happens to carry
+	PATH=${BROOT}/usr/lib/llvm-mingw64/bin:${PATH}
 	wine_src_configure
 }
 
