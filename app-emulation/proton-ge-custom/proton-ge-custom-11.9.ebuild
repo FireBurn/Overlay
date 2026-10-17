@@ -500,7 +500,7 @@ src_install() {
 	if use strip; then
 		ebegin "Stripping Windows binaries"
 		find "${ED}"${libwine}/*-windows -regex '.*\.\(a\|dll\|exe\)' \
-			-type f -exec x86_64-w64-mingw32-strip --strip-unneeded {} +
+			-type f -exec "${BROOT}"/usr/lib/llvm-mingw64/bin/x86_64-w64-mingw32-strip --strip-unneeded {} +
 		eend ${?} || die
 	fi
 
