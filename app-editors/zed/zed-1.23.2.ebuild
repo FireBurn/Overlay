@@ -1736,6 +1736,11 @@ src_prepare() {
 			crates/livekit_client/src/lib.rs \
 			crates/call/src/call_impl/diagnostics.rs ||
 			die "Failed to build without livekit"
+		# Only livekit's Linux client uses webrtc-sys, and its build script
+		# downloads a libwebrtc that this build has no use for
+		sed -i -e '/^webrtc-sys.workspace = true/d' \
+			-e '/^livekit.workspace = true/a webrtc-sys.workspace = true' \
+			crates/livekit_client/Cargo.toml || die "Failed to drop webrtc-sys"
 		export RUSTFLAGS+=" --cfg zed_no_livekit"
 	fi
 }
