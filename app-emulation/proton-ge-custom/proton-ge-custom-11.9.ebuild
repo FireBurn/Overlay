@@ -142,6 +142,7 @@ DEPEND="
 BDEPEND="
 	media-fonts/liberation-fonts
 	dev-build/cmake
+	dev-util/llvm-mingw64[x86-64-pe,i686-pe]
 	${PYTHON_DEPS}
 	app-arch/zstd
 	dev-build/meson
