@@ -513,6 +513,15 @@ src_prepare() {
 
 	eapply "${WORKDIR}/firefox-patches"
 
+	# Skia's PDF subsetting includes the bundled harfbuzz headers, so with
+	# -fvisibility=hidden its calls are hidden references that no system
+	# harfbuzz can satisfy.
+	if use system-harfbuzz; then
+		sed -i -e 's|^#include "hb.h"  // NO_G3_REWRITE|#pragma GCC visibility push(default)\n&|' \
+			-e 's|^#include "hb-subset.h"  // NO_G3_REWRITE|&\n#pragma GCC visibility pop|' \
+			gfx/skia/skia/src/pdf/SkPDFSubsetFont.cpp || die
+	fi
+
 	# Allow user to apply any additional patches without modifying ebuild
 	eapply_user
 
