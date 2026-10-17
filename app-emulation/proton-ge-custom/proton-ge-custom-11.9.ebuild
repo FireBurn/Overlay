@@ -254,6 +254,11 @@ src_configure() {
 	# Wine's PE modules, DXVK and the rest all want one compiler, and that is
 	# llvm-mingw's clang, not whichever mingw gcc a host happens to carry
 	PATH=${BROOT}/usr/lib/llvm-mingw64/bin:${PATH}
+	# The ELF flags of make.conf (--as-needed, --build-id) mean something
+	# else to a PE link, and the DLLs come out with extra .text and .rdata
+	# sections that the loader jumps into
+	: "${CROSSLDFLAGS=-fuse-ld=lld}"
+	export CROSSLDFLAGS
 	wine_src_configure
 }
 
