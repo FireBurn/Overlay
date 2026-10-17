@@ -484,10 +484,11 @@ PY
         return 2
     fi
     info "bumped $pkg $old -> $new"
+    clear_workdir "$pkg"
     return 0
 }
 
-AGENT_RULES="Work only on the ebuilds in this overlay and leave them there, uncommitted, if you cannot finish. Builds run in Portage's default /var/tmp/portage; never set PORTAGE_TMPDIR. Read build failures in Portage's own /var/tmp/portage/<category>/<package>-<version>/temp/build.log and do not copy build logs elsewhere. Put downloads, unpacked sources and checkouts in $SCRATCH/<package name>/ and nowhere else outside the overlay (not /tmp); the caller empties it. Start long builds detached with their console output sent to /dev/null and block on the process until it ends. After fixing a failed build, resume with ebuild <ebuild> compile, and when the phases pass finish with sudo ebuild <ebuild> install qmerge, which installs the finished work directory without another full build; use a clean emerge only when the fix requires a fresh build. Keep one ebuild per package: rename the old ebuild to the new version (git mv) instead of adding one beside it, unless the package is slotted and the versions are in different slots. Live 9999 ebuilds stay. Record how to find upstream versions: if a package's entry in scripts/upstream-sources is missing, wrong or could not be checked, add or fix it using the methods documented at the top of that file, and add an @group when other ebuilds in this overlay share the same pattern. Leave scripts/upstream-sources uncommitted; the caller reports it for review. Run a normal emerge -1 of each new package and a relevant smoke test, then pkgcheck scan --repo FireBurn --commits. Commit only if emerge installed successfully and checks pass, one commit per package, using git commit --only -- <package paths> so changes already staged by someone else stay out of the commit. Leave a package unchanged and report why if there is no safe bump. Do not push."
+AGENT_RULES="Work only on the ebuilds in this overlay and leave them there, uncommitted, if you cannot finish. Builds run in Portage's default /var/tmp/portage; never set PORTAGE_TMPDIR. Read build failures in Portage's own /var/tmp/portage/<category>/<package>-<version>/temp/build.log and do not copy build logs elsewhere. Put downloads, unpacked sources and checkouts in $SCRATCH/<package name>/ and nowhere else outside the overlay (not /tmp); the caller empties it. Start long builds detached with their console output sent to /dev/null and block on the process until it ends. After fixing a failed build, resume with ebuild <ebuild> compile, and when the phases pass finish with sudo ebuild <ebuild> install qmerge clean, which installs the finished work directory without another full build and then removes it; use a clean emerge only when the fix requires a fresh build. Remove the package's directory under /var/tmp/portage when you stop, whether it built or not: /var/tmp/portage is RAM, and a leftover directory makes the packages after it fail their space check. Keep one ebuild per package: rename the old ebuild to the new version (git mv) instead of adding one beside it, unless the package is slotted and the versions are in different slots. Live 9999 ebuilds stay. Record how to find upstream versions: if a package's entry in scripts/upstream-sources is missing, wrong or could not be checked, add or fix it using the methods documented at the top of that file, and add an @group when other ebuilds in this overlay share the same pattern. Leave scripts/upstream-sources uncommitted; the caller reports it for review. Run a normal emerge -1 of each new package and a relevant smoke test, then pkgcheck scan --repo FireBurn --commits. Commit only if emerge installed successfully and checks pass, one commit per package, using git commit --only -- <package paths> so changes already staged by someone else stay out of the commit. Leave a package unchanged and report why if there is no safe bump. Do not push."
 
 # Token counts of opencode sessions in this directory since START_MS, for the log.
 agent_usage() {
@@ -498,9 +499,30 @@ agent_usage() {
          from session_v2 where directory = '$PWD' and time_created >= $1" 2>/dev/null
 }
 
+# Portage removes the work directory of a package it merges itself, but not
+# one finished with ebuild ... qmerge or one that failed. In the RAM-backed
+# /var/tmp/portage those pile up until the next package fails its space check,
+# so a package's directories go once it is done with. A build that is still
+# running keeps its directory. With "save", the build log is copied into the
+# run's logs first, as a failed build's log is what someone will want to read.
+clear_workdir() {
+    local pkg="$1" save="${2:-}" cat pn pid dir
+    cat="${pkg%/*}"; pn="$(pn_of "$pkg")"
+    for pid in $(portage_jobs); do
+        tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null | grep -q -- "$pn" && return 0
+    done
+    for dir in /var/tmp/portage/"$cat"/"$pn"-[0-9]* "$PREP_TMPDIR"/portage/"$cat"/"$pn"-[0-9]*; do
+        [[ -d "$dir" ]] || continue
+        [[ -n "$save" && -f "$dir/temp/build.log" ]] &&
+            cp "$dir/temp/build.log" "$RUN_DIR/build-${pkg//\//_}.log" 2>/dev/null
+        sudo -n rm -rf -- "$dir"
+    done
+}
+
 # Unfinished work stays in the overlay for the user; it is listed at the end.
 UNFINISHED=()
 leave_package() {
+    clear_workdir "$1" save
     package_clean "$1" && return 0
     in_list "$1" "${UNFINISHED[@]}" || UNFINISHED+=("$1")
     info "left $1 uncommitted in the overlay"
@@ -635,6 +657,7 @@ bump_agent() {
         leave_package "$pkg"
         return 2
     fi
+    clear_workdir "$pkg"
     if ! package_clean "$pkg"; then
         echo "ERROR: agent left uncommitted changes in $pkg" >&2
         leave_package "$pkg"
