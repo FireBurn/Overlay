@@ -83,6 +83,7 @@ IUSE="
 REQUIRED_USE="
 	X? ( truetype )
 	opengl? ( || ( X wayland ) )
+	udev? ( sdl )
 "
 RESTRICT="test"
 
