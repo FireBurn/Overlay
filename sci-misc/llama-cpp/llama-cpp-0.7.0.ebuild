@@ -162,7 +162,7 @@ else
 		@jridgewell/source-map@0.3.11
 		@jridgewell/sourcemap-codec@1.5.5
 		@jridgewell/trace-mapping@0.3.31
-		@lucide/svelte@1.25.0
+		@lucide/svelte@1.46.0
 		@mdx-js/react@3.1.1
 		@mermaid-js/parser@1.1.1
 		@modelcontextprotocol/sdk@1.30.0
@@ -1017,6 +1017,7 @@ else
 		uuid@13.0.2
 		valibot@1.4.2
 		vary@1.1.2
+		vaul-svelte@1.0.0-next.7
 		vfile@6.0.3
 		vfile-location@5.0.3
 		vfile-message@2.0.4
@@ -1253,16 +1254,15 @@ RDEPEND="${CDEPEND}
 
 PATCHES=(
 	"${FILESDIR}/0001-vulkan-handle-IQ4_XS-mat-vec-with-more-than-2-column.patch"
-	"${FILESDIR}/0.6.0/0002-vulkan-share-the-K-V-pass-between-query-rows-in-coop.patch"
+	"${FILESDIR}/0002-vulkan-share-the-K-V-pass-between-query-rows-in-coop.patch"
 	"${FILESDIR}/0003-qwen35-optional-reduced-vocab-LM-head-for-MTP-drafti.patch"
-	"${FILESDIR}/0.6.0/0004-vulkan-use-4-rows-for-legacy-quant-mat-vec-from-2-co.patch"
+	"${FILESDIR}/0004-vulkan-use-4-rows-for-legacy-quant-mat-vec-from-2-co.patch"
 	"${FILESDIR}/0005-hip-use-short-vectors-for-bf16-WMMA-builtins-with-LL.patch"
-	"${FILESDIR}/0.6.0/0006-server-keep-speculative-checkpoints-on-device.patch"
+	"${FILESDIR}/0006-server-keep-speculative-checkpoints-on-device.patch"
 	"${FILESDIR}/0007-hip-keep-MMQ-WMMA-k-loops-rolled-to-avoid-VGPR-spill.patch"
-	"${FILESDIR}/0.6.0/0008-cuda-use-8-lanes-per-state-column-in-gated-delta-net.patch"
 	"${FILESDIR}/0009-hip-share-the-FA-vec-K-V-pass-between-the-Q-heads-of.patch"
 	"${FILESDIR}/0010-vulkan-write-gated-delta-net-state-straight-into-the.patch"
-	"${FILESDIR}/0.6.0/0011-vulkan-use-a-subgroup-reduction-in-rms_norm-and-keep.patch"
+	"${FILESDIR}/0011-vulkan-use-a-subgroup-reduction-in-rms_norm-and-keep.patch"
 	"${FILESDIR}/0012-vulkan-dual-issue-friendly-int8-epilogue-in-cm1-mmq-.patch"
 	"${FILESDIR}/0013-vulkan-keep-Q-fragments-in-registers-in-coopmat1-fla.patch"
 	"${FILESDIR}/0014-vulkan-store-the-flash-attention-quantized-K-V-scrat.patch"
@@ -1381,6 +1381,10 @@ src_configure() {
 	fi
 
 	if use hip; then
+		# rocm_use_hipcc replaces CC and CXX, and the web UI's native
+		# addon needs the host's
+		_LLAMA_HOST_CC=$(tc-getCC)
+		_LLAMA_HOST_CXX=$(tc-getCXX)
 		rocm_use_hipcc
 		mycmakeargs+=( -DGGML_HIP=ON -DAMDGPU_TARGETS="$(get_amdgpu_flags)" )
 	fi
@@ -1415,8 +1419,16 @@ _llama_build_sharp() {
 	local npm_modules="${BROOT}/usr/$(get_libdir)/node_modules/npm/node_modules"
 	[[ -d ${npm_modules} ]] || npm_modules="${BROOT}/usr/lib/node_modules/npm/node_modules"
 
+	# The addon runs under Node on this machine, so it takes the host's
+	# compilers, not the hipcc that rocm_use_hipcc left in CC and CXX.
+	local -x CC=${_LLAMA_HOST_CC:-$(tc-getCC)} CXX=${_LLAMA_HOST_CXX:-$(tc-getCXX)}
+	local -x CFLAGS="-O2 -pipe" CXXFLAGS="-O2 -pipe"
+
 	pushd node_modules/sharp >/dev/null || die
-	HOME="${T}/npm-home" SHARP_FORCE_GLOBAL_LIBVIPS=1 \
+	# npm.eclass exports SHARP_IGNORE_GLOBAL_LIBVIPS, which would win over
+	# the request for the system's
+	env -u SHARP_IGNORE_GLOBAL_LIBVIPS \
+		HOME="${T}/npm-home" SHARP_FORCE_GLOBAL_LIBVIPS=1 \
 		npm_config_nodedir="${BROOT}/usr" NODE_PATH="${npm_modules}" \
 		npm run build || die "Failed to build sharp"
 	popd >/dev/null || die
