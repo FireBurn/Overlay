@@ -134,7 +134,9 @@ def split_spec(spec):
 
 def parse_pnpm(path, col):
     import yaml
-    lock = yaml.safe_load(path.read_text())
+    # pnpm 12 lockfiles start with a separate document for the package
+    # manager's own dependencies; the project's lock is the last one.
+    lock = list(yaml.safe_load_all(path.read_text()))[-1]
     ver = float(str(lock.get("lockfileVersion", "0")))
     for key, meta in (lock.get("packages") or {}).items():
         res = meta.get("resolution", {})
