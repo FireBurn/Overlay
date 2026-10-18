@@ -481,7 +481,7 @@ CRATES="
 	hyper-timeout@0.5.2
 	hyper-tls@0.6.0
 	hyper-util@0.1.20
-	hyper@1.8.1
+	hyper@1.11.1
 	i18n-config@0.4.8
 	i18n-embed-fl@0.10.1
 	i18n-embed-impl@0.8.4
@@ -571,6 +571,7 @@ CRATES="
 	libsqlite3-sys@0.37.0
 	line-clipping@0.3.7
 	link-section@0.17.2
+	linkify@0.11.0
 	linktime-proc-macro@0.1.0
 	linux-keyutils@0.2.4
 	linux-raw-sys@0.12.1
@@ -780,7 +781,7 @@ CRATES="
 	quick-xml@0.39.4
 	quick-xml@0.41.0
 	quickcheck@1.1.0
-	quinn-proto@0.11.15
+	quinn-proto@0.11.18
 	quinn-udp@0.5.14
 	quinn-udp@0.6.1
 	quinn@0.11.9
@@ -814,6 +815,7 @@ CRATES="
 	rand_core@0.10.1
 	rand_core@0.6.4
 	rand_core@0.9.5
+	rand_pcg@0.10.2
 	rand_regex@0.18.1
 	rand_xorshift@0.4.0
 	ratatui-core@0.1.2
@@ -1312,8 +1314,8 @@ declare -A GIT_CRATES=(
 	[nucleo]='https://github.com/helix-editor/nucleo;4253de9faabb4e5c6d81d946a5e35a90f87347ee;nucleo-%commit%'
 	[nucleo-matcher]='https://github.com/helix-editor/nucleo;4253de9faabb4e5c6d81d946a5e35a90f87347ee;nucleo-%commit%/matcher'
 	[process_security_environment_spec]='https://github.com/microsoft/mxc;6cd3d58f05d3447e67109cfb75e042803b843ca4;mxc-%commit%/src/core/generated/process_security_environment_specification'
-	[rmcp]='https://github.com/modelcontextprotocol/rust-sdk;3e636cab26c013eca5131103c03d20237f12c4df;rust-sdk-%commit%/crates/rmcp'
-	[rmcp-macros]='https://github.com/modelcontextprotocol/rust-sdk;3e636cab26c013eca5131103c03d20237f12c4df;rust-sdk-%commit%/crates/rmcp-macros'
+	[rmcp]='https://github.com/modelcontextprotocol/rust-sdk;4048ac40e958fb1a7d614617a2ae8d26666ee2fa;rust-sdk-%commit%/crates/rmcp'
+	[rmcp-macros]='https://github.com/modelcontextprotocol/rust-sdk;4048ac40e958fb1a7d614617a2ae8d26666ee2fa;rust-sdk-%commit%/crates/rmcp-macros'
 	[runfiles]='https://github.com/dzbarsky/rules_rust;b56cbaa8465e74127f1ea216f813cd377295ad81;rules_rust-%commit%/rust/runfiles'
 	[sandbox_spec]='https://github.com/microsoft/mxc;6cd3d58f05d3447e67109cfb75e042803b843ca4;mxc-%commit%/src/core/generated/base_container_specification'
 	[tokio-tungstenite]='https://github.com/openai-oss-forks/tokio-tungstenite;0e5b2d73aa18dd9f0a50ee9ff199d5aef7594186;tokio-tungstenite-%commit%'
