@@ -342,7 +342,6 @@ NPM_PKGS="
 	@gar/promise-retry@1.0.3
 	@graphql-typed-document-node/core@3.2.0
 	@happy-dom/global-registrator@20.0.11
-	@hono/standard-validator@0.2.0
 	@ibm/plex@6.4.1
 	@ibm/telemetry-js@1.11.0
 	@iconify/types@2.0.0
@@ -480,7 +479,6 @@ NPM_PKGS="
 	@opencode-ai/pty-linux-x64-gnu@0.2.0|amd64
 	@opencode-ai/pty-linux-x64-musl@0.2.0|amd64
 	@opencode-ai/schema@0.0.0-beta-18050
-	@opencode-ai/sdk@1.18.21
 	@opentelemetry/api@1.9.0
 	@opentelemetry/api@1.9.1
 	@opentelemetry/api-logs@0.219.0
@@ -701,8 +699,6 @@ NPM_PKGS="
 	@solidjs/meta@0.29.4
 	@solidjs/router@1.0.0
 	@speed-highlight/core@1.2.24
-	@standard-community/standard-json@0.3.5
-	@standard-community/standard-openapi@0.2.9
 	@standard-schema/spec@1.1.0
 	@storybook/addon-a11y@10.4.4
 	@storybook/addon-docs@10.4.4
@@ -801,7 +797,6 @@ NPM_PKGS="
 	@types/hast@3.0.5
 	@types/http-cache-semantics@4.2.0
 	@types/js-yaml@4.0.9
-	@types/json-schema@7.0.15
 	@types/keyv@3.1.4
 	@types/luxon@3.7.1
 	@types/mdast@4.0.4
@@ -1367,7 +1362,6 @@ NPM_PKGS="
 	he@1.2.0
 	heap-snapshot-toolkit@1.1.3
 	hono@4.10.7
-	hono-openapi@1.1.2
 	hosted-git-info@4.1.0
 	hosted-git-info@9.0.3
 	html-entities@2.3.3
@@ -1713,7 +1707,6 @@ NPM_PKGS="
 	oniguruma-to-es@4.3.6
 	open@11.0.4
 	openai@6.49.0
-	openapi-types@12.1.3
 	openid-client@5.6.4
 	opentui-spinner@0.0.7
 	own-keys@1.0.2
@@ -1809,7 +1802,6 @@ NPM_PKGS="
 	pvtsutils@1.3.6
 	pvutils@1.2.0
 	qr-scanner@1.4.2
-	quansync@0.2.11
 	queue-microtask@1.2.3
 	quick-lru@5.1.1
 	radix3@1.1.2
