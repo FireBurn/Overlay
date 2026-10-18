@@ -47,20 +47,18 @@ NPM_PKGS="
 	@bcoe/v8-coverage@0.2.3
 	@develar/schema-utils@2.6.5
 	@discordjs/collection@2.1.1
-	@discordjs/rest@2.6.0
+	@discordjs/rest@2.6.3
 	@discordjs/util@1.2.0
 	@electron-internal/extract-zip@1.0.4
 	@electron/asar@3.4.1
 	@electron/fuses@1.8.0
 	@electron/get@3.1.0
 	@electron/get@5.0.0
-	@electron/notarize@2.2.1
 	@electron/notarize@2.5.0
-	@electron/osx-sign@1.0.5
 	@electron/osx-sign@1.3.3
 	@electron/rebuild@4.0.3
-	@electron/universal@1.5.1
 	@electron/universal@2.0.3
+	@electron/windows-sign@1.2.2
 	@emnapi/core@1.4.3
 	@emnapi/runtime@1.4.3
 	@emnapi/wasi-threads@1.0.2
@@ -133,7 +131,6 @@ NPM_PKGS="
 	@jridgewell/trace-mapping@0.3.25
 	@kwsites/file-exists@1.1.1
 	@kwsites/promise-deferred@1.1.1
-	@malept/cross-spawn-promise@1.1.1
 	@malept/cross-spawn-promise@2.0.0
 	@malept/flatpak-bundler@0.4.0
 	@mui/core-downloads-tracker@5.18.0
@@ -154,19 +151,19 @@ NPM_PKGS="
 	@npmcli/fs@3.1.1
 	@npmcli/fs@4.0.0
 	@parcel/watcher@2.5.1
-	@parcel/watcher-linux-arm64-glibc@2.5.1|arm64
-	@parcel/watcher-linux-arm64-musl@2.5.1|arm64
-	@parcel/watcher-linux-x64-glibc@2.5.1|amd64
-	@parcel/watcher-linux-x64-musl@2.5.1|amd64
+	@parcel/watcher-linux-arm64-glibc@2.5.1|arm64,elibc_glibc
+	@parcel/watcher-linux-arm64-musl@2.5.1|arm64,elibc_musl
+	@parcel/watcher-linux-x64-glibc@2.5.1|amd64,elibc_glibc
+	@parcel/watcher-linux-x64-musl@2.5.1|amd64,elibc_musl
 	@pkgjs/parseargs@0.11.0
 	@playwright/test@1.55.1
 	@popperjs/core@2.11.8
 	@remix-run/router@1.23.0
 	@rollup/pluginutils@5.1.4
-	@rollup/rollup-linux-arm64-gnu@4.60.1|arm64
-	@rollup/rollup-linux-arm64-musl@4.60.1|arm64
-	@rollup/rollup-linux-x64-gnu@4.60.1|amd64
-	@rollup/rollup-linux-x64-musl@4.60.1|amd64
+	@rollup/rollup-linux-arm64-gnu@4.60.1|arm64,elibc_glibc
+	@rollup/rollup-linux-arm64-musl@4.60.1|arm64,elibc_musl
+	@rollup/rollup-linux-x64-gnu@4.60.1|amd64,elibc_glibc
+	@rollup/rollup-linux-x64-musl@4.60.1|amd64,elibc_musl
 	@sapphire/async-queue@1.5.5
 	@sapphire/snowflake@3.5.5
 	@shockpkg/icon-encoder@2.1.3
@@ -187,10 +184,10 @@ NPM_PKGS="
 	@svgr/hast-util-to-babel-ast@8.0.0
 	@svgr/plugin-jsx@8.1.0
 	@swc/core@1.11.24
-	@swc/core-linux-arm64-gnu@1.11.24|arm64
-	@swc/core-linux-arm64-musl@1.11.24|arm64
-	@swc/core-linux-x64-gnu@1.11.24|amd64
-	@swc/core-linux-x64-musl@1.11.24|amd64
+	@swc/core-linux-arm64-gnu@1.11.24|arm64,elibc_glibc
+	@swc/core-linux-arm64-musl@1.11.24|arm64,elibc_musl
+	@swc/core-linux-x64-gnu@1.11.24|amd64,elibc_glibc
+	@swc/core-linux-x64-musl@1.11.24|amd64,elibc_musl
 	@swc/counter@0.1.3
 	@swc/types@0.1.21
 	@szmarczak/http-timer@4.0.6
@@ -198,7 +195,6 @@ NPM_PKGS="
 	@testing-library/jest-dom@5.17.0
 	@testing-library/react@14.3.1
 	@testing-library/user-event@14.6.1
-	@tootallnate/once@2.0.0
 	@ts-morph/common@0.18.1
 	@tybys/wasm-util@0.9.0
 	@types/aria-query@5.0.4
@@ -217,7 +213,6 @@ NPM_PKGS="
 	@types/d3-time@3.0.4
 	@types/d3-timer@3.0.2
 	@types/debug@4.1.12
-	@types/debug@4.1.13
 	@types/estree@1.0.7
 	@types/estree@1.0.8
 	@types/fs-extra@11.0.4
@@ -277,19 +272,18 @@ NPM_PKGS="
 	@typescript-eslint/utils@8.34.1
 	@typescript-eslint/visitor-keys@6.21.0
 	@typescript-eslint/visitor-keys@8.34.1
-	@unrs/resolver-binding-linux-arm64-gnu@1.9.1|arm64
-	@unrs/resolver-binding-linux-arm64-musl@1.9.1|arm64
-	@unrs/resolver-binding-linux-x64-gnu@1.9.1|amd64
-	@unrs/resolver-binding-linux-x64-musl@1.9.1|amd64
+	@unrs/resolver-binding-linux-arm64-gnu@1.9.1|arm64,elibc_glibc
+	@unrs/resolver-binding-linux-arm64-musl@1.9.1|arm64,elibc_musl
+	@unrs/resolver-binding-linux-x64-gnu@1.9.1|amd64,elibc_glibc
+	@unrs/resolver-binding-linux-x64-musl@1.9.1|amd64,elibc_musl
 	@vitejs/plugin-react-swc@3.9.0
 	@vladfrangu/async_event_emitter@2.4.7
-	@xhayper/discord-rpc@1.3.0
+	@xhayper/discord-rpc@1.5.1
 	@xmldom/xmldom@0.8.10
 	abbrev@2.0.0
 	abbrev@3.0.1
 	acorn@8.15.0
 	acorn-jsx@5.3.2
-	agent-base@6.0.2
 	agent-base@7.1.3
 	aggregate-error@3.1.0
 	ajv@6.12.6
@@ -304,13 +298,8 @@ NPM_PKGS="
 	ansi-styles@6.2.1
 	any-base@1.1.0
 	anymatch@3.1.3
-	app-builder-bin@4.0.0
 	app-builder-bin@5.0.0-alpha.12
-	app-builder-lib@24.13.3
 	app-builder-lib@26.8.1
-	archiver@5.3.2
-	archiver-utils@2.1.0
-	archiver-utils@3.0.4
 	argparse@1.0.10
 	argparse@2.0.1
 	aria-query@5.1.3
@@ -347,14 +336,10 @@ NPM_PKGS="
 	base64-js@1.5.1
 	bl@4.1.0
 	bl@5.1.0
-	bluebird@3.7.2
-	bluebird-lst@1.0.9
 	boolbase@1.0.0
 	boolean@3.2.0
 	brace-expansion@1.1.12
-	brace-expansion@1.1.13
 	brace-expansion@2.0.2
-	brace-expansion@2.0.3
 	brace-expansion@5.0.2
 	braces@3.0.3
 	broccoli-node-api@1.7.0
@@ -366,12 +351,8 @@ NPM_PKGS="
 	bser@2.1.1
 	buffer@5.7.1
 	buffer@6.0.3
-	buffer-crc32@0.2.13
-	buffer-equal@1.0.1
 	buffer-from@1.1.2
-	builder-util@24.13.1
 	builder-util@26.8.1
-	builder-util-runtime@9.2.4
 	builder-util-runtime@9.5.1
 	cac@6.7.14
 	cacache@18.0.4
@@ -422,12 +403,11 @@ NPM_PKGS="
 	commander@12.1.0
 	commander@5.1.0
 	commander@6.2.1
+	commander@9.5.0
 	comment-parser@1.4.1
 	compare-version@0.1.2
-	compress-commons@4.1.2
 	concat-map@0.0.1
 	conf@10.2.0
-	config-file-ts@0.2.6
 	convert-source-map@1.9.0
 	convert-source-map@2.0.0
 	core-util-is@1.0.2
@@ -435,9 +415,8 @@ NPM_PKGS="
 	cosmiconfig@7.1.0
 	cosmiconfig@8.3.6
 	crc@3.8.0
-	crc-32@1.2.2
-	crc32-stream@4.0.3
 	create-jest@29.7.0
+	cross-dirname@0.1.0
 	cross-env@7.0.3
 	cross-fetch@4.0.0
 	cross-spawn@7.0.5
@@ -486,10 +465,9 @@ NPM_PKGS="
 	detect-node@2.1.0
 	diff@5.2.0
 	diff-sequences@29.6.3
-	dir-compare@3.3.0
 	dir-compare@4.2.0
 	dir-glob@3.0.1
-	discord-api-types@0.38.36
+	discord-api-types@0.38.55
 	dmg-builder@26.8.1
 	doctrine@2.1.0
 	dom-accessibility-api@0.5.16
@@ -501,23 +479,21 @@ NPM_PKGS="
 	dot-case@3.0.4
 	dot-prop@6.0.1
 	dotenv@16.5.0
-	dotenv@9.0.2
 	dotenv-expand@11.0.7
-	dotenv-expand@5.1.0
 	dunder-proto@1.0.1
 	eastasianwidth@0.2.0
 	easydl@1.2.0
 	ejs@3.1.10
 	electron@43.1.1
 	electron-builder@26.8.1
-	electron-builder-squirrel-windows@24.13.3
+	electron-builder-squirrel-windows@26.8.1
 	electron-devtools-installer@4.0.0
-	electron-publish@24.13.1
 	electron-publish@26.8.1
 	electron-store@8.2.0
 	electron-to-chromium@1.5.149
 	electron-updater@6.8.3
 	electron-vite@3.1.0
+	electron-winstaller@5.4.0
 	emittery@0.13.1
 	emoji-regex@8.0.0
 	emoji-regex@9.2.2
@@ -603,9 +579,9 @@ NPM_PKGS="
 	for-each@0.3.5
 	foreground-child@3.3.1
 	form-data@4.0.5
-	fs-constants@1.0.0
 	fs-extra@10.1.0
 	fs-extra@11.3.0
+	fs-extra@7.0.1
 	fs-extra@8.1.0
 	fs-extra@9.1.0
 	fs-merger@3.2.1
@@ -666,10 +642,8 @@ NPM_PKGS="
 	htmlparser2@8.0.2
 	htmlparser2@9.1.0
 	http-cache-semantics@4.1.1
-	http-proxy-agent@5.0.0
 	http-proxy-agent@7.0.2
 	http2-wrapper@1.0.3
-	https-proxy-agent@5.0.1
 	https-proxy-agent@7.0.6
 	human-signals@2.1.0
 	husky@8.0.3
@@ -706,7 +680,6 @@ NPM_PKGS="
 	is-buffer@2.0.5
 	is-bun-module@2.0.0
 	is-callable@1.2.7
-	is-ci@3.0.1
 	is-core-module@2.16.1
 	is-data-view@1.0.2
 	is-date-object@1.1.0
@@ -741,7 +714,6 @@ NPM_PKGS="
 	isarray@2.0.5
 	isbinaryfile@4.0.10
 	isbinaryfile@5.0.4
-	isbinaryfile@5.0.7
 	isexe@2.0.0
 	isexe@3.1.1
 	istanbul-lib-coverage@3.2.2
@@ -801,7 +773,6 @@ NPM_PKGS="
 	kleur@3.0.3
 	kleur@4.1.5
 	lazy-val@1.0.5
-	lazystream@1.0.1
 	lead@4.0.0
 	leven@3.1.0
 	levn@0.4.1
@@ -812,15 +783,10 @@ NPM_PKGS="
 	locate-path@5.0.0
 	locate-path@6.0.0
 	lodash@4.17.21
-	lodash.defaults@4.2.0
-	lodash.difference@4.5.0
 	lodash.escaperegexp@4.1.2
-	lodash.flatten@4.4.0
 	lodash.isequal@4.5.0
-	lodash.isplainobject@4.0.6
 	lodash.memoize@4.1.2
 	lodash.merge@4.6.2
-	lodash.union@4.6.0
 	log-symbols@4.1.0
 	loose-envify@1.4.0
 	lower-case@2.0.2
@@ -829,7 +795,7 @@ NPM_PKGS="
 	lru-cache@5.1.1
 	lru-cache@6.0.0
 	lz-string@1.5.0
-	magic-bytes.js@1.12.1
+	magic-bytes.js@1.13.1
 	magic-string@0.30.17
 	make-dir@4.0.0
 	make-error@1.3.6
@@ -878,9 +844,7 @@ NPM_PKGS="
 	minimatch@10.0.1
 	minimatch@10.2.2
 	minimatch@3.1.2
-	minimatch@3.1.5
 	minimatch@5.1.6
-	minimatch@5.1.9
 	minimatch@9.0.3
 	minimatch@9.0.5
 	minimist@1.2.8
@@ -982,6 +946,7 @@ NPM_PKGS="
 	possible-typed-array-names@1.1.0
 	postcss@8.5.3
 	postcss@8.5.8
+	postject@1.0.0-alpha.6
 	prelude-ls@1.2.1
 	prettier@3.7.4
 	pretty-format@27.5.1
@@ -1018,12 +983,10 @@ NPM_PKGS="
 	react-smooth@4.0.4
 	react-transition-group@4.4.5
 	read-binary-file-arch@1.0.6
-	read-config-file@6.3.2
 	read-pkg@5.2.0
 	read-pkg-up@7.0.1
 	readable-stream@2.3.8
 	readable-stream@3.6.2
-	readdir-glob@1.1.3
 	readdirp@4.1.2
 	recharts@2.15.3
 	recharts-scale@0.4.5
@@ -1053,6 +1016,7 @@ NPM_PKGS="
 	restore-cursor@3.1.0
 	retry@0.12.0
 	reusify@1.1.0
+	rimraf@2.6.3
 	rimraf@2.7.1
 	rimraf@3.0.2
 	roarr@2.15.4
@@ -1068,16 +1032,13 @@ NPM_PKGS="
 	safe-push-apply@1.0.0
 	safe-regex-test@1.1.0
 	safer-buffer@2.1.2
-	sanitize-filename@1.6.3
 	sanitize-filename@1.6.4
 	sanitize-html@2.16.0
 	sass@1.89.0
 	sax@1.4.1
-	sax@1.6.0
 	scheduler@0.23.2
 	semver@5.7.2
 	semver@6.3.1
-	semver@7.7.2
 	semver@7.7.4
 	semver-compare@1.0.0
 	serialize-error@7.0.1
@@ -1154,8 +1115,8 @@ NPM_PKGS="
 	symlink-or-copy@1.3.1
 	tar@6.2.1
 	tar@7.5.9
-	tar-stream@2.2.0
 	teex@1.0.1
+	temp@0.9.4
 	temp-file@3.4.0
 	term-size@2.2.1
 	test-exclude@6.0.0
@@ -1196,13 +1157,12 @@ NPM_PKGS="
 	typed-array-byte-offset@1.0.4
 	typed-array-length@1.0.7
 	typed-emitter@2.1.0
-	typescript@5.8.3
 	typescript@5.9.3
 	typescript-eslint@8.34.1
 	unbox-primitive@1.1.0
 	underscore.string@3.3.6
-	undici@6.21.3
 	undici@6.24.1
+	undici@6.28.1
 	undici@7.24.7
 	undici-types@6.21.0
 	undici-types@7.16.0
@@ -1267,7 +1227,6 @@ NPM_PKGS="
 	wrap-ansi@8.1.0
 	wrappy@1.0.2
 	write-file-atomic@4.0.2
-	ws@8.18.3
 	xmlbuilder@15.1.1
 	xtend@4.0.2
 	xvfb-maybe@0.2.1
@@ -1282,10 +1241,113 @@ NPM_PKGS="
 	yargs-parser@20.2.9
 	yargs-parser@21.1.1
 	yocto-queue@0.1.0
-	zip-stream@4.1.1
 	zod@3.25.6
 	zustand@4.5.6
 	zwitch@2.0.4
+"
+NPM_STUB_PKGS="
+	@esbuild/aix-ppc64@0.25.12
+	@esbuild/aix-ppc64@0.25.3
+	@esbuild/android-arm64@0.25.12
+	@esbuild/android-arm64@0.25.3
+	@esbuild/android-arm@0.25.12
+	@esbuild/android-arm@0.25.3
+	@esbuild/android-x64@0.25.12
+	@esbuild/android-x64@0.25.3
+	@esbuild/darwin-arm64@0.25.12
+	@esbuild/darwin-arm64@0.25.3
+	@esbuild/darwin-x64@0.25.12
+	@esbuild/darwin-x64@0.25.3
+	@esbuild/freebsd-arm64@0.25.12
+	@esbuild/freebsd-arm64@0.25.3
+	@esbuild/freebsd-x64@0.25.12
+	@esbuild/freebsd-x64@0.25.3
+	@esbuild/linux-arm@0.25.12
+	@esbuild/linux-arm@0.25.3
+	@esbuild/linux-ia32@0.25.12
+	@esbuild/linux-ia32@0.25.3
+	@esbuild/linux-loong64@0.25.12
+	@esbuild/linux-loong64@0.25.3
+	@esbuild/linux-mips64el@0.25.12
+	@esbuild/linux-mips64el@0.25.3
+	@esbuild/linux-ppc64@0.25.12
+	@esbuild/linux-ppc64@0.25.3
+	@esbuild/linux-riscv64@0.25.12
+	@esbuild/linux-riscv64@0.25.3
+	@esbuild/linux-s390x@0.25.12
+	@esbuild/linux-s390x@0.25.3
+	@esbuild/netbsd-arm64@0.25.12
+	@esbuild/netbsd-arm64@0.25.3
+	@esbuild/netbsd-x64@0.25.12
+	@esbuild/netbsd-x64@0.25.3
+	@esbuild/openbsd-arm64@0.25.12
+	@esbuild/openbsd-arm64@0.25.3
+	@esbuild/openbsd-x64@0.25.12
+	@esbuild/openbsd-x64@0.25.3
+	@esbuild/openharmony-arm64@0.25.12
+	@esbuild/sunos-x64@0.25.12
+	@esbuild/sunos-x64@0.25.3
+	@esbuild/win32-arm64@0.25.12
+	@esbuild/win32-arm64@0.25.3
+	@esbuild/win32-ia32@0.25.12
+	@esbuild/win32-ia32@0.25.3
+	@esbuild/win32-x64@0.25.12
+	@esbuild/win32-x64@0.25.3
+	@parcel/watcher-android-arm64@2.5.1
+	@parcel/watcher-darwin-arm64@2.5.1
+	@parcel/watcher-darwin-x64@2.5.1
+	@parcel/watcher-freebsd-x64@2.5.1
+	@parcel/watcher-linux-arm-glibc@2.5.1
+	@parcel/watcher-linux-arm-musl@2.5.1
+	@parcel/watcher-win32-arm64@2.5.1
+	@parcel/watcher-win32-ia32@2.5.1
+	@parcel/watcher-win32-x64@2.5.1
+	@rollup/rollup-android-arm-eabi@4.60.1
+	@rollup/rollup-android-arm64@4.60.1
+	@rollup/rollup-darwin-arm64@4.60.1
+	@rollup/rollup-darwin-x64@4.60.1
+	@rollup/rollup-freebsd-arm64@4.60.1
+	@rollup/rollup-freebsd-x64@4.60.1
+	@rollup/rollup-linux-arm-gnueabihf@4.60.1
+	@rollup/rollup-linux-arm-musleabihf@4.60.1
+	@rollup/rollup-linux-loong64-gnu@4.60.1
+	@rollup/rollup-linux-loong64-musl@4.60.1
+	@rollup/rollup-linux-ppc64-gnu@4.60.1
+	@rollup/rollup-linux-ppc64-musl@4.60.1
+	@rollup/rollup-linux-riscv64-gnu@4.60.1
+	@rollup/rollup-linux-riscv64-musl@4.60.1
+	@rollup/rollup-linux-s390x-gnu@4.60.1
+	@rollup/rollup-openbsd-x64@4.60.1
+	@rollup/rollup-openharmony-arm64@4.60.1
+	@rollup/rollup-win32-arm64-msvc@4.60.1
+	@rollup/rollup-win32-ia32-msvc@4.60.1
+	@rollup/rollup-win32-x64-gnu@4.60.1
+	@rollup/rollup-win32-x64-msvc@4.60.1
+	@swc/core-darwin-arm64@1.11.24
+	@swc/core-darwin-x64@1.11.24
+	@swc/core-linux-arm-gnueabihf@1.11.24
+	@swc/core-win32-arm64-msvc@1.11.24
+	@swc/core-win32-ia32-msvc@1.11.24
+	@swc/core-win32-x64-msvc@1.11.24
+	@unrs/resolver-binding-android-arm-eabi@1.9.1
+	@unrs/resolver-binding-android-arm64@1.9.1
+	@unrs/resolver-binding-darwin-arm64@1.9.1
+	@unrs/resolver-binding-darwin-x64@1.9.1
+	@unrs/resolver-binding-freebsd-x64@1.9.1
+	@unrs/resolver-binding-linux-arm-gnueabihf@1.9.1
+	@unrs/resolver-binding-linux-arm-musleabihf@1.9.1
+	@unrs/resolver-binding-linux-ppc64-gnu@1.9.1
+	@unrs/resolver-binding-linux-riscv64-gnu@1.9.1
+	@unrs/resolver-binding-linux-riscv64-musl@1.9.1
+	@unrs/resolver-binding-linux-s390x-gnu@1.9.1
+	@unrs/resolver-binding-wasm32-wasi@1.9.1
+	@unrs/resolver-binding-win32-arm64-msvc@1.9.1
+	@unrs/resolver-binding-win32-ia32-msvc@1.9.1
+	@unrs/resolver-binding-win32-x64-msvc@1.9.1
+	dmg-license@1.0.11
+	fsevents@2.3.2
+	fsevents@2.3.3
+	iconv-corefoundation@1.1.7
 "
 NPM_PNPM_VERSION="10.28.0"
 ELECTRON_SLOT="44"
@@ -1326,6 +1388,19 @@ BDEPEND="${NPM_NODE_DEPEND}"
 # sends Heroic looking for its UI and assets in the source layout
 PATCHES=( "${FILESDIR}/${P}-system-electron-paths.patch" )
 
+src_prepare() {
+	default
+
+	# The pnpm 10 provided here cannot read a pnpm 12 lockfile: the first
+	# document is for pnpm's own dependencies, and a patched dependency is
+	# a bare hash where pnpm 10 expects hash and path
+	sed -i -E \
+		-e '1,/^---$/d' \
+		-e "/^patchedDependencies:/,/^\$/{s|^  ('(.+)'): ([0-9a-f]{64})\$|  \1:\n    hash: \3\n    path: patches/\2.patch|}" \
+		-e ':a;s|(path: patches/[^/]*)/|\1__|;ta' \
+		pnpm-lock.yaml || die
+}
+
 src_compile() {
 	electron_setup_env
 
@@ -1335,7 +1410,8 @@ src_compile() {
 	# The installed app gets a production-only node_modules
 	local prod="${WORKDIR}/prod"
 	mkdir -p "${prod}" || die
-	cp -r package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc patches "${prod}" || die
+	cp -r package.json pnpm-lock.yaml pnpm-workspace.yaml patches "${prod}" || die
+	[[ -f .npmrc ]] && { cp .npmrc "${prod}" || die; }
 	pushd "${prod}" >/dev/null || die
 	npm_with_registry pnpm install --frozen-lockfile --prod --ignore-scripts
 	popd >/dev/null || die
