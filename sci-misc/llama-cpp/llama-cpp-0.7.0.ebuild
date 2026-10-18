@@ -1199,7 +1199,7 @@ else
 	XDNA_COMMIT="fade39f670ae40af184a529e61c8eaa7b799c3b2"
 fi
 
-inherit cmake cuda flag-o-matic linux-info npm rocm
+inherit cmake cuda flag-o-matic linux-info npm rocm toolchain-funcs
 [[ ${PV} == 9999 ]] && inherit git-r3
 
 DESCRIPTION="Port of Facebook's LLaMA model in C/C++, with its web UI"
