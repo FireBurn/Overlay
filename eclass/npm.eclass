@@ -151,6 +151,22 @@ _npm_set_pkg_uris() {
 		fi
 		NPM_PKG_URIS+="${open}${NPM_REGISTRY_URI}/${name}/-/${base}-${version}.tgz -> ${file}${close}
 "
+		# llvm-libc answers to both glibc and musl, and install scripts that
+		# probe the libc may ask for either package
+		if [[ ${conds} == *elibc_glibc* || ${conds} == *elibc_musl* ]]; then
+			conds=${conds//elibc_glibc/elibc_llvm}
+			conds=${conds//elibc_musl/elibc_llvm}
+			open= close=
+			local IFS=,
+			cond_list=( ${conds} )
+			unset IFS
+			for cond in "${cond_list[@]}"; do
+				open+="${cond}? ( "
+				close+=" )"
+			done
+			NPM_PKG_URIS+="${open}${NPM_REGISTRY_URI}/${name}/-/${base}-${version}.tgz -> ${file}${close}
+"
+		fi
 	done
 	if [[ -n ${NPM_PNPM_VERSION} ]]; then
 		NPM_PKG_URIS+="${NPM_REGISTRY_URI}/pnpm/-/pnpm-${NPM_PNPM_VERSION}.tgz -> pnpm-${NPM_PNPM_VERSION}.npm-tool.tgz
@@ -158,6 +174,9 @@ _npm_set_pkg_uris() {
 	fi
 }
 _npm_set_pkg_uris
+
+# Not a value the gentoo profiles declare
+IUSE+=" elibc_llvm"
 
 if [[ -z ${NPM_OPTIONAL} ]]; then
 	BDEPEND="${NPM_NODE_DEPEND}"
