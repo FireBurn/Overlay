@@ -263,3 +263,33 @@ ABI char *gettext(const char *m) { return (char *)m; }
 ABI char *dgettext(const char *d, const char *m) { (void)d; return (char *)m; }
 ABI char *bindtextdomain(const char *d, const char *dir) { (void)d; return (char *)dir; }
 ABI char *bind_textdomain_codeset(const char *d, const char *c) { (void)d; return (char *)c; }
+
+// Internal names glibc's headers and older libm exported. Programs built
+// against them call these instead of the macros and functions behind them.
+ABI int __finite(double x) { return __builtin_isfinite(x); }
+ABI int __isnan(double x) { return __builtin_isnan(x); }
+ABI int __isnanf(float x) { return __builtin_isnan(x); }
+ABI int __signbit(double x) { return __builtin_signbit(x); }
+ABI int __signbitl(long double x) { return __builtin_signbit(x); }
+
+ABI struct cmsghdr *__cmsg_nxthdr(struct msghdr *m, struct cmsghdr *c) { return CMSG_NXTHDR(m, c); }
+
+// The POSIX basename, which may edit the path in place, under the name glibc
+// gives it since <libgen.h> renames it.
+ABI char *__xpg_basename(char *p) {
+	static char dot[] = ".", slash[] = "/";
+	char *e, *b;
+	if (!p || !*p) return dot;
+	e = p + strlen(p);
+	while (e > p + 1 && e[-1] == '/') e--;
+	if (e == p + 1 && *p == '/') return slash;
+	b = e;
+	while (b > p && b[-1] != '/') b--;
+	*e = 0;
+	return b;
+}
+
+int res_ninit(void *);
+void res_nclose(void *);
+ABI int __res_ninit(void *s) { return res_ninit(s); }
+ABI void __res_nclose(void *s) { res_nclose(s); }
