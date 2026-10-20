@@ -19,6 +19,7 @@ RESTRICT="bindist mirror test"
 RDEPEND="
 	${PYTHON_DEPS}
 	app-shells/bash
+	games-util/game-device-udev-rules
 	net-misc/curl
 	sys-apps/coreutils
 "
