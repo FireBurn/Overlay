@@ -3,7 +3,7 @@
 
 EAPI=8
 
-DISTUTILS_USE_PEP517=uv-build
+DISTUTILS_USE_PEP517=hatchling
 PYTHON_COMPAT=( python3_{12..14} )
 DISTUTILS_SINGLE_IMPL=1
 inherit distutils-r1
@@ -27,6 +27,16 @@ RDEPEND="
 
 src_prepare() {
 	distutils-r1_src_prepare
+
+	sed -i -e '/^\[build-system\]/,/^$/d' -e '/^\[tool\.uv/,$d' pyproject.toml || die
+	cat >> pyproject.toml <<-EOF || die
+		[build-system]
+		requires = ["hatchling"]
+		build-backend = "hatchling.build"
+
+		[tool.hatch.build.targets.wheel]
+		packages = ["legendary"]
+	EOF
 
 	# Gentoo's pycryptodome provides the Crypto namespace, not Cryptodome
 	grep -rlZ Cryptodome legendary | xargs -0 sed -i 's/\bCryptodome\b/Crypto/g' || die
