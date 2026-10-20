@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE pkgmetadata SYSTEM "https://www.gentoo.org/dtd/metadata.dtd">
+<pkgmetadata>
+	<maintainer type="person">
+		<email>mike@fireburn.co.uk</email>
+		<name>Mike Lothian</name>
+	</maintainer>
+	<upstream>
+		<remote-id type="pypi">claude-swap</remote-id>
+		<remote-id type="github">realiti4/claude-swap</remote-id>
+	</upstream>
+</pkgmetadata>
