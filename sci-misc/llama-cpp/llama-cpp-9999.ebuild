@@ -95,6 +95,7 @@ PATCHES=(
 	"${FILESDIR}/0024-vulkan-use-the-integer-mat-vec-for-q6_K-with-three-o.patch"
 	"${FILESDIR}/0025-vulkan-compute-two-rows-per-workgroup-in-the-integer.patch"
 	"${FILESDIR}/0026-vulkan-fuse-the-bias-add-into-the-mat-vec-for-small-.patch"
+	"${FILESDIR}/0027-vulkan-split-the-K-V-range-of-multi-row-flash-attent.patch"
 )
 
 pkg_setup() {

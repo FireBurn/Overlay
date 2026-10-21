@@ -1,0 +1,41 @@
+From aa8ab0504deda8ef55958aa2c7ccdee3eab924ca Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Wed, 21 Oct 2026 20:24:43 +0100
+Subject: [PATCH] vulkan : split the K/V range of multi-row flash attention
+ more on AMD
+
+Flash attention with more than eight rows (long speculative decoding
+verification batches) split the K/V range only until there were two
+workgroups per CU. At long context that leaves too few K/V loads in flight.
+Target eight workgroups per CU on AMD. On a Radeon AI PRO R9700 a 64 token
+batch at 262144 tokens of context is 13 to 15% faster and at 65536 tokens
+about 10% faster. Decode, shorter contexts and large prompt batches are
+unchanged.
+
+Assisted-by: Claude Code (Claude Sonnet 5.5)
+---
+ ggml/src/ggml-vulkan/ggml-vulkan.cpp | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/ggml/src/ggml-vulkan/ggml-vulkan.cpp b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
+index 634c9c831..a8ae9a423 100644
+--- a/ggml/src/ggml-vulkan/ggml-vulkan.cpp
++++ b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
+@@ -8371,9 +8371,12 @@ void ggml_vk_flash_attn(ggml_backend_vk_context * ctx, vk_context& subctx, const
+     } else if (gqa_ratio > 1 && workgroups_x <= Br) {
+         split_k = shader_core_count * 2 / (workgroups_x * workgroups_y * workgroups_z);
+     } else if (gqa_ratio <= 1) {
++        // On AMD, batches of 9 to a few hundred rows at long context need more splits than two
++        // workgroups per CU to keep enough K/V loads in flight.
++        const uint32_t target_wgs = shader_core_count * (ctx->device->vendor_id == VK_VENDOR_ID_AMD ? 8 : 2);
+         uint32_t total_wgs_no_split = Tr * workgroups_y * workgroups_z;
+-        if (total_wgs_no_split < shader_core_count * 2) {
+-            split_k = shader_core_count * 2 / total_wgs_no_split;
++        if (total_wgs_no_split < target_wgs) {
++            split_k = target_wgs / total_wgs_no_split;
+         }
+     }
+ 
+-- 
+2.56.0
+
