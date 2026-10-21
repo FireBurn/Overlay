@@ -1,0 +1,45 @@
+From dc02e987641e6d90803f41979f66762bd14f5f95 Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Wed, 21 Oct 2026 06:32:17 +0100
+Subject: [PATCH] vulkan : split the K dimension for 32-64 column mat-mat on
+ AMD
+
+ggml_vk_guess_split_k only considered batches of at least a full tile
+(64 columns), and left four-wave tile counts unsplit. On AMD, also split
+batches of 32 to 64 columns and fill up to four waves of tiles with split_k.
+Speculative decoding verification batches of 16 to 60 tokens are 7 to 9%
+faster on a Radeon AI PRO R9700, 64 columns and larger are unchanged.
+
+Assisted-by: Claude Code (Claude Sonnet 5.5)
+---
+ ggml/src/ggml-vulkan/ggml-vulkan.cpp | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/ggml/src/ggml-vulkan/ggml-vulkan.cpp b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
+index bc69de7ba..d130a4a45 100644
+--- a/ggml/src/ggml-vulkan/ggml-vulkan.cpp
++++ b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
+@@ -5930,7 +5930,10 @@ static uint32_t ggml_vk_guess_split_k(ggml_backend_vk_context * ctx, uint32_t m,
+     }
+ 
+     uint32_t split_k = 1;
+-    if (ctx->device->shader_core_count != 0 && n >= pipeline->wg_denoms[1]) {
++    // On AMD, also split batches of at least half a tile (e.g. speculative-decoding verification
++    // batches of 33-63 tokens) and fill up to four waves of tiles with split_k.
++    const bool amd_small_n = ctx->device->vendor_id == VK_VENDOR_ID_AMD && n <= 64;
++    if (ctx->device->shader_core_count != 0 && n >= (amd_small_n ? pipeline->wg_denoms[1] / 2 : pipeline->wg_denoms[1])) {
+         // If k is 'large' and the SMs will fill less than halfway, use split_k.
+         uint32_t m_tiles = CEIL_DIV(m, pipeline->wg_denoms[0]);
+         uint32_t n_tiles = CEIL_DIV(n, pipeline->wg_denoms[1]);
+@@ -5940,6 +5943,8 @@ static uint32_t ggml_vk_guess_split_k(ggml_backend_vk_context * ctx, uint32_t m,
+                 split_k = ctx->device->shader_core_count / (m_tiles * n_tiles);
+             } else if (m_tiles * n_tiles <= ctx->device->shader_core_count * 2 / 3) {
+                 split_k = 3;
++            } else if (amd_small_n && m_tiles * n_tiles <= ctx->device->shader_core_count * 4) {
++                split_k = 4;
+             }
+             // Cap the split at 8x. Unless k is huge this is a lot of overhead.
+             split_k = std::min(split_k, 8u);
+-- 
+2.56.0
+

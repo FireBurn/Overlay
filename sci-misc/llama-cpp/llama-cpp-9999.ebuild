@@ -91,6 +91,7 @@ PATCHES=(
 	"${FILESDIR}/0020-vulkan-hoist-loop-invariants-in-the-Q4_K-and-Q5_K-in.patch"
 	"${FILESDIR}/0021-vulkan-keep-P-transposed-in-shared-memory-for-the-co.patch"
 	"${FILESDIR}/0022-hip-allow-host-constexpr-use-of-physical-warp-size.patch"
+	"${FILESDIR}/0023-vulkan-split-k-for-32-64-column-mat-mat-on-AMD.patch"
 )
 
 pkg_setup() {
