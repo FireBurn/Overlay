@@ -473,11 +473,11 @@ NPM_PKGS="
 	@octokit/types@6.41.0
 	@opencode-ai/client@0.0.0-beta-18050
 	@opencode-ai/protocol@0.0.0-beta-18050
-	@opencode-ai/pty@0.2.0
-	@opencode-ai/pty-linux-arm64-gnu@0.2.0|arm64
-	@opencode-ai/pty-linux-arm64-musl@0.2.0|arm64
-	@opencode-ai/pty-linux-x64-gnu@0.2.0|amd64
-	@opencode-ai/pty-linux-x64-musl@0.2.0|amd64
+	@opencode-ai/pty@0.3.1
+	@opencode-ai/pty-linux-arm64-gnu@0.3.1|arm64
+	@opencode-ai/pty-linux-arm64-musl@0.3.1|arm64
+	@opencode-ai/pty-linux-x64-gnu@0.3.1|amd64
+	@opencode-ai/pty-linux-x64-musl@0.3.1|amd64
 	@opencode-ai/schema@0.0.0-beta-18050
 	@opentelemetry/api@1.9.0
 	@opentelemetry/api@1.9.1
@@ -499,13 +499,13 @@ NPM_PKGS="
 	@opentelemetry/sdk-trace-base@2.8.0
 	@opentelemetry/sdk-trace-node@2.8.0
 	@opentelemetry/semantic-conventions@1.43.0
-	@opentui/core@0.5.17
-	@opentui/core-linux-arm64@0.5.17|arm64
-	@opentui/core-linux-arm64-musl@0.5.17|arm64
-	@opentui/core-linux-x64@0.5.17|amd64
-	@opentui/core-linux-x64-musl@0.5.17|amd64
-	@opentui/keymap@0.5.17
-	@opentui/solid@0.5.17
+	@opentui/core@0.6.6
+	@opentui/core-linux-arm64@0.6.6|arm64
+	@opentui/core-linux-arm64-musl@0.6.6|arm64
+	@opentui/core-linux-x64@0.6.6|amd64
+	@opentui/core-linux-x64-musl@0.6.6|amd64
+	@opentui/keymap@0.6.6
+	@opentui/solid@0.6.6
 	@opentunnel/client@0.4.0
 	@opentunnel/protocol@0.4.0
 	@oslojs/encoding@1.1.0
@@ -553,7 +553,7 @@ NPM_PKGS="
 	@pierre/trees@1.0.0-beta.4
 	@pkgjs/parseargs@0.11.0
 	@planetscale/database@1.19.0
-	@playwright/test@1.59.1
+	@playwright/test@1.60.0
 	@poppinss/colors@4.1.6
 	@poppinss/dumper@0.6.5
 	@poppinss/exception@1.2.3
@@ -831,9 +831,9 @@ NPM_PKGS="
 	@types/whatwg-mimetype@3.0.2
 	@types/which@3.0.4
 	@types/ws@8.18.1
-	@typescript/native-preview@7.0.0-dev.20251207.1
-	@typescript/native-preview-linux-arm64@7.0.0-dev.20251207.1|arm64
-	@typescript/native-preview-linux-x64@7.0.0-dev.20251207.1|amd64
+	@typescript/typescript-linux-arm64@7.0.2|arm64
+	@typescript/typescript-linux-x64@7.0.2|amd64
+	@typescript/typescript6@6.0.2
 	@typescript/vfs@1.6.4
 	@typespec/ts-http-runtime@0.3.8
 	@ungap/structured-clone@1.3.3
@@ -1005,7 +1005,6 @@ NPM_PKGS="
 	ci-info@4.4.0
 	cjs-module-lexer@2.2.1
 	cli-boxes@3.0.0
-	cli-spinners@3.4.0
 	cli-truncate@4.0.0
 	cliui@8.0.1
 	cliui@9.0.1
@@ -1708,7 +1707,6 @@ NPM_PKGS="
 	open@11.0.4
 	openai@6.49.0
 	openid-client@5.6.4
-	opentui-spinner@0.0.7
 	own-keys@1.0.2
 	oxc-minify@0.96.0
 	oxc-parser@0.127.0
@@ -1761,8 +1759,8 @@ NPM_PKGS="
 	pkce-challenge@5.0.1
 	pkg-up@3.1.0
 	pkijs@3.4.0
-	playwright@1.59.1
-	playwright-core@1.59.1
+	playwright@1.60.0
+	playwright-core@1.60.0
 	plist@3.1.0
 	points-on-curve@0.2.0
 	points-on-path@0.2.1
@@ -2068,8 +2066,8 @@ NPM_PKGS="
 	typesafe-path@0.2.2
 	typescript@3.9.10
 	typescript@5.4.5
-	typescript@5.6.3
-	typescript@5.8.2
+	typescript@6.0.3
+	typescript@7.0.2
 	typescript-auto-import-cache@0.3.6
 	ufo@1.6.4
 	ultrahtml@1.7.0
@@ -2412,12 +2410,14 @@ NPM_STUB_PKGS="
 	@lydell/node-pty-darwin-x64@1.2.0-beta.12
 	@lydell/node-pty-win32-arm64@1.2.0-beta.12
 	@lydell/node-pty-win32-x64@1.2.0-beta.12
-	@opencode-ai/pty-darwin-arm64@0.2.0
-	@opencode-ai/pty-darwin-x64@0.2.0
-	@opentui/core-darwin-arm64@0.5.17
-	@opentui/core-darwin-x64@0.5.17
-	@opentui/core-win32-arm64@0.5.17
-	@opentui/core-win32-x64@0.5.17
+	@opencode-ai/pty-darwin-arm64@0.3.1
+	@opencode-ai/pty-darwin-x64@0.3.1
+	@opencode-ai/pty-win32-arm64@0.3.1
+	@opencode-ai/pty-win32-x64@0.3.1
+	@opentui/core-darwin-arm64@0.6.6
+	@opentui/core-darwin-x64@0.6.6
+	@opentui/core-win32-arm64@0.6.6
+	@opentui/core-win32-x64@0.6.6
 	@oxc-minify/binding-android-arm64@0.96.0
 	@oxc-minify/binding-darwin-arm64@0.96.0
 	@oxc-minify/binding-darwin-x64@0.96.0
@@ -2562,11 +2562,24 @@ NPM_STUB_PKGS="
 	@turbo/darwin-arm64@2.10.2
 	@turbo/windows-64@2.10.2
 	@turbo/windows-arm64@2.10.2
-	@typescript/native-preview-darwin-arm64@7.0.0-dev.20251207.1
-	@typescript/native-preview-darwin-x64@7.0.0-dev.20251207.1
-	@typescript/native-preview-linux-arm@7.0.0-dev.20251207.1
-	@typescript/native-preview-win32-arm64@7.0.0-dev.20251207.1
-	@typescript/native-preview-win32-x64@7.0.0-dev.20251207.1
+	@typescript/typescript-aix-ppc64@7.0.2
+	@typescript/typescript-darwin-arm64@7.0.2
+	@typescript/typescript-darwin-x64@7.0.2
+	@typescript/typescript-freebsd-arm64@7.0.2
+	@typescript/typescript-freebsd-x64@7.0.2
+	@typescript/typescript-linux-arm@7.0.2
+	@typescript/typescript-linux-loong64@7.0.2
+	@typescript/typescript-linux-mips64el@7.0.2
+	@typescript/typescript-linux-ppc64@7.0.2
+	@typescript/typescript-linux-riscv64@7.0.2
+	@typescript/typescript-linux-s390x@7.0.2
+	@typescript/typescript-netbsd-arm64@7.0.2
+	@typescript/typescript-netbsd-x64@7.0.2
+	@typescript/typescript-openbsd-arm64@7.0.2
+	@typescript/typescript-openbsd-x64@7.0.2
+	@typescript/typescript-sunos-x64@7.0.2
+	@typescript/typescript-win32-arm64@7.0.2
+	@typescript/typescript-win32-x64@7.0.2
 	@yuuang/ffi-rs-android-arm64@1.3.7
 	@yuuang/ffi-rs-darwin-arm64@1.3.2
 	@yuuang/ffi-rs-darwin-arm64@1.3.7
