@@ -506,8 +506,8 @@ NPM_PKGS="
 	@opentui/core-linux-x64-musl@0.6.6|amd64
 	@opentui/keymap@0.6.6
 	@opentui/solid@0.6.6
-	@opentunnel/client@0.4.0
-	@opentunnel/protocol@0.4.0
+	@opentunnel/client@0.4.1
+	@opentunnel/protocol@0.4.1
 	@oslojs/encoding@1.1.0
 	@oxc-minify/binding-linux-arm64-gnu@0.96.0|arm64
 	@oxc-minify/binding-linux-arm64-musl@0.96.0|arm64
@@ -1166,7 +1166,7 @@ NPM_PKGS="
 	ecdsa-sig-formatter@1.0.11
 	effect@4.0.1
 	ejs@3.1.10
-	electron@44.4.5
+	electron@44.9.1
 	electron-builder@26.15.7
 	electron-builder-squirrel-windows@26.15.7
 	electron-context-menu@5.0.0
