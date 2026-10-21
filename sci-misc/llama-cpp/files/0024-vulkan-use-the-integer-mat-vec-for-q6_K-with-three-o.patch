@@ -1,0 +1,34 @@
+From 9703996101818d21220a682bb640031ce54c7178 Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Wed, 21 Oct 2026 12:26:14 +0100
+Subject: [PATCH 1/2] vulkan : use the integer mat-vec for q6_K with three or
+ more columns on AMD
+
+q6_K always used the float mat-vec unless the device was Intel. With three or
+more columns, such as speculative decoding verification batches, the integer
+path is faster on a Radeon AI PRO R9700: the q6_K share of a five column step
+drops from 7.4 to 5.0 ms, about 5% of the whole step. Single tokens keep the
+float path.
+
+Assisted-by: Claude Code (Claude Sonnet 5.5)
+---
+ ggml/src/ggml-vulkan/ggml-vulkan.cpp | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/ggml/src/ggml-vulkan/ggml-vulkan.cpp b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
+index d130a4a45..82fd54683 100644
+--- a/ggml/src/ggml-vulkan/ggml-vulkan.cpp
++++ b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
+@@ -6647,7 +6647,8 @@ static bool ggml_vk_should_use_mmvq(const vk_device& device, uint32_t m, uint32_
+ 
+     // q6_k only has 2-byte alignment which makes it somewhat problematic,
+     // using MMVQ is only a win on Intel.
+-    bool mmvq_q6 = device->vendor_id == VK_VENDOR_ID_INTEL;
++    // On AMD it also wins once there are a few columns (speculative decoding verification batches).
++    bool mmvq_q6 = device->vendor_id == VK_VENDOR_ID_INTEL || (device->vendor_id == VK_VENDOR_ID_AMD && n >= 3);
+     if (src0_type == GGML_TYPE_Q6_K && !mmvq_q6) {
+         return false;
+     }
+-- 
+2.56.0
+

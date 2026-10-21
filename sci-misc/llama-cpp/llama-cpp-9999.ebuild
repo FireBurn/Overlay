@@ -92,6 +92,8 @@ PATCHES=(
 	"${FILESDIR}/0021-vulkan-keep-P-transposed-in-shared-memory-for-the-co.patch"
 	"${FILESDIR}/0022-hip-allow-host-constexpr-use-of-physical-warp-size.patch"
 	"${FILESDIR}/0023-vulkan-split-k-for-32-64-column-mat-mat-on-AMD.patch"
+	"${FILESDIR}/0024-vulkan-use-the-integer-mat-vec-for-q6_K-with-three-o.patch"
+	"${FILESDIR}/0025-vulkan-compute-two-rows-per-workgroup-in-the-integer.patch"
 )
 
 pkg_setup() {
