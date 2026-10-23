@@ -1,0 +1,397 @@
+# Copyright 2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+EAPI=8
+
+RUST_MIN_VER=1.98.1
+CRATES="
+	adler2@2.0.1
+	ahash@0.8.12
+	aho-corasick@1.1.4
+	allocator-api2@0.2.21
+	anyhow@1.0.104
+	append-only-vec@0.1.8
+	approx@0.5.1
+	arcstr@1.2.0
+	arrayvec@0.7.8
+	async-channel@2.5.0
+	async-scoped@0.9.0
+	autocfg@1.5.1
+	base-encode@0.3.1
+	base64-simd@0.8.0
+	base64@0.23.0
+	bit-set@0.8.0
+	bit-vec@0.8.0
+	bitflags@2.13.1
+	blake3@1.8.7
+	borrow-or-share@0.2.4
+	bpaf@0.9.26
+	bstr@1.13.0
+	bumpalo@3.20.3
+	bytecount@0.6.9
+	byteorder@1.5.0
+	cast@0.3.0
+	castaway@0.2.4
+	cc@1.3.0
+	cfg-if@1.0.4
+	cfg_aliases@0.2.2
+	ciborium-io@0.2.2
+	ciborium-ll@0.2.2
+	ciborium@0.2.2
+	cmake@0.1.58
+	cobs@0.3.0
+	codspeed@4.7.0
+	colored@2.2.0
+	colored@3.1.1
+	compact_str@0.10.0
+	concurrent-queue@2.5.0
+	concurrent_lru@0.2.0
+	console@0.16.4
+	constant_time_eq@0.4.2
+	convert_case@0.11.0
+	cow-utils@0.1.3
+	cpufeatures@0.3.0
+	crc32fast@1.5.0
+	criterion2@3.0.4
+	crossbeam-deque@0.8.7
+	crossbeam-epoch@0.9.20
+	crossbeam-utils@0.8.22
+	crunchy@0.2.4
+	ctor@1.0.9
+	dashmap@6.2.1
+	data-encoding@2.11.0
+	derive_more-impl@2.1.1
+	derive_more@2.1.1
+	dragonbox_ecma@0.1.12
+	dunce@1.0.5
+	dyn-clone@1.0.20
+	either@1.16.0
+	email_address@0.2.9
+	embedded-io@0.4.0
+	embedded-io@0.6.1
+	encode_unicode@1.0.0
+	endian-type@0.2.0
+	equivalent@1.0.2
+	errno@0.3.14
+	event-listener-strategy@0.5.4
+	event-listener@5.4.1
+	fancy-regex@0.19.0
+	fast-glob@1.1.1
+	fastrand@2.5.0
+	filetime@0.2.29
+	find-msvc-tools@0.1.9
+	fixedbitset@0.5.7
+	flate2@1.1.10
+	float-cmp@0.10.0
+	fluent-uri@0.4.1
+	foldhash@0.1.5
+	foldhash@0.2.0
+	form_urlencoded@1.2.2
+	fraction@0.17.0
+	futures-channel@0.3.34
+	futures-core@0.3.34
+	futures-executor@0.3.34
+	futures-io@0.3.34
+	futures-macro@0.3.34
+	futures-sink@0.3.34
+	futures-task@0.3.34
+	futures-util@0.3.34
+	futures@0.3.34
+	getrandom@0.2.17
+	getrandom@0.3.4
+	getrandom@0.4.3
+	glob@0.3.4
+	globset@0.4.20
+	half@2.7.1
+	halfbrown@0.4.0
+	hashbrown@0.14.5
+	hashbrown@0.15.5
+	hashbrown@0.16.1
+	hashbrown@0.17.1
+	heck@0.5.0
+	hermit-abi@0.5.2
+	hmac-sha1-compact@1.1.7
+	idna@1.1.0
+	idna_adapter@1.0.0
+	ignore@0.4.33
+	indexmap@2.14.2
+	infer@0.22.0
+	inotify-sys@0.1.8
+	inotify@0.11.4
+	insta@1.48.0
+	is_ci@1.2.0
+	itertools@0.15.0
+	itoa@1.0.18
+	js-sys@0.3.103
+	json-escape-simd@3.1.1
+	json-strip-comments@3.1.2
+	jsonschema-regex@0.55.0
+	jsonschema-value@0.55.0
+	jsonschema@0.55.0
+	kqueue-sys@1.1.2
+	kqueue@1.2.0
+	lazy-regex-proc_macros@3.6.1
+	lazy-regex@3.6.1
+	lazy_static@1.5.0
+	libc@0.2.186
+	libloading@0.9.0
+	libmimalloc-sys2@0.1.62
+	linux-raw-sys@0.12.1
+	lock_api@0.4.14
+	log@0.4.33
+	memchr@2.8.3
+	micromap@0.3.0
+	mimalloc-safe@0.1.66
+	mime@0.3.17
+	miniz_oxide@0.9.1
+	mio@1.2.2
+	napi-build@2.4.1
+	napi-derive-backend@6.1.2
+	napi-derive@3.6.3
+	napi-sys@3.3.0
+	napi@3.12.2
+	nibble_vec@0.1.0
+	nix@0.31.3
+	nodejs-built-in-modules@1.0.0
+	nohash-hasher@0.2.0
+	nom@8.0.0
+	nonmax@0.5.5
+	nu-ansi-term@0.50.3
+	num-bigint@0.4.8
+	num-bigint@0.5.1
+	num-cmp@0.1.0
+	num-complex@0.4.6
+	num-integer@0.1.46
+	num-iter@0.1.46
+	num-rational@0.4.2
+	num-traits@0.2.19
+	num@0.4.3
+	num_cpus@1.17.0
+	objc2-core-foundation@0.3.2
+	objc2-core-services@0.3.2
+	once_cell@1.21.4
+	oorandom@11.1.5
+	outref@0.5.2
+	owo-colors@4.4.0
+	oxc-browserslist@5.0.1
+	oxc@0.149.0
+	oxc_allocator@0.149.0
+	oxc_ast@0.149.0
+	oxc_ast_macros@0.149.0
+	oxc_ast_visit@0.149.0
+	oxc_codegen@0.149.0
+	oxc_compat@0.149.0
+	oxc_data_structures@0.149.0
+	oxc_diagnostics@0.149.0
+	oxc_ecmascript@0.149.0
+	oxc_estree@0.149.0
+	oxc_index@5.0.0
+	oxc_isolated_declarations@0.149.0
+	oxc_mangler@0.149.0
+	oxc_minifier@0.149.0
+	oxc_minify_napi@0.149.0
+	oxc_napi@0.149.0
+	oxc_parser@0.149.0
+	oxc_parser_napi@0.149.0
+	oxc_regular_expression@0.149.0
+	oxc_resolver@11.24.3
+	oxc_resolver_napi@11.24.3
+	oxc_semantic@0.149.0
+	oxc_sourcemap@8.1.2
+	oxc_span@0.149.0
+	oxc_str@0.149.0
+	oxc_syntax@0.149.0
+	oxc_transform_napi@0.149.0
+	oxc_transformer@0.149.0
+	oxc_transformer_plugins@0.149.0
+	oxc_traverse@0.149.0
+	parking@2.2.1
+	parking_lot@0.12.5
+	parking_lot_core@0.9.12
+	path-posix@0.0.1
+	pathdiff@0.2.3
+	percent-encoding@2.3.2
+	petgraph@0.8.3
+	phf@0.14.0
+	phf_generator@0.14.0
+	phf_macros@0.14.0
+	phf_shared@0.14.0
+	pin-project-internal@1.1.13
+	pin-project-lite@0.2.17
+	pin-project@1.1.13
+	pnp@0.12.12
+	postcard@1.1.3
+	prettyplease@0.3.0
+	proc-macro2@1.0.107
+	quote@1.0.47
+	r-efi@5.3.0
+	r-efi@6.0.0
+	radix_trie@0.3.0
+	rayon-core@1.13.0
+	rayon@1.12.0
+	redox_syscall@0.5.18
+	ref-cast-impl@1.0.26
+	ref-cast@1.0.26
+	referencing@0.55.0
+	regex-automata@0.4.18
+	regex-syntax@0.8.11
+	regex@1.13.1
+	regress@0.12.0
+	relative-path@1.9.3
+	rolldown-ariadne@0.6.0
+	rolldown-file-id@0.2.10
+	rolldown-notify-debouncer-full@0.7.11
+	rolldown-notify-types@2.0.2
+	rolldown-notify@10.5.1
+	ropey@1.6.1
+	rustc-hash@2.1.3
+	rustc_version@0.4.1
+	rustix@1.1.4
+	rustversion@1.0.23
+	ryu@1.0.23
+	same-file@1.0.6
+	schemars@1.2.2
+	schemars_derive@1.2.2
+	scopeguard@1.2.0
+	self_cell@1.3.0
+	semver@1.0.28
+	seq-macro@0.3.6
+	serde@1.0.229
+	serde_core@1.0.229
+	serde_derive@1.0.229
+	serde_derive_internals@0.30.0
+	serde_json@1.0.151
+	serde_yaml@0.9.34+deprecated
+	sharded-slab@0.1.7
+	shlex@2.0.1
+	signal-hook-registry@1.4.8
+	simd-adler32@0.3.10
+	simd-json@0.18.1
+	simdutf8@0.1.5
+	similar@2.7.0
+	siphasher@1.0.3
+	slab@0.4.12
+	smallvec@1.16.0
+	smawk@0.3.3
+	static_assertions@1.1.0
+	statrs@0.18.0
+	str_indices@0.4.4
+	strum@0.28.0
+	strum_macros@0.28.0
+	sugar_path@3.0.0
+	supports-color@3.0.2
+	syn@2.0.119
+	syn@3.0.5
+	tempfile@3.27.0
+	termcolor@1.4.1
+	terminal_size@0.4.4
+	testing_macros@1.0.2
+	textwrap@0.16.2
+	thiserror-impl@2.0.19
+	thiserror@2.0.19
+	thread_local@1.1.10
+	tokio-macros@2.7.1
+	tokio@1.53.1
+	tracing-attributes@0.1.31
+	tracing-chrome@0.7.2
+	tracing-core@0.1.36
+	tracing-log@0.2.0
+	tracing-serde@0.2.0
+	tracing-subscriber@0.3.23
+	tracing@0.1.44
+	ts-rs-macros@12.0.1
+	ts-rs@12.0.1
+	typedmap@0.6.0
+	unicode-general-category@1.1.0
+	unicode-id-start@1.4.0
+	unicode-ident@1.0.24
+	unicode-linebreak@0.1.5
+	unicode-segmentation@1.13.3
+	unicode-width@0.2.2
+	unicode-xid@0.2.6
+	unsafe-libyaml@0.2.11
+	url@2.5.8
+	utf8_iter@1.0.4
+	uuid-simd@0.8.0
+	uuid@1.26.0
+	valuable@0.1.1
+	value-trait@0.12.2
+	version_check@0.9.5
+	vfs@0.13.0
+	vsimd@0.8.0
+	walkdir@2.5.0
+	wasi@0.11.1+wasi-snapshot-preview1
+	wasip2@1.0.4+wasi-0.2.12
+	wasm-bindgen-macro-support@0.2.126
+	wasm-bindgen-macro@0.2.126
+	wasm-bindgen-shared@0.2.126
+	wasm-bindgen@0.2.126
+	winapi-util@0.1.11
+	windows-collections@0.3.2
+	windows-core@0.62.2
+	windows-future@0.3.2
+	windows-implement@0.60.2
+	windows-interface@0.59.3
+	windows-link@0.2.1
+	windows-numerics@0.3.1
+	windows-result@0.4.1
+	windows-strings@0.5.1
+	windows-sys@0.59.0
+	windows-sys@0.61.2
+	windows-targets@0.52.6
+	windows-threading@0.2.1
+	windows@0.62.2
+	windows_aarch64_gnullvm@0.52.6
+	windows_aarch64_msvc@0.52.6
+	windows_i686_gnu@0.52.6
+	windows_i686_gnullvm@0.52.6
+	windows_i686_msvc@0.52.6
+	windows_x86_64_gnu@0.52.6
+	windows_x86_64_gnullvm@0.52.6
+	windows_x86_64_msvc@0.52.6
+	wit-bindgen@0.57.1
+	xxhash-rust@0.8.18
+	yansi@1.0.1
+	zerocopy-derive@0.8.54
+	zerocopy@0.8.54
+	zlib-rs@0.6.6
+	zmij@1.0.23
+"
+
+inherit cargo
+
+DESCRIPTION="Native Node.js binding of the Rolldown JavaScript bundler"
+HOMEPAGE="https://rolldown.rs/"
+SRC_URI="
+	https://github.com/rolldown/rolldown/archive/refs/tags/v${PV}.tar.gz -> ${P}.tar.gz
+	${CARGO_CRATE_URIS}
+"
+
+LICENSE="MIT"
+# Dependent crate licenses
+LICENSE+="
+	Apache-2.0 BSD BSD-2 Boost-1.0 CC0-1.0 ISC MIT MIT-0 MPL-2.0 ZLIB
+"
+SLOT="${PV}"
+KEYWORDS="~amd64 ~arm64"
+
+src_configure() {
+	# Gentoo strips at install
+	export CARGO_PROFILE_RELEASE_STRIP=false
+	cargo_src_configure --frozen
+}
+
+src_compile() {
+	cargo_src_compile -p rolldown_binding
+}
+
+src_test() {
+	:
+}
+
+src_install() {
+	# Loaded through NAPI_RS_NATIVE_LIBRARY_PATH
+	insinto /usr/$(get_libdir)/rolldown-${PV}
+	newins "$(cargo_target_dir)/librolldown_binding.so" rolldown-binding.node
+	fperms 0755 /usr/$(get_libdir)/rolldown-${PV}/rolldown-binding.node
+}
