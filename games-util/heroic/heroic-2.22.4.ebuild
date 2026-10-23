@@ -151,19 +151,11 @@ NPM_PKGS="
 	@npmcli/fs@3.1.1
 	@npmcli/fs@4.0.0
 	@parcel/watcher@2.5.1
-	@parcel/watcher-linux-arm64-glibc@2.5.1|arm64,elibc_glibc
-	@parcel/watcher-linux-arm64-musl@2.5.1|arm64,elibc_musl
-	@parcel/watcher-linux-x64-glibc@2.5.1|amd64,elibc_glibc
-	@parcel/watcher-linux-x64-musl@2.5.1|amd64,elibc_musl
 	@pkgjs/parseargs@0.11.0
 	@playwright/test@1.55.1
 	@popperjs/core@2.11.8
 	@remix-run/router@1.23.0
 	@rollup/pluginutils@5.1.4
-	@rollup/rollup-linux-arm64-gnu@4.60.1|arm64,elibc_glibc
-	@rollup/rollup-linux-arm64-musl@4.60.1|arm64,elibc_musl
-	@rollup/rollup-linux-x64-gnu@4.60.1|amd64,elibc_glibc
-	@rollup/rollup-linux-x64-musl@4.60.1|amd64,elibc_musl
 	@sapphire/async-queue@1.5.5
 	@sapphire/snowflake@3.5.5
 	@shockpkg/icon-encoder@2.1.3
@@ -184,10 +176,6 @@ NPM_PKGS="
 	@svgr/hast-util-to-babel-ast@8.0.0
 	@svgr/plugin-jsx@8.1.0
 	@swc/core@1.11.24
-	@swc/core-linux-arm64-gnu@1.11.24|arm64,elibc_glibc
-	@swc/core-linux-arm64-musl@1.11.24|arm64,elibc_musl
-	@swc/core-linux-x64-gnu@1.11.24|amd64,elibc_glibc
-	@swc/core-linux-x64-musl@1.11.24|amd64,elibc_musl
 	@swc/counter@0.1.3
 	@swc/types@0.1.21
 	@szmarczak/http-timer@4.0.6
@@ -272,10 +260,6 @@ NPM_PKGS="
 	@typescript-eslint/utils@8.34.1
 	@typescript-eslint/visitor-keys@6.21.0
 	@typescript-eslint/visitor-keys@8.34.1
-	@unrs/resolver-binding-linux-arm64-gnu@1.9.1|arm64,elibc_glibc
-	@unrs/resolver-binding-linux-arm64-musl@1.9.1|arm64,elibc_musl
-	@unrs/resolver-binding-linux-x64-gnu@1.9.1|amd64,elibc_glibc
-	@unrs/resolver-binding-linux-x64-musl@1.9.1|amd64,elibc_musl
 	@vitejs/plugin-react-swc@3.9.0
 	@vladfrangu/async_event_emitter@2.4.7
 	@xhayper/discord-rpc@1.5.1
@@ -1299,6 +1283,10 @@ NPM_STUB_PKGS="
 	@parcel/watcher-freebsd-x64@2.5.1
 	@parcel/watcher-linux-arm-glibc@2.5.1
 	@parcel/watcher-linux-arm-musl@2.5.1
+	@parcel/watcher-linux-arm64-glibc@2.5.1
+	@parcel/watcher-linux-arm64-musl@2.5.1
+	@parcel/watcher-linux-x64-glibc@2.5.1
+	@parcel/watcher-linux-x64-musl@2.5.1
 	@parcel/watcher-win32-arm64@2.5.1
 	@parcel/watcher-win32-ia32@2.5.1
 	@parcel/watcher-win32-x64@2.5.1
@@ -1310,6 +1298,8 @@ NPM_STUB_PKGS="
 	@rollup/rollup-freebsd-x64@4.60.1
 	@rollup/rollup-linux-arm-gnueabihf@4.60.1
 	@rollup/rollup-linux-arm-musleabihf@4.60.1
+	@rollup/rollup-linux-arm64-gnu@4.60.1
+	@rollup/rollup-linux-arm64-musl@4.60.1
 	@rollup/rollup-linux-loong64-gnu@4.60.1
 	@rollup/rollup-linux-loong64-musl@4.60.1
 	@rollup/rollup-linux-ppc64-gnu@4.60.1
@@ -1317,6 +1307,8 @@ NPM_STUB_PKGS="
 	@rollup/rollup-linux-riscv64-gnu@4.60.1
 	@rollup/rollup-linux-riscv64-musl@4.60.1
 	@rollup/rollup-linux-s390x-gnu@4.60.1
+	@rollup/rollup-linux-x64-gnu@4.60.1
+	@rollup/rollup-linux-x64-musl@4.60.1
 	@rollup/rollup-openbsd-x64@4.60.1
 	@rollup/rollup-openharmony-arm64@4.60.1
 	@rollup/rollup-win32-arm64-msvc@4.60.1
@@ -1326,6 +1318,10 @@ NPM_STUB_PKGS="
 	@swc/core-darwin-arm64@1.11.24
 	@swc/core-darwin-x64@1.11.24
 	@swc/core-linux-arm-gnueabihf@1.11.24
+	@swc/core-linux-arm64-gnu@1.11.24
+	@swc/core-linux-arm64-musl@1.11.24
+	@swc/core-linux-x64-gnu@1.11.24
+	@swc/core-linux-x64-musl@1.11.24
 	@swc/core-win32-arm64-msvc@1.11.24
 	@swc/core-win32-ia32-msvc@1.11.24
 	@swc/core-win32-x64-msvc@1.11.24
@@ -1336,10 +1332,14 @@ NPM_STUB_PKGS="
 	@unrs/resolver-binding-freebsd-x64@1.9.1
 	@unrs/resolver-binding-linux-arm-gnueabihf@1.9.1
 	@unrs/resolver-binding-linux-arm-musleabihf@1.9.1
+	@unrs/resolver-binding-linux-arm64-gnu@1.9.1
+	@unrs/resolver-binding-linux-arm64-musl@1.9.1
 	@unrs/resolver-binding-linux-ppc64-gnu@1.9.1
 	@unrs/resolver-binding-linux-riscv64-gnu@1.9.1
 	@unrs/resolver-binding-linux-riscv64-musl@1.9.1
 	@unrs/resolver-binding-linux-s390x-gnu@1.9.1
+	@unrs/resolver-binding-linux-x64-gnu@1.9.1
+	@unrs/resolver-binding-linux-x64-musl@1.9.1
 	@unrs/resolver-binding-wasm32-wasi@1.9.1
 	@unrs/resolver-binding-win32-arm64-msvc@1.9.1
 	@unrs/resolver-binding-win32-ia32-msvc@1.9.1
@@ -1382,7 +1382,12 @@ RDEPEND+="
 	gamescope? ( gui-wm/gamescope )
 	vulkan? ( games-util/vulkan-helper )
 "
-BDEPEND="${NPM_NODE_DEPEND}"
+BDEPEND="
+	${NPM_NODE_DEPEND}
+	dev-util/rollup:4.60.1
+	dev-util/swc:1.11.24
+	dev-util/unrs-resolver:1.9.1
+"
 
 # Electron reports the app as unpackaged when it is run as a directory, which
 # sends Heroic looking for its UI and assets in the source layout
@@ -1404,7 +1409,20 @@ src_prepare() {
 src_compile() {
 	electron_setup_env
 
-	npm_with_registry pnpm install --frozen-lockfile
+	# The install scripts of swc and unrs-resolver need their addons, which
+	# are linked in once the packages are in place
+	npm_with_registry pnpm install --frozen-lockfile --ignore-scripts
+	local platform=linux-$(usex arm64 arm64 x64)-$(usex elibc_musl musl gnu)
+	npm_native_link rollup "@rollup/rollup-${platform}" 4.60.1 \
+		"${BROOT}/usr/$(get_libdir)/rollup-4.60.1/rollup.node"
+	npm_native_link @swc/core "@swc/core-${platform}" 1.11.24 \
+		"${BROOT}/usr/$(get_libdir)/swc-1.11.24/swc.node"
+	npm_native_link unrs-resolver "@unrs/resolver-binding-${platform}" 1.9.1 \
+		"${BROOT}/usr/$(get_libdir)/unrs-resolver-1.9.1/unrs-resolver.node"
+	# A bare rebuild fails with E2BIG; these are the packages allowBuilds
+	# lets run scripts
+	npm_with_registry pnpm rebuild @parcel/watcher @swc/core electron esbuild \
+		register-scheme unrs-resolver
 	edo pnpm run build
 
 	# The installed app gets a production-only node_modules
