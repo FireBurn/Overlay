@@ -155,6 +155,29 @@ gradle_setup_offline_repo() {
 		chmod u+w "${dir}/${file}" || die
 	done
 
+	# A version range is resolved from the versions maven-metadata.xml lists
+	local v
+	while IFS= read -r -d '' dir; do
+		artifact=${dir##*/}
+		group=${dir#"${repo}/"}
+		group=${group%/*}
+		{
+			echo '<?xml version="1.0" encoding="UTF-8"?>'
+			echo '<metadata>'
+			echo "  <groupId>${group//\//.}</groupId>"
+			echo "  <artifactId>${artifact}</artifactId>"
+			echo '  <versioning>'
+			echo '    <versions>'
+			for v in "${dir}"/*/; do
+				v=${v%/}
+				echo "      <version>${v##*/}</version>"
+			done
+			echo '    </versions>'
+			echo '  </versioning>'
+			echo '</metadata>'
+		} > "${dir}/maven-metadata.xml" || die
+	done < <(find "${repo}" -mindepth 2 -type d -links 2 -printf '%h\0' | sort -zu)
+
 	local flatdirs=
 	local d
 	for d in ${GRADLE_FLATDIRS}; do
