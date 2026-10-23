@@ -547,9 +547,10 @@ NPM_PKGS="
 	@peculiar/json-schema@1.1.12
 	@peculiar/utils@2.0.3
 	@peculiar/webcrypto@1.7.1
-	@pierre/diffs@1.5.1
+	@pierre/diffs@1.6.1
+	@pierre/highlights@0.2.0
 	@pierre/theme@2.0.0
-	@pierre/theming@1.0.1
+	@pierre/theming@1.0.2
 	@pierre/trees@1.0.0-beta.4
 	@pkgjs/parseargs@0.11.0
 	@planetscale/database@1.19.0
@@ -615,7 +616,6 @@ NPM_PKGS="
 	@shikijs/langs@3.23.0
 	@shikijs/langs@4.4.3
 	@shikijs/primitive@4.4.3
-	@shikijs/stream@4.4.3
 	@shikijs/themes@1.29.2
 	@shikijs/themes@3.23.0
 	@shikijs/themes@4.4.3
@@ -751,7 +751,7 @@ NPM_PKGS="
 	@types/babel__template@7.4.4
 	@types/babel__traverse@7.28.0
 	@types/braces@3.0.5
-	@types/bun@1.4.0
+	@types/bun@1.4.3
 	@types/cacache@20.0.1
 	@types/cacheable-request@6.0.3
 	@types/chai@5.2.3
@@ -972,7 +972,7 @@ NPM_PKGS="
 	builder-util-runtime@9.7.0
 	bun-ffi-structs@0.3.1
 	bun-pty@0.4.11
-	bun-types@1.4.2
+	bun-types@1.4.4
 	bundle-name@4.1.0
 	bytestreamjs@2.0.1
 	cac@7.0.0
@@ -2654,7 +2654,7 @@ RESTRICT="mirror strip test"
 RDEPEND="dev-vcs/git"
 BDEPEND="
 	${NPM_NODE_DEPEND}
-	>=dev-lang/bun-1.4.2
+	>=dev-lang/bun-1.4.4
 "
 
 src_prepare() {
