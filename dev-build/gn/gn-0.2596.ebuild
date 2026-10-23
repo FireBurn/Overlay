@@ -14,7 +14,7 @@ HOMEPAGE="https://gn.googlesource.com/"
 # gn for this reason; there is no repack of this version, so the commit is
 # taken from git instead.
 EGIT_REPO_URI="https://gn.googlesource.com/gn"
-EGIT_COMMIT="127dd2a6d582528d6d61c4d838dc17385ef31abd"
+EGIT_COMMIT="0817afa577428da457b6482c027d7202cd01fcbf"
 S="${WORKDIR}/${P}"
 
 LICENSE="BSD"
