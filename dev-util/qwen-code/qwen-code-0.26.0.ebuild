@@ -152,6 +152,7 @@ NPM_PKGS="
 	@jest/schemas@29.6.3
 	@jest/schemas@30.0.1
 	@jitl/quickjs-ffi-types@0.32.0
+	@jitl/quickjs-singlefile-browser-release-sync@0.32.0
 	@jitl/quickjs-singlefile-mjs-release-sync@0.32.0
 	@jridgewell/gen-mapping@0.3.13
 	@jridgewell/remapping@2.3.5
@@ -544,6 +545,7 @@ NPM_PKGS="
 	@typescript-eslint/visitor-keys@7.18.0
 	@typescript-eslint/visitor-keys@8.35.0
 	@typespec/ts-http-runtime@0.3.6
+	@ubjs/core@0.31.0-3
 	@ungap/structured-clone@1.3.0
 	@upsetjs/venn.js@2.0.0
 	@vitejs/plugin-react@4.7.0
@@ -568,6 +570,7 @@ NPM_PKGS="
 	@vscode/vsce-sign-linux-x64@2.0.6|amd64
 	@wecom/aibot-node-sdk@1.0.7
 	@xterm/addon-fit@0.11.0
+	@xterm/addon-unicode11@0.9.0
 	@xterm/headless@5.5.0
 	@xterm/xterm@6.0.0
 	@yarnpkg/lockfile@1.1.0
@@ -844,6 +847,7 @@ NPM_PKGS="
 	dlv@1.1.3
 	doctrine@2.1.0
 	doctrine@3.0.0
+	docx-preview@0.4.1
 	dom-accessibility-api@0.5.16
 	dom-serializer@2.0.0
 	domelementtype@2.3.0
@@ -1847,6 +1851,7 @@ NPM_PKGS="
 	undici-types@7.29.0
 	unicorn-magic@0.1.0
 	unicorn-magic@0.3.0
+	uniffi-bindgen-react-native@0.31.0-3
 	unified@11.0.5
 	unique-filename@4.0.0
 	unique-slug@5.0.0
