@@ -33,16 +33,20 @@ GRADLE_DEPS="
 	com.google.code.findbugs:jsr305:3.0.2:jsr305-3.0.2.pom
 	com.google.code.gson:gson:2.13.2:gson-2.13.2.jar
 	com.google.code.gson:gson:2.13.2:gson-2.13.2.pom
+	com.google.code.gson:gson:2.14.0:gson-2.14.0.pom
 	com.google.code.gson:gson-parent:2.13.2:gson-parent-2.13.2.pom
+	com.google.code.gson:gson-parent:2.14.0:gson-parent-2.14.0.pom
 	com.google.errorprone:error_prone_annotations:2.2.0:error_prone_annotations-2.2.0.pom
 	com.google.errorprone:error_prone_annotations:2.21.1:error_prone_annotations-2.21.1.pom
 	com.google.errorprone:error_prone_annotations:2.38.0:error_prone_annotations-2.38.0.pom
 	com.google.errorprone:error_prone_annotations:2.41.0:error_prone_annotations-2.41.0.jar
 	com.google.errorprone:error_prone_annotations:2.41.0:error_prone_annotations-2.41.0.pom
+	com.google.errorprone:error_prone_annotations:2.48.0:error_prone_annotations-2.48.0.pom
 	com.google.errorprone:error_prone_parent:2.2.0:error_prone_parent-2.2.0.pom
 	com.google.errorprone:error_prone_parent:2.21.1:error_prone_parent-2.21.1.pom
 	com.google.errorprone:error_prone_parent:2.38.0:error_prone_parent-2.38.0.pom
 	com.google.errorprone:error_prone_parent:2.41.0:error_prone_parent-2.41.0.pom
+	com.google.errorprone:error_prone_parent:2.48.0:error_prone_parent-2.48.0.pom
 	com.google.guava:failureaccess:1.0.1:failureaccess-1.0.1.jar
 	com.google.guava:failureaccess:1.0.1:failureaccess-1.0.1.pom
 	com.google.guava:guava:19.0:guava-19.0.pom
@@ -81,14 +85,12 @@ GRADLE_DEPS="
 	com.oracle.labs.olcut:olcut-config-protobuf:5.3.1:olcut-config-protobuf-5.3.1.pom
 	com.oracle.labs.olcut:olcut-core:5.3.1:olcut-core-5.3.1.jar
 	com.oracle.labs.olcut:olcut-core:5.3.1:olcut-core-5.3.1.pom
-	commons-beanutils:commons-beanutils:1.9.4:commons-beanutils-1.9.4.jar
-	commons-beanutils:commons-beanutils:1.9.4:commons-beanutils-1.9.4.pom
 	commons-codec:commons-codec:1.18.0:commons-codec-1.18.0.jar
 	commons-codec:commons-codec:1.18.0:commons-codec-1.18.0.pom
-	commons-collections:commons-collections:3.2.2:commons-collections-3.2.2.jar
-	commons-collections:commons-collections:3.2.2:commons-collections-3.2.2.pom
 	commons-io:commons-io:2.19.0:commons-io-2.19.0.jar
 	commons-io:commons-io:2.19.0:commons-io-2.19.0.pom
+	commons-io:commons-io:2.21.0:commons-io-2.21.0.jar
+	commons-io:commons-io:2.21.0:commons-io-2.21.0.pom
 	commons-io:commons-io:2.8.0:commons-io-2.8.0.pom
 	commons-logging:commons-logging:1.2:commons-logging-1.2.jar
 	commons-logging:commons-logging:1.2:commons-logging-1.2.pom
@@ -142,6 +144,8 @@ GRADLE_DEPS="
 	net.java.dev.jna:jna-platform:5.14.0:jna-platform-5.14.0.pom
 	net.java.dev.timingframework:timingframework:1.0:timingframework-1.0.jar
 	net.java.dev.timingframework:timingframework:1.0:timingframework-1.0.pom
+	net.lingala.zip4j:zip4j:2.11.6:zip4j-2.11.6.jar
+	net.lingala.zip4j:zip4j:2.11.6:zip4j-2.11.6.pom
 	net.sf.jung:jung-algorithms:2.1.1:jung-algorithms-2.1.1.jar
 	net.sf.jung:jung-algorithms:2.1.1:jung-algorithms-2.1.1.pom
 	net.sf.jung:jung-api:2.1.1:jung-api-2.1.1.jar
@@ -151,10 +155,6 @@ GRADLE_DEPS="
 	net.sf.jung:jung-parent:2.1.1:jung-parent-2.1.1.pom
 	net.sf.jung:jung-visualization:2.1.1:jung-visualization-2.1.1.jar
 	net.sf.jung:jung-visualization:2.1.1:jung-visualization-2.1.1.pom
-	net.sf.sevenzipjbinding:sevenzipjbinding:16.02-2.01:sevenzipjbinding-16.02-2.01.jar
-	net.sf.sevenzipjbinding:sevenzipjbinding:16.02-2.01:sevenzipjbinding-16.02-2.01.pom
-	net.sf.sevenzipjbinding:sevenzipjbinding-all-platforms:16.02-2.01:sevenzipjbinding-all-platforms-16.02-2.01.jar
-	net.sf.sevenzipjbinding:sevenzipjbinding-all-platforms:16.02-2.01:sevenzipjbinding-all-platforms-16.02-2.01.pom
 	org.antlr:ST4:4.0.8:ST4-4.0.8.jar
 	org.antlr:ST4:4.0.8:ST4-4.0.8.pom
 	org.antlr:antlr:3.5.2:antlr-3.5.2.jar
@@ -163,8 +163,6 @@ GRADLE_DEPS="
 	org.antlr:antlr-runtime:3.5.2:antlr-runtime-3.5.2.jar
 	org.antlr:antlr-runtime:3.5.2:antlr-runtime-3.5.2.pom
 	org.apache:apache:13:apache-13.pom
-	org.apache:apache:16:apache-16.pom
-	org.apache:apache:19:apache-19.pom
 	org.apache:apache:21:apache-21.pom
 	org.apache:apache:23:apache-23.pom
 	org.apache:apache:27:apache-27.pom
@@ -185,8 +183,6 @@ GRADLE_DEPS="
 	org.apache.commons:commons-lang3:3.9:commons-lang3-3.9.pom
 	org.apache.commons:commons-parent:103:commons-parent-103.pom
 	org.apache.commons:commons-parent:34:commons-parent-34.pom
-	org.apache.commons:commons-parent:39:commons-parent-39.pom
-	org.apache.commons:commons-parent:47:commons-parent-47.pom
 	org.apache.commons:commons-parent:48:commons-parent-48.pom
 	org.apache.commons:commons-parent:52:commons-parent-52.pom
 	org.apache.commons:commons-parent:54:commons-parent-54.pom
@@ -194,6 +190,7 @@ GRADLE_DEPS="
 	org.apache.commons:commons-parent:72:commons-parent-72.pom
 	org.apache.commons:commons-parent:79:commons-parent-79.pom
 	org.apache.commons:commons-parent:81:commons-parent-81.pom
+	org.apache.commons:commons-parent:91:commons-parent-91.pom
 	org.apache.commons:commons-parent:92:commons-parent-92.pom
 	org.apache.commons:commons-pool2:2.11.1:commons-pool2-2.11.1.jar
 	org.apache.commons:commons-pool2:2.11.1:commons-pool2-2.11.1.pom
@@ -215,12 +212,12 @@ GRADLE_DEPS="
 	org.apache.logging.log4j:log4j-core:2.26.1:log4j-core-2.26.1.jar
 	org.apache.logging.log4j:log4j-core:2.26.1:log4j-core-2.26.1.module
 	org.apache.logging.log4j:log4j-core:2.26.1:log4j-core-2.26.1.pom
-	org.bouncycastle:bcpkix-jdk18on:1.84:bcpkix-jdk18on-1.84.jar
-	org.bouncycastle:bcpkix-jdk18on:1.84:bcpkix-jdk18on-1.84.pom
-	org.bouncycastle:bcprov-jdk18on:1.84:bcprov-jdk18on-1.84.jar
-	org.bouncycastle:bcprov-jdk18on:1.84:bcprov-jdk18on-1.84.pom
-	org.bouncycastle:bcutil-jdk18on:1.84:bcutil-jdk18on-1.84.jar
-	org.bouncycastle:bcutil-jdk18on:1.84:bcutil-jdk18on-1.84.pom
+	org.bouncycastle:bcpkix-jdk18on:1.86:bcpkix-jdk18on-1.86.jar
+	org.bouncycastle:bcpkix-jdk18on:1.86:bcpkix-jdk18on-1.86.pom
+	org.bouncycastle:bcprov-jdk18on:1.86:bcprov-jdk18on-1.86.jar
+	org.bouncycastle:bcprov-jdk18on:1.86:bcprov-jdk18on-1.86.pom
+	org.bouncycastle:bcutil-jdk18on:1.86:bcutil-jdk18on-1.86.jar
+	org.bouncycastle:bcutil-jdk18on:1.86:bcutil-jdk18on-1.86.pom
 	org.checkerframework:checker-compat-qual:2.5.2:checker-compat-qual-2.5.2.pom
 	org.checkerframework:checker-qual:3.37.0:checker-qual-3.37.0.jar
 	org.checkerframework:checker-qual:3.37.0:checker-qual-3.37.0.module
@@ -246,6 +243,14 @@ GRADLE_DEPS="
 	org.commonmark:commonmark-ext-heading-anchor:0.23.0:commonmark-ext-heading-anchor-0.23.0.pom
 	org.commonmark:commonmark-parent:0.23.0:commonmark-parent-0.23.0.pom
 	org.eclipse.ee4j:project:1.0.7:project-1.0.7.pom
+	org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0:org.eclipse.lsp4j-1.0.0.jar
+	org.eclipse.lsp4j:org.eclipse.lsp4j:1.0.0:org.eclipse.lsp4j-1.0.0.pom
+	org.eclipse.lsp4j:org.eclipse.lsp4j.debug:1.0.0:org.eclipse.lsp4j.debug-1.0.0.jar
+	org.eclipse.lsp4j:org.eclipse.lsp4j.debug:1.0.0:org.eclipse.lsp4j.debug-1.0.0.pom
+	org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:1.0.0:org.eclipse.lsp4j.jsonrpc-1.0.0.jar
+	org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc:1.0.0:org.eclipse.lsp4j.jsonrpc-1.0.0.pom
+	org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc.debug:1.0.0:org.eclipse.lsp4j.jsonrpc.debug-1.0.0.jar
+	org.eclipse.lsp4j:org.eclipse.lsp4j.jsonrpc.debug:1.0.0:org.eclipse.lsp4j.jsonrpc.debug-1.0.0.pom
 	org.fusesource:fusesource-pom:1.12:fusesource-pom-1.12.pom
 	org.fusesource.jansi:jansi:2.4.1:jansi-2.4.1.jar
 	org.fusesource.jansi:jansi:2.4.1:jansi-2.4.1.pom
@@ -254,15 +259,6 @@ GRADLE_DEPS="
 	org.hamcrest:hamcrest-core:1.3:hamcrest-core-1.3.jar
 	org.hamcrest:hamcrest-core:1.3:hamcrest-core-1.3.pom
 	org.hamcrest:hamcrest-parent:1.3:hamcrest-parent-1.3.pom
-	org.jacoco:org.jacoco.agent:0.8.14:org.jacoco.agent-0.8.14.jar
-	org.jacoco:org.jacoco.agent:0.8.14:org.jacoco.agent-0.8.14.pom
-	org.jacoco:org.jacoco.ant:0.8.14:org.jacoco.ant-0.8.14.jar
-	org.jacoco:org.jacoco.ant:0.8.14:org.jacoco.ant-0.8.14.pom
-	org.jacoco:org.jacoco.build:0.8.14:org.jacoco.build-0.8.14.pom
-	org.jacoco:org.jacoco.core:0.8.14:org.jacoco.core-0.8.14.jar
-	org.jacoco:org.jacoco.core:0.8.14:org.jacoco.core-0.8.14.pom
-	org.jacoco:org.jacoco.report:0.8.14:org.jacoco.report-0.8.14.jar
-	org.jacoco:org.jacoco.report:0.8.14:org.jacoco.report-0.8.14.pom
 	org.jdom:jdom2:2.0.6.1:jdom2-2.0.6.1.jar
 	org.jdom:jdom2:2.0.6.1:jdom2-2.0.6.1.pom
 	org.jgrapht:jgrapht:1.5.1:jgrapht-1.5.1.pom
@@ -322,19 +318,12 @@ GRADLE_DEPS="
 	org.ow2:ow2:1.5.1:ow2-1.5.1.pom
 	org.ow2.asm:asm:9.7.1:asm-9.7.1.jar
 	org.ow2.asm:asm:9.7.1:asm-9.7.1.pom
-	org.ow2.asm:asm:9.9:asm-9.9.jar
-	org.ow2.asm:asm:9.9:asm-9.9.pom
 	org.ow2.asm:asm-analysis:9.7.1:asm-analysis-9.7.1.jar
 	org.ow2.asm:asm-analysis:9.7.1:asm-analysis-9.7.1.pom
-	org.ow2.asm:asm-bom:9.9:asm-bom-9.9.pom
 	org.ow2.asm:asm-commons:9.7.1:asm-commons-9.7.1.jar
 	org.ow2.asm:asm-commons:9.7.1:asm-commons-9.7.1.pom
-	org.ow2.asm:asm-commons:9.9:asm-commons-9.9.jar
-	org.ow2.asm:asm-commons:9.9:asm-commons-9.9.pom
 	org.ow2.asm:asm-tree:9.7.1:asm-tree-9.7.1.jar
 	org.ow2.asm:asm-tree:9.7.1:asm-tree-9.7.1.pom
-	org.ow2.asm:asm-tree:9.9:asm-tree-9.9.jar
-	org.ow2.asm:asm-tree:9.9:asm-tree-9.9.pom
 	org.ow2.asm:asm-util:9.7.1:asm-util-9.7.1.jar
 	org.ow2.asm:asm-util:9.7.1:asm-util-9.7.1.pom
 	org.postgresql:postgresql:42.7.13:postgresql-42.7.13.jar
@@ -388,7 +377,7 @@ GHIDRA_DEP_URIS="
 	https://files.pythonhosted.org/packages/0b/2c/87f3254fd8ffd29e4c02732eee68a83a1d3c346ae39bc6822dcbcb697f2b/wheel-0.45.1-py3-none-any.whl
 	https://files.pythonhosted.org/packages/a3/dc/17031897dae0efacfea57dfd3a82fdd2a2aeb58e0ff71b77b87e44edc772/setuptools-80.9.0-py3-none-any.whl
 	https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/android4me/AXMLPrinter2.jar
-		-> ghidra-12.1.4-AXMLPrinter2.jar
+		-> ghidra-12.2-AXMLPrinter2.jar
 	bsim? (
 		https://ftp.postgresql.org/pub/source/v15.18/postgresql-15.18.tar.gz
 	)
@@ -402,32 +391,33 @@ GHIDRA_DEP_URIS="
 			-> PyDev-9.3.0.zip
 	)
 	fidb? (
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vs2012_x64.fidb
-			-> ghidra-12.1.4-vs2012_x64.fidb
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vs2012_x86.fidb
-			-> ghidra-12.1.4-vs2012_x86.fidb
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vs2015_x64.fidb
-			-> ghidra-12.1.4-vs2015_x64.fidb
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vs2015_x86.fidb
-			-> ghidra-12.1.4-vs2015_x86.fidb
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vs2017_x64.fidb
-			-> ghidra-12.1.4-vs2017_x64.fidb
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vs2017_x86.fidb
-			-> ghidra-12.1.4-vs2017_x86.fidb
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vs2019_x64.fidb
-			-> ghidra-12.1.4-vs2019_x64.fidb
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vs2019_x86.fidb
-			-> ghidra-12.1.4-vs2019_x86.fidb
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vsOlder_x64.fidb
-			-> ghidra-12.1.4-vsOlder_x64.fidb
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/FunctionID/vsOlder_x86.fidb
-			-> ghidra-12.1.4-vsOlder_x86.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.2/FunctionID/vs2012_x64.fidb
+			-> ghidra-12.2-vs2012_x64.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.2/FunctionID/vs2012_x86.fidb
+			-> ghidra-12.2-vs2012_x86.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.2/FunctionID/vs2015_x64.fidb
+			-> ghidra-12.2-vs2015_x64.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.2/FunctionID/vs2015_x86.fidb
+			-> ghidra-12.2-vs2015_x86.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.2/FunctionID/vs2017_x64.fidb
+			-> ghidra-12.2-vs2017_x64.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.2/FunctionID/vs2017_x86.fidb
+			-> ghidra-12.2-vs2017_x86.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.2/FunctionID/vs2019_x64.fidb
+			-> ghidra-12.2-vs2019_x64.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.2/FunctionID/vs2019_x86.fidb
+			-> ghidra-12.2-vs2019_x86.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.2/FunctionID/vsOlder_x64.fidb
+			-> ghidra-12.2-vsOlder_x64.fidb
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.2/FunctionID/vsOlder_x86.fidb
+			-> ghidra-12.2-vsOlder_x86.fidb
 	)
 	python? (
 		https://files.pythonhosted.org/packages/0b/7d/9fdbbc1a574be43f9820735ca8df0caf8b159856201d9b21fd73932342bc/jpype1-1.5.2-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 		https://files.pythonhosted.org/packages/0e/78/95db2eb3c8a7311ee08a2c237cea24828859db6a6cb5e901971d3f5e49da/jpype1-1.5.2-cp311-cp311-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
 		https://files.pythonhosted.org/packages/20/12/38679034af332785aac8774540895e234f4d07f7545804097de4b666afd8/packaging-25.0-py3-none-any.whl
 		https://files.pythonhosted.org/packages/20/a3/00a265d424f7d47e0dc547df2320225ce0143fec671faf710def41404b8c/jpype1-1.5.2-cp313-cp313-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
+		https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl
 		https://files.pythonhosted.org/packages/6d/d0/191db2e9ab6ae7029368a488c9d88235966843b185aba7925e54aa0c0013/jpype1-1.5.2-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 		https://files.pythonhosted.org/packages/74/f3/1cd4332076ed0421e703412f47f15f43af170809435c57ba3162edc80d4b/jpype1-1.5.2-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 		https://files.pythonhosted.org/packages/77/6b/130fb6d0c43976b4e129c6bc19daf0e25c42fc38c5096ed92c4105bfd2c4/jpype1-1.5.2-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
@@ -438,8 +428,8 @@ GHIDRA_DEP_URIS="
 		https://files.pythonhosted.org/packages/fa/4c/e0200a6e3fed5cda79e926c2a8a610676f04948f89d7e38d93c7d4b21be9/jpype1-1.5.2-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
 	)
 	sarif? (
-		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.1.4/lib/java-sarif-2.1-modified.jar
-			-> ghidra-12.1.4-java-sarif-2.1-modified.jar
+		https://github.com/NationalSecurityAgency/ghidra-data/raw/Ghidra_12.2/lib/java-sarif-2.1-modified.jar
+			-> ghidra-12.2-java-sarif-2.1-modified.jar
 	)
 	server? (
 		https://sourceforge.net/projects/yajsw/files/yajsw/yajsw-stable-13.18/yajsw-stable-13.18.zip
