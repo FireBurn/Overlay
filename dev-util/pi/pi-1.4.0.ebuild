@@ -36,16 +36,41 @@ NPM_PKGS="
 	@biomejs/cli-linux-x64@2.3.5|amd64
 	@biomejs/cli-linux-x64-musl@2.3.5|amd64
 	@biomejs/wasm-nodejs@2.3.5
+	@cloudflare/kv-asset-handler@0.5.0
+	@cloudflare/unenv-preset@2.16.2
+	@cloudflare/vitest-plugin@1.4.4
+	@cloudflare/workerd-linux-64@1.20261012.1|amd64
+	@cloudflare/workerd-linux-arm64@1.20261012.1|arm64
+	@cspotcode/source-map-support@0.8.1
 	@cto.af/wtf8@0.0.5
 	@earendil-works/gondolin@0.12.0
 	@earendil-works/gondolin-krun-runner-linux-x64@0.12.0|amd64
+	@emnapi/core@1.10.0
+	@emnapi/runtime@1.10.0
+	@emnapi/runtime@1.11.3
+	@emnapi/wasi-threads@1.2.1
 	@esbuild/linux-arm64@0.28.2|arm64
 	@esbuild/linux-x64@0.28.2|amd64
 	@google/genai@2.21.0
+	@img/colour@1.1.0
+	@img/sharp-libvips-linux-arm64@1.3.4|arm64
+	@img/sharp-libvips-linux-x64@1.3.4|amd64
+	@img/sharp-libvips-linuxmusl-arm64@1.3.4|arm64
+	@img/sharp-libvips-linuxmusl-x64@1.3.4|amd64
+	@img/sharp-linux-arm64@0.35.5|arm64
+	@img/sharp-linux-x64@0.35.5|amd64
+	@img/sharp-linuxmusl-arm64@0.35.5|arm64
+	@img/sharp-linuxmusl-x64@0.35.5|amd64
+	@img/sharp-wasm32@0.35.5
+	@jridgewell/resolve-uri@3.1.2
 	@jridgewell/sourcemap-codec@1.5.5
+	@jridgewell/trace-mapping@0.3.9
 	@napi-rs/wasm-runtime@1.1.5
 	@oxc-project/types@0.133.0
 	@pondwader/socks5-server@1.0.10
+	@poppinss/colors@4.1.6
+	@poppinss/dumper@0.6.5
+	@poppinss/exception@1.2.3
 	@protobufjs/aspromise@1.1.2
 	@protobufjs/base64@1.1.2
 	@protobufjs/codegen@2.0.5
@@ -62,12 +87,14 @@ NPM_PKGS="
 	@rolldown/pluginutils@1.0.1
 	@silvia-odwyer/photon@0.3.3
 	@silvia-odwyer/photon-node@0.3.4
+	@sindresorhus/is@7.2.0
 	@smithy/core@3.33.3
 	@smithy/credential-provider-imds@4.5.2
 	@smithy/fetch-http-handler@5.8.0
 	@smithy/node-http-handler@4.12.1
 	@smithy/signature-v4@5.7.3
 	@smithy/types@4.18.0
+	@speed-highlight/core@1.2.24
 	@stablelib/base64@1.0.1
 	@standard-schema/spec@1.1.0
 	@tybys/wasm-util@0.10.2
@@ -111,6 +138,7 @@ NPM_PKGS="
 	bignumber.js@9.3.1
 	binary-search@1.3.6
 	bl@4.1.0
+	blake3-wasm@2.1.5
 	bowser@2.14.1
 	brace-expansion@1.1.21
 	brace-expansion@5.0.12
@@ -123,12 +151,14 @@ NPM_PKGS="
 	chalk@6.0.0
 	cheminfo-types@1.16.0
 	chownr@1.1.4
+	cjs-module-lexer@1.2.3
 	commander@12.1.0
 	compute-cosine-similarity@1.1.0
 	compute-dot@1.1.0
 	compute-l2norm@1.1.0
 	concat-map@0.0.1
 	convert-source-map@2.0.0
+	cookie@1.1.1
 	cpu-features@0.0.10
 	cross-spawn@7.0.6
 	data-uri-to-buffer@4.0.1
@@ -139,6 +169,7 @@ NPM_PKGS="
 	diff@8.0.4
 	ecdsa-sig-formatter@1.0.11
 	end-of-stream@1.4.5
+	error-stack-parser-es@1.0.5
 	es-errors@1.3.0
 	es-module-lexer@2.3.1
 	esbuild@0.28.2
@@ -146,6 +177,7 @@ NPM_PKGS="
 	expand-template@2.0.3
 	expect-type@1.3.0
 	extend@3.0.2
+	fake-indexeddb@6.2.6
 	fast-deep-equal@3.1.3
 	fast-sha256@1.3.0
 	fast-uri@3.1.8
@@ -189,6 +221,7 @@ NPM_PKGS="
 	json-schema-traverse@1.0.0
 	jwa@2.0.1
 	jws@4.0.1
+	kleur@4.1.5
 	lightningcss@1.32.0
 	lightningcss-linux-arm64-gnu@1.32.0|arm64
 	lightningcss-linux-arm64-musl@1.32.0|arm64
@@ -200,7 +233,9 @@ NPM_PKGS="
 	lru-cache@11.4.0
 	magic-string@0.30.21
 	marked@18.0.11
+	marked-cjk-friendly@0.1.2
 	mimic-response@3.1.0
+	miniflare@5.20261012.1-beta
 	minimatch@10.2.6
 	minimatch@3.1.5
 	minimist@1.2.8
@@ -230,6 +265,7 @@ NPM_PKGS="
 	path-is-absolute@1.0.1
 	path-key@3.1.1
 	path-parse@1.0.7
+	path-to-regexp@6.3.0
 	pathe@2.0.3
 	picocolors@1.1.1
 	picomatch@4.0.4
@@ -253,6 +289,7 @@ NPM_PKGS="
 	safe-buffer@5.2.1
 	safer-buffer@2.1.2
 	semver@7.8.5
+	sharp@0.35.5
 	shebang-command@2.0.0
 	shebang-regex@3.0.0
 	shell-quote@1.12.0
@@ -269,6 +306,7 @@ NPM_PKGS="
 	std-env@4.2.0
 	string_decoder@1.3.0
 	strip-json-comments@2.0.1
+	supports-color@10.2.2
 	supports-preserve-symlinks-flag@1.0.0
 	tar-fs@2.1.4
 	tar-stream@2.2.0
@@ -284,8 +322,10 @@ NPM_PKGS="
 	typebox@1.3.27
 	typescript@7.0.2
 	undici@6.29.0
+	undici@7.29.1
 	undici@8.10.2
 	undici-types@6.21.0
+	unenv@2.0.0-rc.24
 	util-deprecate@1.0.2
 	validate.io-array@1.0.6
 	validate.io-function@1.0.2
@@ -295,10 +335,15 @@ NPM_PKGS="
 	web-streams-polyfill@3.3.3
 	which@2.0.2
 	why-is-node-running@2.3.0
+	workerd@1.20261012.1
+	wrangler@4.151.1
 	wrappy@1.0.2
 	ws@8.21.0
 	yaml@2.9.0
+	youch@4.1.0-beta.10
+	youch-core@0.3.3
 	zod@3.25.76
+	zod@4.6.5
 	zod-to-json-schema@3.25.0
 "
 NPM_STUB_PKGS="
@@ -306,6 +351,9 @@ NPM_STUB_PKGS="
 	@biomejs/cli-darwin-x64@2.3.5
 	@biomejs/cli-win32-arm64@2.3.5
 	@biomejs/cli-win32-x64@2.3.5
+	@cloudflare/workerd-darwin-64@1.20261012.1
+	@cloudflare/workerd-darwin-arm64@1.20261012.1
+	@cloudflare/workerd-windows-64@1.20261012.1
 	@earendil-works/gondolin-krun-runner-darwin-arm64@0.12.0
 	@esbuild/aix-ppc64@0.28.2
 	@esbuild/android-arm64@0.28.2
@@ -331,6 +379,23 @@ NPM_STUB_PKGS="
 	@esbuild/win32-arm64@0.28.2
 	@esbuild/win32-ia32@0.28.2
 	@esbuild/win32-x64@0.28.2
+	@img/sharp-darwin-arm64@0.35.5
+	@img/sharp-darwin-x64@0.35.5
+	@img/sharp-freebsd-wasm32@0.35.5
+	@img/sharp-libvips-darwin-arm64@1.3.4
+	@img/sharp-libvips-darwin-x64@1.3.4
+	@img/sharp-libvips-linux-arm@1.3.4
+	@img/sharp-libvips-linux-ppc64@1.3.4
+	@img/sharp-libvips-linux-riscv64@1.3.4
+	@img/sharp-libvips-linux-s390x@1.3.4
+	@img/sharp-linux-arm@0.35.5
+	@img/sharp-linux-ppc64@0.35.5
+	@img/sharp-linux-riscv64@0.35.5
+	@img/sharp-linux-s390x@0.35.5
+	@img/sharp-webcontainers-wasm32@0.35.5
+	@img/sharp-win32-arm64@0.35.5
+	@img/sharp-win32-ia32@0.35.5
+	@img/sharp-win32-x64@0.35.5
 	@rolldown/binding-android-arm64@1.0.3
 	@rolldown/binding-darwin-arm64@1.0.3
 	@rolldown/binding-darwin-x64@1.0.3
