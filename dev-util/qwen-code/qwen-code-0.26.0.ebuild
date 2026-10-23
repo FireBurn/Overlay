@@ -133,14 +133,6 @@ NPM_PKGS="
 	@iconify/types@2.0.0
 	@iconify/utils@3.1.3
 	@img/colour@1.1.0
-	@img/sharp-libvips-linux-arm64@1.3.3|arm64,elibc_glibc
-	@img/sharp-libvips-linux-x64@1.3.3|amd64,elibc_glibc
-	@img/sharp-libvips-linuxmusl-arm64@1.3.3|arm64,elibc_musl
-	@img/sharp-libvips-linuxmusl-x64@1.3.3|amd64,elibc_musl
-	@img/sharp-linux-arm64@0.35.4|arm64,elibc_glibc
-	@img/sharp-linux-x64@0.35.4|amd64,elibc_glibc
-	@img/sharp-linuxmusl-arm64@0.35.4|arm64,elibc_musl
-	@img/sharp-linuxmusl-x64@0.35.4|amd64,elibc_musl
 	@img/sharp-wasm32@0.35.4
 	@inquirer/confirm@5.1.14
 	@inquirer/core@10.1.15
@@ -189,15 +181,10 @@ NPM_PKGS="
 	@modelcontextprotocol/sdk@1.26.0
 	@modelcontextprotocol/sdk@1.30.0
 	@mswjs/interceptors@0.39.5
-	@napi-rs/lzma-linux-x64-gnu@1.5.1|amd64,elibc_glibc
 	@napi-rs/wasm-runtime@1.2.4
 	@noble/hashes@1.8.0
 	@nodable/entities@2.2.0
 	@node-rs/jieba@2.0.2
-	@node-rs/jieba-linux-arm64-gnu@2.0.2|arm64,elibc_glibc
-	@node-rs/jieba-linux-arm64-musl@2.0.2|arm64,elibc_musl
-	@node-rs/jieba-linux-x64-gnu@2.0.2|amd64,elibc_glibc
-	@node-rs/jieba-linux-x64-musl@2.0.2|amd64,elibc_musl
 	@node-rs/jieba-wasm32-wasi@2.0.2
 	@nodelib/fs.scandir@2.1.5
 	@nodelib/fs.stat@2.0.5
@@ -255,9 +242,7 @@ NPM_PKGS="
 	@opentelemetry/semantic-conventions@1.36.0
 	@opentui/core@0.5.10
 	@opentui/core-linux-arm64@0.5.10|arm64
-	@opentui/core-linux-arm64-musl@0.5.10|arm64,elibc_musl
 	@opentui/core-linux-x64@0.5.10|amd64
-	@opentui/core-linux-x64-musl@0.5.10|amd64,elibc_musl
 	@opentui/react@0.5.10
 	@paralleldrive/cuid2@2.3.1
 	@pierre/diffs@1.5.2
@@ -341,10 +326,6 @@ NPM_PKGS="
 	@redocly/config@0.22.0
 	@redocly/openapi-core@1.34.20
 	@rolldown/pluginutils@1.0.0-beta.27
-	@rollup/rollup-linux-arm64-gnu@4.62.5|arm64,elibc_glibc
-	@rollup/rollup-linux-arm64-musl@4.62.5|arm64,elibc_musl
-	@rollup/rollup-linux-x64-gnu@4.62.5|amd64,elibc_glibc
-	@rollup/rollup-linux-x64-musl@4.62.5|amd64,elibc_musl
 	@rtsao/scc@1.1.0
 	@sec-ant/readable-stream@0.4.1
 	@secretlint/config-creator@10.2.2
@@ -385,18 +366,12 @@ NPM_PKGS="
 	@stylistic/eslint-plugin@3.1.0
 	@tailwindcss/node@4.3.2
 	@tailwindcss/oxide@4.3.2
-	@tailwindcss/oxide-linux-arm64-gnu@4.3.2|arm64,elibc_glibc
-	@tailwindcss/oxide-linux-arm64-musl@4.3.2|arm64,elibc_musl
-	@tailwindcss/oxide-linux-x64-gnu@4.3.2|amd64,elibc_glibc
-	@tailwindcss/oxide-linux-x64-musl@4.3.2|amd64,elibc_musl
 	@tailwindcss/vite@4.3.2
 	@tanstack/react-table@8.21.3
 	@tanstack/react-virtual@3.14.2
 	@tanstack/table-core@8.21.3
 	@tanstack/virtual-core@3.17.0
 	@teddyzhu/clipboard@0.0.5
-	@teddyzhu/clipboard-linux-arm64-gnu@0.0.5|arm64,elibc_glibc
-	@teddyzhu/clipboard-linux-x64-gnu@0.0.5|amd64,elibc_glibc
 	@tencent-connect/qqbot-connector@1.1.0
 	@testing-library/dom@10.4.1
 	@testing-library/react@16.3.0
@@ -1227,10 +1202,6 @@ NPM_PKGS="
 	libqp@2.1.1
 	lie@3.3.0
 	lightningcss@1.32.0
-	lightningcss-linux-arm64-gnu@1.32.0|arm64,elibc_glibc
-	lightningcss-linux-arm64-musl@1.32.0|arm64,elibc_musl
-	lightningcss-linux-x64-gnu@1.32.0|amd64,elibc_glibc
-	lightningcss-linux-x64-musl@1.32.0|amd64,elibc_musl
 	lilconfig@3.1.3
 	lines-and-columns@1.2.4
 	linkify-it@5.0.2
@@ -2034,14 +2005,22 @@ NPM_STUB_PKGS="
 	@img/sharp-freebsd-wasm32@0.35.4
 	@img/sharp-libvips-darwin-arm64@1.3.3
 	@img/sharp-libvips-darwin-x64@1.3.3
+	@img/sharp-libvips-linux-arm64@1.3.3
 	@img/sharp-libvips-linux-arm@1.3.3
 	@img/sharp-libvips-linux-ppc64@1.3.3
 	@img/sharp-libvips-linux-riscv64@1.3.3
 	@img/sharp-libvips-linux-s390x@1.3.3
+	@img/sharp-libvips-linux-x64@1.3.3
+	@img/sharp-libvips-linuxmusl-arm64@1.3.3
+	@img/sharp-libvips-linuxmusl-x64@1.3.3
+	@img/sharp-linux-arm64@0.35.4
 	@img/sharp-linux-arm@0.35.4
 	@img/sharp-linux-ppc64@0.35.4
 	@img/sharp-linux-riscv64@0.35.4
 	@img/sharp-linux-s390x@0.35.4
+	@img/sharp-linux-x64@0.35.4
+	@img/sharp-linuxmusl-arm64@0.35.4
+	@img/sharp-linuxmusl-x64@0.35.4
 	@img/sharp-webcontainers-wasm32@0.35.4
 	@img/sharp-win32-arm64@0.35.4
 	@img/sharp-win32-ia32@0.35.4
@@ -2050,17 +2029,24 @@ NPM_STUB_PKGS="
 	@lydell/node-pty-darwin-x64@1.2.0-beta.10
 	@lydell/node-pty-win32-arm64@1.2.0-beta.10
 	@lydell/node-pty-win32-x64@1.2.0-beta.10
+	@napi-rs/lzma-linux-x64-gnu@1.5.1
 	@node-rs/jieba-android-arm-eabi@2.0.2
 	@node-rs/jieba-android-arm64@2.0.2
 	@node-rs/jieba-darwin-arm64@2.0.2
 	@node-rs/jieba-darwin-x64@2.0.2
 	@node-rs/jieba-freebsd-x64@2.0.2
 	@node-rs/jieba-linux-arm-gnueabihf@2.0.2
+	@node-rs/jieba-linux-arm64-gnu@2.0.2
+	@node-rs/jieba-linux-arm64-musl@2.0.2
+	@node-rs/jieba-linux-x64-gnu@2.0.2
+	@node-rs/jieba-linux-x64-musl@2.0.2
 	@node-rs/jieba-win32-arm64-msvc@2.0.2
 	@node-rs/jieba-win32-ia32-msvc@2.0.2
 	@node-rs/jieba-win32-x64-msvc@2.0.2
 	@opentui/core-darwin-arm64@0.5.10
 	@opentui/core-darwin-x64@0.5.10
+	@opentui/core-linux-arm64-musl@0.5.10
+	@opentui/core-linux-x64-musl@0.5.10
 	@opentui/core-win32-arm64@0.5.10
 	@opentui/core-win32-x64@0.5.10
 	@rollup/rollup-android-arm-eabi@4.62.5
@@ -2071,6 +2057,8 @@ NPM_STUB_PKGS="
 	@rollup/rollup-freebsd-x64@4.62.5
 	@rollup/rollup-linux-arm-gnueabihf@4.62.5
 	@rollup/rollup-linux-arm-musleabihf@4.62.5
+	@rollup/rollup-linux-arm64-gnu@4.62.5
+	@rollup/rollup-linux-arm64-musl@4.62.5
 	@rollup/rollup-linux-loong64-gnu@4.62.5
 	@rollup/rollup-linux-loong64-musl@4.62.5
 	@rollup/rollup-linux-ppc64-gnu@4.62.5
@@ -2078,6 +2066,8 @@ NPM_STUB_PKGS="
 	@rollup/rollup-linux-riscv64-gnu@4.62.5
 	@rollup/rollup-linux-riscv64-musl@4.62.5
 	@rollup/rollup-linux-s390x-gnu@4.62.5
+	@rollup/rollup-linux-x64-gnu@4.62.5
+	@rollup/rollup-linux-x64-musl@4.62.5
 	@rollup/rollup-openbsd-x64@4.62.5
 	@rollup/rollup-openharmony-arm64@4.62.5
 	@rollup/rollup-win32-arm64-msvc@4.62.5
@@ -2089,11 +2079,17 @@ NPM_STUB_PKGS="
 	@tailwindcss/oxide-darwin-x64@4.3.2
 	@tailwindcss/oxide-freebsd-x64@4.3.2
 	@tailwindcss/oxide-linux-arm-gnueabihf@4.3.2
+	@tailwindcss/oxide-linux-arm64-gnu@4.3.2
+	@tailwindcss/oxide-linux-arm64-musl@4.3.2
+	@tailwindcss/oxide-linux-x64-gnu@4.3.2
+	@tailwindcss/oxide-linux-x64-musl@4.3.2
 	@tailwindcss/oxide-wasm32-wasi@4.3.2
 	@tailwindcss/oxide-win32-arm64-msvc@4.3.2
 	@tailwindcss/oxide-win32-x64-msvc@4.3.2
 	@teddyzhu/clipboard-darwin-arm64@0.0.5
 	@teddyzhu/clipboard-darwin-x64@0.0.5
+	@teddyzhu/clipboard-linux-arm64-gnu@0.0.5
+	@teddyzhu/clipboard-linux-x64-gnu@0.0.5
 	@teddyzhu/clipboard-win32-arm64-msvc@0.0.5
 	@teddyzhu/clipboard-win32-x64-msvc@0.0.5
 	@vscode/vsce-sign-alpine-arm64@2.0.6
@@ -2110,6 +2106,10 @@ NPM_STUB_PKGS="
 	lightningcss-darwin-x64@1.32.0
 	lightningcss-freebsd-x64@1.32.0
 	lightningcss-linux-arm-gnueabihf@1.32.0
+	lightningcss-linux-arm64-gnu@1.32.0
+	lightningcss-linux-arm64-musl@1.32.0
+	lightningcss-linux-x64-gnu@1.32.0
+	lightningcss-linux-x64-musl@1.32.0
 	lightningcss-win32-arm64-msvc@1.32.0
 	lightningcss-win32-x64-msvc@1.32.0
 "
@@ -2137,7 +2137,12 @@ RDEPEND="
 	dev-vcs/git
 	sys-apps/ripgrep
 "
-BDEPEND="${NPM_NODE_DEPEND}"
+BDEPEND="
+	${NPM_NODE_DEPEND}
+	dev-util/lightningcss:1.32.0
+	dev-util/rollup:4.62.5
+	dev-util/tailwindcss-oxide:4.3.2
+"
 
 src_prepare() {
 	default
@@ -2160,6 +2165,13 @@ src_compile() {
 	# Upstream's prepare script builds and bundles during install
 	export QWEN_SKIP_PREPARE=1
 	npm_with_registry pnpm install --frozen-lockfile
+	local platform=linux-$(usex arm64 arm64 x64)-$(usex elibc_musl musl gnu)
+	npm_native_link rollup "@rollup/rollup-${platform}" 4.62.5 \
+		"${BROOT}/usr/$(get_libdir)/rollup-4.62.5/rollup.node"
+	npm_native_link lightningcss "lightningcss-${platform}" 1.32.0 \
+		"${BROOT}/usr/$(get_libdir)/lightningcss-1.32.0/lightningcss.node"
+	npm_native_link @tailwindcss/oxide "@tailwindcss/oxide-${platform}" 4.3.2 \
+		"${BROOT}/usr/$(get_libdir)/tailwindcss-oxide-4.3.2/tailwindcss-oxide.node"
 	edo pnpm --recursive run build
 	edo pnpm run bundle
 
