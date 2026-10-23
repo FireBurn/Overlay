@@ -148,6 +148,31 @@ ABI int __isoc99_sscanf(const char *s, const char *f, ...) {
 	va_end(ap);
 	return r;
 }
+ABI int __isoc99_scanf(const char *f, ...) {
+	va_list ap;
+	va_start(ap, f);
+	int r = vscanf(f, ap);
+	va_end(ap);
+	return r;
+}
+ABI int __isoc99_fscanf(FILE *fp, const char *f, ...) {
+	va_list ap;
+	va_start(ap, f);
+	int r = vfscanf(fp, f, ap);
+	va_end(ap);
+	return r;
+}
+ABI int __isoc99_vsscanf(const char *s, const char *f, va_list ap) { return vsscanf(s, f, ap); }
+ABI int __isoc99_vscanf(const char *f, va_list ap) { return vscanf(f, ap); }
+ABI int __isoc99_vfscanf(FILE *fp, const char *f, va_list ap) { return vfscanf(fp, f, ap); }
+ABI int __isoc99_swscanf(const wchar_t *s, const wchar_t *f, ...) {
+	va_list ap;
+	va_start(ap, f);
+	int r = vswscanf(s, f, ap);
+	va_end(ap);
+	return r;
+}
+ABI int __isoc99_vswscanf(const wchar_t *s, const wchar_t *f, va_list ap) { return vswscanf(s, f, ap); }
 ABI char *__strdup(const char *s) { return strdup(s); }
 ABI long long strtoq(const char *s, char **e, int b) { return strtoll(s, e, b); }
 ABI unsigned long long strtouq(const char *s, char **e, int b) { return strtoull(s, e, b); }
