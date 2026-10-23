@@ -151,22 +151,6 @@ _npm_set_pkg_uris() {
 		fi
 		NPM_PKG_URIS+="${open}${NPM_REGISTRY_URI}/${name}/-/${base}-${version}.tgz -> ${file}${close}
 "
-		# llvm-libc answers to both glibc and musl, and install scripts that
-		# probe the libc may ask for either package
-		if [[ ${conds} == *elibc_glibc* || ${conds} == *elibc_musl* ]]; then
-			conds=${conds//elibc_glibc/elibc_llvm}
-			conds=${conds//elibc_musl/elibc_llvm}
-			open= close=
-			local IFS=,
-			cond_list=( ${conds} )
-			unset IFS
-			for cond in "${cond_list[@]}"; do
-				open+="${cond}? ( "
-				close+=" )"
-			done
-			NPM_PKG_URIS+="${open}${NPM_REGISTRY_URI}/${name}/-/${base}-${version}.tgz -> ${file}${close}
-"
-		fi
 	done
 	if [[ -n ${NPM_PNPM_VERSION} ]]; then
 		NPM_PKG_URIS+="${NPM_REGISTRY_URI}/pnpm/-/pnpm-${NPM_PNPM_VERSION}.tgz -> pnpm-${NPM_PNPM_VERSION}.npm-tool.tgz
@@ -441,6 +425,41 @@ npm_rebuild_native() {
 			die "${ECLASS}: node-gyp failed for ${pkg}"
 		popd >/dev/null || die
 	done < <(find -L "${dir}" -name binding.gyp -not -path '*/test/*' -print0)
+}
+
+# @FUNCTION: npm_native_link
+# @USAGE: <package> <platform package> <version> <file>
+# @DESCRIPTION:
+# Stands a source-built addon in for a prebuilt platform package.  Beside
+# every installed copy of <package> that has <platform package>@<version>
+# as an optional dependency, a <platform package> directory is made whose
+# main is a link to <file>.  The link takes the name napi-rs gives the
+# addon when <package> declares one, as some install scripts look for it.
+# List the platform package in NPM_STUB_PKGS so the prebuilt one is never
+# fetched.
+npm_native_link() {
+	debug-print-function ${FUNCNAME} "$@"
+
+	(( $# == 4 )) ||
+		die "Usage: ${FUNCNAME} <package> <platform package> <version> <file>"
+	local pkg=$1 native=$2 version=$3 file=$4 json ver name target found=
+	[[ -f ${file} ]] || die "${ECLASS}: ${file} not found"
+
+	while IFS= read -r -d '' json; do
+		ver=$(node -p "(require('./${json}').optionalDependencies || {})['${native}'] || ''") || die
+		[[ ${ver} == "${version}" ]] || continue
+		name=$(node -p "const n = require('./${json}').napi || {}, b = n.binaryName || n.name,
+			p = n.packageName || '${pkg}'; b && '${native}'.startsWith(p + '-') ?
+			b + '.' + '${native}'.slice(p.length + 1) + '.node' : ''") || die
+		name=${name:-${file##*/}}
+		target="${json%/${pkg}/package.json}/${native}"
+		mkdir -p "${target}" || die
+		ln -sf "${file}" "${target}/${name}" || die
+		printf '{"name": "%s", "version": "%s", "main": "./%s"}\n' \
+			"${native}" "${version}" "${name}" > "${target}/package.json" || die
+		found=1
+	done < <(find -L . -path "*/node_modules/${pkg}/package.json" -print0)
+	[[ -n ${found} ]] || die "${ECLASS}: no ${pkg} depends on ${native}@${version}"
 }
 
 # @FUNCTION: npm_src_unpack
