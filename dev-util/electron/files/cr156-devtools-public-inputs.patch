@@ -1,0 +1,16 @@
+From: Gentoo Overlay <gentoo@localhost>
+Subject: [PATCH] devtools: mark public_inputs as not_needed in action targets
+
+Refresh for Chromium 156. The ts_library and entrypoint tsconfig actions
+that exposed public_inputs in M155 are gone; only the copy action remains.
+
+--- a/third_party/devtools-frontend/src/scripts/build/ninja/copy.gni
++++ b/third_party/devtools-frontend/src/scripts/build/ninja/copy.gni
+@@ -27,6 +27,7 @@
+ 
+     # Expose ts files to dependent targets.
+     public_inputs = filter_include(sources, [ "*.ts" ])
++    not_needed([ "public_inputs" ])
+ 
+     outputs = []
+     foreach(_input, sources) {

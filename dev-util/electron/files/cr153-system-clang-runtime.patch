@@ -1,0 +1,34 @@
+--- a/build/config/clang/clang.gni
++++ b/build/config/clang/clang.gni
+@@ -53,2 +53,5 @@
+ declare_args() {
++  system_clang_resource_dir = ""
++  system_clang_builtin_library = ""
++
+   # Indicates if the build should use the Chrome-specific plugins for enforcing
+--- a/build/config/clang/BUILD.gn
++++ b/build/config/clang/BUILD.gn
+@@ -239,3 +239,8 @@
+       _lib_file = "${_prefix}clang_rt.${_libname}${_suffix}.${_ext}"
+-      libs = [ "$_clang_lib_dir/$_dir/$_lib_file" ]
++      if (_libname == "builtins" && system_clang_builtin_library != "") {
++        not_needed([ "_clang_lib_dir", "_lib_file", "_dir" ])
++        libs = [ system_clang_builtin_library ]
++      } else {
++        libs = [ "$_clang_lib_dir/$_dir/$_lib_file" ]
++      }
+     }
+--- a/build/rust/rust_bindgen_generator.gni
++++ b/build/rust/rust_bindgen_generator.gni
+@@ -233,3 +233,8 @@
+-    clang_resource_dir =
+-        rebase_path(clang_base_path + "/lib/clang/" + clang_version,
+-                    root_build_dir)
++    if (system_clang_resource_dir != "") {
++      clang_resource_dir =
++          rebase_path(system_clang_resource_dir, root_build_dir)
++    } else {
++      clang_resource_dir =
++          rebase_path(clang_base_path + "/lib/clang/" + clang_version,
++                      root_build_dir)
++    }

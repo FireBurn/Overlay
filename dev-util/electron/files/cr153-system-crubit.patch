@@ -1,0 +1,20 @@
+--- a/build/config/rust.gni
++++ b/build/config/rust.gni
+@@ -58,3 +58,6 @@
+   rust_sysroot_absolute = ""
++
++  # Use a system Crubit built against the selected Rust compiler.
++  use_system_crubit = false
+
+   # Directory under which to find `bin/bindgen` (a `bin` directory containing
+@@ -130,1 +130,1 @@
+-use_chromium_rust_toolchain = rust_sysroot_absolute == ""
++use_chromium_rust_toolchain = rust_sysroot_absolute == "" || use_system_crubit
+@@ -427,1 +427,1 @@
+-enable_cpp_api_from_rust = enable_rust && use_chromium_rust_toolchain &&
++enable_cpp_api_from_rust = enable_rust && (use_chromium_rust_toolchain || use_system_crubit) &&
+--- a/build/rust/gni_impl/cpp_api_from_rust.gni
++++ b/build/rust/gni_impl/cpp_api_from_rust.gni
+@@ -49,1 +49,1 @@
+-  assert(enable_rust && use_chromium_rust_toolchain)
++  assert(enable_rust && (use_chromium_rust_toolchain || use_system_crubit))

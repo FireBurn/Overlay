@@ -1,0 +1,31 @@
+From: Gentoo Overlay <gentoo@localhost>
+Subject: [PATCH] cbor: construct MapEntry via the Crubit From binding
+
+Chromium 156 changed cbor::rust::MapEntry from a tuple struct to a
+#[repr(C)] struct with a From<(MapKey, Value)> impl. Crubit no longer
+generates a field-wise C++ constructor for it, only the explicit
+MapEntry(std::tuple<MapKey, Value>) constructor derived from the From
+impl, so the two-argument initialisation in writer.cc no longer
+compiles. Use the From binding instead.
+
+--- a/components/cbor/writer.cc
++++ b/components/cbor/writer.cc
+@@ -7,6 +7,7 @@
+ #include <cstdint>
+ #include <optional>
+ #include <string_view>
++#include <tuple>
+ #include <utility>
+ 
+ #include "base/check_op.h"
+@@ -173,7 +174,9 @@
+           return std::nullopt;
+         }
+         cbor::rust::vec_push_entry(
+-            entries, cbor::rust::MapEntry{*std::move(key), *std::move(value)});
++            entries,
++            cbor::rust::MapEntry{
++                std::make_tuple(*std::move(key), *std::move(value))});
+       }
+       // `Value::MapValue` is already sorted in canonical CBOR order.
+       return cbor::rust::Value::MakeMap(
