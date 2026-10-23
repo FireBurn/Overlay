@@ -10,7 +10,7 @@ BUN_VENDOR=(
 	"picohttpparser h2o/picohttpparser f4d94b48b31e0abae029ebeafcfd9ca0680ede58"
 	"zlib zlib-ng/zlib-ng 12731092979c6d07f42da27da673a9f6c7b13586"
 	"zstd facebook/zstd f8745da6ff1ad1e7bab384bd1f9d742439278e99"
-	"brotli google/brotli 028fb5a23661f123017c060daa546b55cf4bde29"
+	"brotli google/brotli db24a98aed38a16de78cc05ca15cdd8dc2a0d92d"
 	"libdeflate ebiggers/libdeflate 92e6a0db9fa848d742f9eb286c92afc60f2c3dda"
 	"libarchive libarchive/libarchive 27cbc7827172698143e440801fc0ba39ccb4f1f5"
 	"libjpeg-turbo libjpeg-turbo/libjpeg-turbo c85e6b905bf237038faa936dab160ebfc5da0344"
@@ -28,10 +28,10 @@ BUN_VENDOR=(
 	"boringssl oven-sh/boringssl 41bf9b59c2ebf277a7aa427e1ecad5cc80dd4d4f"
 	"lsquic litespeedtech/lsquic f812ceb9529e26717df78c6064a2ff648b949f3e"
 )
-BUN_WEBKIT_COMMIT="0c06faadf65bf8e8c8ad3a5a8aca83e1e9ed653f"
+BUN_WEBKIT_COMMIT="d6375c72affe0f70222cdcb45012b10f0bf3a9d5"
 BUN_NODEJS_HEADERS="https://nodejs.org/dist/v26.3.0/node-v26.3.0-headers.tar.gz"
 # Commit of the bun-v${PV} tag, reported by "bun --revision"
-BUN_GIT_SHA="744846f844374847c902b5e7fd59b4342a51ef99"
+BUN_GIT_SHA="38afee6c84fcf48c0edb2466aa4b27d287a59c30"
 
 CRATES="
 	addr2line@0.27.1
@@ -249,10 +249,6 @@ NPM_PKGS="
 	@lezer/cpp@1.1.6
 	@lezer/highlight@1.2.3
 	@lezer/lr@1.4.10
-	@oxlint/binding-linux-arm64-gnu@1.70.0|arm64
-	@oxlint/binding-linux-arm64-musl@1.70.0|arm64
-	@oxlint/binding-linux-x64-gnu@1.70.0|amd64
-	@oxlint/binding-linux-x64-musl@1.70.0|amd64
 	@types/node@26.2.0
 	@types/prop-types@15.7.15
 	@types/react@18.3.31
@@ -334,14 +330,12 @@ NPM_PKGS="
 	object-is@1.1.6
 	object-keys@1.1.1
 	object.assign@4.1.7
-	oxlint@1.70.0
 	pako@1.0.11
 	parse-asn1@5.1.9
 	pbkdf2@3.1.5
 	possible-typed-array-names@1.1.0
 	preact@10.27.2
-	prettier@3.6.2
-	prettier-plugin-organize-imports@4.3.0
+	prettier@3.9.9
 	process@0.11.10
 	process-nextick-args@2.0.1
 	public-encrypt@4.0.3
@@ -398,21 +392,6 @@ NPM_STUB_PKGS="
 	@esbuild/win32-arm64@0.21.5
 	@esbuild/win32-ia32@0.21.5
 	@esbuild/win32-x64@0.21.5
-	@oxlint/binding-android-arm-eabi@1.70.0
-	@oxlint/binding-android-arm64@1.70.0
-	@oxlint/binding-darwin-arm64@1.70.0
-	@oxlint/binding-darwin-x64@1.70.0
-	@oxlint/binding-freebsd-x64@1.70.0
-	@oxlint/binding-linux-arm-gnueabihf@1.70.0
-	@oxlint/binding-linux-arm-musleabihf@1.70.0
-	@oxlint/binding-linux-ppc64-gnu@1.70.0
-	@oxlint/binding-linux-riscv64-gnu@1.70.0
-	@oxlint/binding-linux-riscv64-musl@1.70.0
-	@oxlint/binding-linux-s390x-gnu@1.70.0
-	@oxlint/binding-openharmony-arm64@1.70.0
-	@oxlint/binding-win32-arm64-msvc@1.70.0
-	@oxlint/binding-win32-ia32-msvc@1.70.0
-	@oxlint/binding-win32-x64-msvc@1.70.0
 "
 
 LLVM_COMPAT=( 21 22 23 )
@@ -547,6 +526,7 @@ src_prepare() {
 	default
 
 	eapply "${FILESDIR}/${P}-type-info.patch"
+	eapply "${FILESDIR}/${P}-once-default.patch"
 
 	# Use the CPU target from CFLAGS instead of upstream's portable baseline.
 	# The same table feeds WebKit's flags and rustc's -Ctarget-cpu.

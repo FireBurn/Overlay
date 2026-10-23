@@ -1,0 +1,31 @@
+Implement Default for the lint startup state by hand. std::sync::Once
+implements Default only from Rust 1.100, so the derive fails on 1.99.
+
+--- a/src/runtime/cli/lint_js.rs
++++ b/src/runtime/cli/lint_js.rs
+@@ -407,7 +407,6 @@
+ }
+ 
+ /// Startup state that all VMs share.
+-#[derive(Default)]
+ struct Start {
+     initialize: std::sync::Once,
+     /// Set if the run won't have more than a few VMs. Stays unset if a VM starts before the files are known.
+@@ -415,6 +414,17 @@
+     memory: std::sync::OnceLock<usize>,
+ }
+ 
++// `Once` implements `Default` only from Rust 1.100.
++impl Default for Start {
++    fn default() -> Self {
++        Self {
++            initialize: std::sync::Once::new(),
++            is_for_few: AtomicBool::default(),
++            memory: std::sync::OnceLock::new(),
++        }
++    }
++}
++
+ impl Start {
+     /// [`memory_for_engines`]
+     fn memory(&self) -> usize {
