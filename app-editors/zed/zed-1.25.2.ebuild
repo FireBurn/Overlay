@@ -17,9 +17,9 @@ CRATES="
 	adler2@2.0.1
 	adler32@1.2.0
 	aes@0.8.4
-	agent-client-protocol-derive@2.2.0
-	agent-client-protocol-schema@1.9.1
-	agent-client-protocol@2.2.0
+	agent-client-protocol-derive@3.3.0
+	agent-client-protocol-schema@1.11.0
+	agent-client-protocol@3.3.0
 	ahash@0.8.12
 	aho-corasick@1.1.3
 	aliasable@0.1.3
@@ -27,8 +27,8 @@ CRATES="
 	aligned@0.4.3
 	alloca@0.4.0
 	allocator-api2@0.2.21
-	alsa-sys@0.3.1
-	alsa@0.10.0
+	alsa-sys@0.4.0
+	alsa@0.11.0
 	ambient-authority@0.0.2
 	ammonia@4.1.4
 	android_system_properties@0.1.5
@@ -104,12 +104,14 @@ CRATES="
 	aws-smithy-eventstream@0.60.20
 	aws-smithy-http-client@1.1.10
 	aws-smithy-http@0.63.4
-	aws-smithy-json@0.62.5
+	aws-smithy-json@0.62.7
 	aws-smithy-observability@0.2.5
 	aws-smithy-query@0.60.15
-	aws-smithy-runtime-api@1.11.4
+	aws-smithy-runtime-api-macros@1.0.0
+	aws-smithy-runtime-api@1.12.3
 	aws-smithy-runtime@1.10.1
-	aws-smithy-types@1.4.7
+	aws-smithy-schema@0.1.0
+	aws-smithy-types@1.4.9
 	aws-smithy-xml@0.60.15
 	aws-types@1.3.12
 	axum-core@0.3.4
@@ -125,10 +127,10 @@ CRATES="
 	bigdecimal@0.4.8
 	bincode@1.3.3
 	bindgen@0.72.1
+	bit-set@0.11.1
 	bit-set@0.8.0
-	bit-set@0.9.1
+	bit-vec@0.10.1
 	bit-vec@0.8.0
-	bit-vec@0.9.1
 	bit_field@0.10.3
 	bitflags@1.3.2
 	bitflags@2.13.1
@@ -180,8 +182,7 @@ CRATES="
 	cexpr@0.6.0
 	cfg-expr@0.20.9
 	cfg-if@1.0.4
-	cfg_aliases@0.2.1
-	cgl@0.3.2
+	cfg_aliases@0.2.2
 	chacha20@0.10.1
 	chardetng@0.1.17
 	chrono@0.4.42
@@ -227,19 +228,16 @@ CRATES="
 	core-graphics-helmer-fork@0.24.0
 	core-graphics-types@0.1.3
 	core-graphics-types@0.2.0
-	core-graphics2@0.5.2
 	core-graphics@0.23.2
 	core-graphics@0.24.0
 	core-services@1.0.0
 	core-text@21.0.0
-	core-video@0.5.2
 	core2@0.4.0
 	core_maths@0.1.1
 	coreaudio-rs@0.12.1
-	coreaudio-rs@0.13.0
+	coreaudio-rs@0.14.2
 	coreaudio-sys@0.2.18
 	cosmic-text@0.19.0
-	cpal@0.17.1
 	cpp_demangle@0.5.1
 	cpufeatures@0.2.17
 	cpufeatures@0.3.0
@@ -441,13 +439,11 @@ CRATES="
 	glob@0.3.3
 	globset@0.4.17
 	gloo-timers@0.3.0
-	glow@0.17.0
+	glow@0.18.0
 	glutin_wgl_sys@0.6.1
 	gobject-sys@0.21.5
 	goblin@0.9.3
 	gpu-allocator@0.28.0
-	gpu-descriptor-types@0.2.0
-	gpu-descriptor@0.3.2
 	granit-parser@1.0.0
 	group@0.12.1
 	guppy-workspace-hack@0.1.0
@@ -477,7 +473,6 @@ CRATES="
 	heed@0.21.0
 	hermit-abi@0.5.2
 	hex@0.4.3
-	hexf-parse@0.2.1
 	hkdf@0.12.4
 	hmac@0.12.1
 	home@0.5.11
@@ -540,7 +535,6 @@ CRATES="
 	io-extras@0.19.0
 	io-lifetimes@2.0.4
 	io-lifetimes@3.0.1
-	io-surface@0.16.1
 	iovec@0.1.4
 	ipc-channel@0.19.0
 	ipnet@2.11.0
@@ -565,7 +559,7 @@ CRATES="
 	jni@0.21.1
 	jni@0.22.4
 	jobserver@0.1.34
-	js-sys@0.3.97
+	js-sys@0.3.106
 	json5@1.3.1
 	jsonschema-regex@0.51.0
 	jsonschema-value@0.51.0
@@ -573,7 +567,6 @@ CRATES="
 	jsonwebtoken@10.3.0
 	jupyter-protocol@1.4.0
 	jupyter-websocket-client@1.1.0
-	khronos-egl@6.0.0
 	khronos_api@3.1.0
 	kqueue-sys@1.1.2
 	kqueue@1.2.0
@@ -581,8 +574,6 @@ CRATES="
 	kv-log-macro@1.0.7
 	lalrpop-util@0.23.1
 	lazy_static@1.5.0
-	leak@0.1.2
-	leaky-cow@0.1.1
 	leb128@0.2.5
 	leb128fmt@0.1.0
 	lebe@0.5.3
@@ -626,8 +617,9 @@ CRATES="
 	lyon_path@1.0.16
 	lyon_tessellation@1.0.16
 	mac-notification-sys@0.6.15
-	mach2@0.5.0
 	mach2@0.6.0
+	macro_rules_attribute-proc_macro@0.2.3
+	macro_rules_attribute@0.2.3
 	malloc_buf@0.0.6
 	manatee@0.8.0-alpha.5
 	maplit@1.0.2
@@ -666,7 +658,6 @@ CRATES="
 	moxcms@0.8.1
 	msvc_spectre_libs@0.1.3
 	multimap@0.8.3
-	naga@29.0.4
 	nanoid@0.4.0
 	native-tls@0.2.18
 	nbformat@1.2.0
@@ -715,6 +706,7 @@ CRATES="
 	objc2-core-image@0.2.2
 	objc2-core-media@0.3.2
 	objc2-core-services@0.3.2
+	objc2-core-text@0.3.2
 	objc2-core-video@0.3.2
 	objc2-encode@4.1.0
 	objc2-foundation@0.2.2
@@ -726,6 +718,7 @@ CRATES="
 	objc2-quartz-core@0.2.2
 	objc2-quartz-core@0.3.2
 	objc2-screen-capture-kit@0.3.2
+	objc2-security@0.3.2
 	objc2-user-notifications@0.3.2
 	objc2@0.5.2
 	objc2@0.6.3
@@ -765,6 +758,7 @@ CRATES="
 	password-hash@0.4.2
 	paste@1.0.15
 	pastey@0.1.1
+	pastey@0.2.3
 	pathdiff@0.2.3
 	pathfinder_geometry@0.5.1
 	pathfinder_simd@0.5.6
@@ -1154,12 +1148,12 @@ CRATES="
 	tower@0.4.13
 	tower@0.5.2
 	tracing-attributes@0.1.31
-	tracing-core@0.1.35
+	tracing-core@0.1.36
 	tracing-log@0.2.0
 	tracing-serde@0.2.0
 	tracing-subscriber@0.3.22
 	tracing-tracy@0.11.4
-	tracing@0.1.43
+	tracing@0.1.44
 	tracy-client-sys@0.27.0
 	tracy-client@0.18.3
 	tree-sitter-bash@0.25.1
@@ -1238,11 +1232,11 @@ CRATES="
 	wasip2@1.0.1+wasi-0.2.4
 	wasip3@0.4.0+wasi-0.3.0-rc-2026-01-06
 	wasite@0.1.0
-	wasm-bindgen-futures@0.4.70
-	wasm-bindgen-macro-support@0.2.120
-	wasm-bindgen-macro@0.2.120
-	wasm-bindgen-shared@0.2.120
-	wasm-bindgen@0.2.120
+	wasm-bindgen-futures@0.4.79
+	wasm-bindgen-macro-support@0.2.129
+	wasm-bindgen-macro@0.2.129
+	wasm-bindgen-shared@0.2.129
+	wasm-bindgen@0.2.129
 	wasm-encoder@0.201.0
 	wasm-encoder@0.227.1
 	wasm-encoder@0.244.0
@@ -1282,22 +1276,13 @@ CRATES="
 	wayland-protocols@0.32.9
 	wayland-scanner@0.31.7
 	wayland-sys@0.31.11
-	web-sys@0.3.97
+	web-sys@0.3.106
 	web-time@1.1.0
 	web_atoms@0.2.6
 	webpki-root-certs@1.0.9
 	webpki-roots@0.26.8
 	webpki-roots@1.0.8
 	weezl@0.1.10
-	wgpu-core-deps-apple@29.0.4
-	wgpu-core-deps-emscripten@29.0.4
-	wgpu-core-deps-wasm@29.0.4
-	wgpu-core-deps-windows-linux-android@29.0.4
-	wgpu-core@29.0.4
-	wgpu-hal@29.0.4
-	wgpu-naga-bridge@29.0.4
-	wgpu-types@29.0.4
-	wgpu@29.0.4
 	which@8.0.5
 	whoami@1.6.1
 	winapi-i686-pc-windows-gnu@0.4.0
@@ -1428,7 +1413,7 @@ CRATES="
 	xml5ever@0.39.0
 	xmlparser@0.13.6
 	xmlwriter@0.1.0
-	xxhash-rust@0.8.15
+	xxhash-rust@0.8.16
 	y4m@0.8.0
 	yaml-rust2@0.8.1
 	yansi@1.0.1
@@ -1476,17 +1461,21 @@ declare -A GIT_CRATES=(
 	[async-pipe]='https://github.com/zed-industries/async-pipe-rs;82d00a04211cf4e1236029aa03e6b6ce2a74c553;async-pipe-rs-%commit%'
 	[async-process]='https://github.com/zed-industries/async-process;0b6d6713570af61806e1e5cb40e0f757cb93fd9d;async-process-%commit%'
 	[async-tar]='https://github.com/zed-industries/async-tar;bd3ad6f89df9a9da7a8535958756d6bf465936a0;async-tar-%commit%'
-	[async-task]='https://github.com/smol-rs/async-task;b4486cd71e4e94fbda54ce6302444de14f4d190e;async-task-%commit%'
+	[async-task]='https://github.com/zed-industries/async-task;015845a19fc31752c02367567d3b8900a406f9da;async-task-%commit%'
 	[calloop]='https://github.com/zed-industries/calloop;3759371fee14c40066d64777e2a36b6ffcc22590;calloop-%commit%'
+	[cpal]='https://github.com/RustAudio/cpal;e1612d5d98152f8dc2a62e1b51ef7cbf4f7f26b7;cpal-%commit%'
 	[dap-types]='https://github.com/zed-industries/dap-types;1b461b310481d01e02b2603c16d7144b926339f8;dap-types-%commit%/dap-types'
 	[gh-workflow]='https://github.com/zed-industries/gh-workflow;37f3c0575d379c218a9c455ee67585184e40d43f;gh-workflow-%commit%/crates/gh-workflow'
 	[gh-workflow-macros]='https://github.com/zed-industries/gh-workflow;37f3c0575d379c218a9c455ee67585184e40d43f;gh-workflow-%commit%/crates/gh-workflow-macros'
+	[khronos-egl]='https://github.com/zed-industries/khronos-egl;42214b36347b108fd9630ca6254b96dde59e04fe;khronos-egl-%commit%'
 	[libwebrtc]='https://github.com/zed-industries/livekit-rust-sdks;0a1c519cfce9b365229026b55de9b9dbdb6fed3c;livekit-rust-sdks-%commit%/libwebrtc'
 	[livekit]='https://github.com/zed-industries/livekit-rust-sdks;0a1c519cfce9b365229026b55de9b9dbdb6fed3c;livekit-rust-sdks-%commit%/livekit'
 	[livekit-api]='https://github.com/zed-industries/livekit-rust-sdks;0a1c519cfce9b365229026b55de9b9dbdb6fed3c;livekit-rust-sdks-%commit%/livekit-api'
 	[livekit-protocol]='https://github.com/zed-industries/livekit-rust-sdks;0a1c519cfce9b365229026b55de9b9dbdb6fed3c;livekit-rust-sdks-%commit%/livekit-protocol'
 	[livekit-runtime]='https://github.com/zed-industries/livekit-rust-sdks;0a1c519cfce9b365229026b55de9b9dbdb6fed3c;livekit-rust-sdks-%commit%/livekit-runtime'
 	[lsp-types]='https://github.com/zed-industries/lsp-types;f1783e63a7f4eb4397bf51d4148b4895a1f7ab16;lsp-types-%commit%'
+	[naga]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/naga'
+	[naga-types]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/naga-types'
 	[notify]='https://github.com/zed-industries/notify;d842f16b2716bd60f09caf3ae3a894237ab38f54;notify-%commit%/notify'
 	[notify-types]='https://github.com/zed-industries/notify;d842f16b2716bd60f09caf3ae3a894237ab38f54;notify-%commit%/notify-types'
 	[nvim-rs]='https://github.com/KillTheMule/nvim-rs;764dd270c642f77f10f3e19d05cc178a6cbe69f3;nvim-rs-%commit%'
@@ -1519,7 +1508,7 @@ declare -A GIT_CRATES=(
 	[pet-winpython]='https://github.com/zed-industries/python-environment-tools;5aad7164bfc2a58977b103c8ef8fdd7302ed2e9f;python-environment-tools-%commit%/crates/pet-winpython'
 	[proptest]='https://github.com/proptest-rs/proptest;3dca198a8fef1b32e3a66f1e1897c955b4dc5b5b;proptest-%commit%/proptest'
 	[proptest-macro]='https://github.com/proptest-rs/proptest;3dca198a8fef1b32e3a66f1e1897c955b4dc5b5b;proptest-%commit%/proptest-macro'
-	[rodio]='https://github.com/RustAudio/rodio;e50e726ddd0292f6ef9de0dda6b90af4ed1fb66a;rodio-%commit%'
+	[rodio]='https://github.com/RustAudio/rodio;3ee9745862279ce1d18db593155016e7ce024aeb;rodio-%commit%'
 	[trash]='https://github.com/zed-industries/trash-rs;41c6c800d884a89351f3b8856d12894cccee261d;trash-rs-%commit%'
 	[tree-sitter]='https://github.com/tree-sitter/tree-sitter;43623ec9bf0eaaf7113285c46e8a09018f181b18;tree-sitter-%commit%/lib'
 	[tree-sitter-cpp]='https://github.com/tree-sitter/tree-sitter-cpp;5cb9b693cfd7bfacab1d9ff4acac1a4150700609;tree-sitter-cpp-%commit%'
@@ -1534,6 +1523,17 @@ declare -A GIT_CRATES=(
 	[wasm_thread]='https://github.com/zed-industries/wasm_thread;0cf96c7708dfb97ccf3da50347e25edcf75d6937;wasm_thread-%commit%'
 	[webrtc-sys]='https://github.com/zed-industries/livekit-rust-sdks;0a1c519cfce9b365229026b55de9b9dbdb6fed3c;livekit-rust-sdks-%commit%/webrtc-sys'
 	[webrtc-sys-build]='https://github.com/zed-industries/livekit-rust-sdks;0a1c519cfce9b365229026b55de9b9dbdb6fed3c;livekit-rust-sdks-%commit%/webrtc-sys/build'
+	[wgpu]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu'
+	[wgpu-core]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-core'
+	[wgpu-core-deps-apple]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-core/platform-deps/apple'
+	[wgpu-core-deps-emscripten]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-core/platform-deps/emscripten'
+	[wgpu-core-deps-linux-android-bsd]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-core/platform-deps/linux-android-bsd'
+	[wgpu-core-deps-wasm]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-core/platform-deps/wasm'
+	[wgpu-core-deps-windows]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-core/platform-deps/windows'
+	[wgpu-hal]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-hal'
+	[wgpu-naga-bridge]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-naga-bridge'
+	[wgpu-sync]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-sync'
+	[wgpu-types]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-types'
 	[windows-capture]='https://github.com/zed-industries/windows-capture;f0d6c1b6691db75461b732f6d5ff56eed002eeb9;windows-capture-%commit%'
 	[wprcontrol]='https://github.com/zed-industries/wprcontrol;cd811f7d744f65291e13131b1d907fda63ed91a1;wprcontrol-%commit%'
 	[xim-ctext]='https://github.com/zed-industries/xim-rs;16f35a2c881b815a2b6cdfd6687988e84f8447d8;xim-rs-%commit%/xim-ctext'
@@ -1650,13 +1650,21 @@ src_prepare() {
 	local ASYNC_PROCESS_GIT="async-process = { git = \"https://github.com/zed-industries/async-process.git\", rev = \"${ASYNC_PROCESS_COMMIT}\""
 	local ASYNC_PROCESS_PATH="async-process = \\{ path = \"${WORKDIR}/async-process-${ASYNC_PROCESS_COMMIT}\""
 
-	local ASYNC_TASK_COMMIT="b4486cd71e4e94fbda54ce6302444de14f4d190e"
-	local ASYNC_TASK_GIT="async-task = { git = \"https://github.com/smol-rs/async-task.git\", rev = \"${ASYNC_TASK_COMMIT}\""
+	local ASYNC_TASK_COMMIT="015845a19fc31752c02367567d3b8900a406f9da"
+	local ASYNC_TASK_GIT="async-task = { git = \"https://github.com/zed-industries/async-task.git\", rev = \"${ASYNC_TASK_COMMIT}\""
 	local ASYNC_TASK_PATH="async-task = \\{ path = \"${WORKDIR}/async-task-${ASYNC_TASK_COMMIT}\""
+
+	local CPAL_COMMIT="e1612d5d98152f8dc2a62e1b51ef7cbf4f7f26b7"
+	local CPAL_GIT="cpal = { git = \"https://github.com/RustAudio/cpal\", rev = \"${CPAL_COMMIT}\""
+	local CPAL_PATH="cpal = \\{ path = \"${WORKDIR}/cpal-${CPAL_COMMIT}\""
 
 	local CALLOOP_COMMIT="3759371fee14c40066d64777e2a36b6ffcc22590"
 	local CALLOOP_GIT="calloop = { git = \"https://github.com/zed-industries/calloop\", rev = \"${CALLOOP_COMMIT}\""
 	local CALLOOP_PATH="calloop = \\{ path = \"${WORKDIR}/calloop-${CALLOOP_COMMIT}\""
+
+	local KHRONOS_EGL_COMMIT="42214b36347b108fd9630ca6254b96dde59e04fe"
+	local KHRONOS_EGL_GIT="khronos-egl = { git = \"https://github.com/zed-industries/khronos-egl\", rev = \"${KHRONOS_EGL_COMMIT}\""
+	local KHRONOS_EGL_PATH="khronos-egl = \\{ path = \"${WORKDIR}/khronos-egl-${KHRONOS_EGL_COMMIT}\""
 
 	local LIVEKIT_COMMIT="0a1c519cfce9b365229026b55de9b9dbdb6fed3c"
 	local LIVEKIT_GIT="livekit = { git = \"https://github.com/zed-industries/livekit-rust-sdks\", rev = \"${LIVEKIT_COMMIT}\""
@@ -1685,7 +1693,9 @@ src_prepare() {
 	sed \
 		-e "s#${ASYNC_PROCESS_GIT}#${ASYNC_PROCESS_PATH}#" \
 		-e "s#${ASYNC_TASK_GIT}#${ASYNC_TASK_PATH}#" \
+		-e "s#${CPAL_GIT}#${CPAL_PATH}#" \
 		-e "s#${CALLOOP_GIT}#${CALLOOP_PATH}#" \
+		-e "s#${KHRONOS_EGL_GIT}#${KHRONOS_EGL_PATH}#" \
 		-e "s#${LIVEKIT_GIT}#${LIVEKIT_PATH}#" \
 		-e "s#${LIBWERBRTC_GIT}#${LIBWERBRTC_PATH}#" \
 		-e "s#${WEBRTC_SYS_GIT}#${WEBRTC_SYS_PATH}#" \
