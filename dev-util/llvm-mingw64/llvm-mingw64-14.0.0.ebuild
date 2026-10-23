@@ -44,7 +44,21 @@ RDEPEND="
 	llvm-core/clang:${LLVM_MAJOR}
 	llvm-core/llvm:${LLVM_MAJOR}
 	llvm-core/lld:${LLVM_MAJOR}
-	bin-symlinks? ( !dev-util/mingw64-toolchain[bin-symlinks] )
+	bin-symlinks? (
+		!dev-util/mingw64-toolchain[bin-symlinks]
+		arm64-pe? (
+			!cross-aarch64-w64-mingw32/binutils
+			!cross-aarch64-w64-mingw32/gcc
+		)
+		i686-pe? (
+			!cross-i686-w64-mingw32/binutils
+			!cross-i686-w64-mingw32/gcc
+		)
+		x86-64-pe? (
+			!cross-x86_64-w64-mingw32/binutils
+			!cross-x86_64-w64-mingw32/gcc
+		)
+	)
 "
 DEPEND="${RDEPEND}"
 
