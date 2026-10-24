@@ -23,7 +23,7 @@ EAPI=8
 # using an external CI system that we have some control over, in case
 # issues pop up again with official tarball generation.
 
-GN_MIN_VER=0.2574
+GN_MIN_VER=0.2596
 # chromium-tools/get-chromium-toolchain-strings.py (or just use Chromicler)
 # Node for M145+ should be 24.12.0 but that's not packaged in Gentoo yet. See #969145
 TEST_FONT="9c07d19d9c5ee1ff94f717e6fb17e0c8c354e6f9"
@@ -564,11 +564,11 @@ src_prepare() {
 
 		# Copium patches go here.
 		PATCHES+=(
-			"${WORKDIR}/copium/cr143-libsync-__BEGIN_DECLS.patch"
-			"${FILESDIR}/cr153-system-crubit.patch"
+			"${FILESDIR}/cr158-libsync-__BEGIN_DECLS.patch"
+			"${FILESDIR}/cr158-system-crubit.patch"
 			"${FILESDIR}/cr156-cbor-crubit-enable-cpp-api-from-rust.patch"
 			"${FILESDIR}/cr157-cbor-mapentry-from-tuple.patch"
-			"${FILESDIR}/cr153-rust-wrapper-inputs-system-rust.patch"
+			"${FILESDIR}/cr158-bindgen-libclang-path.patch"
 			"${FILESDIR}/cr157-system-clang-runtime.patch"
 			"${FILESDIR}/cr153-bytemuck-stable-simd.patch"
 		)
@@ -820,7 +820,6 @@ src_prepare() {
 		third_party/libpfm4
 		third_party/libphonenumber
 		third_party/libpng
-		third_party/libsecret
 		third_party/libsrtp
 		third_party/libsync
 		third_party/libtess2/libtess2

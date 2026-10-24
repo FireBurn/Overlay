@@ -1,0 +1,30 @@
+From: Mike Lothian <mike@fireburn.co.uk>
+Subject: [PATCH] Set the bindgen libclang path
+
+Allow the ebuild to specify the libclang directory.
+---
+diff --git a/build/config/rust.gni b/build/config/rust.gni
+--- a/build/config/rust.gni
++++ b/build/config/rust.gni
+@@ -65,6 +65,7 @@
+   # Directory under which to find `bin/bindgen` (a `bin` directory containing
+   # the bindgen exectuable).
+   rust_bindgen_root = "//third_party/rust-toolchain"
++  bindgen_libclang_path = ""
+ 
+   # Directory under which to find Crubit tools and support libraries:
+   # * `bin/cc_bindings_from_rs` and `bin/rs_bindings_from_cc`
+diff --git a/build/rust/rust_bindgen_generator.gni b/build/rust/rust_bindgen_generator.gni
+--- a/build/rust/rust_bindgen_generator.gni
++++ b/build/rust/rust_bindgen_generator.gni
+@@ -27,7 +27,9 @@ if (host_os == "win") {
+ # On Windows, the libclang.dll is beside the bindgen.exe, otherwise it is in
+ # ../lib.
+ _libclang_path = rust_bindgen_root
+-if (!use_chromium_rust_toolchain &&
++if (bindgen_libclang_path != "") {
++  _libclang_path = bindgen_libclang_path
++} else if (!use_chromium_rust_toolchain &&
+     (host_cpu == "ppc64" || host_cpu == "s390x")) {
+   _libclang_path = rust_sysroot_absolute + "/lib64"
+ } else if (host_os == "win") {

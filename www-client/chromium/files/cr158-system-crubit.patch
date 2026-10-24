@@ -1,0 +1,12 @@
+--- a/build/config/rust.gni
++++ b/build/config/rust.gni
+@@ -58,3 +58,6 @@
+   rust_sysroot_absolute = ""
++
++  # Use a system Crubit built against the selected Rust compiler.
++  use_system_crubit = false
+
+   # Directory under which to find `bin/bindgen` (a `bin` directory containing
+@@ -130,1 +130,1 @@
+-use_chromium_rust_toolchain = rust_sysroot_absolute == ""
++use_chromium_rust_toolchain = rust_sysroot_absolute == "" || use_system_crubit

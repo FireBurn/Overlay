@@ -46,25 +46,3 @@
  
    # The headers are parsed with v8_base_without_compiler's flags.
    _metagen_flags_target = ":v8_base_without_compiler"
---- a/build/rust/rust_api_from_cpp.gni
-+++ b/build/rust/rust_api_from_cpp.gni
-@@ -6,4 +6,9 @@
- import("//build/config/rust.gni")
- import("//build/config/sysroot.gni")
- import("//build/rust/mixed_static_library.gni")
-+
-+_clang_resource_dir = clang_base_path + "/lib/clang/" + clang_version
-+if (system_clang_resource_dir != "") {
-+  _clang_resource_dir = system_clang_resource_dir
-+}
- 
- # Template to generate and build Rust bindings for a set of C++ headers using
- # Crubit's `rs_bindings_from_cc` tool.
-@@ -290,8 +295,6 @@
-       # Add it last so includes from deps and configs take precedence.
-       "-isystem" + rebase_path(
--              clang_base_path + "/lib/clang/" + clang_version + "/include",
-+              _clang_resource_dir + "/include",
-               root_build_dir),
- 
-       # Passes C comments through as rustdoc attributes.

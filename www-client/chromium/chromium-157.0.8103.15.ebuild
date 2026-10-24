@@ -85,7 +85,7 @@ LICENSE+=" IJG ISC LGPL-2 LGPL-2.1 MIT MPL-1.1 MPL-2.0 Ms-PL PSF-2 SGI-B-2.0 SSL
 LICENSE+=" Unicode-DFS-2015 Unlicense UoI-NCSA ZLIB libtiff openssl"
 LICENSE+=" rar? ( unRAR )"
 
-SLOT="stable"
+SLOT="beta"
 # Unstable in gentoo exists mostly to give devs some breathing room for beta/stable releases.
 # It shouldn't be keyworded but adventurous users are encouraged to select it;
 # there's official dev channel Google Chrome after all.
@@ -517,9 +517,11 @@ src_prepare() {
 		"${FILESDIR}/cr145-oauth2-client-switches.patch"
 		"${FILESDIR}/cr148-v8-fix-cfi-sanitizer-set-death-callback.patch"
 		"${FILESDIR}/cr149-channel-aware-build.patch"
-		"${FILESDIR}/cr155-devtools-public-inputs.patch"
-		"${FILESDIR}/cr155-devtools-isolated-declarations.patch"
+		"${FILESDIR}/cr156-devtools-public-inputs.patch"
+		"${FILESDIR}/cr156-devtools-isolated-declarations.patch"
+		"${FILESDIR}/cr156-bidi-isolated-declarations.patch"
 		"${FILESDIR}/cr154-devtools-typescript-tsc-fallback.patch"
+		"${FILESDIR}/cr156-devtools-tsc-native.patch"
 		"${FILESDIR}/cr152-dawn-system-go.patch"
 		"${FILESDIR}/cr152-unbundle-minizip-undo-unicode.patch"
 		"${FILESDIR}/cross-compile.patch"
@@ -564,9 +566,10 @@ src_prepare() {
 		PATCHES+=(
 			"${WORKDIR}/copium/cr143-libsync-__BEGIN_DECLS.patch"
 			"${FILESDIR}/cr153-system-crubit.patch"
-			"${FILESDIR}/cr155-cbor-crubit-enable-cpp-api-from-rust.patch"
+			"${FILESDIR}/cr156-cbor-crubit-enable-cpp-api-from-rust.patch"
+			"${FILESDIR}/cr157-cbor-mapentry-from-tuple.patch"
 			"${FILESDIR}/cr153-rust-wrapper-inputs-system-rust.patch"
-			"${FILESDIR}/cr153-system-clang-runtime.patch"
+			"${FILESDIR}/cr157-system-clang-runtime.patch"
 			"${FILESDIR}/cr153-bytemuck-stable-simd.patch"
 		)
 
@@ -896,6 +899,7 @@ src_prepare() {
 		third_party/selenium-atoms
 		third_party/sentencepiece
 		third_party/sentencepiece/src/third_party/darts_clone
+		third_party/sframe
 		third_party/shell-encryption
 		third_party/simdutf
 		third_party/simplejson
@@ -1165,7 +1169,7 @@ chromium_configure() {
 			"use_system_crubit=true"
 			# metagen parses V8 headers with the bundled clang's libclang and
 			# builtin headers; generate the instance types with Torque instead.
-			"v8_use_metagen_instance_types=false"
+			"v8_use_metagen=false"
 		)
 
 		if tc-ld-is-mold; then
