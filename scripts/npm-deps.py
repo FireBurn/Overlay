@@ -12,7 +12,9 @@ Usage:
   npm-deps.py [--arches amd64,arm64] LOCKFILE... [--ebuild FILE]
 
 With --ebuild, the NPM_PKGS="..." block in FILE is replaced in place;
-otherwise the block is printed.  Packages that cannot come from the registry
+otherwise the block is printed.  Native addons that the overlay builds from
+source go in NPM_NATIVE_DEPEND, one slot per version the lockfile pins, for
+npm_native_link; --natives-only updates only that block.  Packages that cannot come from the registry
 (git, file or URL dependencies) are reported on stderr.
 """
 
@@ -27,6 +29,19 @@ REGISTRY_RE = re.compile(r"^https://registry\.(?:npmjs\.org|yarnpkg\.com)/(.+)/-
 CPU = {"x64": "amd64", "arm64": "arm64", "ia32": "x86", "arm": "arm", "ppc64": "ppc64",
        "riscv64": "riscv", "loong64": "loong", "s390x": "s390"}
 LIBC = {"glibc": "elibc_glibc", "musl": "elibc_musl"}
+
+# Prebuilt platform package prefix -> overlay package that builds it, slotted
+# by version
+NATIVES = {
+    "@oxc-parser/binding-": "dev-util/oxc-parser",
+    "@oxc-resolver/binding-": "dev-util/oxc-resolver",
+    "@rollup/rollup-": "dev-util/rollup",
+    "@swc/core-": "dev-util/swc",
+    "@tailwindcss/oxide-": "dev-util/tailwindcss-oxide",
+    "@unrs/resolver-binding-": "dev-util/unrs-resolver",
+    "lightningcss-": "dev-util/lightningcss",
+}
+NATIVE_RE = re.compile(r"^(.+-)linux-x64-(?:gnu|musl)$")
 
 
 def as_list(v):
@@ -100,6 +115,18 @@ class Collector:
             else:
                 lines.extend(f"{name}@{version}|{c}" for c in sorted(conds))
         return lines
+
+    def natives(self):
+        deps, unknown = set(), set()
+        for name, version in self.pkgs.keys() | self.stubs:
+            m = NATIVE_RE.match(name)
+            if not m:
+                continue
+            if m.group(1) in NATIVES:
+                deps.add(f"{NATIVES[m.group(1)]}:{version}")
+            else:
+                unknown.add(f"{name}@{version}")
+        return sorted(deps), sorted(unknown)
 
 
 def name_from_url(url):
@@ -219,6 +246,8 @@ def main():
     ap.add_argument("lockfiles", nargs="+", type=Path)
     ap.add_argument("--arches", default="amd64,arm64")
     ap.add_argument("--ebuild", type=Path)
+    ap.add_argument("--natives-only", action="store_true",
+                    help="only update NPM_NATIVE_DEPEND, for live ebuilds")
     ap.add_argument("--strict", action="store_true",
                     help="fail if a dependency cannot be represented")
     args = ap.parse_args()
@@ -230,6 +259,10 @@ def main():
     block = 'NPM_PKGS="\n' + "".join(f"\t{l}\n" for l in col.render()) + '"'
     stubs = sorted(f"{n}@{v}" for n, v in col.stubs if (n, v) not in col.pkgs)
     stub_block = 'NPM_STUB_PKGS="\n' + "".join(f"\t{l}\n" for l in stubs) + '"'
+    natives, unknown = col.natives()
+    native_block = 'NPM_NATIVE_DEPEND="' + "".join(f"\n\t{d}" for d in natives) + ('\n"' if natives else '"')
+    for u in unknown:
+        print(f"prebuilt native {u} has no source-built package", file=sys.stderr)
     for s in col.skipped:
         print(f"skipped {s}", file=sys.stderr)
     print(f"{len(col.pkgs)} packages, {len(col.stubs)} other-platform stubs", file=sys.stderr)
@@ -238,7 +271,15 @@ def main():
 
     if args.ebuild:
         text = args.ebuild.read_text()
-        new, n = re.subn(r'^NPM_PKGS="[^"]*"', lambda _: block, text, count=1, flags=re.M)
+        new, n = re.subn(r'^(\s*)NPM_NATIVE_DEPEND="[^"]*"',
+                         lambda m: m.group(1) + native_block.replace("\n", "\n" + m.group(1)),
+                         text, count=1, flags=re.M)
+        if not n and natives:
+            print(f"{args.ebuild}: no NPM_NATIVE_DEPEND block; add one to BDEPEND", file=sys.stderr)
+        if args.natives_only:
+            args.ebuild.write_text(new)
+            return
+        new, n = re.subn(r'^NPM_PKGS="[^"]*"', lambda _: block, new, count=1, flags=re.M)
         if not n:
             sys.exit(f"{args.ebuild}: no NPM_PKGS block found")
         new, n = re.subn(r'^NPM_STUB_PKGS="[^"]*"', lambda _: stub_block, new, count=1, flags=re.M)
@@ -251,6 +292,8 @@ def main():
         print(block)
         if stubs:
             print(stub_block)
+        if natives:
+            print(native_block)
 
 
 if __name__ == "__main__":
