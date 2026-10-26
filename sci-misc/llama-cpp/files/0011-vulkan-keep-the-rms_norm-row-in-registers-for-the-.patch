@@ -1,0 +1,70 @@
+From 24da9240655ac2edc8cfc547d6447eeb0b0364ec Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Sat, 26 Sep 2026 17:04:35 +0100
+Subject: [PATCH 11/18] vulkan : keep the rms_norm row in registers for the
+ second pass
+
+Assisted-by: Claude Code (Claude Opus 5.5)
+---
+ ggml/src/ggml-vulkan/vulkan-shaders/rms_norm.comp | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+
+diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/rms_norm.comp b/ggml/src/ggml-vulkan/vulkan-shaders/rms_norm.comp
+index 6a2525849..0147af391 100644
+--- a/ggml/src/ggml-vulkan/vulkan-shaders/rms_norm.comp
++++ b/ggml/src/ggml-vulkan/vulkan-shaders/rms_norm.comp
+@@ -10,6 +10,7 @@
+ #endif
+ 
+ layout (constant_id = 3) const int BLOCK_SIZE = 512;
++#define CACHE_ITERS 16
+ layout(local_size_x_id = 3, local_size_y = 1, local_size_z = 1) in;
+ 
+ #if RMS_NORM_ROPE_FUSION
+@@ -85,13 +86,19 @@ void rms_norm(uint num_iters) {
+ #endif
+             FLOAT_TYPE sum = FLOAT_TYPE(0.0f); // partial sum for thread in warp
+ 
++            // keep the row in registers for the second pass (num_iters is a small compile-time constant)
++            FLOAT_TYPE xs[CACHE_ITERS];
+             [[unroll]] for (uint col = tid, idx = 0; idx < num_iters; col += BLOCK_SIZE, ++idx) {
+                 FLOAT_TYPE xi = FLOAT_TYPE(0);
+                 if (col < ncols) {
+                     xi = FLOAT_TYPE(data_a[a_offset + col]);
+                 }
++                if (idx < CACHE_ITERS) {
++                    xs[idx] = xi;
++                }
+                 sum += xi * xi;
+             }
++            #define LOAD_A(idx, col) ((idx) < CACHE_ITERS ? xs[(idx) < CACHE_ITERS ? (idx) : 0] : FLOAT_TYPE(data_a[a_offset + (col)]))
+ 
+             #if USE_SUBGROUP_ADD
+                 sum = subgroupAdd(sum);
+@@ -135,7 +142,7 @@ void rms_norm(uint num_iters) {
+                         if (col >= ncols) {
+                             continue;
+                         }
+-                        FLOAT_TYPE value = scale * FLOAT_TYPE(data_a[a_offset + col]) * FLOAT_TYPE(data_b[b_offset + fastmod(col, p.ne10)]);
++                        FLOAT_TYPE value = scale * LOAD_A(idx, col) * FLOAT_TYPE(data_b[b_offset + fastmod(col, p.ne10)]);
+ #if RMS_NORM_ADD_FUSION
+                         value += FLOAT_TYPE(data_c[d_offset + col]);
+                         if (do_post_multiply) {
+@@ -149,7 +156,7 @@ void rms_norm(uint num_iters) {
+                         if (col >= ncols) {
+                             continue;
+                         }
+-                        FLOAT_TYPE value = scale * FLOAT_TYPE(data_a[a_offset + col]) * FLOAT_TYPE(data_b[b_offset + col]);
++                        FLOAT_TYPE value = scale * LOAD_A(idx, col) * FLOAT_TYPE(data_b[b_offset + col]);
+ #if RMS_NORM_ADD_FUSION
+                         value += FLOAT_TYPE(data_c[d_offset + col]);
+                         if (do_post_multiply) {
+@@ -164,7 +171,7 @@ void rms_norm(uint num_iters) {
+                     if (col >= ncols) {
+                         continue;
+                     }
+-                    data_d[d_offset + col] = D_TYPE(scale * FLOAT_TYPE(data_a[a_offset + col]));
++                    data_d[d_offset + col] = D_TYPE(scale * LOAD_A(idx, col));
+                 }
+             }
+ #if RMS_NORM_ROPE_FUSION

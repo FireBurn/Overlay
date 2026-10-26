@@ -390,7 +390,7 @@ multilib_src_configure() {
 
 	emesonargs+=(
 		$(meson_use test build-tests)
-		-Damd-use-llvm=false
+		-Damd-options=
 		-Dexpat=enabled
 		$(meson_use opengl)
 		$(meson_feature opengl gbm)
