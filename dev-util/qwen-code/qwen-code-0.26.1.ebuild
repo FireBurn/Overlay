@@ -241,8 +241,6 @@ NPM_PKGS="
 	@opentelemetry/sdk-trace-node@2.10.0
 	@opentelemetry/semantic-conventions@1.36.0
 	@opentui/core@0.5.10
-	@opentui/core-linux-arm64@0.5.10|arm64
-	@opentui/core-linux-x64@0.5.10|amd64
 	@opentui/react@0.5.10
 	@paralleldrive/cuid2@2.3.1
 	@pierre/diffs@1.5.2
@@ -2046,7 +2044,9 @@ NPM_STUB_PKGS="
 	@opentui/core-darwin-arm64@0.5.10
 	@opentui/core-darwin-x64@0.5.10
 	@opentui/core-linux-arm64-musl@0.5.10
+	@opentui/core-linux-arm64@0.5.10
 	@opentui/core-linux-x64-musl@0.5.10
+	@opentui/core-linux-x64@0.5.10
 	@opentui/core-win32-arm64@0.5.10
 	@opentui/core-win32-x64@0.5.10
 	@rollup/rollup-android-arm-eabi@4.62.5
@@ -2113,6 +2113,11 @@ NPM_STUB_PKGS="
 	lightningcss-win32-arm64-msvc@1.32.0
 	lightningcss-win32-x64-msvc@1.32.0
 "
+NPM_NATIVE_DEPEND="
+	dev-util/lightningcss:1.32.0
+	dev-util/rollup:4.62.5
+	dev-util/tailwindcss-oxide:4.3.2
+"
 NPM_PNPM_VERSION="11.24.0"
 
 inherit edo multilib npm wrapper
@@ -2130,18 +2135,21 @@ LICENSE="Apache-2.0"
 LICENSE+=" 0BSD Apache-2.0 BSD BSD-2 CC0-1.0 ISC MIT MPL-2.0 Unlicense"
 SLOT="0"
 KEYWORDS="~amd64 ~arm64"
+IUSE="+opentui"
 RESTRICT="mirror test"
 
 RDEPEND="
 	>=net-libs/nodejs-22
 	dev-vcs/git
 	sys-apps/ripgrep
+	opentui? (
+		>=net-libs/nodejs-26.4
+		dev-util/opentui:0.5.10
+	)
 "
 BDEPEND="
 	${NPM_NODE_DEPEND}
-	dev-util/lightningcss:1.32.0
-	dev-util/rollup:4.62.5
-	dev-util/tailwindcss-oxide:4.3.2
+	${NPM_NATIVE_DEPEND}
 "
 
 src_prepare() {
@@ -2159,6 +2167,12 @@ src_prepare() {
 	sed -i 's/^const MAX_DOCUMENT_RUNTIME_BYTES = .*/const MAX_DOCUMENT_RUNTIME_BYTES = Infinity;/' \
 		packages/web-templates/src/export-html/build.mjs ||
 		die "Failed to lift the document export size budget"
+
+	if use opentui; then
+		sed -i 's/const requested = envValue?\.trim()/const requested = (envValue ?? OPEN_TUI_RENDERER_VALUE).trim()/' \
+			packages/cli/src/ui/opentui/renderer-selection.ts ||
+			die "Failed to make OpenTUI the default renderer"
+	fi
 }
 
 src_compile() {
@@ -2166,12 +2180,12 @@ src_compile() {
 	export QWEN_SKIP_PREPARE=1
 	npm_with_registry pnpm install --frozen-lockfile
 	local platform=linux-$(usex arm64 arm64 x64)-$(usex elibc_musl musl gnu)
-	npm_native_link rollup "@rollup/rollup-${platform}" 4.62.5 \
-		"${BROOT}/usr/$(get_libdir)/rollup-4.62.5/rollup.node"
-	npm_native_link lightningcss "lightningcss-${platform}" 1.32.0 \
-		"${BROOT}/usr/$(get_libdir)/lightningcss-1.32.0/lightningcss.node"
-	npm_native_link @tailwindcss/oxide "@tailwindcss/oxide-${platform}" 4.3.2 \
-		"${BROOT}/usr/$(get_libdir)/tailwindcss-oxide-4.3.2/tailwindcss-oxide.node"
+	npm_native_link_all rollup "@rollup/rollup-${platform}" \
+		"${BROOT}/usr/$(get_libdir)/rollup-@V@/rollup.node"
+	npm_native_link_all lightningcss "lightningcss-${platform}" \
+		"${BROOT}/usr/$(get_libdir)/lightningcss-@V@/lightningcss.node"
+	npm_native_link_all @tailwindcss/oxide "@tailwindcss/oxide-${platform}" \
+		"${BROOT}/usr/$(get_libdir)/tailwindcss-oxide-@V@/tailwindcss-oxide.node"
 	edo pnpm --recursive run build
 	edo pnpm run bundle
 
@@ -2192,8 +2206,17 @@ src_compile() {
 src_install() {
 	local home="/usr/$(get_libdir)/${PN}"
 
+	# Upstream's native libraries are prebuilt
+	rm -rf dist/opentui-assets/@opentui/core-linux-* || die
+	use opentui || { rm -rf dist/opentui-assets || die; }
+
 	insinto "${home}"
 	doins -r dist "${WORKDIR}/pty/node_modules"
+
+	if use opentui; then
+		dosym -r /usr/$(get_libdir)/opentui-0.5.10/libopentui.so \
+			"${home}"/dist/opentui-assets/@opentui/core-linux-$(usex arm64 arm64 x64)/libopentui.so
+	fi
 
 	make_wrapper qwen "${EPREFIX}/usr/bin/node ${EPREFIX}${home}/dist/cli.js"
 
