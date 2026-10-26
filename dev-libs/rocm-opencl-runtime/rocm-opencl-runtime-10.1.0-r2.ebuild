@@ -35,6 +35,7 @@ BDEPEND="
 PATCHES=(
 	"${FILESDIR}"/${PN}-10.1.0-fix-lib-version.patch
 	"${FILESDIR}"/${PN}-10.1.0-vega-apu-xnack.patch
+	"${FILESDIR}"/${PN}-10.1.0-aligned-new.patch
 )
 
 src_prepare() {
@@ -51,6 +52,9 @@ src_configure() {
 	filter-lto
 	append-ldflags $(test-flags-CCLD -Wl,--undefined-version)
 	append-cflags -fcommon
+	# Release builds upstream have assertions off and some are reachable,
+	# e.g. Isa::isCompatible on gfx90c: https://bugs.gentoo.org/984577
+	use debug || append-cppflags -DNDEBUG
 
 	local mycmakeargs=(
 		-Wno-dev
