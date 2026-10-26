@@ -462,6 +462,31 @@ npm_native_link() {
 	[[ -n ${found} ]] || die "${ECLASS}: no ${pkg} depends on ${native}@${version}"
 }
 
+# @FUNCTION: npm_native_link_all
+# @USAGE: <package> <platform package> <file>
+# @DESCRIPTION:
+# Runs npm_native_link for each version of <platform package> that an
+# installed copy of <package> depends on, so the versions are read from
+# the lockfile rather than repeated in the ebuild.  @V@ in <file> stands
+# for the version.  Dies naming the version when its file is missing.
+npm_native_link_all() {
+	debug-print-function ${FUNCNAME} "$@"
+
+	(( $# == 3 )) ||
+		die "Usage: ${FUNCNAME} <package> <platform package> <file>"
+	local pkg=$1 native=$2 file=$3 json ver vers=()
+	while IFS= read -r -d '' json; do
+		ver=$(node -p "(require('./${json}').optionalDependencies || {})['${native}'] || ''") || die
+		[[ -n ${ver} && " ${vers[*]} " != *" ${ver} "* ]] && vers+=( "${ver}" )
+	done < <(find -L . -path "*/node_modules/${pkg}/package.json" -print0)
+	(( ${#vers[@]} )) || die "${ECLASS}: no ${pkg} depends on ${native}"
+	for ver in "${vers[@]}"; do
+		[[ -f ${file//@V@/${ver}} ]] ||
+			die "${ECLASS}: ${native}@${ver} needs ${file//@V@/${ver}}; regenerate NPM_NATIVE_DEPEND"
+		npm_native_link "${pkg}" "${native}" "${ver}" "${file//@V@/${ver}}"
+	done
+}
+
 # @FUNCTION: npm_src_unpack
 # @DESCRIPTION:
 # Unpacks everything except npm tarballs, which the registry serves from
