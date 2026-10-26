@@ -14,7 +14,7 @@ CHROMIUM_LANGS="
 PYTHON_COMPAT=( python3_{11..15} )
 UPDATE_DISABLER_COMMIT="2f26748a667045d26bc19841f1a731b4be7a7514"
 
-ELECTRON_SLOT="44"
+ELECTRON_SLOT="45"
 
 inherit chromium-2 desktop electron linux-info optfeature python-single-r1 unpacker xdg
 
