@@ -1349,8 +1349,13 @@ NPM_STUB_PKGS="
 	fsevents@2.3.3
 	iconv-corefoundation@1.1.7
 "
+NPM_NATIVE_DEPEND="
+	dev-util/rollup:4.60.1
+	dev-util/swc:1.11.24
+	dev-util/unrs-resolver:1.9.1
+"
 NPM_PNPM_VERSION="10.28.0"
-ELECTRON_SLOT="44"
+ELECTRON_SLOT="45"
 
 inherit desktop edo electron npm xdg
 
@@ -1368,7 +1373,7 @@ LICENSE="GPL-3"
 # Bundled npm packages
 LICENSE+=" 0BSD Apache-2.0 BSD BSD-2 CC0-1.0 ISC MIT"
 SLOT="0"
-KEYWORDS="~amd64 ~arm64"
+KEYWORDS="~amd64"
 IUSE="gamescope +vulkan"
 RESTRICT="mirror test"
 
@@ -1384,9 +1389,7 @@ RDEPEND+="
 "
 BDEPEND="
 	${NPM_NODE_DEPEND}
-	dev-util/rollup:4.60.1
-	dev-util/swc:1.11.24
-	dev-util/unrs-resolver:1.9.1
+	${NPM_NATIVE_DEPEND}
 "
 
 # Electron reports the app as unpackaged when it is run as a directory, which
@@ -1413,12 +1416,12 @@ src_compile() {
 	# are linked in once the packages are in place
 	npm_with_registry pnpm install --frozen-lockfile --ignore-scripts
 	local platform=linux-$(usex arm64 arm64 x64)-$(usex elibc_musl musl gnu)
-	npm_native_link rollup "@rollup/rollup-${platform}" 4.60.1 \
-		"${BROOT}/usr/$(get_libdir)/rollup-4.60.1/rollup.node"
-	npm_native_link @swc/core "@swc/core-${platform}" 1.11.24 \
-		"${BROOT}/usr/$(get_libdir)/swc-1.11.24/swc.node"
-	npm_native_link unrs-resolver "@unrs/resolver-binding-${platform}" 1.9.1 \
-		"${BROOT}/usr/$(get_libdir)/unrs-resolver-1.9.1/unrs-resolver.node"
+	npm_native_link_all rollup "@rollup/rollup-${platform}" \
+		"${BROOT}/usr/$(get_libdir)/rollup-@V@/rollup.node"
+	npm_native_link_all @swc/core "@swc/core-${platform}" \
+		"${BROOT}/usr/$(get_libdir)/swc-@V@/swc.node"
+	npm_native_link_all unrs-resolver "@unrs/resolver-binding-${platform}" \
+		"${BROOT}/usr/$(get_libdir)/unrs-resolver-@V@/unrs-resolver.node"
 	# A bare rebuild fails with E2BIG; these are the packages allowBuilds
 	# lets run scripts
 	npm_with_registry pnpm rebuild @parcel/watcher @swc/core electron esbuild \
