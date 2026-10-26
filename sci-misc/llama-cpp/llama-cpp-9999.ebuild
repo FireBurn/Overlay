@@ -7,8 +7,17 @@ ROCM_VERSION="10.0"
 
 if [[ ${PV} == 9999 ]]; then
 	# The web UI's npm dependencies change with every commit, so the live
-	# ebuild installs them from the checked-out lockfile in src_unpack
+	# ebuild installs them from the checked-out lockfile in src_unpack.
+	# The native addons it links still need slots, so regenerate these with
+	# scripts/npm-deps.py --natives-only when the lockfile moves
 	NPM_PKGS=""
+	NPM_NATIVE_DEPEND="
+		dev-util/lightningcss:1.30.1
+		dev-util/oxc-parser:0.127.0
+		dev-util/oxc-resolver:11.21.2
+		dev-util/rollup:4.61.1
+		dev-util/tailwindcss-oxide:4.1.11
+	"
 else
 	# Generated from tools/ui/package-lock.json by scripts/npm-deps.py
 	NPM_PKGS=""
@@ -46,6 +55,7 @@ RESTRICT="mirror"
 BDEPEND="
 	webui? (
 		${NPM_NODE_DEPEND}
+		${NPM_NATIVE_DEPEND}
 		media-libs/vips
 	)
 	virtual/pkgconfig
@@ -74,7 +84,6 @@ PATCHES=(
 	"${FILESDIR}/0002-vulkan-share-the-K-V-pass-between-query-rows-in-coop.patch"
 	"${FILESDIR}/0003-qwen35-optional-reduced-vocab-LM-head-for-MTP-drafti.patch"
 	"${FILESDIR}/0004-vulkan-use-4-rows-for-legacy-quant-mat-vec-from-2-co.patch"
-	"${FILESDIR}/0005-hip-use-short-vectors-for-bf16-WMMA-builtins-with-LL.patch"
 	"${FILESDIR}/0006-server-keep-speculative-checkpoints-on-device.patch"
 	"${FILESDIR}/0007-hip-keep-MMQ-WMMA-k-loops-rolled-to-avoid-VGPR-spill.patch"
 	"${FILESDIR}/0009-hip-share-the-FA-vec-K-V-pass-between-the-Q-heads-of.patch"
@@ -246,6 +255,23 @@ _llama_build_sharp() {
 	popd >/dev/null || die
 }
 
+_llama_link_natives() {
+	local platform=linux-$(usex arm64 arm64 x64)-$(usex elibc_musl musl gnu)
+	local lib="${BROOT}/usr/$(get_libdir)" pkg native file
+	while read -r pkg native file; do
+		rm -rf node_modules/${native}-linux-* || die
+		npm_native_link_all "${pkg}" "${native}-${platform}" "${lib}/${file}"
+	done <<-EOF
+		rollup @rollup/rollup rollup-@V@/rollup.node
+		lightningcss lightningcss lightningcss-@V@/lightningcss.node
+		@tailwindcss/oxide @tailwindcss/oxide tailwindcss-oxide-@V@/tailwindcss-oxide.node
+		oxc-resolver @oxc-resolver/binding oxc-resolver-@V@/resolver.node
+		oxc-parser @oxc-parser/binding oxc-parser-@V@/parser.node
+	EOF
+	# Optional for pdfjs and sass, and only shipped prebuilt
+	rm -rf node_modules/@napi-rs/canvas-linux-* node_modules/@parcel/watcher-linux-* || die
+}
+
 src_compile() {
 	if use webui; then
 		# 1. Build the Web UI assets from source
@@ -257,6 +283,7 @@ src_compile() {
 			npm_with_registry npm ci --ignore-scripts
 		fi
 		_llama_build_sharp
+		[[ ${PV} == 9999 ]] && _llama_link_natives
 		# Generates the dist/ directory CMake embeds
 		HOME="${T}/npm-home" npm run build --offline || die
 
