@@ -114,6 +114,7 @@ media-fonts/liberation-fonts      github-release liberationfonts/liberation-font
 media-gfx/renderdoc               github-release baldurk/renderdoc prefix=v
 media-gfx/reshade-shaders         github-commit crosire/reshade-shaders
 media-libs/harfbuzz               github-release harfbuzz/harfbuzz
+media-libs/openxr                 github-release KhronosGroup/OpenXR-SDK prefix=release-
 media-libs/vkBasalt               github-release DadSchoorse/vkBasalt prefix=v
 net-im/discord                    json https://discord.com/api/updates/stable?platform=linux name
 sci-misc/llama-cpp                github-tag ggml-org/llama.cpp prefix=v
