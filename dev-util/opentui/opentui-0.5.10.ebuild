@@ -1,0 +1,45 @@
+# Copyright 2026 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+EAPI=8
+
+ZIG_SLOT="0.16"
+
+inherit zig
+
+DESCRIPTION="Native Zig core of the OpenTUI terminal UI library"
+HOMEPAGE="https://opentui.com/ https://github.com/anomalyco/opentui"
+SRC_URI="https://github.com/anomalyco/opentui/archive/refs/tags/v${PV}.tar.gz -> ${P}.tar.gz"
+S="${WORKDIR}/${P}/packages/native"
+
+LICENSE="MIT"
+# Bundled ghostty-vt, uucode, yoga, lcms2, stb (MIT), wuffs (Apache-2.0),
+# libwebp (BSD), miniaudio
+LICENSE+=" Apache-2.0 BSD || ( MIT-0 public-domain )"
+SLOT="${PV}"
+KEYWORDS="~amd64 ~arm64"
+
+src_unpack() {
+	zig_src_unpack
+	mkdir "${S}"/zig-deps || die
+	tar -xzf "${S}"/src/vendor/zig-deps.tar.gz -C "${S}"/zig-deps || die
+}
+
+src_configure() {
+	local my_zbs_args=(
+		--release=fast
+		# Not the upstream glibc 2.17 target: link the system C library
+		-Dlibrary-target=native
+	)
+	zig_src_configure
+}
+
+src_test() {
+	:
+}
+
+src_install() {
+	# build.zig installs to ../lib/<target> from the prefix
+	exeinto /usr/$(get_libdir)/${P}
+	doexe "${BUILD_DIR}"/lib/native/libopentui.so
+}
