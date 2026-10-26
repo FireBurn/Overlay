@@ -173,6 +173,10 @@ src_install() {
 			die "installing ${component} failed"
 	done
 
+	# libc's libintl.h declares only stubs. dev-libs/libintl provides the
+	# header along with the real implementation.
+	rm "${ED}"/usr/include/libintl.h || die
+
 	# The loader looks under the directories /etc/ld-llvm-libc-<arch>.path
 	# lists, and env-update keeps ld.so.conf current from env.d, so the one
 	# file is a link to the other.
