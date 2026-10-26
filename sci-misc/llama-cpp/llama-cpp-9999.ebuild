@@ -88,7 +88,7 @@ PATCHES=(
 	"${FILESDIR}/0007-hip-keep-MMQ-WMMA-k-loops-rolled-to-avoid-VGPR-spill.patch"
 	"${FILESDIR}/0009-hip-share-the-FA-vec-K-V-pass-between-the-Q-heads-of.patch"
 	"${FILESDIR}/0010-vulkan-write-gated-delta-net-state-straight-into-the.patch"
-	"${FILESDIR}/0011-vulkan-use-a-subgroup-reduction-in-rms_norm-and-keep.patch"
+	"${FILESDIR}/0011-vulkan-keep-the-rms_norm-row-in-registers-for-the-.patch"
 	"${FILESDIR}/0012-vulkan-dual-issue-friendly-int8-epilogue-in-cm1-mmq-.patch"
 	"${FILESDIR}/0013-vulkan-keep-Q-fragments-in-registers-in-coopmat1-fla.patch"
 	"${FILESDIR}/0014-vulkan-store-the-flash-attention-quantized-K-V-scrat.patch"
