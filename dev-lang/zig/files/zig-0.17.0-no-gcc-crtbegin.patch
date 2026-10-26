@@ -1,0 +1,49 @@
+Link without crtbegin.o and crtend.o on Linux when the C compiler has none, as
+with clang and compiler-rt and no GCC, as Zig 0.16 did.
+
+--- a/lib/std/zig/LibCInstallation.zig
++++ b/lib/std/zig/LibCInstallation.zig
+@@ -104,7 +104,7 @@
+ 
+     const os_tag = target.os.tag;
+ 
+-    if (self.cc_dir == null and (os_tag == .haiku or os_tag == .serenity or os_tag == .linux)) {
++    if (self.cc_dir == null and (os_tag == .haiku or os_tag == .serenity)) {
+         log.err("cc_dir may not be empty for {s}", .{@tagName(os_tag)});
+         return error.ParseError;
+     }
+@@ -229,7 +229,12 @@
+             .freebsd, .netbsd, .openbsd, .dragonfly => self.crt_dir = try gpa.dupe(u8, "/usr/lib"),
+             .linux => {
+                 try self.findNativeCrtDirPosix(gpa, io, args);
+-                try self.findNativeGccDirPosix(gpa, io, args);
++                // A toolchain without GCC, such as clang with compiler-rt, has
++                // no crtbegin.o; link without it as before.
++                self.findNativeGccDirPosix(gpa, io, args) catch |err| switch (err) {
++                    error.LibCRuntimeNotFound => {},
++                    else => |e| return e,
++                };
+             },
+             else => {},
+         }
+@@ -1032,15 +1037,15 @@
+             };
+         },
+         .haiku, .serenity, .linux => {
+-            const cc_dir_path: Path = .{
++            const cc_dir_path: ?Path = if (lci.cc_dir) |cc_dir| .{
+                 .root_dir = Cache.Directory.cwd(),
+-                .sub_path = lci.cc_dir orelse return error.LibCInstallationMissingCcDir,
+-            };
++                .sub_path = cc_dir,
++            } else if (target.os.tag == .linux) null else return error.LibCInstallationMissingCcDir;
+             return .{
+                 .crt0 = if (crt_basenames.crt0) |basename| try crt_dir_path.join(arena, basename) else null,
+                 .crti = if (crt_basenames.crti) |basename| try crt_dir_path.join(arena, basename) else null,
+-                .crtbegin = if (crt_basenames.crtbegin) |basename| try cc_dir_path.join(arena, basename) else null,
+-                .crtend = if (crt_basenames.crtend) |basename| try cc_dir_path.join(arena, basename) else null,
++                .crtbegin = if (cc_dir_path) |p| if (crt_basenames.crtbegin) |basename| try p.join(arena, basename) else null else null,
++                .crtend = if (cc_dir_path) |p| if (crt_basenames.crtend) |basename| try p.join(arena, basename) else null else null,
+                 .crtn = if (crt_basenames.crtn) |basename| try crt_dir_path.join(arena, basename) else null,
+             };
+         },

@@ -1,0 +1,15 @@
+Treat LLVM libc's dynamic loader as the GNU ABI, which LLVM libc keeps, rather
+than falling back to musl.
+
+--- a/lib/std/zig/system.zig
++++ b/lib/std/zig/system.zig
+@@ -634,6 +634,9 @@
+                             result.abi = ld_info.abi;
+                             break;
+                         }
++                    } else if (std.mem.startsWith(u8, fs.path.basename(full_ld_path), "ld-llvm-libc")) {
++                        // LLVM libc keeps the glibc ABI
++                        result.abi = .gnu;
+                     }
+                 }
+             },

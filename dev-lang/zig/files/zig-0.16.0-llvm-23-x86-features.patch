@@ -1,0 +1,22 @@
+LLVM 23 renamed false-deps-lzcnt-tzcnt to false-deps-lzcnt and dropped amx-tf32.
+
+--- a/lib/std/Target/x86.zig
++++ b/lib/std/Target/x86.zig
+@@ -314,7 +314,7 @@ pub const all_features = blk: {
+         }),
+     };
+     result[@intFromEnum(Feature.amx_tf32)] = .{
+-        .llvm_name = "amx-tf32",
++        .llvm_name = null,
+         .description = "Support AMX-TF32 instructions",
+         .dependencies = featureSet(&[_]Feature{
+             .amx_tile,
+@@ -622,7 +622,7 @@ pub const all_features = blk: {
+         .dependencies = featureSet(&[_]Feature{}),
+     };
+     result[@intFromEnum(Feature.false_deps_lzcnt_tzcnt)] = .{
+-        .llvm_name = "false-deps-lzcnt-tzcnt",
++        .llvm_name = "false-deps-lzcnt",
+         .description = "LZCNT/TZCNT have a false dependency on dest register",
+         .dependencies = featureSet(&[_]Feature{}),
+     };

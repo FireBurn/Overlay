@@ -1,0 +1,67 @@
+Allow LLVM built without some of Zig's default targets. The missing ones get
+no-op initialisers, so Zig reports them as unavailable instead of failing to
+configure.
+
+diff -ru a/CMakeLists.txt b/CMakeLists.txt
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -494,6 +494,13 @@
+ target_compile_features(zigcpp PRIVATE cxx_std_17)
+ set_target_properties(zigcpp PROPERTIES POSITION_INDEPENDENT_CODE ${ZIG_PIE})
+ 
++if(ZIG_LLVM_MISSING_TARGETS)
++  message(STATUS "LLVM lacks targets ${ZIG_LLVM_MISSING_TARGETS}, Zig cannot generate code for them")
++  list(TRANSFORM ZIG_LLVM_MISSING_TARGETS REPLACE "(.+)" "ZIG_LLVM_STUB_TARGET(\\1)" OUTPUT_VARIABLE _stubs)
++  list(JOIN _stubs " " _stubs)
++  target_compile_definitions(zigcpp PRIVATE "ZIG_LLVM_MISSING_TARGETS=${_stubs}")
++endif()
++
+ if(LLVM_LINK_MODE STREQUAL "static")
+   target_compile_definitions(zigcpp PRIVATE
+     LLVM_BUILD_STATIC
+diff -ru a/cmake/Findllvm.cmake b/cmake/Findllvm.cmake
+--- a/cmake/Findllvm.cmake
++++ b/cmake/Findllvm.cmake
+@@ -85,22 +85,14 @@
+ 
+     set(ZIG_LLVM_REQUIRED_TARGETS "AArch64;AMDGPU;ARM;AVR;BPF;Hexagon;Lanai;LoongArch;Mips;MSP430;NVPTX;PowerPC;RISCV;SPIRV;Sparc;SystemZ;VE;WebAssembly;X86;XCore")
+ 
+-    set(ZIG_LLVM_REQUIRED_TARGETS_ENABLED TRUE)
++    # Targets LLVM was built without get no-op initialisers in zigcpp
++    set(ZIG_LLVM_MISSING_TARGETS "")
+     foreach(TARGET_NAME IN LISTS ZIG_LLVM_REQUIRED_TARGETS)
+       list (FIND LLVM_TARGETS_BUILT "${TARGET_NAME}" _index)
+       if (${_index} EQUAL -1)
+-        # Save the error message, in case this is the last llvm-config we find
+-        list(APPEND LLVM_CONFIG_ERROR_MESSAGES "LLVM (according to ${LLVM_CONFIG_EXE}) is missing target ${TARGET_NAME}. Zig requires LLVM to be built with all default targets enabled.")
+-
+-        # Ignore this directory and try the search again
+-        list(APPEND CMAKE_IGNORE_PATH "${LLVM_CONFIG_DIR}")
+-        set(ZIG_LLVM_REQUIRED_TARGETS_ENABLED FALSE)
+-        break()
++        list(APPEND ZIG_LLVM_MISSING_TARGETS "${TARGET_NAME}")
+       endif()
+     endforeach()
+-    if (NOT ZIG_LLVM_REQUIRED_TARGETS_ENABLED)
+-      continue()
+-    endif()
+ 
+     # Got it!
+     break()
+diff -ru a/src/zig_llvm.cpp b/src/zig_llvm.cpp
+--- a/src/zig_llvm.cpp
++++ b/src/zig_llvm.cpp
+@@ -546,3 +546,13 @@
+ static_assert((object::Archive::Kind)ZigLLVMArchiveKind_DARWIN64 == object::Archive::Kind::K_DARWIN64, "");
+ static_assert((object::Archive::Kind)ZigLLVMArchiveKind_COFF == object::Archive::Kind::K_COFF, "");
+ static_assert((object::Archive::Kind)ZigLLVMArchiveKind_AIXBIG == object::Archive::Kind::K_AIXBIG, "");
++
++#ifdef ZIG_LLVM_MISSING_TARGETS
++#define ZIG_LLVM_STUB_TARGET(T) \
++    extern "C" void LLVMInitialize##T##Target(void) {} \
++    extern "C" void LLVMInitialize##T##TargetInfo(void) {} \
++    extern "C" void LLVMInitialize##T##TargetMC(void) {} \
++    extern "C" void LLVMInitialize##T##AsmPrinter(void) {} \
++    extern "C" void LLVMInitialize##T##AsmParser(void) {}
++ZIG_LLVM_MISSING_TARGETS
++#endif
