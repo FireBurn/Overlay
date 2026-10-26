@@ -434,9 +434,6 @@ GHIDRA_DEP_URIS="
 	server? (
 		https://sourceforge.net/projects/yajsw/files/yajsw/yajsw-stable-13.18/yajsw-stable-13.18.zip
 	)
-	z3? (
-		https://github.com/Z3Prover/z3/releases/download/z3-4.13.0/z3-4.13.0-x64-glibc-2.31.zip
-	)
 "
 
 GRADLE_SLOT="9.7.0"
@@ -492,7 +489,7 @@ RDEPEND="
 			dev-python/psutil[${PYTHON_USEDEP}]
 		')
 	)
-	z3? ( sci-mathematics/z3 )
+	z3? ( sci-mathematics/z3[java] )
 "
 
 DEPEND="
@@ -506,7 +503,6 @@ QA_PREBUILT="
 	usr/share/ghidra/Ghidra/Features/Decompiler/os/*/sleigh
 	usr/share/ghidra/Ghidra/Features/FileFormats/os/*/lzfse
 	usr/share/ghidra/Ghidra/Features/FileFormats/data/sevenzipnativelibs/*/*.so
-	usr/share/ghidra/Ghidra/Extensions/SymbolicSummaryZ3/os/*/*.so
 "
 
 ghidra_extensions() {
@@ -535,12 +531,8 @@ pkg_setup() {
 	use python && python-single-r1_pkg_setup
 }
 
-Z3_P="z3-4.13.0-x64-glibc-2.31"
-
 src_unpack() {
 	unpack "${P}.tar.gz"
-
-	use z3 && unpack "${Z3_P}.zip"
 }
 
 # <dir under dependencies/> <name in the tree> [distfile]
@@ -602,10 +594,10 @@ src_prepare() {
 	fi
 
 	if use z3; then
-		mkdir -p "${S}/dependencies/SymbolicSummaryZ3/os/linux_x86_64" || die
-		cp "${WORKDIR}/${Z3_P}"/bin/libz3*.so \
-			"${S}/dependencies/SymbolicSummaryZ3/os/linux_x86_64/" || die
-		cp "${WORKDIR}/${Z3_P}"/bin/*.jar "${S}/dependencies/flatRepo/" || die
+		# the libraries are linked to the system ones in src_install
+		mkdir -p "${S}/dependencies/SymbolicSummaryZ3/os" || die
+		cp "${ESYSROOT}"/usr/share/java/com.microsoft.z3.jar \
+			"${S}/dependencies/flatRepo/" || die
 	fi
 
 	# Windows only, and wants a prebuilt type library
@@ -733,6 +725,13 @@ src_install() {
 		while IFS= read -r -d '' dbg_script; do
 			fperms +x "${dbg_script#${ED}}"
 		done < <(find "${ED}/usr/share/ghidra/Ghidra/Debug" -type f -name "*.sh" -print0 2>/dev/null)
+	fi
+
+	if use z3; then
+		local lib z3os=/usr/share/ghidra/Ghidra/Extensions/SymbolicSummaryZ3/os/linux_x86_64
+		for lib in libz3 libz3java; do
+			dosym -r /usr/$(get_libdir)/${lib}.so ${z3os}/${lib}.so
+		done
 	fi
 
 	# Symlinks in /usr/bin
