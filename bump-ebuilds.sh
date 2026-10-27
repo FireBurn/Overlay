@@ -18,6 +18,7 @@ HEAVY_PKGS=( dev-lang/rust dev-lang/bun app-office/libreoffice www-client/firefo
 DRY_RUN=0
 PUSH=1
 RETRY=0
+SKIP_CHROMIUM=0
 PKG=""
 usage() {
     cat <<'EOF'
@@ -30,6 +31,7 @@ Options:
       --push       Push each bump right after its commit (default; rebasing if needed)
       --no-push    Keep commits local
       --retry      Retry candidates the agent declined in an earlier run
+      --skip-chromium  Leave Chromium out, so a long build does not hold up the rest
   -h, --help       Show this help
 
 With no package argument, all overlay packages are checked.
@@ -49,6 +51,7 @@ for arg in "$@"; do
         --push)       PUSH=1 ;;
         --no-push)    PUSH=0 ;;
         --retry)      RETRY=1 ;;
+        --skip-chromium) SKIP_CHROMIUM=1 ;;
         -h|--help)    usage; exit 0 ;;
         -*)           echo "unknown option: $arg" >&2; usage >&2; exit 2 ;;
         *)            PKG="$arg" ;;
@@ -262,6 +265,16 @@ npm_lockfiles() {
     esac
 }
 
+# Lockfile entries that are not registry packages but that the ebuild fetches
+# itself (SRC_URI) and rewrites in src_prepare. One regex per line, passed to
+# npm-deps.py --allow-skipped. The revision each names must appear in the
+# ebuild, so a new pin upstream still stops the bump.
+npm_allowed_skips() {
+    case "$1" in
+        dev-util/opencode) printf '%s\n' '^@solidjs/start@https://pkg\.pr\.new/' '^ghostty-web@github:' ;;
+    esac
+}
+
 # Registry packages required by the ebuild but not recorded in upstream's
 # lockfile. Keep these here so dependency regeneration cannot silently drop them.
 npm_extra_pkgs() {
@@ -274,8 +287,13 @@ npm_extra_pkgs() {
 # Their CRATES block is regenerated from it on every bump.
 cargo_lockfiles() {
     case "$1" in
-        dev-util/codex)  echo "openai/codex rust-v codex-rs/Cargo.lock" ;;
-        app-editors/zed) echo "zed-industries/zed v Cargo.lock" ;;
+        dev-util/codex)           echo "openai/codex rust-v codex-rs/Cargo.lock" ;;
+        app-editors/zed)          echo "zed-industries/zed v Cargo.lock" ;;
+        dev-util/oxc-parser)      echo "oxc-project/oxc crates_v Cargo.lock" ;;
+        dev-util/oxc-resolver)    echo "oxc-project/oxc-resolver v Cargo.lock" ;;
+        dev-util/rolldown)        echo "rolldown/rolldown v Cargo.lock" ;;
+        dev-util/swc)             echo "swc-project/swc v Cargo.lock" ;;
+        dev-util/unrs-resolver)   echo "unrs/unrs-resolver v Cargo.lock" ;;
     esac
 }
 
@@ -315,7 +333,15 @@ update_npm_pkgs() {
             "${extras[@]}" >/dev/null || { rm -rf "$tmp"; return 1; }
         lock+=("$tmp/extras/package-lock.json")
     fi
-    ./scripts/npm-deps.py "${lock[@]}" --strict --ebuild "$ebuild" || { rm -rf "$tmp"; return 1; }
+    local -a allow=() ; local re log="$tmp/npm-deps.log" s rev
+    while read -r re; do [[ -n "$re" ]] && allow+=( --allow-skipped "$re" ); done < <(npm_allowed_skips "$pkg")
+    ./scripts/npm-deps.py "${lock[@]}" --strict "${allow[@]}" --ebuild "$ebuild" 2> >(tee "$log" >&2) ||
+        { rm -rf "$tmp"; return 1; }
+    while read -r s; do
+        rev="${s##*[@#]}"; rev="${rev%%:*}"
+        grep -q -- "$rev" "$ebuild" ||
+            { echo "ERROR: $pkg $pv pins $s, which the ebuild does not carry; update its revisions" >&2; rm -rf "$tmp"; return 1; }
+    done < <(grep -a '^skipped ' "$log" | sed 's/^skipped //')
 
     if grep -q '^ESBUILD_SLOT=' "$ebuild" && [[ "${lock[0]}" == *package-lock.json ]]; then
         esb="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["packages"]["node_modules/esbuild"]["version"])' "${lock[0]}")"
@@ -408,6 +434,23 @@ retry_with_agent() {
     return "$result"
 }
 
+# Revisions the ebuild pins by hand next to PV: the tag's commit and the
+# submodule it needs. Looked up from upstream so the Manifest step can fetch.
+update_pins() {
+    local pkg="$1" pv="$2" ebuild="$3" tag commit ggml
+    case "$pkg" in
+        sci-misc/stable-diffusion-cpp)
+            tag="$(git ls-remote --tags https://github.com/leejet/stable-diffusion.cpp "refs/tags/master-$pv-*" |
+                   awk -F/ '$3 !~ /\^\{\}$/ { print $3; exit }')"
+            [[ -n "$tag" ]] || { echo "ERROR: no master-$pv-* tag in stable-diffusion.cpp" >&2; return 1; }
+            commit="${tag##*-}"
+            ggml="$(curl -fsSL "https://api.github.com/repos/leejet/stable-diffusion.cpp/contents/ggml?ref=$tag" |
+                    python3 -c 'import json, sys; print(json.load(sys.stdin)["sha"])')" || return 1
+            sed -i -e "s/^\(\s*\)MY_COMMIT=.*/\1MY_COMMIT=\"$commit\"/" \
+                   -e "s/^\(\s*\)GGML_COMMIT=.*/\1GGML_COMMIT=\"$ggml\"/" "$ebuild" ;;
+    esac
+}
+
 # Simple bump: rename + Manifest refresh. Returns 0 on success, 2 on failure.
 bump_simple() {
     local pkg="$1" old="$2" new="$3"
@@ -442,6 +485,16 @@ def testing_keywords(match):
 
 path.write_text(re.sub(r'^KEYWORDS="([^"]*)"', testing_keywords, text, flags=re.M))
 PY
+    # Patches named after the version follow the ebuild; the emerge shows
+    # whether they still apply.
+    local pf
+    for pf in "$pkg"/files/*"-$old"[-.]*; do
+        [[ -e "$pf" ]] && git mv "$pf" "${pf/-$old/-$new}"
+    done
+    if ! run_step "$pkg" pins update_pins "$pkg" "$new" "$newf"; then
+        retry_with_agent "$pkg" "$old" "$new" "$oldf" "$newf" "updating the pinned revisions failed"
+        return $?
+    fi
     # Regeneration is skipped for packages without a lockfile, so only the
     # ones that need it show up as steps.
     if [[ -n "$(npm_lockfiles "$pkg")" ]] &&
@@ -565,6 +618,7 @@ declined() {
 
 # Whether the agent's model server answers; checked once per run.
 AGENT_UP=""
+HANDOFF=()
 agent_available() {
     local url
     if [[ -z "$AGENT_UP" ]]; then
@@ -575,7 +629,8 @@ print(c["provider"][prov]["options"]["baseURL"].removesuffix("/v1"))' 2>/dev/nul
         if [[ -z "$url" ]] || curl -sf -m 10 "$url/health" >/dev/null; then
             AGENT_UP=1
         else
-            echo "ERROR: the agent's model server at $url is not answering; agent steps are skipped" >&2
+            echo "ERROR: the agent's model server at $url is not answering; the prompts are written to $RUN_DIR/handoff/ for someone else to work through" >&2
+            AGENT_UP=0
             return 1
         fi
     fi
@@ -600,7 +655,12 @@ agent_timeout() {
 
 run_agent() {
     local label="$1" prompt="$2" alog start start_ms rc round=0 session before
-    agent_available || return 2
+    if ! agent_available; then
+        mkdir -p "$RUN_DIR/handoff"
+        printf '%s\n' "$prompt" >"$RUN_DIR/handoff/${label//\//_}.txt"
+        HANDOFF+=("$label")
+        return 2
+    fi
     alog="$RUN_DIR/agent-${label//\//_}.log"
     session="ses_bump${RUN_ID//[^0-9]/}${label//[^A-Za-z0-9]/}"
     before="$(portage_jobs)"
@@ -972,6 +1032,18 @@ VERSIONS="$RUN_DIR/versions.tsv"
 timed - version-check scripts/upstream-version.py "${WORK[@]}" >"$VERSIONS" ||
     die "scripts/upstream-version.py failed"
 
+# Several ebuilds, each in its own slot (SLOT="${PV}"): versions are added when
+# a consumer needs one, so a newer upstream release is not a reason to bump.
+on_demand() {
+    local f n=0
+    for f in "$1"/*.ebuild; do
+        [[ "$f" == *-9999.ebuild ]] && continue
+        grep -q '^SLOT="${PV}"' "$f" || return 1
+        n=$((n + 1))
+    done
+    (( n > 1 ))
+}
+
 # One ebuild per package, none live: a plain rename can bump it.
 mechanical() {
     local pkg="$1" n
@@ -996,7 +1068,11 @@ while IFS=$'\037' read -r pkg status old new group batch source note <&3; do
     esac
     row="$pkg$SEP$status$SEP$old$SEP$new$SEP$group$SEP$batch$SEP$source$SEP$note"
     if [[ "$pkg" == www-client/chromium ]]; then
+        (( SKIP_CHROMIUM )) && { skipped+=("$pkg: --skip-chromium"); continue; }
         Q_CHROMIUM+=("$row"); continue
+    fi
+    if [[ "$status" == newer ]] && on_demand "$pkg"; then
+        skipped+=("$pkg: one slot per version, added when a package needs it ($old -> $new)"); continue
     fi
     if ! package_clean "$pkg"; then
         skipped+=("$pkg: uncommitted changes ($status${new:+ $old -> $new})"); continue
@@ -1144,6 +1220,11 @@ fi
 if (( ${#results[@]} )); then
     log "results"
     for line in "${results[@]}"; do info "$line"; done
+fi
+
+if (( ${#HANDOFF[@]} )); then
+    log "needs an agent (prompts in $RUN_DIR/handoff/)"
+    for pkg in "${HANDOFF[@]}"; do info "$pkg"; done
 fi
 
 if (( ${#UNFINISHED[@]} )); then

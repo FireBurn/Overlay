@@ -250,6 +250,9 @@ def main():
                     help="only update NPM_NATIVE_DEPEND, for live ebuilds")
     ap.add_argument("--strict", action="store_true",
                     help="fail if a dependency cannot be represented")
+    ap.add_argument("--allow-skipped", action="append", default=[], metavar="REGEX",
+                    help="with --strict, accept skipped dependencies matching REGEX "
+                         "(pinned in the ebuild by hand)")
     args = ap.parse_args()
 
     col = Collector(args.arches.split(","))
@@ -266,8 +269,10 @@ def main():
     for s in col.skipped:
         print(f"skipped {s}", file=sys.stderr)
     print(f"{len(col.pkgs)} packages, {len(col.stubs)} other-platform stubs", file=sys.stderr)
-    if args.strict and col.skipped:
-        sys.exit("unhandled dependencies in lockfile")
+    unhandled = [s for s in col.skipped
+                 if not any(re.search(r, s) for r in args.allow_skipped)]
+    if args.strict and unhandled:
+        sys.exit("unhandled dependencies in lockfile: " + ", ".join(unhandled))
 
     if args.ebuild:
         text = args.ebuild.read_text()
