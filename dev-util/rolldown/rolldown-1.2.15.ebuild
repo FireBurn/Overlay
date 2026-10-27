@@ -13,6 +13,7 @@ CRATES="
 	append-only-vec@0.1.8
 	approx@0.5.1
 	arcstr@1.2.0
+	arraydeque@0.5.1
 	arrayvec@0.7.8
 	async-channel@2.5.0
 	async-scoped@0.9.0
@@ -22,7 +23,7 @@ CRATES="
 	base64@0.23.0
 	bit-set@0.8.0
 	bit-vec@0.8.0
-	bitflags@2.13.1
+	bitflags@2.13.2
 	blake3@1.8.7
 	borrow-or-share@0.2.4
 	bpaf@0.9.26
@@ -48,7 +49,7 @@ CRATES="
 	concurrent_lru@0.2.0
 	console@0.16.4
 	constant_time_eq@0.4.2
-	convert_case@0.11.0
+	convert_case@0.12.0
 	cow-utils@0.1.3
 	cpufeatures@0.3.0
 	crc32fast@1.5.0
@@ -73,10 +74,11 @@ CRATES="
 	endian-type@0.2.0
 	equivalent@1.0.2
 	errno@0.3.14
+	escape-simd@0.1.0
 	event-listener-strategy@0.5.4
 	event-listener@5.4.1
 	fancy-regex@0.19.0
-	fast-glob@1.1.1
+	fast-glob@1.1.2
 	fastrand@2.5.0
 	filetime@0.2.29
 	find-msvc-tools@0.1.9
@@ -102,12 +104,14 @@ CRATES="
 	getrandom@0.4.3
 	glob@0.3.4
 	globset@0.4.20
+	globstar@0.0.4
 	half@2.7.1
 	halfbrown@0.4.0
 	hashbrown@0.14.5
 	hashbrown@0.15.5
 	hashbrown@0.16.1
 	hashbrown@0.17.1
+	hashlink@0.12.2
 	heck@0.5.0
 	hermit-abi@0.5.2
 	hmac-sha1-compact@1.1.7
@@ -118,16 +122,16 @@ CRATES="
 	infer@0.22.0
 	inotify-sys@0.1.8
 	inotify@0.11.4
-	insta@1.48.0
+	insta@1.49.0
 	is_ci@1.2.0
 	itertools@0.15.0
 	itoa@1.0.18
 	js-sys@0.3.103
-	json-escape-simd@3.1.1
+	json-escape-simd@3.1.2
 	json-strip-comments@3.1.2
-	jsonschema-regex@0.55.0
-	jsonschema-value@0.55.0
-	jsonschema@0.55.0
+	jsonschema-regex@0.58.5
+	jsonschema-value@0.58.5
+	jsonschema@0.58.5
 	kqueue-sys@1.1.2
 	kqueue@1.2.0
 	lazy-regex-proc_macros@3.6.1
@@ -135,21 +139,21 @@ CRATES="
 	lazy_static@1.5.0
 	libc@0.2.186
 	libloading@0.9.0
-	libmimalloc-sys2@0.1.62
+	libmimalloc-sys2@0.1.63
 	linux-raw-sys@0.12.1
 	lock_api@0.4.14
 	log@0.4.33
 	memchr@2.8.3
 	micromap@0.3.0
-	mimalloc-safe@0.1.66
+	mimalloc-safe@0.1.67
 	mime@0.3.17
 	miniz_oxide@0.9.1
 	mio@1.2.2
-	napi-build@2.4.1
-	napi-derive-backend@6.1.2
-	napi-derive@3.6.3
-	napi-sys@3.3.0
-	napi@3.12.2
+	napi-build@2.6.0
+	napi-derive-backend@6.1.5
+	napi-derive@3.6.12
+	napi-sys@3.4.0
+	napi@3.14.2
 	nibble_vec@0.1.0
 	nix@0.31.3
 	nodejs-built-in-modules@1.0.0
@@ -171,40 +175,41 @@ CRATES="
 	objc2-core-services@0.3.2
 	once_cell@1.21.4
 	oorandom@11.1.5
+	ordered-float@5.5.0
 	outref@0.5.2
 	owo-colors@4.4.0
 	oxc-browserslist@5.0.1
-	oxc@0.149.0
-	oxc_allocator@0.149.0
-	oxc_ast@0.149.0
-	oxc_ast_macros@0.149.0
-	oxc_ast_visit@0.149.0
-	oxc_codegen@0.149.0
-	oxc_compat@0.149.0
-	oxc_data_structures@0.149.0
-	oxc_diagnostics@0.149.0
-	oxc_ecmascript@0.149.0
-	oxc_estree@0.149.0
+	oxc@0.155.0
+	oxc_allocator@0.155.0
+	oxc_ast@0.155.0
+	oxc_ast_macros@0.155.0
+	oxc_ast_visit@0.155.0
+	oxc_codegen@0.155.0
+	oxc_compat@0.155.0
+	oxc_data_structures@0.155.0
+	oxc_diagnostics@0.155.0
+	oxc_ecmascript@0.155.0
+	oxc_estree@0.155.0
 	oxc_index@5.0.0
-	oxc_isolated_declarations@0.149.0
-	oxc_mangler@0.149.0
-	oxc_minifier@0.149.0
-	oxc_minify_napi@0.149.0
-	oxc_napi@0.149.0
-	oxc_parser@0.149.0
-	oxc_parser_napi@0.149.0
-	oxc_regular_expression@0.149.0
+	oxc_isolated_declarations@0.155.0
+	oxc_mangler@0.155.0
+	oxc_minifier@0.155.0
+	oxc_minify_napi@0.155.0
+	oxc_napi@0.155.0
+	oxc_parser@0.155.0
+	oxc_parser_napi@0.155.0
+	oxc_regular_expression@0.155.0
 	oxc_resolver@11.24.3
 	oxc_resolver_napi@11.24.3
-	oxc_semantic@0.149.0
-	oxc_sourcemap@8.1.2
-	oxc_span@0.149.0
-	oxc_str@0.149.0
-	oxc_syntax@0.149.0
-	oxc_transform_napi@0.149.0
-	oxc_transformer@0.149.0
-	oxc_transformer_plugins@0.149.0
-	oxc_traverse@0.149.0
+	oxc_semantic@0.155.0
+	oxc_sourcemap@9.0.0
+	oxc_span@0.155.0
+	oxc_str@0.155.0
+	oxc_syntax@0.155.0
+	oxc_transform_napi@0.155.0
+	oxc_transformer@0.155.0
+	oxc_transformer_plugins@0.155.0
+	oxc_traverse@0.155.0
 	parking@2.2.1
 	parking_lot@0.12.5
 	parking_lot_core@0.9.12
@@ -232,17 +237,17 @@ CRATES="
 	redox_syscall@0.5.18
 	ref-cast-impl@1.0.26
 	ref-cast@1.0.26
-	referencing@0.55.0
+	referencing@0.58.5
 	regex-automata@0.4.18
 	regex-syntax@0.8.11
 	regex@1.13.1
 	regress@0.12.0
 	relative-path@1.9.3
 	rolldown-ariadne@0.6.0
-	rolldown-file-id@0.2.10
-	rolldown-notify-debouncer-full@0.7.11
-	rolldown-notify-types@2.0.2
-	rolldown-notify@10.5.1
+	rolldown-file-id@0.2.11
+	rolldown-notify-debouncer-full@0.8.0
+	rolldown-notify-types@2.0.3
+	rolldown-notify@11.0.0
 	ropey@1.6.1
 	rustc-hash@2.1.3
 	rustc_version@0.4.1
@@ -250,6 +255,8 @@ CRATES="
 	rustversion@1.0.23
 	ryu@1.0.23
 	same-file@1.0.6
+	saphyr-parser@0.2.1
+	saphyr@0.2.1
 	schemars@1.2.2
 	schemars_derive@1.2.2
 	scopeguard@1.2.0
@@ -261,7 +268,6 @@ CRATES="
 	serde_derive@1.0.229
 	serde_derive_internals@0.30.0
 	serde_json@1.0.151
-	serde_yaml@0.9.34+deprecated
 	sharded-slab@0.1.7
 	shlex@2.0.1
 	signal-hook-registry@1.4.8
@@ -271,7 +277,7 @@ CRATES="
 	similar@2.7.0
 	siphasher@1.0.3
 	slab@0.4.12
-	smallvec@1.16.0
+	smallvec@1.16.2
 	smawk@0.3.3
 	static_assertions@1.1.0
 	statrs@0.18.0
@@ -281,17 +287,17 @@ CRATES="
 	sugar_path@3.0.0
 	supports-color@3.0.2
 	syn@2.0.119
-	syn@3.0.5
+	syn@3.0.6
 	tempfile@3.27.0
 	termcolor@1.4.1
 	terminal_size@0.4.4
 	testing_macros@1.0.2
 	textwrap@0.16.2
-	thiserror-impl@2.0.19
-	thiserror@2.0.19
+	thiserror-impl@2.0.21
+	thiserror@2.0.21
 	thread_local@1.1.10
 	tokio-macros@2.7.1
-	tokio@1.53.1
+	tokio@1.53.2
 	tracing-attributes@0.1.31
 	tracing-chrome@0.7.2
 	tracing-core@0.1.36
@@ -309,11 +315,10 @@ CRATES="
 	unicode-segmentation@1.13.3
 	unicode-width@0.2.2
 	unicode-xid@0.2.6
-	unsafe-libyaml@0.2.11
 	url@2.5.8
 	utf8_iter@1.0.4
 	uuid-simd@0.8.0
-	uuid@1.26.0
+	uuid@1.27.0
 	valuable@0.1.1
 	value-trait@0.12.2
 	version_check@0.9.5
@@ -350,7 +355,7 @@ CRATES="
 	windows_x86_64_gnullvm@0.52.6
 	windows_x86_64_msvc@0.52.6
 	wit-bindgen@0.57.1
-	xxhash-rust@0.8.18
+	xxhash-rust@0.8.19
 	yansi@1.0.1
 	zerocopy-derive@0.8.54
 	zerocopy@0.8.54
