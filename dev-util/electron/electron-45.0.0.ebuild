@@ -903,7 +903,7 @@ LICENSE="Apache-2.0 Apache-2.0-with-LLVM-exceptions BSD BSD-2 Base64 Boost-1.0 C
 LICENSE+=" IJG ISC LGPL-2 LGPL-2.1 MIT MPL-1.1 MPL-2.0 Ms-PL PSF-2 SGI-B-2.0 SSLeay SunSoft Unicode-3.0"
 LICENSE+=" Unicode-DFS-2015 Unlicense UoI-NCSA ZLIB libtiff openssl"
 SLOT="$(ver_cut 1)"
-KEYWORDS="~amd64 ~arm64"
+KEYWORDS="~amd64"
 IUSE="+X cups custom-cflags debug kerberos +official pax-kernel +proprietary-codecs pulseaudio"
 IUSE+=" +screencast selinux system-harfbuzz +system-zstd +vaapi +wayland cpu_flags_x86_avx512f"
 # Not one of the ELIBC values the Gentoo profiles declare.
