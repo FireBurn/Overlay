@@ -2120,7 +2120,7 @@ NPM_NATIVE_DEPEND="
 "
 NPM_PNPM_VERSION="11.24.0"
 
-inherit edo multilib npm wrapper
+inherit edo npm wrapper
 
 DESCRIPTION="The open source AI coding agent for the terminal by Qwen"
 HOMEPAGE="https://github.com/QwenLM/qwen-code"
