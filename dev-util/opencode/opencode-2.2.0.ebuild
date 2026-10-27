@@ -12,7 +12,6 @@ NPM_PKGS="
 	@actions/http-client@2.2.3
 	@actions/http-client@3.0.2
 	@actions/io@2.0.0
-	@adobe/css-tools@4.5.0
 	@agentclientprotocol/sdk@1.6.0
 	@ai-sdk/cohere@3.0.27
 	@ai-sdk/openai-compatible@2.0.37
@@ -23,7 +22,6 @@ NPM_PKGS="
 	@ai-sdk/provider-utils@4.0.23
 	@ai-sdk/vercel@2.0.39
 	@ampproject/remapping@2.3.0
-	@antfu/install-pkg@1.1.0
 	@anthropic-ai/sdk@0.71.2
 	@anycable/core@0.9.2
 	@apideck/better-ajv-errors@0.3.7
@@ -238,7 +236,6 @@ NPM_PKGS="
 	@betteroffice/fonts@0.4.0
 	@betteroffice/pptx@0.2.0
 	@betteroffice/xlsx@0.3.0
-	@braintree/sanitize-url@7.1.2
 	@brendonovich/vite-plugin-opencode@0.1.3
 	@bruits/satteri-linux-arm64-gnu@0.9.5|arm64
 	@bruits/satteri-linux-arm64-musl@0.9.5|arm64
@@ -248,7 +245,6 @@ NPM_PKGS="
 	@bufbuild/protoplugin@2.14.0
 	@capsizecss/unpack@2.4.0
 	@capsizecss/unpack@4.0.1
-	@chevrotain/types@11.1.2
 	@clack/core@1.0.0-alpha.1
 	@clack/core@1.4.3
 	@clack/prompts@1.0.0-alpha.1
@@ -276,7 +272,6 @@ NPM_PKGS="
 	@dnd-kit/collision@0.5.0
 	@dnd-kit/dom@0.5.0
 	@dnd-kit/geometry@0.5.0
-	@dnd-kit/helpers@0.5.0
 	@dnd-kit/solid@0.5.0
 	@dnd-kit/state@0.5.0
 	@drizzle-team/brocli@0.12.0
@@ -302,14 +297,9 @@ NPM_PKGS="
 	@emmetio/stream-reader@2.2.0
 	@emmetio/stream-reader-utils@0.1.0
 	@emnapi/core@1.11.1
-	@emnapi/core@1.11.2
 	@emnapi/core@1.11.3
-	@emnapi/core@1.9.2
 	@emnapi/runtime@1.11.1
-	@emnapi/runtime@1.11.2
 	@emnapi/runtime@1.11.3
-	@emnapi/runtime@1.9.2
-	@emnapi/wasi-threads@1.2.1
 	@emnapi/wasi-threads@1.2.2
 	@emnapi/wasi-threads@1.2.3
 	@esbuild/linux-arm64@0.25.12|arm64
@@ -344,8 +334,6 @@ NPM_PKGS="
 	@happy-dom/global-registrator@20.0.11
 	@ibm/plex@6.4.1
 	@ibm/telemetry-js@1.11.0
-	@iconify/types@2.0.0
-	@iconify/utils@3.1.4
 	@img/colour@1.1.0
 	@img/sharp-libvips-linux-arm64@1.0.4|arm64
 	@img/sharp-libvips-linux-arm64@1.2.4|arm64
@@ -394,6 +382,8 @@ NPM_PKGS="
 	@jridgewell/trace-mapping@0.3.31
 	@jridgewell/trace-mapping@0.3.9
 	@js-temporal/polyfill@0.5.1
+	@kitlangton/knobs@0.4.0-next.22
+	@kitlangton/rolling-number@0.4.1
 	@kitlangton/solid-motion@0.2.2
 	@kobalte/core@0.13.13
 	@kobalte/utils@0.9.2
@@ -403,11 +393,9 @@ NPM_PKGS="
 	@malept/cross-spawn-promise@2.0.0
 	@malept/flatpak-bundler@0.4.0
 	@mdx-js/mdx@3.1.1
-	@mdx-js/react@3.1.1
-	@mermaid-js/parser@1.2.1
-	@modelcontextprotocol/client@2.0.0
-	@modelcontextprotocol/core@2.0.0
-	@modelcontextprotocol/server@2.0.0
+	@modelcontextprotocol/client@2.3.1
+	@modelcontextprotocol/core@2.3.1
+	@modelcontextprotocol/server@2.3.1
 	@napi-rs/lzma-linux-x64-gnu@1.5.1|amd64
 	@napi-rs/wasm-runtime@0.2.12
 	@napi-rs/wasm-runtime@1.2.3
@@ -499,30 +487,21 @@ NPM_PKGS="
 	@opentelemetry/sdk-trace-base@2.8.0
 	@opentelemetry/sdk-trace-node@2.8.0
 	@opentelemetry/semantic-conventions@1.43.0
-	@opentui/core@0.6.6
-	@opentui/core-linux-arm64@0.6.6|arm64
-	@opentui/core-linux-arm64-musl@0.6.6|arm64
-	@opentui/core-linux-x64@0.6.6|amd64
-	@opentui/core-linux-x64-musl@0.6.6|amd64
-	@opentui/keymap@0.6.6
-	@opentui/solid@0.6.6
-	@opentunnel/client@0.4.1
-	@opentunnel/protocol@0.4.1
+	@opentui/core@0.7.0
+	@opentui/core-linux-arm64@0.7.0|arm64
+	@opentui/core-linux-arm64-musl@0.7.0|arm64,elibc_musl
+	@opentui/core-linux-x64@0.7.0|amd64
+	@opentui/core-linux-x64-musl@0.7.0|amd64,elibc_musl
+	@opentui/keymap@0.7.0
+	@opentui/solid@0.7.0
+	@opentunnel/client@0.6.1
+	@opentunnel/protocol@0.6.1
 	@oslojs/encoding@1.1.0
 	@oxc-minify/binding-linux-arm64-gnu@0.96.0|arm64
 	@oxc-minify/binding-linux-arm64-musl@0.96.0|arm64
 	@oxc-minify/binding-linux-x64-gnu@0.96.0|amd64
 	@oxc-minify/binding-linux-x64-musl@0.96.0|amd64
-	@oxc-parser/binding-linux-arm64-gnu@0.127.0|arm64
-	@oxc-parser/binding-linux-arm64-musl@0.127.0|arm64
-	@oxc-parser/binding-linux-x64-gnu@0.127.0|amd64
-	@oxc-parser/binding-linux-x64-musl@0.127.0|amd64
-	@oxc-project/types@0.127.0
 	@oxc-project/types@0.146.0
-	@oxc-resolver/binding-linux-arm64-gnu@11.24.2|arm64
-	@oxc-resolver/binding-linux-arm64-musl@11.24.2|arm64
-	@oxc-resolver/binding-linux-x64-gnu@11.24.2|amd64
-	@oxc-resolver/binding-linux-x64-musl@11.24.2|amd64
 	@oxc-transform/binding-linux-arm64-gnu@0.96.0|arm64
 	@oxc-transform/binding-linux-arm64-musl@0.96.0|arm64
 	@oxc-transform/binding-linux-x64-gnu@0.96.0|amd64
@@ -550,8 +529,9 @@ NPM_PKGS="
 	@pierre/diffs@1.6.1
 	@pierre/highlights@0.2.0
 	@pierre/theme@2.0.0
+	@pierre/theming@1.0.0
 	@pierre/theming@1.0.2
-	@pierre/trees@1.0.0-beta.4
+	@pierre/trees@1.0.0-beta.6
 	@pkgjs/parseargs@0.11.0
 	@planetscale/database@1.19.0
 	@playwright/test@1.60.0
@@ -682,7 +662,6 @@ NPM_PKGS="
 	@socket.io/component-emitter@3.1.2
 	@solid-primitives/event-bus@1.1.2
 	@solid-primitives/event-listener@2.4.6
-	@solid-primitives/i18n@2.2.1
 	@solid-primitives/keyed@1.5.3
 	@solid-primitives/map@0.4.13
 	@solid-primitives/media@2.3.6
@@ -700,16 +679,6 @@ NPM_PKGS="
 	@solidjs/router@1.0.0
 	@speed-highlight/core@1.2.24
 	@standard-schema/spec@1.1.0
-	@storybook/addon-a11y@10.4.4
-	@storybook/addon-docs@10.4.4
-	@storybook/addon-links@10.4.4
-	@storybook/addon-onboarding@10.4.4
-	@storybook/addon-vitest@10.4.4
-	@storybook/builder-vite@10.4.4
-	@storybook/csf-plugin@10.4.4
-	@storybook/global@5.0.0
-	@storybook/icons@2.1.0
-	@storybook/react-dom-shim@10.4.4
 	@swc/helpers@0.5.23
 	@szmarczak/http-timer@4.0.6
 	@tailwindcss/node@4.1.11
@@ -733,9 +702,6 @@ NPM_PKGS="
 	@tanstack/solid-query@5.91.4
 	@tanstack/solid-virtual@3.13.37
 	@tanstack/virtual-core@3.17.8
-	@testing-library/dom@10.4.1
-	@testing-library/jest-dom@6.10.0
-	@testing-library/user-event@14.6.5
 	@trickfilm400/rollup-plugin-off-main-thread@3.0.0-pre1
 	@tsconfig/bun@1.0.9
 	@tsconfig/node22@22.0.2
@@ -745,7 +711,6 @@ NPM_PKGS="
 	@turbo/linux-arm64@2.10.2|arm64
 	@tybys/wasm-util@0.10.3
 	@tybys/wasm-util@0.9.0
-	@types/aria-query@5.0.4
 	@types/babel__core@7.20.5
 	@types/babel__generator@7.27.0
 	@types/babel__template@7.4.4
@@ -756,44 +721,14 @@ NPM_PKGS="
 	@types/cacheable-request@6.0.3
 	@types/chai@5.2.3
 	@types/cross-spawn@6.0.6
-	@types/d3@7.4.3
-	@types/d3-array@3.2.2
-	@types/d3-axis@3.0.6
-	@types/d3-brush@3.0.6
-	@types/d3-chord@3.0.6
-	@types/d3-color@3.1.3
-	@types/d3-contour@3.0.6
-	@types/d3-delaunay@6.0.4
-	@types/d3-dispatch@3.0.7
-	@types/d3-drag@3.0.7
-	@types/d3-dsv@3.0.7
-	@types/d3-ease@3.0.2
-	@types/d3-fetch@3.0.7
-	@types/d3-force@3.0.10
-	@types/d3-format@3.0.4
-	@types/d3-geo@3.1.0
-	@types/d3-hierarchy@3.1.7
-	@types/d3-interpolate@3.0.4
-	@types/d3-path@3.1.1
-	@types/d3-polygon@3.0.2
-	@types/d3-quadtree@3.0.6
-	@types/d3-random@3.0.4
 	@types/d3-scale@4.0.9
-	@types/d3-scale-chromatic@3.1.0
-	@types/d3-selection@3.0.11
-	@types/d3-shape@3.1.8
 	@types/d3-time@3.0.4
-	@types/d3-time-format@4.0.3
-	@types/d3-timer@3.0.2
-	@types/d3-transition@3.0.9
-	@types/d3-zoom@3.0.8
 	@types/debug@4.1.13
 	@types/deep-eql@4.0.2
 	@types/estree@1.0.9
 	@types/estree-jsx@1.0.5
 	@types/fontkit@2.0.9
 	@types/fs-extra@9.0.13
-	@types/geojson@7946.0.16
 	@types/hast@3.0.5
 	@types/http-cache-semantics@4.2.0
 	@types/js-yaml@4.0.9
@@ -814,14 +749,11 @@ NPM_PKGS="
 	@types/npmlog@7.0.0
 	@types/offscreencanvas@2019.7.3
 	@types/pacote@11.1.8
-	@types/prop-types@15.7.15
-	@types/react@18.0.25
 	@types/react@19.2.17
 	@types/react-dom@19.2.3
 	@types/resolve@1.20.2
 	@types/responselike@1.0.3
 	@types/sax@1.2.7
-	@types/scheduler@0.26.0
 	@types/semver@7.7.1
 	@types/semver@7.8.0
 	@types/ssri@7.1.5
@@ -831,23 +763,18 @@ NPM_PKGS="
 	@types/whatwg-mimetype@3.0.2
 	@types/which@3.0.4
 	@types/ws@8.18.1
-	@typescript/typescript-linux-arm64@7.0.2|arm64
-	@typescript/typescript-linux-x64@7.0.2|amd64
+	@typescript/typescript-linux-arm64@7.1.0-beta|arm64
+	@typescript/typescript-linux-x64@7.1.0-beta|amd64
 	@typescript/typescript6@6.0.2
 	@typescript/vfs@1.6.4
 	@typespec/ts-http-runtime@0.3.8
 	@ungap/structured-clone@1.3.3
-	@upsetjs/venn.js@2.0.0
-	@vitest/expect@3.2.4
 	@vitest/expect@4.1.11
 	@vitest/mocker@4.1.11
-	@vitest/pretty-format@3.2.4
 	@vitest/pretty-format@4.1.11
 	@vitest/runner@4.1.11
 	@vitest/snapshot@4.1.11
-	@vitest/spy@3.2.4
 	@vitest/spy@4.1.11
-	@vitest/utils@3.2.4
 	@vitest/utils@4.1.11
 	@volar/kit@2.4.28
 	@volar/language-core@2.4.28
@@ -857,7 +784,6 @@ NPM_PKGS="
 	@volar/typescript@2.4.28
 	@vscode/emmet-helper@2.11.0
 	@vscode/l10n@0.0.18
-	@webcontainer/env@1.1.1
 	@webgpu/types@0.1.54
 	@xmldom/xmldom@0.8.14
 	@yuuang/ffi-rs-linux-arm64-gnu@1.3.2|arm64
@@ -886,7 +812,6 @@ NPM_PKGS="
 	ansi-regex@5.0.1
 	ansi-regex@6.3.0
 	ansi-styles@4.3.0
-	ansi-styles@5.2.0
 	ansi-styles@6.2.3
 	ansis@4.3.1
 	anymatch@3.1.3
@@ -897,14 +822,12 @@ NPM_PKGS="
 	arg@5.0.2
 	argparse@1.0.10
 	argparse@2.0.1
-	aria-query@5.3.0
 	aria-query@5.3.2
 	array-buffer-byte-length@1.0.2
 	array-iterate@2.0.1
 	arraybuffer.prototype.slice@1.0.4
 	asn1js@3.0.10
 	assertion-error@2.0.1
-	ast-types@0.16.1
 	astring@1.9.0
 	astro@5.7.13
 	astro@7.1.3
@@ -985,7 +908,6 @@ NPM_PKGS="
 	camelcase@8.0.0
 	caniuse-lite@1.0.30001809
 	ccount@2.0.1
-	chai@5.3.3
 	chai@6.2.2
 	chainsaw@0.1.0
 	chalk@4.1.2
@@ -994,7 +916,6 @@ NPM_PKGS="
 	character-entities-html4@2.1.0
 	character-entities-legacy@3.0.0
 	character-reference-invalid@2.0.1
-	check-error@2.1.3
 	chokidar@4.0.3
 	chokidar@5.0.0
 	chownr@3.0.0
@@ -1024,12 +945,13 @@ NPM_PKGS="
 	commander@11.1.0
 	commander@2.20.3
 	commander@5.1.0
-	commander@7.2.0
 	commander@8.3.0
 	commander@9.5.0
 	common-ancestor-path@1.0.1
 	common-ancestor-path@2.0.0
 	common-tags@1.8.2
+	commonmark@0.31.2
+	commonmark-spec@0.31.2
 	compare-version@0.1.2
 	compress-commons@6.0.2
 	concat-map@0.0.1
@@ -1041,11 +963,8 @@ NPM_PKGS="
 	cookie@2.0.1
 	cookie-es@1.2.3
 	cookie-es@2.0.1
-	core-js@3.50.0
 	core-js-compat@3.50.0
 	core-util-is@1.0.3
-	cose-base@1.0.3
-	cose-base@2.2.0
 	crc-32@1.2.2
 	crc32-stream@6.0.0
 	cross-dirname@0.1.0
@@ -1060,60 +979,25 @@ NPM_PKGS="
 	css-tree@2.2.1
 	css-tree@3.2.1
 	css-what@6.2.2
-	css.escape@1.5.1
 	cssesc@3.0.0
 	csso@5.0.5
 	csstype@3.2.3
-	cytoscape@3.34.1
-	cytoscape-cose-bilkent@4.1.0
-	cytoscape-fcose@2.2.0
-	d3@7.9.0
-	d3-array@2.12.1
 	d3-array@3.2.4
-	d3-axis@3.0.0
-	d3-brush@3.0.0
-	d3-chord@3.0.1
 	d3-color@3.1.0
-	d3-contour@4.0.2
-	d3-delaunay@6.0.4
-	d3-dispatch@3.0.1
-	d3-drag@3.0.0
-	d3-dsv@3.0.1
-	d3-ease@3.0.1
-	d3-fetch@3.0.1
-	d3-force@3.0.0
 	d3-format@3.1.2
-	d3-geo@3.1.1
-	d3-hierarchy@3.1.2
 	d3-interpolate@3.0.1
-	d3-path@1.0.9
-	d3-path@3.1.0
-	d3-polygon@3.0.1
-	d3-quadtree@3.0.1
-	d3-random@3.0.1
-	d3-sankey@0.12.3
 	d3-scale@4.0.2
-	d3-scale-chromatic@3.1.0
-	d3-selection@3.0.0
-	d3-shape@1.3.7
-	d3-shape@3.2.0
 	d3-time@3.1.0
 	d3-time-format@4.1.0
-	d3-timer@3.0.1
-	d3-transition@3.0.1
-	d3-zoom@3.0.0
-	dagre-d3-es@7.0.14
 	data-uri-to-buffer@4.0.1
 	data-view-buffer@1.0.2
 	data-view-byte-length@1.0.2
 	data-view-byte-offset@1.0.1
-	dayjs@1.11.23
 	db0@0.3.4
 	debug@4.4.3
 	decimal.js@10.6.0
 	decode-named-character-reference@1.3.0
 	decompress-response@6.0.0
-	deep-eql@5.0.2
 	deepmerge@4.3.1
 	default-browser@5.5.1
 	default-browser-id@5.0.1
@@ -1122,7 +1006,6 @@ NPM_PKGS="
 	define-lazy-prop@3.0.0
 	define-properties@1.2.1
 	defu@6.1.7
-	delaunator@5.1.0
 	delayed-stream@1.0.0
 	deprecation@2.3.1
 	dequal@2.0.3
@@ -1146,8 +1029,6 @@ NPM_PKGS="
 	direction@2.0.1
 	dlv@1.1.3
 	dmg-builder@26.15.7
-	dom-accessibility-api@0.5.16
-	dom-accessibility-api@0.6.3
 	dom-serializer@2.0.0
 	domelementtype@2.3.0
 	domhandler@5.0.3
@@ -1188,6 +1069,7 @@ NPM_PKGS="
 	engine.io-parser@5.2.3
 	enhanced-resolve@5.24.5
 	enquirer@2.4.1
+	entities@3.0.1
 	entities@4.5.0
 	entities@6.0.1
 	entities@7.0.1
@@ -1205,7 +1087,6 @@ NPM_PKGS="
 	es-object-atoms@1.1.2
 	es-set-tostringtag@2.1.0
 	es-to-primitive@1.3.4
-	es-toolkit@1.51.0
 	es6-error@4.1.1
 	esast-util-from-estree@2.0.0
 	esast-util-from-js@2.0.1
@@ -1254,7 +1135,6 @@ NPM_PKGS="
 	fast-xml-builder@1.3.1
 	fast-xml-parser@5.11.0
 	fast-xml-parser@5.2.5
-	fastdom@1.0.12
 	fastq@1.20.1
 	fdir@6.5.0
 	fetch-blob@3.2.0
@@ -1275,7 +1155,6 @@ NPM_PKGS="
 	form-data-encoder@1.7.2
 	formdata-node@4.4.1
 	formdata-polyfill@4.0.10
-	framer-motion@12.43.0
 	fs-extra@10.1.0
 	fs-extra@11.3.1
 	fs-extra@11.4.0
@@ -1304,7 +1183,7 @@ NPM_PKGS="
 	get-tsconfig@4.14.3
 	get-tsconfig@5.0.0-beta.4
 	github-slugger@2.0.0
-	gitlab-ai-provider@6.19.0
+	gitlab-ai-provider@6.23.1
 	glob@10.5.0
 	glob@11.1.0
 	glob@13.0.5
@@ -1328,7 +1207,6 @@ NPM_PKGS="
 	h3@1.15.11
 	h3@2.0.1-rc.4
 	h3@2.0.1-rc.5
-	hachure-fill@0.5.2
 	happy-dom@20.11.1
 	has-bigints@1.1.0
 	has-flag@4.0.0
@@ -1379,7 +1257,6 @@ NPM_PKGS="
 	husky@9.1.7
 	i18n-iso-countries@7.14.0
 	i18next@23.16.8
-	iconv-lite@0.6.3
 	iconv-lite@0.7.3
 	idb@7.1.1
 	ieee754@1.2.1
@@ -1388,13 +1265,11 @@ NPM_PKGS="
 	immer@11.1.4
 	import-in-the-middle@3.4.0
 	import-meta-resolve@4.2.0
-	indent-string@4.0.0
 	inflight@1.0.6
 	inherits@2.0.4
 	ini@6.0.0
 	inline-style-parser@0.2.7
 	internal-slot@1.1.0
-	internmap@1.0.1
 	internmap@2.0.3
 	intl-messageformat@10.7.18
 	ip-address@10.5.0
@@ -1488,6 +1363,7 @@ NPM_PKGS="
 	jsonfile@6.2.1
 	jsonparse@1.3.1
 	jsonpointer@5.0.1
+	jsqr@1.4.0
 	just-diff@6.0.2
 	just-diff-apply@5.5.0
 	jwa@2.0.1
@@ -1495,15 +1371,12 @@ NPM_PKGS="
 	jwt-decode@3.1.2
 	katex@0.16.47
 	keyv@4.5.4
-	khroma@2.1.0
 	kind-of@6.0.3
 	kleur@3.0.3
 	kleur@4.1.5
 	klona@2.0.6
 	lang-map@0.4.0
 	language-map@1.5.0
-	layout-base@1.0.2
-	layout-base@2.0.1
 	lazy-val@1.0.5
 	lazystream@1.0.1
 	legacy-javascript@0.0.1
@@ -1535,8 +1408,6 @@ NPM_PKGS="
 	lodash.isequal@4.5.0
 	longest-streak@3.1.0
 	lookup-closest-locale@6.2.0
-	loose-envify@1.4.0
-	loupe@3.2.1
 	lowercase-keys@2.0.0
 	lru-cache@10.4.3
 	lru-cache@11.5.2
@@ -1544,14 +1415,12 @@ NPM_PKGS="
 	lru-cache@6.0.0
 	lru_map@0.4.1
 	luxon@3.6.1
-	lz-string@1.5.0
 	magic-string@0.30.21
 	magicast@0.3.5
 	magicast@0.5.4
 	make-fetch-happen@15.0.6
 	markdown-extensions@2.0.0
 	markdown-table@3.0.4
-	marked@16.4.2
 	marked@17.0.1
 	marked@18.0.11
 	marked-shiki@1.2.1
@@ -1578,9 +1447,9 @@ NPM_PKGS="
 	mdast-util-to-string@4.0.0
 	mdn-data@2.0.28
 	mdn-data@2.27.1
+	mdurl@1.0.1
 	merge-anything@5.1.7
 	merge2@1.4.1
-	mermaid@11.17.2
 	micromark@4.0.2
 	micromark-core-commonmark@2.0.3
 	micromark-extension-directive@3.0.2
@@ -1626,7 +1495,6 @@ NPM_PKGS="
 	mime-types@3.0.2
 	mimic-response@1.0.1
 	mimic-response@3.1.0
-	min-indent@1.0.1
 	miniflare@4.20251118.1
 	miniflare@4.20260708.1
 	miniflare@5.20260811.1-alpha
@@ -1649,10 +1517,7 @@ NPM_PKGS="
 	mkdirp@0.5.6
 	modern-tar@0.8.4
 	module-details-from-path@1.0.4
-	motion@12.34.5
-	motion-dom@12.43.0
 	motion-dom@14.0.0
-	motion-utils@12.39.0
 	motion-utils@14.0.0
 	mrmime@2.0.1
 	ms@2.1.3
@@ -1709,8 +1574,6 @@ NPM_PKGS="
 	openid-client@5.6.4
 	own-keys@1.0.2
 	oxc-minify@0.96.0
-	oxc-parser@0.127.0
-	oxc-resolver@11.24.2
 	oxc-transform@0.96.0
 	oxlint@1.60.0
 	oxlint-tsgolint@0.21.0
@@ -1737,7 +1600,6 @@ NPM_PKGS="
 	parse-latin@7.0.0
 	parse5@7.3.0
 	path-browserify@1.0.1
-	path-data-parser@0.1.0
 	path-exists@3.0.0
 	path-exists@4.0.0
 	path-exists@5.0.0
@@ -1750,8 +1612,8 @@ NPM_PKGS="
 	path-to-regexp@6.3.0
 	path-to-regexp@8.4.2
 	pathe@2.0.3
-	pathval@2.0.1
 	pe-library@0.4.1
+	pele@1.7.0
 	piccolore@0.1.3
 	picocolors@1.1.1
 	picomatch@2.3.2
@@ -1762,8 +1624,6 @@ NPM_PKGS="
 	playwright@1.60.0
 	playwright-core@1.60.0
 	plist@3.1.0
-	points-on-curve@0.2.0
-	points-on-path@0.2.1
 	possible-typed-array-names@1.1.0
 	postcss@8.5.26
 	postcss-nested@6.2.0
@@ -1778,7 +1638,6 @@ NPM_PKGS="
 	prettier@3.9.6
 	pretty-bytes@5.6.0
 	pretty-bytes@6.1.1
-	pretty-format@27.5.1
 	prismjs@1.30.0
 	proc-log@6.1.0
 	process@0.11.10
@@ -1803,11 +1662,8 @@ NPM_PKGS="
 	queue-microtask@1.2.3
 	quick-lru@5.1.1
 	radix3@1.1.2
-	react@18.2.0
 	react@19.2.8
-	react-dom@18.2.0
 	react-dom@19.2.8
-	react-is@17.0.2
 	read-binary-file-arch@1.0.6
 	read-cmd-shim@6.0.0
 	readable-stream@2.3.8
@@ -1815,12 +1671,10 @@ NPM_PKGS="
 	readdir-glob@1.1.3
 	readdirp@4.1.2
 	readdirp@5.1.1
-	recast@0.23.21
 	recma-build-jsx@1.0.0
 	recma-jsx@1.0.1
 	recma-parse@1.0.0
 	recma-stringify@1.0.0
-	redent@3.0.0
 	redis@6.2.1
 	reflect.getprototypeof@1.0.10
 	regenerate@1.4.2
@@ -1850,7 +1704,6 @@ NPM_PKGS="
 	remark-smartypants@3.0.3
 	remark-stringify@11.0.0
 	remeda@2.26.0
-	remend@1.3.1
 	request-light@0.5.8
 	request-light@0.7.0
 	require-directory@2.1.1
@@ -1873,14 +1726,11 @@ NPM_PKGS="
 	rimraf@5.0.10
 	roarr@2.15.4
 	robots-parser@3.0.1
-	robust-predicates@3.0.3
 	rolldown@1.2.5
 	rollup@4.62.4
 	rou3@0.7.12
-	roughjs@4.6.6
 	run-applescript@7.1.0
 	run-parallel@1.2.0
-	rw@1.3.3
 	s-js@0.4.9
 	safe-array-concat@1.1.4
 	safe-buffer@5.1.2
@@ -1891,20 +1741,16 @@ NPM_PKGS="
 	sanitize-filename@1.6.4
 	satteri@0.9.5
 	sax@1.6.1
-	scheduler@0.23.2
 	scheduler@0.27.0
 	section-matter@1.0.0
 	semver@5.7.2
 	semver@6.3.1
 	semver@7.7.4
-	semver@7.8.1
 	semver@7.8.5
 	semver-compare@1.0.0
 	serialize-error@7.0.1
 	serialize-javascript@7.1.0
-	seroval@1.3.2
 	seroval@1.5.6
-	seroval-plugins@1.3.3
 	seroval-plugins@1.5.6
 	set-function-length@1.2.2
 	set-function-name@2.0.2
@@ -1973,11 +1819,8 @@ NPM_PKGS="
 	std-env@4.2.0
 	stop-iteration-iterator@1.1.0
 	stoppable@1.1.0
-	storybook@10.4.4
-	storybook-solidjs-vite@10.5.2
 	stream-replace-string@2.0.0
 	streamx@2.28.0
-	strictdom@1.0.1
 	string-width@4.2.3
 	string-width@5.1.2
 	string-width@7.2.0
@@ -1994,13 +1837,11 @@ NPM_PKGS="
 	strip-ansi@7.1.2
 	strip-bom-string@1.0.0
 	strip-comments@2.0.1
-	strip-indent@3.0.0
 	strnum@2.4.2
 	stubborn-fs@2.0.0
 	stubborn-utils@1.0.2
 	style-to-js@1.1.21
 	style-to-object@1.0.14
-	stylis@4.4.0
 	sumchecker@3.0.1
 	supports-color@10.2.2
 	supports-color@7.2.0
@@ -2029,9 +1870,7 @@ NPM_PKGS="
 	tinyexec@0.3.2
 	tinyexec@1.3.0
 	tinyglobby@0.2.17
-	tinyrainbow@2.0.0
 	tinyrainbow@3.1.1
-	tinyspy@4.0.4
 	tldts-core@7.4.11
 	tldts-icann@7.4.11
 	tmp@0.2.7
@@ -2048,7 +1887,6 @@ NPM_PKGS="
 	trough@2.2.0
 	truncate-utf8-bytes@1.0.2
 	ts-algebra@2.0.0
-	ts-dedent@2.3.0
 	tsconfck@3.1.6
 	tslib@2.8.1
 	tuf-js@4.1.0
@@ -2067,7 +1905,7 @@ NPM_PKGS="
 	typescript@3.9.10
 	typescript@5.4.5
 	typescript@6.0.3
-	typescript@7.0.2
+	typescript@7.1.0-beta
 	typescript-auto-import-cache@0.3.6
 	ufo@1.6.4
 	ultrahtml@1.7.0
@@ -2107,7 +1945,6 @@ NPM_PKGS="
 	universal-user-agent@7.0.3
 	universalify@0.1.2
 	universalify@2.0.1
-	unplugin@2.3.11
 	unstorage@1.17.5
 	unstorage@2.0.0-alpha.7
 	unused-filename@4.0.1
@@ -2115,18 +1952,14 @@ NPM_PKGS="
 	unzipper@0.12.5
 	upath@1.2.0
 	update-browserslist-db@1.3.1
-	uqr@0.1.3
-	use-sync-external-store@1.6.0
 	utf8-byte-length@1.0.5
 	util-deprecate@1.0.2
-	uuid@14.0.2
 	validate-npm-package-name@7.0.2
 	vfile@6.0.3
 	vfile-location@5.0.3
 	vfile-message@4.0.3
 	vite@6.4.3
 	vite@7.1.10
-	vite@7.1.11
 	vite@7.3.6
 	vite@8.2.2
 	vite-plugin-icons-spritesheet@3.0.1
@@ -2166,7 +1999,6 @@ NPM_PKGS="
 	webcrypto-core@1.9.2
 	webdriver-bidi-protocol@0.4.2
 	webidl-conversions@3.0.1
-	webpack-virtual-modules@0.6.2
 	whatwg-mimetype@3.0.0
 	whatwg-url@5.0.0
 	when-exit@2.1.5
@@ -2414,10 +2246,10 @@ NPM_STUB_PKGS="
 	@opencode-ai/pty-darwin-x64@0.3.1
 	@opencode-ai/pty-win32-arm64@0.3.1
 	@opencode-ai/pty-win32-x64@0.3.1
-	@opentui/core-darwin-arm64@0.6.6
-	@opentui/core-darwin-x64@0.6.6
-	@opentui/core-win32-arm64@0.6.6
-	@opentui/core-win32-x64@0.6.6
+	@opentui/core-darwin-arm64@0.7.0
+	@opentui/core-darwin-x64@0.7.0
+	@opentui/core-win32-arm64@0.7.0
+	@opentui/core-win32-x64@0.7.0
 	@oxc-minify/binding-android-arm64@0.96.0
 	@oxc-minify/binding-darwin-arm64@0.96.0
 	@oxc-minify/binding-darwin-x64@0.96.0
@@ -2429,37 +2261,6 @@ NPM_STUB_PKGS="
 	@oxc-minify/binding-wasm32-wasi@0.96.0
 	@oxc-minify/binding-win32-arm64-msvc@0.96.0
 	@oxc-minify/binding-win32-x64-msvc@0.96.0
-	@oxc-parser/binding-android-arm-eabi@0.127.0
-	@oxc-parser/binding-android-arm64@0.127.0
-	@oxc-parser/binding-darwin-arm64@0.127.0
-	@oxc-parser/binding-darwin-x64@0.127.0
-	@oxc-parser/binding-freebsd-x64@0.127.0
-	@oxc-parser/binding-linux-arm-gnueabihf@0.127.0
-	@oxc-parser/binding-linux-arm-musleabihf@0.127.0
-	@oxc-parser/binding-linux-ppc64-gnu@0.127.0
-	@oxc-parser/binding-linux-riscv64-gnu@0.127.0
-	@oxc-parser/binding-linux-riscv64-musl@0.127.0
-	@oxc-parser/binding-linux-s390x-gnu@0.127.0
-	@oxc-parser/binding-openharmony-arm64@0.127.0
-	@oxc-parser/binding-wasm32-wasi@0.127.0
-	@oxc-parser/binding-win32-arm64-msvc@0.127.0
-	@oxc-parser/binding-win32-ia32-msvc@0.127.0
-	@oxc-parser/binding-win32-x64-msvc@0.127.0
-	@oxc-resolver/binding-android-arm-eabi@11.24.2
-	@oxc-resolver/binding-android-arm64@11.24.2
-	@oxc-resolver/binding-darwin-arm64@11.24.2
-	@oxc-resolver/binding-darwin-x64@11.24.2
-	@oxc-resolver/binding-freebsd-x64@11.24.2
-	@oxc-resolver/binding-linux-arm-gnueabihf@11.24.2
-	@oxc-resolver/binding-linux-arm-musleabihf@11.24.2
-	@oxc-resolver/binding-linux-ppc64-gnu@11.24.2
-	@oxc-resolver/binding-linux-riscv64-gnu@11.24.2
-	@oxc-resolver/binding-linux-riscv64-musl@11.24.2
-	@oxc-resolver/binding-linux-s390x-gnu@11.24.2
-	@oxc-resolver/binding-openharmony-arm64@11.24.2
-	@oxc-resolver/binding-wasm32-wasi@11.24.2
-	@oxc-resolver/binding-win32-arm64-msvc@11.24.2
-	@oxc-resolver/binding-win32-x64-msvc@11.24.2
 	@oxc-transform/binding-android-arm64@0.96.0
 	@oxc-transform/binding-darwin-arm64@0.96.0
 	@oxc-transform/binding-darwin-x64@0.96.0
@@ -2562,24 +2363,25 @@ NPM_STUB_PKGS="
 	@turbo/darwin-arm64@2.10.2
 	@turbo/windows-64@2.10.2
 	@turbo/windows-arm64@2.10.2
-	@typescript/typescript-aix-ppc64@7.0.2
-	@typescript/typescript-darwin-arm64@7.0.2
-	@typescript/typescript-darwin-x64@7.0.2
-	@typescript/typescript-freebsd-arm64@7.0.2
-	@typescript/typescript-freebsd-x64@7.0.2
-	@typescript/typescript-linux-arm@7.0.2
-	@typescript/typescript-linux-loong64@7.0.2
-	@typescript/typescript-linux-mips64el@7.0.2
-	@typescript/typescript-linux-ppc64@7.0.2
-	@typescript/typescript-linux-riscv64@7.0.2
-	@typescript/typescript-linux-s390x@7.0.2
-	@typescript/typescript-netbsd-arm64@7.0.2
-	@typescript/typescript-netbsd-x64@7.0.2
-	@typescript/typescript-openbsd-arm64@7.0.2
-	@typescript/typescript-openbsd-x64@7.0.2
-	@typescript/typescript-sunos-x64@7.0.2
-	@typescript/typescript-win32-arm64@7.0.2
-	@typescript/typescript-win32-x64@7.0.2
+	@typescript/typescript-aix-ppc64@7.1.0-beta
+	@typescript/typescript-android-arm64@7.1.0-beta
+	@typescript/typescript-darwin-arm64@7.1.0-beta
+	@typescript/typescript-darwin-x64@7.1.0-beta
+	@typescript/typescript-freebsd-arm64@7.1.0-beta
+	@typescript/typescript-freebsd-x64@7.1.0-beta
+	@typescript/typescript-linux-arm@7.1.0-beta
+	@typescript/typescript-linux-loong64@7.1.0-beta
+	@typescript/typescript-linux-mips64el@7.1.0-beta
+	@typescript/typescript-linux-ppc64@7.1.0-beta
+	@typescript/typescript-linux-riscv64@7.1.0-beta
+	@typescript/typescript-linux-s390x@7.1.0-beta
+	@typescript/typescript-netbsd-arm64@7.1.0-beta
+	@typescript/typescript-netbsd-x64@7.1.0-beta
+	@typescript/typescript-openbsd-arm64@7.1.0-beta
+	@typescript/typescript-openbsd-x64@7.1.0-beta
+	@typescript/typescript-sunos-x64@7.1.0-beta
+	@typescript/typescript-win32-arm64@7.1.0-beta
+	@typescript/typescript-win32-x64@7.1.0-beta
 	@yuuang/ffi-rs-android-arm64@1.3.7
 	@yuuang/ffi-rs-darwin-arm64@1.3.2
 	@yuuang/ffi-rs-darwin-arm64@1.3.7
@@ -2623,7 +2425,7 @@ NPM_STUB_PKGS="
 # Dependencies that are not published to the registry: a preview build of
 # @solidjs/start and a fork of ghostty-web, both used by the embedded web UI
 SOLID_START_BUILD="dfb2020"
-GHOSTTY_WEB_COMMIT="83c0a07b8628b748aed073b232cb4b52a6ca11c1"
+GHOSTTY_WEB_COMMIT="e91e38a9ceb13c566ddfa15185a9393849f712a9"
 
 inherit edo npm shell-completion
 
@@ -2668,9 +2470,6 @@ src_prepare() {
 	tar -czf "${WORKDIR}/ghostty-web.tgz" -C "${WORKDIR}" package || die
 
 	# bun keys patchedDependencies by the specifier replaced below
-	pushd "${WORKDIR}/package" > /dev/null || die
-	eapply "${S}/patches/ghostty-web@0.3.0.patch"
-	popd > /dev/null || die
 	sed -i '/"ghostty-web@github:anomalyco\/ghostty-web#/d' package.json || die
 
 	# Point the two non-registry dependencies at the distfiles
