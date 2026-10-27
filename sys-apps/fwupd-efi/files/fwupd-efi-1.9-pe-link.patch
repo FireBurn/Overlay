@@ -4,14 +4,14 @@ neither objcopy with PE support nor the ELF linker script and crt0.
 
 --- a/meson.build
 +++ b/meson.build
-@@ -10,7 +10,7 @@
- 
+@@ -12,7 +12,7 @@
+
  cc = meson.get_compiler('c')
  cc_ld = find_program(cc.get_linker_id())
 -objcopy = find_program('objcopy')
 +objcopy = find_program('objcopy', 'llvm-objcopy')
  objcopy_version = run_command(objcopy, '--version', check: true).stdout().split('\n')[0].split(' ')[-1]
- 
+
  gnuefi = dependency('gnu-efi', version: '>= 3.0.18')
 --- a/meson_options.txt
 +++ b/meson_options.txt
@@ -20,13 +20,13 @@ neither objcopy with PE support nor the ELF linker script and crt0.
 +option('efi-pe-libdir', type : 'string', description : 'directory with a PE/COFF libefi.a; links the image directly with the compiler and lld, without objcopy')
  option('efi-ldsdir', type : 'string', description : 'path to the EFI lds directory')
  option('efi-includedir', type : 'string', value : '/usr/include/efi', description : 'path to the EFI header directory')
- option('efi_sbat_fwupd_generation', type : 'integer', value : 1, description : 'SBAT fwupd generation')
+ option('efi_sbat_fwupd_generation', type : 'integer', value : 2, description : 'SBAT fwupd generation')
 --- a/efi/meson.build
 +++ b/efi/meson.build
-@@ -203,6 +203,19 @@
+@@ -197,6 +197,19 @@
  # no special cases for aarch64 or arm
  endif
- 
+
 +efi_pe_libdir = get_option('efi-pe-libdir')
 +if efi_pe_libdir != ''
 +  pe_args = ['--target=x86_64-w64-mingw32', '-fno-exceptions',
@@ -43,10 +43,10 @@ neither objcopy with PE support nor the ELF linker script and crt0.
  efi_ldflags = ['-T',
                 join_paths(efi_ldsdir, arch_lds),
                 '-shared',
-@@ -308,6 +321,22 @@
+@@ -302,6 +315,22 @@
    fwupd_so_deps += [o_crt0]
  endif
- 
+
 +if efi_pe_libdir != ''
 +  app = custom_target(efi_name,
 +                      input : o_files,
@@ -66,8 +66,11 @@ neither objcopy with PE support nor the ELF linker script and crt0.
  so = custom_target('fwup.so',
                     input : o_files,
                     output : 'fwup.so',
-@@ -350,3 +379,4 @@
+@@ -347,6 +376,7 @@
                                 ['@INPUT@', '@OUTPUT@'],
                      install : false,
                      install_dir : debugdir)
 +endif
+
+ selftest = executable('fwup-selftest',
+   'fwup-selftest.c',
