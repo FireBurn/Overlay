@@ -1565,7 +1565,7 @@ LICENSE+="
 	UoI-NCSA Unicode-3.0 ZLIB
 "
 SLOT="0"
-KEYWORDS="~amd64 ~arm64"
+KEYWORDS="~amd64"
 IUSE="collab"
 REQUIRED_USE="collab? ( amd64 )"
 RESTRICT="mirror"
