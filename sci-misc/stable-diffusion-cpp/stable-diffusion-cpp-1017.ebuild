@@ -11,9 +11,9 @@ if [[ ${PV} == 9999 ]]; then
 	EGIT_SUBMODULES=( 'ggml' )
 else
 	MY_BUILD="${PV#0_p}"
-	MY_COMMIT="fd21ecf"
+	MY_COMMIT="be48649"
 	MY_PV="master-${MY_BUILD}-${MY_COMMIT}"
-	GGML_COMMIT="c1f80e507db1d0ce49f3bf7f81bc79246d7a2611"
+	GGML_COMMIT="a5915eb0e47adef21c3f25b889a008925ea838c2"
 	SRC_URI="
 		https://github.com/leejet/stable-diffusion.cpp/archive/refs/tags/${MY_PV}.tar.gz -> ${P}.tar.gz
 		https://github.com/leejet/ggml/archive/${GGML_COMMIT}.tar.gz -> ${PN}-ggml-${GGML_COMMIT:0:10}.tar.gz
