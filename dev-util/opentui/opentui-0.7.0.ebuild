@@ -17,12 +17,27 @@ LICENSE="MIT"
 # libwebp (BSD), miniaudio
 LICENSE+=" Apache-2.0 BSD || ( MIT-0 public-domain )"
 SLOT="${PV}"
+# elibc_llvm is not one of the values the gentoo profiles declare, so it is
+# named here. On a profile which does not set ELIBC=llvm it is simply off.
+IUSE="elibc_llvm"
 KEYWORDS="~amd64 ~arm64"
 
 src_unpack() {
 	zig_src_unpack
 	mkdir "${S}"/zig-deps || die
 	tar -xzf "${S}"/src/vendor/zig-deps.tar.gz -C "${S}"/zig-deps || die
+}
+
+src_prepare() {
+	zig_src_prepare
+
+	# zig translate-c cannot expand llvm-libc's INTn_C, which pastes tokens
+	if use elibc_llvm; then
+		sed -E -i \
+			-e 's/\bUINT(8|16|32|64)_C\(([^()]*)\)/((uint\1_t)\2)/g' \
+			-e 's/\bINT(8|16|32|64)_C\(([^()]*)\)/((int\1_t)\2)/g' \
+			include/opentui.h || die
+	fi
 }
 
 src_configure() {
