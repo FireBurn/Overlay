@@ -17,10 +17,10 @@ LICENSE="MIT"
 # libwebp (BSD), miniaudio
 LICENSE+=" Apache-2.0 BSD || ( MIT-0 public-domain )"
 SLOT="${PV}"
+KEYWORDS="~amd64 ~arm64"
 # elibc_llvm is not one of the values the gentoo profiles declare, so it is
 # named here. On a profile which does not set ELIBC=llvm it is simply off.
 IUSE="elibc_llvm"
-KEYWORDS="~amd64 ~arm64"
 
 src_unpack() {
 	zig_src_unpack
