@@ -6,7 +6,7 @@ EAPI=8
 inherit dot-a java-vm-2 toolchain-funcs
 
 abi_uri() {
-	local baseuri="https://github.com/adoptium/temurin$(ver_cut 1)-binaries/releases/download/jdk-${PVB}/"
+	local baseuri="https://github.com/adoptium/temurin$(ver_cut 1)-binaries/releases/download/jdk-${MY_PV}/"
 	local musl=
 	local os=linux
 	local libc=glibc
@@ -28,39 +28,25 @@ abi_uri() {
 
 	echo "${2-$1}? (
 		${musl:+ ${musl}? ( }
-			${baseuri}/OpenJDK$(ver_cut 1)U-jdk_${1}_${os}_hotspot_${PVH}.tar.gz
+			${baseuri}/OpenJDK$(ver_cut 1)U-jdk_${1}_${os}_hotspot_${MY_PV//+/_}.tar.gz
 			static-libs? (
-				${baseuri}/OpenJDK$(ver_cut 1)U-static-libs${libc:+-$libc}_${1}_${os}_hotspot_${PVH}.tar.gz
+				${baseuri}/OpenJDK$(ver_cut 1)U-static-libs${libc:+-$libc}_${1}_${os}_hotspot_${MY_PV//+/_}.tar.gz
 			)
 		${musl:+ ) } )"
 }
 
-# In "early access" versions, SRC_URI is different from released versions
-# and contains strings like 'jdk-25+36-ea-beta' and '_25_36-ea.tar.gz'
-# According to file naming rules, the ebuilds are named like
-# 'openjdk-bin-25_beta36.ebuild'.
-if [[ "${PV%_beta*}" != "${PV}" ]]; then # version string contains "_beta"
-	MY_PV="${PV/_beta/+}"
-	PVB="${PV/_beta/+}-ea-beta"
-	PVH="${PV/_beta/_}-ea"
-else
-	MY_PV="${PV/_p/+}"
-	PVB="${MY_PV}"
-	PVH="${MY_PV//+/_}"
-fi
+MY_PV=${PV/_p/+}
 
 DESCRIPTION="Prebuilt Java JDK binaries provided by Eclipse Temurin"
 HOMEPAGE="https://adoptium.net"
 SRC_URI="
 	$(abi_uri aarch64 arm64)
 	$(abi_uri aarch64 arm64-macos)
-	$(abi_uri aarch64 arm64 musl)
+	$(abi_uri arm)
 	$(abi_uri ppc64le ppc64)
 	$(abi_uri x64 amd64)
 	$(abi_uri x64 amd64 musl)
 	$(abi_uri x64 amd64 llvm)
-	$(abi_uri riscv64 riscv)
-	$(abi_uri x64 x64-macos)
 "
 S="${WORKDIR}/jdk-${MY_PV}"
 
@@ -145,8 +131,7 @@ src_install() {
 		fi
 
 		if use headless-awt ; then
-			# do not die if not available, -f for bug #934974
-			rm -fv lib/lib*{[jx]awt,splashscreen}* || die
+			rm -v lib/lib*{[jx]awt,splashscreen}* || die
 		fi
 	fi
 
