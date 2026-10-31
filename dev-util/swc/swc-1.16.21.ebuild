@@ -32,7 +32,6 @@ CRATES="
 	assert_fs@1.1.1
 	async-trait@0.1.89
 	atomic-waker@1.1.2
-	atty@0.2.14
 	auto_impl@1.2.0
 	autocfg@1.3.0
 	backtrace@0.3.76
@@ -84,20 +83,17 @@ CRATES="
 	ciborium-ll@0.2.2
 	ciborium@0.2.2
 	clang-sys@1.8.1
-	clap@3.2.25
 	clap@4.5.9
 	clap_builder@4.5.9
-	clap_derive@3.2.25
 	clap_derive@4.5.8
-	clap_lex@0.2.4
 	clap_lex@0.7.1
 	cmake@0.1.51
 	cobs@0.3.0
-	codspeed-criterion-compat-walltime@3.0.4
-	codspeed-criterion-compat@3.0.4
-	codspeed@3.0.4
+	codspeed-criterion-compat-walltime@6.0.0
+	codspeed-criterion-compat@6.0.0
+	codspeed@6.0.0
 	colorchoice@1.0.0
-	colored@2.1.0
+	colored@3.1.1
 	compact_str@0.7.1
 	console@0.15.8
 	console_error_panic_hook@0.1.7
@@ -134,9 +130,9 @@ CRATES="
 	cranelift-isle@0.123.19
 	cranelift-native@0.123.19
 	cranelift-srcgen@0.123.19
-	crc-catalog@1.1.1
+	crc-catalog@2.5.0
 	crc32fast@1.5.0
-	crc@2.1.0
+	crc@3.4.0
 	criterion-plot@0.5.0
 	criterion@0.5.1
 	crossbeam-channel@0.5.15
@@ -242,9 +238,7 @@ CRATES="
 	hashbrown@0.17.1
 	heapless@0.8.0
 	heck@0.3.3
-	heck@0.4.1
 	heck@0.5.0
-	hermit-abi@0.1.19
 	hermit-abi@0.3.9
 	hex@0.4.3
 	hmac-sha256@1.1.14
@@ -272,13 +266,11 @@ CRATES="
 	idna_adapter@1.2.1
 	if_chain@1.0.2
 	ignore@0.4.23
-	indexmap@1.9.3
-	indexmap@2.12.0
+	indexmap@2.14.2
 	inotify-sys@0.1.5
 	inotify@0.11.1
 	insta@1.41.1
 	io-extras@0.18.4
-	io-lifetimes@1.0.11
 	io-lifetimes@2.0.4
 	ipnet@2.10.1
 	iprange@0.6.7
@@ -299,14 +291,14 @@ CRATES="
 	lazy_static@1.5.0
 	leb128@0.2.5
 	leb128fmt@0.1.0
-	lexical-core@0.8.5
-	lexical-parse-float@0.8.5
-	lexical-parse-integer@0.8.6
+	lexical-core@1.0.6
+	lexical-parse-float@1.0.6
+	lexical-parse-integer@1.0.6
 	lexical-sort@0.3.1
-	lexical-util@0.8.5
-	lexical-write-float@0.8.5
-	lexical-write-integer@0.8.5
-	lexical@6.1.1
+	lexical-util@1.0.7
+	lexical-write-float@1.0.6
+	lexical-write-integer@1.0.6
+	lexical@7.0.5
 	libc@0.2.189
 	libloading@0.8.9
 	libm@0.2.15
@@ -319,7 +311,6 @@ CRATES="
 	linked-hash-map@0.5.6
 	linked_hash_set@0.1.4
 	linux-raw-sys@0.11.0
-	linux-raw-sys@0.3.8
 	linux-raw-sys@0.4.15
 	litemap@0.8.1
 	litrs@0.4.1
@@ -345,7 +336,7 @@ CRATES="
 	minimal-lexical@0.2.1
 	miniz_oxide@0.8.0
 	miniz_oxide@0.9.1
-	mio@1.0.2
+	mio@1.2.4
 	more-asserts@0.2.2
 	munge@0.4.1
 	munge_macro@0.4.1
@@ -356,12 +347,12 @@ CRATES="
 	napi@3.3.0
 	native-tls@0.2.11
 	new_debug_unreachable@1.0.6
-	nix@0.29.0
+	nix@0.31.3
 	nohash-hasher@0.2.0
 	nom@5.1.3
 	nom@7.1.3
 	nom@8.0.0
-	normpath@0.2.0
+	normpath@1.5.2
 	notify-types@2.1.0
 	notify@8.2.0
 	ntest@0.7.5
@@ -385,7 +376,6 @@ CRATES="
 	openssl-probe@0.1.5
 	openssl-sys@0.9.107
 	openssl@0.10.72
-	os_str_bytes@6.6.1
 	outref@0.1.0
 	outref@0.5.2
 	owo-colors@4.2.3
@@ -397,9 +387,9 @@ CRATES="
 	parking_lot_core@0.9.10
 	paste@1.0.15
 	pastey@0.1.1
-	path-absolutize@3.1.1
+	path-absolutize@4.0.1
 	path-clean@1.0.1
-	path-dedot@3.1.1
+	path-dedot@4.0.1
 	pathdiff@0.2.3
 	percent-encoding@2.3.1
 	petgraph@0.7.1
@@ -430,9 +420,7 @@ CRATES="
 	prettyplease@0.2.25
 	proc-macro-crate@1.3.1
 	proc-macro-error-attr2@2.0.0
-	proc-macro-error-attr@1.0.4
 	proc-macro-error2@2.0.1
-	proc-macro-error@1.0.4
 	proc-macro2@1.0.103
 	proptest@1.10.0
 	psm@0.1.21
@@ -479,7 +467,7 @@ CRATES="
 	regex@1.10.6
 	region@3.0.2
 	regress@0.11.1
-	relative-path@1.9.2
+	relative-path@2.0.3
 	rend@0.4.2
 	rend@0.5.2
 	replace_with@0.1.8
@@ -493,7 +481,6 @@ CRATES="
 	rustc-hash@1.1.0
 	rustc-hash@2.1.1
 	rustix-linux-procfs@0.1.1
-	rustix@0.37.27
 	rustix@0.38.44
 	rustix@1.1.2
 	rustls-pki-types@1.15.1
@@ -529,6 +516,7 @@ CRATES="
 	serde_derive_internals@0.29.1
 	serde_json@1.0.140
 	serde_spanned@0.6.7
+	serde_spanned@1.1.2
 	serde_urlencoded@0.7.1
 	serde_yml@0.0.12
 	sha1@0.10.6
@@ -549,7 +537,7 @@ CRATES="
 	smallvec@1.15.1
 	smol_str@0.2.2
 	smoltcp@0.8.2
-	socket2@0.6.1
+	socket2@0.6.5
 	st-map@0.2.4
 	stable_deref_trait@1.2.1
 	stacker@0.1.25
@@ -562,6 +550,7 @@ CRATES="
 	subtle@2.6.1
 	syn@1.0.109
 	syn@2.0.110
+	syn@3.0.9
 	sync_wrapper@1.0.2
 	synstructure@0.13.2
 	system-configuration-sys@0.6.0
@@ -573,7 +562,6 @@ CRATES="
 	target-lexicon@0.13.3
 	tempfile@3.12.0
 	termcolor@1.4.1
-	terminal_size@0.2.6
 	terminal_size@0.3.0
 	termios@0.3.3
 	termtree@0.4.1
@@ -592,16 +580,20 @@ CRATES="
 	tinytemplate@1.2.1
 	tinyvec@1.8.0
 	tinyvec_macros@0.1.1
-	tokio-macros@2.6.0
+	tokio-macros@2.7.2
 	tokio-native-tls@0.3.1
 	tokio-rustls@0.26.4
 	tokio-stream@0.1.15
 	tokio-util@0.7.10
-	tokio@1.48.0
+	tokio@1.53.3
 	toml@0.8.19
+	toml@1.1.8+spec-1.1.0
 	toml_datetime@0.6.8
+	toml_datetime@1.1.2+spec-1.1.0
 	toml_edit@0.19.15
 	toml_edit@0.22.20
+	toml_parser@1.1.5+spec-1.1.0
+	toml_writer@1.1.3+spec-1.1.0
 	tower-http@0.6.11
 	tower-layer@0.3.3
 	tower-service@0.3.3
@@ -747,6 +739,7 @@ CRATES="
 	windows_x86_64_msvc@0.53.1
 	winnow@0.5.34
 	winnow@0.6.18
+	winnow@1.0.4
 	winx@0.36.4
 	wit-bindgen@0.46.0
 	wit-parser@0.236.1
