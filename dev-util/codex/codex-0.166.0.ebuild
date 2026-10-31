@@ -222,7 +222,7 @@ CRATES="
 	ctor@0.6.3
 	ctor@1.0.6
 	ctr@0.9.2
-	ctutils@0.4.2
+	ctutils@0.4.5
 	curl-sys@0.4.90+curl-8.21.0
 	curl@0.4.50
 	curve25519-dalek-derive@0.1.1
@@ -1138,7 +1138,6 @@ CRATES="
 	utf8_iter@1.0.4
 	utf8parse@0.2.2
 	uuid@1.20.0
-	v8@152.2.0
 	valuable@0.1.1
 	vcpkg@0.2.15
 	version-compare@0.2.1
@@ -1315,6 +1314,7 @@ declare -A GIT_CRATES=(
 	[runfiles]='https://github.com/dzbarsky/rules_rust;b56cbaa8465e74127f1ea216f813cd377295ad81;rules_rust-%commit%/rust/runfiles'
 	[tokio-tungstenite]='https://github.com/openai-oss-forks/tokio-tungstenite;0e5b2d73aa18dd9f0a50ee9ff199d5aef7594186;tokio-tungstenite-%commit%'
 	[tungstenite]='https://github.com/openai-oss-forks/tungstenite-rs;4fffad30fe373adbdcffab9545e9e9bf4f2fc19f;tungstenite-rs-%commit%'
+	[v8]='https://github.com/seanh-oai/rusty_v8;350c5a859a9b3c84ab8701b3ad51e3b7699b30c0;rusty_v8-%commit%'
 )
 
 RUST_MIN_VER="1.95.0"
@@ -1415,6 +1415,7 @@ src_prepare() {
 	crossterm = { path = "$(gen_git_crate_dir crossterm)" }
 	tokio-tungstenite = { path = "$(gen_git_crate_dir tokio-tungstenite)" }
 	tungstenite = { path = "$(gen_git_crate_dir tungstenite)" }
+	v8 = { path = "$(gen_git_crate_dir v8)" }
 	EOF
 
 	# Increase recursion limit to avoid query depth overflow during layout computation of cli_main
