@@ -41,7 +41,7 @@ SRC_URI="
 # swig: GPL-3+ BSD BSD-2
 LICENSE="BSD BSD-2 CC-BY-3.0 GPL-3+ MIT OFL-1.1 public-domain ZLIB"
 SLOT="0"
-KEYWORDS="amd64"
+KEYWORDS="~amd64"
 IUSE="qt6 wayland"
 REQUIRED_USE="doc? ( qt6 ) qt6? ( ${PYTHON_REQUIRED_USE} )"
 
@@ -79,7 +79,7 @@ PATCHES=(
 	# The analytics seem very reasonable, and even without this patch
 	# they are NOT sent before the user accepts.  But default the
 	# selection to off, just in case.
-	"${FILESDIR}"/${PN}-1.46-analytics-off.patch
+	"${FILESDIR}"/${PN}-1.47-analytics-off.patch
 
 	# Only search for PySide2 if pyside2 USE flag is set.
 	# Bug #833627
@@ -98,10 +98,10 @@ PATCHES=(
 	"${FILESDIR}"/${PN}-1.31-lld.patch
 
 	# qrenderdoc only supports Qt5 upstream
-	"${FILESDIR}"/${PN}-1.46-qt6.patch
+	"${FILESDIR}"/${PN}-1.47-qt6.patch
 
 	# keep the GUI on xcb even with wayland capture built in
-	"${FILESDIR}"/${PN}-1.46-wayland-gui-xcb.patch
+	"${FILESDIR}"/${PN}-1.47-wayland-gui-xcb.patch
 )
 
 DOCS=( util/LINUX_DIST_README )
@@ -140,6 +140,36 @@ src_prepare() {
 	sed -i '/#include <stdarg/i #include <time.h>' \
 		"${S}"/renderdoc/os/os_specific.h \
 		|| die 'sed include time.h failed'
+
+	# The vendored compressonator uses qsort without including <cstdlib>.
+	sed -i '/#include "Common_Def.h"/i #include <cstdlib>' \
+		"${S}"/renderdoc/3rdparty/compressonator/BCn_Common_Kernel.h \
+		|| die 'sed include cstdlib failed'
+	sed -i '/#include "BC6_Encode_kernel.h"/i #include <cstdlib>' \
+		"${S}"/renderdoc/3rdparty/compressonator/BC6_Encode_kernel.cpp \
+		|| die 'sed include cstdlib failed'
+
+	# The __local macro is an unused OpenCL leftover that collides with
+	# libc++'s internal identifiers.
+	sed -i '/#define __local const/d' \
+		"${S}"/renderdoc/3rdparty/compressonator/Common_Def.h \
+		|| die 'sed remove __local macro failed'
+
+	# The vendored PerfSDK headers use stdlib functions without including
+	# <cstdlib>.
+	sed -i '/#include <ctime>/a #include <cstdlib>' \
+		"${S}"/renderdoc/driver/ihv/nv/official/PerfSDK/redist/NvPerfUtility/include/NvPerfInit.h \
+		"${S}"/renderdoc/driver/ihv/nv/official/PerfSDK/redist/NvPerfUtility/include/NvPerfReportGenerator.h \
+		|| die 'sed include cstdlib failed'
+
+	# The vendored scintilla uses std::fill without including <algorithm>.
+	sed -i '1i #include <algorithm>' \
+		"${S}"/qrenderdoc/3rdparty/scintilla/src/SplitVector.h \
+		"${S}"/qrenderdoc/3rdparty/scintilla/src/SparseVector.h \
+		|| die 'sed include algorithm failed'
+	sed -i '/#include <stdlib.h>/i #include <algorithm>' \
+		"${S}"/qrenderdoc/3rdparty/scintilla/src/XPM.cxx \
+		|| die 'sed include algorithm failed'
 }
 
 src_configure() {

@@ -1967,10 +1967,10 @@ index 0422fc3..904bbbd 100644
  
  // fixed size array, wrapped to be more python-friendly (mapped to an N-tuple)
 diff --git a/renderdoc/api/replay/rdcstr.h b/renderdoc/api/replay/rdcstr.h
-index caf358e..e7d65f9 100644
+index caf358e..642bfc7 100644
 --- a/renderdoc/api/replay/rdcstr.h
 +++ b/renderdoc/api/replay/rdcstr.h
-@@ -941,6 +941,14 @@ inline rdcstr operator+(const QString &left, const rdcstr &right)
+@@ -941,6 +941,22 @@ inline rdcstr operator+(const QString &left, const rdcstr &right)
    return rdcstr(left) += right;
  }
  
@@ -1980,6 +1980,14 @@ index caf358e..e7d65f9 100644
 +inline QString &operator+=(QString &left, const rdcstr &right)
 +{
 +  return left += QString(right);
++}
++
++// Qt 6.5+ QStringLiteral is a macro producing a prvalue, which is ambiguous
++// with QString's own operator+(QString&&, const QString&). Take the
++// ambiguity away with an exact match.
++inline rdcstr operator+(QString &&left, const rdcstr &right)
++{
++  return rdcstr(left) += right;
 +}
 +
  inline rdcstr operator+(const QChar &left, const rdcstr &right)
