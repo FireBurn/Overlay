@@ -75,7 +75,9 @@ def conditions(os_, cpu, libc, arches):
         if not ok:
             return None
         if len(ok) == 1:
-            libc_cond = ok[0]
+            # glibc is the default: no condition, so hosts with an exotic
+            # ELIBC (e.g. llvm-runtimes/libc) still fetch the gnu tarballs
+            libc_cond = "" if ok[0] == "elibc_glibc" else ok[0]
     if not cpus:
         return [libc_cond]
     out = []
