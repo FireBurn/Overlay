@@ -17,9 +17,9 @@ CRATES="
 	adler2@2.0.1
 	adler32@1.2.0
 	aes@0.8.4
-	agent-client-protocol-derive@3.3.0
-	agent-client-protocol-schema@1.11.0
-	agent-client-protocol@3.3.0
+	agent-client-protocol-derive@3.4.0
+	agent-client-protocol-schema@1.12.0
+	agent-client-protocol@3.4.0
 	ahash@0.8.12
 	aho-corasick@1.1.3
 	aliasable@0.1.3
@@ -145,6 +145,8 @@ CRATES="
 	bon-macros@3.8.2
 	bon@3.8.2
 	borrow-or-share@0.2.4
+	borsh-derive@1.8.1
+	borsh@1.8.1
 	brush-parser@0.3.0
 	bs58@0.5.1
 	bstr@1.12.1
@@ -231,6 +233,7 @@ CRATES="
 	core-services@1.0.0
 	core-text@21.0.0
 	core2@0.4.0
+	core_detect@1.0.0
 	core_maths@0.1.1
 	coreaudio-rs@0.12.1
 	coreaudio-rs@0.14.2
@@ -308,6 +311,10 @@ CRATES="
 	diff@0.1.13
 	diffy@0.4.2
 	digest@0.10.7
+	dioxus-cli-config@0.7.10
+	dioxus-core-types@0.7.10
+	dioxus-core@0.7.10
+	dioxus-devtools-types@0.7.10
 	dirs-sys@0.5.0
 	dirs@6.0.0
 	dispatch2@0.3.1
@@ -420,6 +427,7 @@ CRATES="
 	futures@0.1.31
 	futures@0.3.34
 	gaoya@0.2.0
+	generational-box@0.7.10
 	generator@0.8.9
 	generic-array@0.14.7
 	gethostname@1.1.0
@@ -604,6 +612,7 @@ CRATES="
 	logos@0.15.1
 	logos@0.16.1
 	lol_html@3.0.1
+	longest-increasing-subsequence@0.1.0
 	loom@0.7.2
 	loop9@0.1.5
 	lru-slab@0.1.2
@@ -717,6 +726,7 @@ CRATES="
 	objc2-quartz-core@0.3.2
 	objc2-screen-capture-kit@0.3.2
 	objc2-security@0.3.2
+	objc2-ui-kit@0.3.2
 	objc2-user-notifications@0.3.2
 	objc2@0.5.2
 	objc2@0.6.3
@@ -728,7 +738,6 @@ CRATES="
 	octocrab@0.49.7
 	once_cell@1.21.4
 	once_cell_polyfill@1.70.1
-	oo7@0.6.0
 	oorandom@11.1.5
 	open@5.3.2
 	opener@0.7.2
@@ -837,6 +846,8 @@ CRATES="
 	profiling@1.0.17
 	prometheus@0.14.0
 	proptest-derive@0.8.0
+	proptest-macro@0.6.0
+	proptest@1.12.0
 	prost-build@0.14.4
 	prost-derive@0.14.4
 	prost-reflect@0.16.5
@@ -880,7 +891,7 @@ CRATES="
 	rand_core@0.9.3
 	rand_pcg@0.10.2
 	rand_pcg@0.3.1
-	rand_xorshift@0.4.0
+	rand_xorshift@0.5.0
 	random_choice@0.3.2
 	range-alloc@0.1.4
 	range-map@0.2.0
@@ -1059,6 +1070,8 @@ CRATES="
 	strum@0.28.0
 	strum_macros@0.27.2
 	strum_macros@0.28.0
+	subsecond-types@0.7.10
+	subsecond@0.7.10
 	subtle@2.6.1
 	sval@2.15.0
 	sval_buffer@2.15.0
@@ -1477,6 +1490,7 @@ declare -A GIT_CRATES=(
 	[notify]='https://github.com/zed-industries/notify;d842f16b2716bd60f09caf3ae3a894237ab38f54;notify-%commit%/notify'
 	[notify-types]='https://github.com/zed-industries/notify;d842f16b2716bd60f09caf3ae3a894237ab38f54;notify-%commit%/notify-types'
 	[nvim-rs]='https://github.com/KillTheMule/nvim-rs;764dd270c642f77f10f3e19d05cc178a6cbe69f3;nvim-rs-%commit%'
+	[oo7]='https://github.com/zed-industries/oo7;731c1215edb6905876c6137ab300428c7b8d7c13;oo7-%commit%/client'
 	[pet]='https://github.com/zed-industries/python-environment-tools;5aad7164bfc2a58977b103c8ef8fdd7302ed2e9f;python-environment-tools-%commit%/crates/pet'
 	[pet-conda]='https://github.com/zed-industries/python-environment-tools;5aad7164bfc2a58977b103c8ef8fdd7302ed2e9f;python-environment-tools-%commit%/crates/pet-conda'
 	[pet-core]='https://github.com/zed-industries/python-environment-tools;5aad7164bfc2a58977b103c8ef8fdd7302ed2e9f;python-environment-tools-%commit%/crates/pet-core'
@@ -1504,8 +1518,6 @@ declare -A GIT_CRATES=(
 	[pet-windows-registry]='https://github.com/zed-industries/python-environment-tools;5aad7164bfc2a58977b103c8ef8fdd7302ed2e9f;python-environment-tools-%commit%/crates/pet-windows-registry'
 	[pet-windows-store]='https://github.com/zed-industries/python-environment-tools;5aad7164bfc2a58977b103c8ef8fdd7302ed2e9f;python-environment-tools-%commit%/crates/pet-windows-store'
 	[pet-winpython]='https://github.com/zed-industries/python-environment-tools;5aad7164bfc2a58977b103c8ef8fdd7302ed2e9f;python-environment-tools-%commit%/crates/pet-winpython'
-	[proptest]='https://github.com/proptest-rs/proptest;3dca198a8fef1b32e3a66f1e1897c955b4dc5b5b;proptest-%commit%/proptest'
-	[proptest-macro]='https://github.com/proptest-rs/proptest;3dca198a8fef1b32e3a66f1e1897c955b4dc5b5b;proptest-%commit%/proptest-macro'
 	[rodio]='https://github.com/RustAudio/rodio;3ee9745862279ce1d18db593155016e7ce024aeb;rodio-%commit%'
 	[trash]='https://github.com/zed-industries/trash-rs;41c6c800d884a89351f3b8856d12894cccee261d;trash-rs-%commit%'
 	[tree-sitter]='https://github.com/tree-sitter/tree-sitter;43623ec9bf0eaaf7113285c46e8a09018f181b18;tree-sitter-%commit%/lib'
