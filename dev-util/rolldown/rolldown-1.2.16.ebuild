@@ -10,7 +10,7 @@ CRATES="
 	aho-corasick@1.1.4
 	allocator-api2@0.2.21
 	anyhow@1.0.104
-	append-only-vec@0.1.8
+	append-only-vec@0.1.10
 	approx@0.5.1
 	arcstr@1.2.0
 	arraydeque@0.5.1
@@ -74,7 +74,7 @@ CRATES="
 	endian-type@0.2.0
 	equivalent@1.0.2
 	errno@0.3.14
-	escape-simd@0.1.0
+	escape-simd@0.1.1
 	event-listener-strategy@0.5.4
 	event-listener@5.4.1
 	fancy-regex@0.19.0
@@ -104,7 +104,7 @@ CRATES="
 	getrandom@0.4.3
 	glob@0.3.4
 	globset@0.4.20
-	globstar@0.0.4
+	globstar@0.0.6
 	half@2.7.1
 	halfbrown@0.4.0
 	hashbrown@0.14.5
@@ -127,33 +127,34 @@ CRATES="
 	itertools@0.15.0
 	itoa@1.0.18
 	js-sys@0.3.103
-	json-escape-simd@3.1.2
+	json-escape-simd@3.1.3
 	json-strip-comments@3.1.2
-	jsonschema-regex@0.58.5
-	jsonschema-value@0.58.5
-	jsonschema@0.58.5
+	jsonschema-regex@0.60.1
+	jsonschema-value@0.60.1
+	jsonschema@0.60.1
 	kqueue-sys@1.1.2
 	kqueue@1.2.0
 	lazy-regex-proc_macros@3.6.1
 	lazy-regex@3.6.1
 	lazy_static@1.5.0
-	libc@0.2.186
+	libc@0.2.191
 	libloading@0.9.0
-	libmimalloc-sys2@0.1.63
+	libmimalloc-sys2@0.1.65
 	linux-raw-sys@0.12.1
 	lock_api@0.4.14
+	lock_api@0.5.0
 	log@0.4.33
 	memchr@2.8.3
 	micromap@0.3.0
-	mimalloc-safe@0.1.67
+	mimalloc-safe@0.1.69
 	mime@0.3.17
 	miniz_oxide@0.9.1
 	mio@1.2.2
 	napi-build@2.6.0
-	napi-derive-backend@6.1.5
-	napi-derive@3.6.12
-	napi-sys@3.4.0
-	napi@3.14.2
+	napi-derive-backend@6.1.6
+	napi-derive@3.6.13
+	napi-sys@3.4.1
+	napi@3.15.0
 	nibble_vec@0.1.0
 	nix@0.31.3
 	nodejs-built-in-modules@1.0.0
@@ -179,39 +180,41 @@ CRATES="
 	outref@0.5.2
 	owo-colors@4.4.0
 	oxc-browserslist@5.0.1
-	oxc@0.155.0
-	oxc_allocator@0.155.0
-	oxc_ast@0.155.0
-	oxc_ast_macros@0.155.0
-	oxc_ast_visit@0.155.0
-	oxc_codegen@0.155.0
-	oxc_compat@0.155.0
-	oxc_data_structures@0.155.0
-	oxc_diagnostics@0.155.0
-	oxc_ecmascript@0.155.0
-	oxc_estree@0.155.0
+	oxc@0.156.0
+	oxc_allocator@0.156.0
+	oxc_ast@0.156.0
+	oxc_ast_macros@0.156.0
+	oxc_ast_visit@0.156.0
+	oxc_codegen@0.156.0
+	oxc_compat@0.156.0
+	oxc_data_structures@0.156.0
+	oxc_diagnostics@0.156.0
+	oxc_ecmascript@0.156.0
+	oxc_estree@0.156.0
 	oxc_index@5.0.0
-	oxc_isolated_declarations@0.155.0
-	oxc_mangler@0.155.0
-	oxc_minifier@0.155.0
-	oxc_minify_napi@0.155.0
-	oxc_napi@0.155.0
-	oxc_parser@0.155.0
-	oxc_parser_napi@0.155.0
-	oxc_regular_expression@0.155.0
+	oxc_isolated_declarations@0.156.0
+	oxc_mangler@0.156.0
+	oxc_minifier@0.156.0
+	oxc_minify_napi@0.156.0
+	oxc_napi@0.156.0
+	oxc_parser@0.156.0
+	oxc_parser_napi@0.156.0
+	oxc_regular_expression@0.156.0
 	oxc_resolver@11.24.3
 	oxc_resolver_napi@11.24.3
-	oxc_semantic@0.155.0
+	oxc_semantic@0.156.0
 	oxc_sourcemap@9.0.0
-	oxc_span@0.155.0
-	oxc_str@0.155.0
-	oxc_syntax@0.155.0
-	oxc_transform_napi@0.155.0
-	oxc_transformer@0.155.0
-	oxc_transformer_plugins@0.155.0
-	oxc_traverse@0.155.0
+	oxc_span@0.156.0
+	oxc_str@0.156.0
+	oxc_syntax@0.156.0
+	oxc_transform_napi@0.156.0
+	oxc_transformer@0.156.0
+	oxc_transformer_plugins@0.156.0
+	oxc_traverse@0.156.0
 	parking@2.2.1
 	parking_lot@0.12.5
+	parking_lot@0.13.0
+	parking_lot_core@0.10.0
 	parking_lot_core@0.9.12
 	path-posix@0.0.1
 	pathdiff@0.2.3
@@ -235,9 +238,10 @@ CRATES="
 	rayon-core@1.13.0
 	rayon@1.12.0
 	redox_syscall@0.5.18
+	redox_syscall@0.9.5
 	ref-cast-impl@1.0.26
 	ref-cast@1.0.26
-	referencing@0.58.5
+	referencing@0.60.1
 	regex-automata@0.4.18
 	regex-syntax@0.8.11
 	regex@1.13.1
@@ -255,10 +259,10 @@ CRATES="
 	rustversion@1.0.23
 	ryu@1.0.23
 	same-file@1.0.6
-	saphyr-parser@0.2.1
-	saphyr@0.2.1
-	schemars@1.2.2
-	schemars_derive@1.2.2
+	saphyr-parser@0.3.1
+	saphyr@0.3.1
+	schemars@1.2.3
+	schemars_derive@1.2.3
 	scopeguard@1.2.0
 	self_cell@1.3.0
 	semver@1.0.28
@@ -267,17 +271,18 @@ CRATES="
 	serde_core@1.0.229
 	serde_derive@1.0.229
 	serde_derive_internals@0.30.0
-	serde_json@1.0.151
+	serde_json@1.0.154
 	sharded-slab@0.1.7
 	shlex@2.0.1
 	signal-hook-registry@1.4.8
 	simd-adler32@0.3.10
 	simd-json@0.18.1
+	simd-utf16-len@0.3.0
 	simdutf8@0.1.5
 	similar@2.7.0
 	siphasher@1.0.3
 	slab@0.4.12
-	smallvec@1.16.2
+	smallvec@1.16.4
 	smawk@0.3.3
 	static_assertions@1.1.0
 	statrs@0.18.0
@@ -287,7 +292,7 @@ CRATES="
 	sugar_path@3.0.0
 	supports-color@3.0.2
 	syn@2.0.119
-	syn@3.0.6
+	syn@3.0.9
 	tempfile@3.27.0
 	termcolor@1.4.1
 	terminal_size@0.4.4
@@ -297,7 +302,7 @@ CRATES="
 	thiserror@2.0.21
 	thread_local@1.1.10
 	tokio-macros@2.7.1
-	tokio@1.53.2
+	tokio@1.54.1
 	tracing-attributes@0.1.31
 	tracing-chrome@0.7.2
 	tracing-core@0.1.36
@@ -318,7 +323,7 @@ CRATES="
 	url@2.5.8
 	utf8_iter@1.0.4
 	uuid-simd@0.8.0
-	uuid@1.27.0
+	uuid@1.29.0
 	valuable@0.1.1
 	value-trait@0.12.2
 	version_check@0.9.5
