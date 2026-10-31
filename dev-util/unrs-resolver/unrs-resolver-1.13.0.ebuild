@@ -6,17 +6,13 @@ EAPI=8
 RUST_MIN_VER=1.87.0
 CRATES="
 	adler2@2.0.1
-	aho-corasick@1.1.4
 	allocator-api2@0.2.21
-	anes@0.2.1
 	anyhow@1.0.102
 	approx@0.5.1
 	arrayvec@0.7.6
 	autocfg@1.5.0
-	bit-set@0.8.0
-	bit-vec@0.8.0
 	bitflags@2.11.0
-	bpaf@0.9.24
+	bpaf@0.9.26
 	byteorder@1.5.0
 	cast@0.3.0
 	castaway@0.2.4
@@ -27,28 +23,28 @@ CRATES="
 	ciborium-ll@0.2.2
 	ciborium@0.2.2
 	cmake@0.1.58
-	codspeed@4.4.1
+	codspeed@4.7.0
 	colored@2.2.0
 	colored@3.1.1
-	compact_str@0.9.0
+	compact_str@0.10.0
 	concurrent_lru@0.2.0
-	convert_case@0.11.0
+	convert_case@0.12.0
 	crc32fast@1.5.0
-	criterion2@3.0.3
+	criterion2@3.0.4
 	crossbeam-deque@0.8.6
-	crossbeam-epoch@0.9.18
+	crossbeam-epoch@0.9.20
 	crossbeam-utils@0.8.21
 	crunchy@0.2.4
 	ctor@1.0.5
+	dashmap@6.2.1
 	dirs-sys@0.5.0
-	dirs@6.0.0
+	dirs@7.0.0
 	document-features@0.2.12
 	either@1.15.0
 	endian-type@0.2.0
 	equivalent@1.0.2
 	errno@0.3.14
-	fancy-regex@0.18.0
-	fast-glob@1.0.1
+	fast-glob@1.1.2
 	filetime@0.2.26
 	find-msvc-tools@0.1.9
 	flate2@1.1.5
@@ -67,27 +63,29 @@ CRATES="
 	glob@0.3.3
 	half@2.7.1
 	halfbrown@0.4.0
+	hashbrown@0.14.5
 	hashbrown@0.16.1
 	hashbrown@0.17.0
-	indexmap@2.14.0
+	indexmap@2.14.2
 	itoa@1.0.18
-	json-strip-comments@3.1.1
+	json-strip-comments@3.1.2
 	lazy_static@1.5.0
 	libc@0.2.184
 	libloading@0.9.0
-	libmimalloc-sys2@0.1.57
+	libmimalloc-sys2@0.1.64
 	libredox@0.1.10
 	libz-rs-sys@0.5.2
 	linux-raw-sys@0.12.1
 	litrs@1.0.0
-	memchr@2.8.0
-	mimalloc-safe@0.1.61
+	lock_api@0.4.14
+	memchr@2.8.3
+	mimalloc-safe@0.1.68
 	miniz_oxide@0.8.9
-	napi-build@2.3.2
-	napi-derive-backend@5.0.4
-	napi-derive@3.5.6
-	napi-sys@3.2.1
-	napi@3.9.0
+	napi-build@2.5.0
+	napi-derive-backend@6.1.4
+	napi-derive@3.6.9
+	napi-sys@3.3.2
+	napi@3.13.0
 	nibble_vec@0.1.0
 	nix@0.31.2
 	nodejs-built-in-modules@1.0.0
@@ -96,13 +94,13 @@ CRATES="
 	once_cell@1.21.4
 	oorandom@11.1.5
 	option-ext@0.2.0
-	papaya@0.2.4
+	parking_lot_core@0.9.12
 	pathdiff@0.2.3
 	percent-encoding@2.3.2
 	pico-args@0.5.0
 	pin-project-lite@0.2.16
 	pin-utils@0.1.0
-	pnp@0.12.9
+	pnp@0.12.12
 	proc-macro2@1.0.106
 	quote@1.0.45
 	radix_trie@0.3.0
@@ -112,32 +110,32 @@ CRATES="
 	redox_users@0.5.2
 	ref-cast-impl@1.0.25
 	ref-cast@1.0.25
-	regex-automata@0.4.14
-	regex-syntax@0.8.8
-	rustc-hash@2.1.2
-	rustix@1.1.4
+	regress@0.12.0
+	rustc-hash@2.1.3
+	rustix@1.1.5
 	rustversion@1.0.22
 	ryu@1.0.20
 	same-file@1.0.6
-	seize@0.5.1
-	self_cell@1.2.2
+	scopeguard@1.2.0
+	self_cell@1.3.0
 	semver@1.0.27
-	serde@1.0.228
-	serde_core@1.0.228
-	serde_derive@1.0.228
-	serde_json@1.0.149
+	serde@1.0.229
+	serde_core@1.0.229
+	serde_derive@1.0.229
+	serde_json@1.0.154
 	sharded-slab@0.1.7
 	shlex@1.3.0
-	simd-adler32@0.3.7
-	simd-json@0.17.0
+	simd-adler32@0.3.10
+	simd-json@0.18.1
 	simdutf8@0.1.5
 	slab@0.4.11
 	smallvec@1.15.1
 	static_assertions@1.1.0
 	statrs@0.18.0
 	syn@2.0.117
-	thiserror-impl@2.0.18
-	thiserror@2.0.18
+	syn@3.0.0
+	thiserror-impl@2.0.21
+	thiserror@2.0.21
 	thread_local@1.1.9
 	tracing-attributes@0.1.31
 	tracing-core@0.1.36
