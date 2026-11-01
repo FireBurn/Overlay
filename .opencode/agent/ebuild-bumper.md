@@ -58,6 +58,7 @@ Host facts, so you do not have to discover them (each discovery costs a model tu
 - Do not poll in short loops and do not re-run commands whose result you already have. Combine related commands in one call.
 - `emerge -1 =cat/pkg-ver` is the real validation. For packages that are only a version rename with no source change, run it straight after the Manifest.
 - Do not edit `AGENTS.md`, `bump-ebuilds.sh` or `.opencode/`.
+- Under `/var/tmp/portage` delete only the work directory of the package you are building (`/var/tmp/portage/<category>/<package>-<version>`). Everything else there belongs to someone else: never remove other directories, even to free space. If memory or space is short, lower parallelism (`MAKEOPTS`) or report it.
 
 Context budget. Every token you read is reprocessed on each later turn by a local model that handles about 900 tokens a second, so a large read stalls the run for minutes and can make the connection time out. Never read, `cat` or print a `Manifest` (codex's is 400 KB), a lockfile, `CRATES`/`NPM_PKGS`/`GRADLE_DEPS` blocks, an unpacked source tree listing or a full build log. Read ebuilds with `sed -n '<from>,<to>p'` or `grep -n`, skipping dependency blocks. Check Manifest changes with `git diff --stat` and `git diff -U0 -- <Manifest> | grep -c '^[+-]DIST'`. Keep each tool output under about 100 lines.
 

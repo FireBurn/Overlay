@@ -1048,6 +1048,7 @@ on_demand() {
 mechanical() {
     local pkg="$1" n
     in_list "$pkg" "${AI_PKGS[@]}" && return 1
+    in_list "$pkg" "${HEAVY_PKGS[@]}" && return 1
     n=$(ls "$pkg"/*.ebuild 2>/dev/null | grep -vc -- '-9999')
     (( n == 1 ))
 }
