@@ -192,6 +192,15 @@ npm_setup_env() {
 	export npm_config_progress=false
 	export JOBS=$(makeopts_jobs)
 
+	# npm's libc check reads /usr/bin/ldd, which can be a wrapper (e.g.
+	# llvm-libc's) that names no family, so packages pinned to a libc are
+	# silently skipped. The Node runtime report knows node's own libc.
+	local glibc_ver
+	glibc_ver=$(node -p "process.report.excludeNetwork = true;
+		process.report.getReport().header.glibcVersionRuntime || ''" 2>/dev/null) \
+		|| glibc_ver=
+	[[ -n ${glibc_ver} ]] && export npm_config_libc=glibc
+
 	# pnpm, yarn and bun keep their own stores
 	export XDG_CONFIG_HOME="${HOME}/.config"
 	export PNPM_HOME="${T}/pnpm-home"
