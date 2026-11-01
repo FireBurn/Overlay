@@ -133,12 +133,12 @@ NPM_PKGS="
 	@iconify/types@2.0.0
 	@iconify/utils@3.1.3
 	@img/colour@1.1.0
-	@img/sharp-libvips-linux-arm64@1.3.3|arm64,elibc_glibc
-	@img/sharp-libvips-linux-x64@1.3.3|amd64,elibc_glibc
+	@img/sharp-libvips-linux-arm64@1.3.3|arm64
+	@img/sharp-libvips-linux-x64@1.3.3|amd64
 	@img/sharp-libvips-linuxmusl-arm64@1.3.3|arm64,elibc_musl
 	@img/sharp-libvips-linuxmusl-x64@1.3.3|amd64,elibc_musl
-	@img/sharp-linux-arm64@0.35.4|arm64,elibc_glibc
-	@img/sharp-linux-x64@0.35.4|amd64,elibc_glibc
+	@img/sharp-linux-arm64@0.35.4|arm64
+	@img/sharp-linux-x64@0.35.4|amd64
 	@img/sharp-linuxmusl-arm64@0.35.4|arm64,elibc_musl
 	@img/sharp-linuxmusl-x64@0.35.4|amd64,elibc_musl
 	@img/sharp-wasm32@0.35.4
@@ -183,20 +183,20 @@ NPM_PKGS="
 	@mobilewright/driver-mobilenext@0.0.53
 	@mobilewright/inspector@0.0.53
 	@mobilewright/protocol@0.0.53
-	@modelcontextprotocol/client@2.0.0
-	@modelcontextprotocol/core@2.0.0
+	@modelcontextprotocol/client@2.4.0
+	@modelcontextprotocol/core@2.4.0
 	@modelcontextprotocol/ext-apps@1.7.5
 	@modelcontextprotocol/sdk@1.26.0
 	@modelcontextprotocol/sdk@1.30.0
 	@mswjs/interceptors@0.39.5
-	@napi-rs/lzma-linux-x64-gnu@1.5.1|amd64,elibc_glibc
+	@napi-rs/lzma-linux-x64-gnu@1.5.1|amd64
 	@napi-rs/wasm-runtime@1.2.4
 	@noble/hashes@1.8.0
 	@nodable/entities@2.2.0
 	@node-rs/jieba@2.0.2
-	@node-rs/jieba-linux-arm64-gnu@2.0.2|arm64,elibc_glibc
+	@node-rs/jieba-linux-arm64-gnu@2.0.2|arm64
 	@node-rs/jieba-linux-arm64-musl@2.0.2|arm64,elibc_musl
-	@node-rs/jieba-linux-x64-gnu@2.0.2|amd64,elibc_glibc
+	@node-rs/jieba-linux-x64-gnu@2.0.2|amd64
 	@node-rs/jieba-linux-x64-musl@2.0.2|amd64,elibc_musl
 	@node-rs/jieba-wasm32-wasi@2.0.2
 	@nodelib/fs.scandir@2.1.5
@@ -341,9 +341,9 @@ NPM_PKGS="
 	@redocly/config@0.22.0
 	@redocly/openapi-core@1.34.20
 	@rolldown/pluginutils@1.0.0-beta.27
-	@rollup/rollup-linux-arm64-gnu@4.62.5|arm64,elibc_glibc
+	@rollup/rollup-linux-arm64-gnu@4.62.5|arm64
 	@rollup/rollup-linux-arm64-musl@4.62.5|arm64,elibc_musl
-	@rollup/rollup-linux-x64-gnu@4.62.5|amd64,elibc_glibc
+	@rollup/rollup-linux-x64-gnu@4.62.5|amd64
 	@rollup/rollup-linux-x64-musl@4.62.5|amd64,elibc_musl
 	@rtsao/scc@1.1.0
 	@sec-ant/readable-stream@0.4.1
@@ -385,9 +385,9 @@ NPM_PKGS="
 	@stylistic/eslint-plugin@3.1.0
 	@tailwindcss/node@4.3.2
 	@tailwindcss/oxide@4.3.2
-	@tailwindcss/oxide-linux-arm64-gnu@4.3.2|arm64,elibc_glibc
+	@tailwindcss/oxide-linux-arm64-gnu@4.3.2|arm64
 	@tailwindcss/oxide-linux-arm64-musl@4.3.2|arm64,elibc_musl
-	@tailwindcss/oxide-linux-x64-gnu@4.3.2|amd64,elibc_glibc
+	@tailwindcss/oxide-linux-x64-gnu@4.3.2|amd64
 	@tailwindcss/oxide-linux-x64-musl@4.3.2|amd64,elibc_musl
 	@tailwindcss/vite@4.3.2
 	@tanstack/react-table@8.21.3
@@ -395,8 +395,8 @@ NPM_PKGS="
 	@tanstack/table-core@8.21.3
 	@tanstack/virtual-core@3.17.0
 	@teddyzhu/clipboard@0.0.5
-	@teddyzhu/clipboard-linux-arm64-gnu@0.0.5|arm64,elibc_glibc
-	@teddyzhu/clipboard-linux-x64-gnu@0.0.5|amd64,elibc_glibc
+	@teddyzhu/clipboard-linux-arm64-gnu@0.0.5|arm64
+	@teddyzhu/clipboard-linux-x64-gnu@0.0.5|amd64
 	@tencent-connect/qqbot-connector@1.1.0
 	@testing-library/dom@10.4.1
 	@testing-library/react@16.3.0
@@ -938,6 +938,7 @@ NPM_PKGS="
 	events-universal@1.0.1
 	eventsource@3.0.7
 	eventsource-parser@3.0.3
+	eventsource-parser@3.1.1
 	exceljs@4.4.0
 	execa@5.1.1
 	execa@8.0.1
@@ -1227,9 +1228,9 @@ NPM_PKGS="
 	libqp@2.1.1
 	lie@3.3.0
 	lightningcss@1.32.0
-	lightningcss-linux-arm64-gnu@1.32.0|arm64,elibc_glibc
+	lightningcss-linux-arm64-gnu@1.32.0|arm64
 	lightningcss-linux-arm64-musl@1.32.0|arm64,elibc_musl
-	lightningcss-linux-x64-gnu@1.32.0|amd64,elibc_glibc
+	lightningcss-linux-x64-gnu@1.32.0|amd64
 	lightningcss-linux-x64-musl@1.32.0|amd64,elibc_musl
 	lilconfig@3.1.3
 	lines-and-columns@1.2.4
