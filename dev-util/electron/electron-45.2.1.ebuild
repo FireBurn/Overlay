@@ -13,8 +13,8 @@ EAPI=8
 # Versions come from electron's DEPS file. NPM_PKGS comes from its yarn.lock:
 #   scripts/npm-deps.py electron/yarn.lock --ebuild <this ebuild>
 
-CHROMIUM_VER="156.0.8078.48"
-ELECTRON_NODE_VER="24.22.0"
+CHROMIUM_VER="156.0.8078.75"
+ELECTRON_NODE_VER="24.22.1"
 ELECTRON_NAN_COMMIT="675cefebca42410733da8a454c8d9391fcebfbc2"
 
 GN_MIN_VER=0.2574
