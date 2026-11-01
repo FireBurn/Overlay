@@ -249,7 +249,10 @@ _llama_build_sharp() {
 	[[ -d ${npm_modules} ]] || npm_modules="${BROOT}/usr/lib/node_modules/npm/node_modules"
 
 	pushd node_modules/sharp >/dev/null || die
-	HOME="${T}/npm-home" SHARP_FORCE_GLOBAL_LIBVIPS=1 \
+	# npm_config_libc would make the build name the addon for the glibc
+	# platform while the loader looks for the plain linux one, so unset it.
+	env -u npm_config_libc \
+		HOME="${T}/npm-home" SHARP_FORCE_GLOBAL_LIBVIPS=1 \
 		npm_config_nodedir="${BROOT}/usr" NODE_PATH="${npm_modules}" \
 		npm run build || die "Failed to build sharp"
 	popd >/dev/null || die

@@ -112,13 +112,14 @@ else
 		@braintree/sanitize-url@7.1.2
 		@canvas/image-data@1.1.0
 		@chevrotain/types@11.1.2
-		@chromatic-com/storybook@5.2.1
-		@emnapi/core@1.10.0
+		@chromatic-com/storybook@5.5.1
+		@emnapi/core@1.11.0
 		@emnapi/core@1.9.2
-		@emnapi/runtime@1.10.0
+		@emnapi/runtime@1.11.0
 		@emnapi/runtime@1.11.3
 		@emnapi/runtime@1.9.2
 		@emnapi/wasi-threads@1.2.1
+		@emnapi/wasi-threads@1.2.2
 		@esbuild/linux-arm64@0.28.1|arm64
 		@esbuild/linux-x64@0.28.1|amd64
 		@eslint-community/eslint-utils@4.9.1
@@ -144,15 +145,15 @@ else
 		@iconify/types@2.0.0
 		@iconify/utils@3.1.3
 		@img/colour@1.1.0
-		@img/sharp-libvips-linux-arm64@1.3.2|arm64
-		@img/sharp-libvips-linux-x64@1.3.2|amd64
-		@img/sharp-libvips-linuxmusl-arm64@1.3.2|arm64
-		@img/sharp-libvips-linuxmusl-x64@1.3.2|amd64
-		@img/sharp-linux-arm64@0.35.3|arm64
-		@img/sharp-linux-x64@0.35.3|amd64
-		@img/sharp-linuxmusl-arm64@0.35.3|arm64
-		@img/sharp-linuxmusl-x64@0.35.3|amd64
-		@img/sharp-wasm32@0.35.3
+		@img/sharp-libvips-linux-arm64@1.3.4|arm64
+		@img/sharp-libvips-linux-x64@1.3.4|amd64
+		@img/sharp-libvips-linuxmusl-arm64@1.3.4|arm64,elibc_musl
+		@img/sharp-libvips-linuxmusl-x64@1.3.4|amd64,elibc_musl
+		@img/sharp-linux-arm64@0.35.5|arm64
+		@img/sharp-linux-x64@0.35.5|amd64
+		@img/sharp-linuxmusl-arm64@0.35.5|arm64,elibc_musl
+		@img/sharp-linuxmusl-x64@0.35.5|amd64,elibc_musl
+		@img/sharp-wasm32@0.35.5
 		@internationalized/date@3.12.2
 		@isaacs/cliui@9.0.0
 		@isaacs/fs-minipass@4.0.1
@@ -160,28 +161,29 @@ else
 		@jridgewell/remapping@2.3.5
 		@jridgewell/resolve-uri@3.1.2
 		@jridgewell/source-map@0.3.11
-		@jridgewell/sourcemap-codec@1.5.5
+		@jridgewell/sourcemap-codec@1.6.0
 		@jridgewell/trace-mapping@0.3.31
 		@lucide/svelte@1.46.0
 		@mdx-js/react@3.1.1
-		@mermaid-js/parser@1.1.1
-		@modelcontextprotocol/sdk@1.30.0
+		@mermaid-js/parser@1.2.1
+		@modelcontextprotocol/sdk@1.32.1
 		@napi-rs/canvas@0.1.100
 		@napi-rs/canvas-linux-arm64-gnu@0.1.100|arm64
 		@napi-rs/canvas-linux-arm64-musl@0.1.100|arm64
 		@napi-rs/canvas-linux-x64-gnu@0.1.100|amd64
 		@napi-rs/canvas-linux-x64-musl@0.1.100|amd64
 		@napi-rs/wasm-runtime@1.1.4
+		@napi-rs/wasm-runtime@1.2.5
 		@neoconfetti/react@1.0.0
 		@oxc-parser/binding-linux-arm64-gnu@0.127.0|arm64
 		@oxc-parser/binding-linux-arm64-musl@0.127.0|arm64
 		@oxc-parser/binding-linux-x64-gnu@0.127.0|amd64
 		@oxc-parser/binding-linux-x64-musl@0.127.0|amd64
 		@oxc-project/types@0.127.0
-		@oxc-resolver/binding-linux-arm64-gnu@11.20.0|arm64
-		@oxc-resolver/binding-linux-arm64-musl@11.20.0|arm64
-		@oxc-resolver/binding-linux-x64-gnu@11.20.0|amd64
-		@oxc-resolver/binding-linux-x64-musl@11.20.0|amd64
+		@oxc-resolver/binding-linux-arm64-gnu@11.21.2|arm64
+		@oxc-resolver/binding-linux-arm64-musl@11.21.2|arm64,elibc_musl
+		@oxc-resolver/binding-linux-x64-gnu@11.21.2|amd64
+		@oxc-resolver/binding-linux-x64-musl@11.21.2|amd64,elibc_musl
 		@parcel/watcher@2.5.6
 		@parcel/watcher-linux-arm64-glibc@2.5.6|arm64
 		@parcel/watcher-linux-arm64-musl@2.5.6|arm64
@@ -200,21 +202,19 @@ else
 		@rollup/rollup-linux-x64-gnu@4.61.1|amd64
 		@rollup/rollup-linux-x64-musl@4.61.1|amd64
 		@standard-schema/spec@1.1.0
-		@storybook/addon-a11y@10.5.6
-		@storybook/addon-docs@10.5.6
-		@storybook/addon-mcp@0.7.0
-		@storybook/addon-svelte-csf@5.1.2
-		@storybook/addon-vitest@10.5.6
-		@storybook/builder-vite@10.5.6
+		@storybook/addon-a11y@10.6.2
+		@storybook/addon-docs@10.6.2
+		@storybook/addon-mcp@10.6.2
+		@storybook/addon-svelte-csf@5.1.5
+		@storybook/addon-vitest@10.6.2
+		@storybook/builder-vite@10.6.2
 		@storybook/csf@0.1.13
-		@storybook/csf-plugin@10.5.6
 		@storybook/global@5.0.0
-		@storybook/icons@2.0.2
-		@storybook/mcp@0.8.0
-		@storybook/react-dom-shim@10.5.6
-		@storybook/svelte@10.5.6
-		@storybook/svelte-vite@10.5.6
-		@storybook/sveltekit@10.5.6
+		@storybook/icons@2.2.0
+		@storybook/react-dom-shim@10.6.2
+		@storybook/svelte@10.6.2
+		@storybook/svelte-vite@10.6.2
+		@storybook/sveltekit@10.6.2
 		@sveltejs/acorn-typescript@1.0.10
 		@sveltejs/adapter-static@3.0.10
 		@sveltejs/kit@2.70.2
@@ -229,17 +229,18 @@ else
 		@tailwindcss/oxide-linux-arm64-musl@4.1.11|arm64
 		@tailwindcss/oxide-linux-x64-gnu@4.1.11|amd64
 		@tailwindcss/oxide-linux-x64-musl@4.1.11|amd64
-		@tailwindcss/typography@0.5.16
+		@tailwindcss/typography@0.5.20
 		@tailwindcss/vite@4.1.11
 		@testing-library/dom@10.4.1
 		@testing-library/jest-dom@6.9.1
 		@testing-library/svelte-core@1.0.0
-		@testing-library/user-event@14.6.1
+		@testing-library/user-event@14.6.8
 		@tmcp/adapter-valibot@0.1.6
 		@tmcp/session-manager@0.2.2
 		@tmcp/transport-http@0.8.6
 		@trickfilm400/rollup-plugin-off-main-thread@3.0.0-pre1
 		@tybys/wasm-util@0.10.2
+		@tybys/wasm-util@0.10.4
 		@types/aria-query@5.0.4
 		@types/chai@5.2.3
 		@types/cookie@0.6.0
@@ -310,22 +311,22 @@ else
 		@ungap/structured-clone@1.3.1
 		@upsetjs/venn.js@2.0.0
 		@valibot/to-json-schema@1.7.1
-		@vite-pwa/assets-generator@1.0.2
+		@vite-pwa/assets-generator@1.0.4
 		@vite-pwa/sveltekit@1.1.0
-		@vitest/browser@4.1.10
-		@vitest/browser-playwright@4.1.10
-		@vitest/coverage-v8@4.1.10
+		@vitest/browser@4.1.12
+		@vitest/browser-playwright@4.1.12
+		@vitest/coverage-v8@4.1.12
 		@vitest/expect@3.2.4
-		@vitest/expect@4.1.10
-		@vitest/mocker@4.1.10
+		@vitest/expect@4.1.12
+		@vitest/mocker@4.1.12
 		@vitest/pretty-format@3.2.4
-		@vitest/pretty-format@4.1.10
-		@vitest/runner@4.1.10
-		@vitest/snapshot@4.1.10
+		@vitest/pretty-format@4.1.12
+		@vitest/runner@4.1.12
+		@vitest/snapshot@4.1.12
 		@vitest/spy@3.2.4
-		@vitest/spy@4.1.10
+		@vitest/spy@4.1.12
 		@vitest/utils@3.2.4
-		@vitest/utils@4.1.10
+		@vitest/utils@4.1.12
 		@webcontainer/env@1.1.1
 		accepts@2.0.0
 		acorn@8.16.0
@@ -357,14 +358,14 @@ else
 		bail@2.0.2
 		balanced-match@1.0.2
 		balanced-match@4.0.4
-		baseline-browser-mapping@2.10.33
+		baseline-browser-mapping@2.11.29
 		basic-auth@2.0.1
 		bits-ui@2.18.1
 		body-parser@2.3.0
-		brace-expansion@1.1.18
-		brace-expansion@2.1.4
-		brace-expansion@5.0.9
-		browserslist@4.28.2
+		brace-expansion@1.1.21
+		brace-expansion@2.1.7
+		brace-expansion@5.0.12
+		browserslist@4.29.3
 		buffer-from@1.1.2
 		bundle-name@4.1.0
 		bytes@3.1.2
@@ -373,10 +374,10 @@ else
 		call-bind-apply-helpers@1.0.2
 		call-bound@1.0.4
 		callsites@3.1.0
-		caniuse-lite@1.0.30001793
+		caniuse-lite@1.0.30001816
 		ccount@2.0.1
 		chai@5.3.3
-		chai@6.2.2
+		chai@6.3.0
 		chalk@4.1.2
 		character-entities@2.0.2
 		character-entities-html4@2.1.0
@@ -385,15 +386,15 @@ else
 		chokidar@4.0.3
 		chokidar@5.0.0
 		chownr@3.0.0
-		chromatic@16.10.0
+		chromatic@18.12.2
 		clsx@2.1.1
 		color-convert@2.0.1
 		color-name@1.1.4
 		colorette@2.0.20
 		comma-separated-tokens@2.0.3
+		commander@15.0.0
 		commander@2.20.3
 		commander@7.2.0
-		commander@8.3.0
 		common-tags@1.8.2
 		concat-map@0.0.1
 		consola@3.4.2
@@ -475,16 +476,16 @@ else
 		depd@2.0.0
 		dequal@2.0.3
 		detect-libc@2.1.2
-		devalue@5.8.1
+		devalue@5.9.4
 		devlop@1.1.0
 		dexie@4.4.3
 		dom-accessibility-api@0.5.16
 		dom-accessibility-api@0.6.3
-		dompurify@3.4.13
+		dompurify@3.4.17
 		dunder-proto@1.0.1
 		ee-first@1.1.1
 		ejs@3.1.10
-		electron-to-chromium@1.5.367
+		electron-to-chromium@1.5.458
 		encodeurl@2.0.0
 		enhanced-resolve@5.23.0
 		entities@6.0.1
@@ -505,7 +506,7 @@ else
 		eslint-config-prettier@10.1.8
 		eslint-plugin-perfectionist@5.10.1
 		eslint-plugin-simple-import-sort@14.0.0
-		eslint-plugin-storybook@10.5.6
+		eslint-plugin-storybook@10.6.2
 		eslint-plugin-svelte@3.19.0
 		eslint-scope@8.4.0
 		eslint-visitor-keys@3.4.3
@@ -535,7 +536,8 @@ else
 		fast-deep-equal@3.1.3
 		fast-json-stable-stringify@2.1.0
 		fast-levenshtein@2.0.6
-		fast-uri@3.1.5
+		fast-uri@3.1.8
+		fastdom@1.0.12
 		fdir@6.5.0
 		fflate@0.8.3
 		file-entry-cache@8.0.0
@@ -544,7 +546,7 @@ else
 		find-up@5.0.0
 		flat-cache@4.0.1
 		flatted@3.4.2
-		follow-redirects@1.16.0
+		follow-redirects@1.16.1
 		for-each@0.3.5
 		foreground-child@3.3.1
 		forwarded@0.2.0
@@ -587,7 +589,7 @@ else
 		hastscript@9.0.1
 		he@1.2.0
 		highlight.js@11.11.1
-		hono@4.13.0
+		hono@4.13.13
 		html-encoding-sniffer@3.0.0
 		html-escaper@2.0.2
 		html-void-elements@3.0.0
@@ -610,7 +612,7 @@ else
 		internal-slot@1.1.0
 		internmap@1.0.1
 		internmap@2.0.3
-		ip-address@10.4.0
+		ip-address@10.7.4
 		ipaddr.js@1.9.1
 		is-array-buffer@3.0.5
 		is-async-function@2.1.1
@@ -657,7 +659,7 @@ else
 		jose@6.2.3
 		js-tokens@10.0.0
 		js-tokens@4.0.0
-		js-yaml@4.3.1
+		js-yaml@4.3.2
 		jsesc@3.1.0
 		json-buffer@3.0.1
 		json-rpc-2.0@1.7.1
@@ -669,7 +671,7 @@ else
 		jsonc-parser@3.3.1
 		jsonfile@6.2.1
 		jsonpointer@5.0.1
-		katex@0.16.47
+		katex@0.18.11
 		keyv@4.5.4
 		khroma@2.1.0
 		kleur@4.1.5
@@ -688,9 +690,7 @@ else
 		locate-character@3.0.0
 		locate-path@6.0.0
 		lodash-es@4.18.1
-		lodash.castarray@4.4.0
 		lodash.debounce@4.0.8
-		lodash.isplainobject@4.0.6
 		lodash.merge@4.6.2
 		lodash.sortby@4.7.0
 		longest-streak@3.1.0
@@ -700,6 +700,7 @@ else
 		lru-cache@5.1.1
 		lz-string@1.5.0
 		magic-string@0.30.21
+		magic-string@1.4.3
 		magicast@0.5.3
 		make-dir@4.0.0
 		markdown-table@3.0.4
@@ -723,7 +724,7 @@ else
 		mdsvex@0.12.7
 		media-typer@1.1.0
 		merge-descriptors@2.0.0
-		mermaid@11.15.0
+		mermaid@11.17.2
 		micromark@4.0.2
 		micromark-core-commonmark@2.0.3
 		micromark-extension-gfm@3.0.0
@@ -769,12 +770,12 @@ else
 		mri@1.2.0
 		mrmime@2.0.1
 		ms@2.1.3
-		nanoid@3.3.17
+		nanoid@3.3.20
 		natural-compare@1.4.0
 		natural-orderby@5.0.0
 		negotiator@1.0.0
 		node-addon-api@7.1.1
-		node-releases@2.0.47
+		node-releases@2.0.59
 		object-assign@4.1.1
 		object-inspect@1.13.4
 		object-keys@1.1.1
@@ -787,7 +788,7 @@ else
 		optionator@0.9.4
 		own-keys@1.0.1
 		oxc-parser@0.127.0
-		oxc-resolver@11.20.0
+		oxc-resolver@11.21.2
 		p-limit@3.1.0
 		p-locate@5.0.0
 		package-json-from-dist@1.0.1
@@ -806,7 +807,6 @@ else
 		pdfjs-dist@5.4.54
 		picocolors@1.1.1
 		picomatch@4.0.4
-		picoquery@2.5.0
 		pkce-challenge@5.0.1
 		playwright@1.56.1
 		playwright-core@1.56.1
@@ -819,8 +819,7 @@ else
 		postcss-load-config@3.1.4
 		postcss-safe-parser@7.0.1
 		postcss-scss@4.0.9
-		postcss-selector-parser@6.0.10
-		postcss-selector-parser@7.1.1
+		postcss-selector-parser@7.1.6
 		prelude-ls@1.2.1
 		prettier@3.8.3
 		prettier-plugin-svelte@4.1.0
@@ -831,9 +830,9 @@ else
 		prism-svelte@0.4.7
 		prismjs@1.30.0
 		property-information@7.2.0
-		proxy-addr@2.0.7
+		proxy-addr@2.0.8
 		punycode@2.3.1
-		qs@6.15.2
+		qs@6.16.1
 		quansync@1.0.0
 		range-parser@1.2.1
 		raw-body@3.0.2
@@ -896,11 +895,11 @@ else
 		set-function-name@2.0.2
 		set-proto@1.0.0
 		setprototypeof@1.2.0
-		sharp@0.35.3
+		sharp@0.35.5
 		sharp-ico@0.1.5
 		shebang-command@2.0.0
 		shebang-regex@3.0.0
-		side-channel@1.1.0
+		side-channel@1.1.1
 		side-channel-list@1.0.1
 		side-channel-map@1.0.1
 		side-channel-weakmap@1.0.2
@@ -910,7 +909,7 @@ else
 		smob@1.6.2
 		source-map@0.6.1
 		source-map@0.8.0-beta.0
-		source-map-js@1.2.1
+		source-map-js@1.2.2
 		source-map-support@0.5.21
 		space-separated-tokens@2.0.2
 		sqids@0.3.0
@@ -918,7 +917,8 @@ else
 		statuses@2.0.2
 		std-env@4.1.0
 		stop-iteration-iterator@1.1.0
-		storybook@10.5.6
+		storybook@10.6.2
+		strictdom@1.0.1
 		string.prototype.matchall@4.0.12
 		string.prototype.trim@1.2.10
 		string.prototype.trimend@1.0.9
@@ -1007,7 +1007,7 @@ else
 		unpipe@1.0.0
 		unplugin@2.3.11
 		upath@1.2.0
-		update-browserslist-db@1.2.3
+		update-browserslist-db@1.3.4
 		uri-js@4.4.1
 		uri-template-matcher@1.1.2
 		url-join@4.0.1
@@ -1022,11 +1022,11 @@ else
 		vfile-location@5.0.3
 		vfile-message@2.0.4
 		vfile-message@4.0.3
-		vite@7.3.6
+		vite@7.3.7
 		vite-plugin-devtools-json@0.2.1
 		vite-plugin-pwa@1.3.0
 		vitefu@1.1.3
-		vitest@4.1.10
+		vitest@4.1.12
 		vitest-browser-svelte@2.1.1
 		web-namespaces@2.0.1
 		webidl-conversions@4.0.2
@@ -1094,23 +1094,23 @@ else
 		@esbuild/win32-arm64@0.28.1
 		@esbuild/win32-ia32@0.28.1
 		@esbuild/win32-x64@0.28.1
-		@img/sharp-darwin-arm64@0.35.3
-		@img/sharp-darwin-x64@0.35.3
-		@img/sharp-freebsd-wasm32@0.35.3
-		@img/sharp-libvips-darwin-arm64@1.3.2
-		@img/sharp-libvips-darwin-x64@1.3.2
-		@img/sharp-libvips-linux-arm@1.3.2
-		@img/sharp-libvips-linux-ppc64@1.3.2
-		@img/sharp-libvips-linux-riscv64@1.3.2
-		@img/sharp-libvips-linux-s390x@1.3.2
-		@img/sharp-linux-arm@0.35.3
-		@img/sharp-linux-ppc64@0.35.3
-		@img/sharp-linux-riscv64@0.35.3
-		@img/sharp-linux-s390x@0.35.3
-		@img/sharp-webcontainers-wasm32@0.35.3
-		@img/sharp-win32-arm64@0.35.3
-		@img/sharp-win32-ia32@0.35.3
-		@img/sharp-win32-x64@0.35.3
+		@img/sharp-darwin-arm64@0.35.5
+		@img/sharp-darwin-x64@0.35.5
+		@img/sharp-freebsd-wasm32@0.35.5
+		@img/sharp-libvips-darwin-arm64@1.3.4
+		@img/sharp-libvips-darwin-x64@1.3.4
+		@img/sharp-libvips-linux-arm@1.3.4
+		@img/sharp-libvips-linux-ppc64@1.3.4
+		@img/sharp-libvips-linux-riscv64@1.3.4
+		@img/sharp-libvips-linux-s390x@1.3.4
+		@img/sharp-linux-arm@0.35.5
+		@img/sharp-linux-ppc64@0.35.5
+		@img/sharp-linux-riscv64@0.35.5
+		@img/sharp-linux-s390x@0.35.5
+		@img/sharp-webcontainers-wasm32@0.35.5
+		@img/sharp-win32-arm64@0.35.5
+		@img/sharp-win32-ia32@0.35.5
+		@img/sharp-win32-x64@0.35.5
 		@napi-rs/canvas-android-arm64@0.1.100
 		@napi-rs/canvas-darwin-arm64@0.1.100
 		@napi-rs/canvas-darwin-x64@0.1.100
@@ -1134,21 +1134,21 @@ else
 		@oxc-parser/binding-win32-arm64-msvc@0.127.0
 		@oxc-parser/binding-win32-ia32-msvc@0.127.0
 		@oxc-parser/binding-win32-x64-msvc@0.127.0
-		@oxc-resolver/binding-android-arm-eabi@11.20.0
-		@oxc-resolver/binding-android-arm64@11.20.0
-		@oxc-resolver/binding-darwin-arm64@11.20.0
-		@oxc-resolver/binding-darwin-x64@11.20.0
-		@oxc-resolver/binding-freebsd-x64@11.20.0
-		@oxc-resolver/binding-linux-arm-gnueabihf@11.20.0
-		@oxc-resolver/binding-linux-arm-musleabihf@11.20.0
-		@oxc-resolver/binding-linux-ppc64-gnu@11.20.0
-		@oxc-resolver/binding-linux-riscv64-gnu@11.20.0
-		@oxc-resolver/binding-linux-riscv64-musl@11.20.0
-		@oxc-resolver/binding-linux-s390x-gnu@11.20.0
-		@oxc-resolver/binding-openharmony-arm64@11.20.0
-		@oxc-resolver/binding-wasm32-wasi@11.20.0
-		@oxc-resolver/binding-win32-arm64-msvc@11.20.0
-		@oxc-resolver/binding-win32-x64-msvc@11.20.0
+		@oxc-resolver/binding-android-arm-eabi@11.21.2
+		@oxc-resolver/binding-android-arm64@11.21.2
+		@oxc-resolver/binding-darwin-arm64@11.21.2
+		@oxc-resolver/binding-darwin-x64@11.21.2
+		@oxc-resolver/binding-freebsd-x64@11.21.2
+		@oxc-resolver/binding-linux-arm-gnueabihf@11.21.2
+		@oxc-resolver/binding-linux-arm-musleabihf@11.21.2
+		@oxc-resolver/binding-linux-ppc64-gnu@11.21.2
+		@oxc-resolver/binding-linux-riscv64-gnu@11.21.2
+		@oxc-resolver/binding-linux-riscv64-musl@11.21.2
+		@oxc-resolver/binding-linux-s390x-gnu@11.21.2
+		@oxc-resolver/binding-openharmony-arm64@11.21.2
+		@oxc-resolver/binding-wasm32-wasi@11.21.2
+		@oxc-resolver/binding-win32-arm64-msvc@11.21.2
+		@oxc-resolver/binding-win32-x64-msvc@11.21.2
 		@parcel/watcher-android-arm64@2.5.6
 		@parcel/watcher-darwin-arm64@2.5.6
 		@parcel/watcher-darwin-x64@2.5.6
@@ -1257,12 +1257,11 @@ PATCHES=(
 	"${FILESDIR}/0002-vulkan-share-the-K-V-pass-between-query-rows-in-coop.patch"
 	"${FILESDIR}/0003-qwen35-optional-reduced-vocab-LM-head-for-MTP-drafti.patch"
 	"${FILESDIR}/0004-vulkan-use-4-rows-for-legacy-quant-mat-vec-from-2-co.patch"
-	"${FILESDIR}/0005-hip-use-short-vectors-for-bf16-WMMA-builtins-with-LL.patch"
 	"${FILESDIR}/0006-server-keep-speculative-checkpoints-on-device.patch"
 	"${FILESDIR}/0007-hip-keep-MMQ-WMMA-k-loops-rolled-to-avoid-VGPR-spill.patch"
 	"${FILESDIR}/0009-hip-share-the-FA-vec-K-V-pass-between-the-Q-heads-of.patch"
 	"${FILESDIR}/0010-vulkan-write-gated-delta-net-state-straight-into-the.patch"
-	"${FILESDIR}/0011-vulkan-use-a-subgroup-reduction-in-rms_norm-and-keep.patch"
+	"${FILESDIR}/0011-vulkan-keep-the-rms_norm-row-in-registers-for-the-.patch"
 	"${FILESDIR}/0012-vulkan-dual-issue-friendly-int8-epilogue-in-cm1-mmq-.patch"
 	"${FILESDIR}/0013-vulkan-keep-Q-fragments-in-registers-in-coopmat1-fla.patch"
 	"${FILESDIR}/0014-vulkan-store-the-flash-attention-quantized-K-V-scrat.patch"
@@ -1426,8 +1425,10 @@ _llama_build_sharp() {
 
 	pushd node_modules/sharp >/dev/null || die
 	# npm.eclass exports SHARP_IGNORE_GLOBAL_LIBVIPS, which would win over
-	# the request for the system's
-	env -u SHARP_IGNORE_GLOBAL_LIBVIPS \
+	# the request for the system's.  npm_config_libc would make the build
+	# name the addon for the glibc platform while the loader looks for the
+	# plain linux one, so unset it.
+	env -u SHARP_IGNORE_GLOBAL_LIBVIPS -u npm_config_libc \
 		HOME="${T}/npm-home" SHARP_FORCE_GLOBAL_LIBVIPS=1 \
 		npm_config_nodedir="${BROOT}/usr" NODE_PATH="${npm_modules}" \
 		npm run build || die "Failed to build sharp"
