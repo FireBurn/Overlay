@@ -33,6 +33,7 @@
 
 @rocm       github-release ROCm/rocm-systems prefix=therock- pad=3 batch=1
 @libreoffice page https://downloadarchive.documentfoundation.org/libreoffice/old/ href="(\d+\.\d+\.(?:0\.3|[1-9]\d*\.2))/"
+@openjdk     agent one ebuild per major version, each followed by hand
 
 dev-build/rocm-cmake              @rocm
 dev-libs/rccl                     @rocm
@@ -62,9 +63,9 @@ sci-libs/rocFFT                   @rocm
 sci-libs/rocRAND                  @rocm
 
 app-emulation/proton-ge-custom    github-release GloriousEggroll/proton-ge-custom prefix=GE-Proton sep=-
-dev-java/openjdk                  agent one ebuild per major version, each followed by hand
-dev-java/openjdk-bin              agent one ebuild per major version, each followed by hand
-dev-java/openjdk-jre-bin          agent one ebuild per major version, each followed by hand
+dev-java/openjdk                  @openjdk
+dev-java/openjdk-bin              @openjdk
+dev-java/openjdk-jre-bin          @openjdk
 dev-lang/zig                      page https://ziglang.org/download/index.json "(\d+\.\d+\.\d+)":
 dev-qt/qttools                    github-tag qt/qttools prefix=v match=^\d+\.\d+\.\d+$
 dev-util/claude-code              text https://downloads.claude.ai/claude-code-releases/latest
