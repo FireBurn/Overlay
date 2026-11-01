@@ -17,7 +17,6 @@ HEAVY_PKGS=( dev-lang/rust dev-lang/bun app-office/libreoffice www-client/firefo
 # --- CLI ------------------------------------------------------------------
 DRY_RUN=0
 PUSH=1
-RETRY=0
 SKIP_CHROMIUM=0
 PKG=""
 usage() {
@@ -30,7 +29,6 @@ Options:
   -n, --dry-run    Report what would change without touching anything
       --push       Push each bump right after its commit (default; rebasing if needed)
       --no-push    Keep commits local
-      --retry      Retry candidates the agent declined in an earlier run
       --skip-chromium  Leave Chromium out, so a long build does not hold up the rest
   -h, --help       Show this help
 
@@ -39,10 +37,9 @@ Chromium is always handled last, one slot at a time.
 Live runs pull --rebase --autostash from origin/master before checking packages.
 With --push each commit is pushed as soon as its emerge has succeeded.
 Upstream version sources are listed in scripts/upstream-sources.
-Logs are written to ~/bump-work/runs/<run>/, timings and declined candidates
-to ~/bump-work/state/. Bumps that do not finish are left uncommitted here.
-Candidates the agent declines are recorded in declined.tsv there. That candidate
-is skipped until --retry, and newer ones for a week.
+Logs are written to ~/bump-work/runs/<run>/ and timings to ~/bump-work/state/.
+Bumps that do not finish are left uncommitted here. A candidate the agent made
+no change for is tried again on every run.
 EOF
 }
 for arg in "$@"; do
@@ -50,7 +47,6 @@ for arg in "$@"; do
         -n|--dry-run) DRY_RUN=1 ;;
         --push)       PUSH=1 ;;
         --no-push)    PUSH=0 ;;
-        --retry)      RETRY=1 ;;
         --skip-chromium) SKIP_CHROMIUM=1 ;;
         -h|--help)    usage; exit 0 ;;
         -*)           echo "unknown option: $arg" >&2; usage >&2; exit 2 ;;
@@ -63,7 +59,7 @@ done
 # timings.tsv: run, time, package, step, seconds, exit status, detail.
 #
 # Where things live:
-#   $BUMP_WORK/state/    timings.tsv and declined.tsv, kept between runs
+#   $BUMP_WORK/state/    timings.tsv, kept between runs
 #   $BUMP_WORK/runs/     one directory per run (console log, step logs, agent
 #                        transcripts); runs older than 30 days are removed
 #   $SCRATCH/<package>/  scratch for downloads and checkouts; emptied at the
@@ -607,15 +603,6 @@ cleanup() {
 trap cleanup EXIT
 trap 'exit 130' INT TERM HUP
 
-# A declined candidate stays skipped; newer candidates wait a week, so a busy
-# upstream (e.g. commit snapshots) does not trigger an agent run every day.
-DECLINED="$LOG_DIR/declined.tsv"
-declined() {
-    [[ "$RETRY" == 0 && -f "$DECLINED" ]] || return 1
-    awk -F'\t' -v p="$1" -v v="$2" -v since="$(date -I -d '7 days ago')" \
-        '$1 == p && ($2 == v || $3 >= since) { found = 1 } END { exit !found }' "$DECLINED"
-}
-
 # Whether the agent's model server answers; checked once per run.
 AGENT_UP=""
 HANDOFF=()
@@ -728,8 +715,6 @@ bump_agent() {
         return 0
     fi
     info "agent made no commit for $pkg"
-    [[ -n "$new" ]] && printf '%s\t%s\t%s\t%s\n' "$pkg" "$new" "$(date -I)" \
-        "$RUN_DIR/agent-${pkg//\//_}.log" >>"$DECLINED"
     return 1
 }
 
@@ -1077,9 +1062,6 @@ while IFS=$'\037' read -r pkg status old new group batch source note <&3; do
     fi
     if ! package_clean "$pkg"; then
         skipped+=("$pkg: uncommitted changes ($status${new:+ $old -> $new})"); continue
-    fi
-    if [[ "$status" == newer ]] && declined "$pkg" "$new"; then
-        skipped+=("$pkg: $new declined by the agent recently (--retry to recheck)"); continue
     fi
     if [[ "$status" == newer && -n "$batch" ]]; then
         GROUP_PKGS[$group]+="$pkg "
