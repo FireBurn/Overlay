@@ -1,0 +1,42 @@
+Pick the strerror_r result by its type. Which variant a libc declares depends
+on its feature macros, and the __GLIBC__ test chooses the XSI one on a libc
+that only has the GNU one.
+
+--- a/src/main/native/unix_jni_linux.cc
++++ b/src/main/native/unix_jni_linux.cc
+@@ -26,22 +26,21 @@
+ 
+ namespace blaze_jni {
+ 
++// strerror_r is either the XSI version, which returns an error code, or the
++// GNU one, which returns the message; which one a libc declares depends on the
++// feature macros in force, so pick by the type that comes back.
++static const char *StrerrorResult(int result, const char *buf) {
++  return result == -1 ? "" : buf;
++}
++
++static const char *StrerrorResult(const char *message, const char *) {
++  return message;
++}
++
+ std::string ErrorMessage(int error_number) {
+   char buf[1024] = "";
+-
+-  // In its infinite wisdom, GNU libc defines strerror_r with extended
+-  // functionality which is not compatible with not the
+-  // SUSv3-conformant one which returns an error code; see DESCRIPTION
+-// at strerror(3).
+-#if !__GLIBC__ || (_POSIX_C_SOURCE >= 200112L && !_GNU_SOURCE)
+-  if (strerror_r(error_number, buf, sizeof buf) == -1) {
+-    return std::string("");
+-  } else {
+-    return std::string(buf);
+-  }
+-#else
+-  return std::string(strerror_r(error_number, buf, sizeof buf));
+-#endif
++  return std::string(
++      StrerrorResult(strerror_r(error_number, buf, sizeof buf), buf));
+ }
+ 
+ int portable_fstatat(
