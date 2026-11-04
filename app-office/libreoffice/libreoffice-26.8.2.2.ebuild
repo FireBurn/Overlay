@@ -303,6 +303,8 @@ PATCHES=(
 
 	# box2d ships no pkg-config file; detect the 3.x API from its headers
 	"${FILESDIR}/${PN}-26.8-box2d-header-detect.patch"
+	# box2d 3.2 renamed b2ChainDef::count and b2Body_ApplyMassFromShapes
+	"${FILESDIR}/${PN}-26.8-box2d-3.2.patch"
 
 	# fix Qt6/KF6 Wayland fractional scaling:
 	# https://bugs.documentfoundation.org/show_bug.cgi?id=172896
