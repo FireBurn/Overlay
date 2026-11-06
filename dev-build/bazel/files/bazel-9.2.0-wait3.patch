@@ -1,0 +1,14 @@
+wait3 is wait4 on any child; use wait4 directly, as llvm-libc has not always
+declared wait3.
+
+--- a/src/main/tools/process-tools.cc
++++ b/src/main/tools/process-tools.cc
+@@ -218,7 +218,7 @@
+     // Discard any zombies that we may get when the child subreaper feature is
+     // enabled.
+     do {
+-      err = wait3(&status, 0, rusage);
++      err = wait4(-1, &status, 0, rusage);
+     } while (err != pid || (err == -1 && errno == EINTR));
+   } else {
+     do {

@@ -42,6 +42,7 @@ pkg_setup() {
 
 PATCHES=(
 	"${FILESDIR}/${P}-strerror_r.patch"
+	"${FILESDIR}/${P}-wait3.patch"
 )
 
 src_prepare() {
@@ -63,6 +64,14 @@ src_compile() {
 		cxxopts+=( -stdlib=libc++ )
 		export BAZEL_LINKOPTS="-stdlib=libc++"
 		export BAZEL_LINKLIBS="-lc++:-lm"
+	fi
+	# gRPC reads the TCP_INQ byte count by the kernel's TCP_CM_INQ name,
+	# which libcs do not always define
+	if ! echo '#include <netinet/tcp.h>
+#ifndef TCP_CM_INQ
+#error
+#endif' | $(tc-getCXX) -fsyntax-only -x c++ - &>/dev/null; then
+		cxxopts+=( -DTCP_CM_INQ=36 )
 	fi
 	local IFS=:
 	export BAZEL_CXXOPTS="${cxxopts[*]}"
