@@ -41,8 +41,7 @@ CRATES="
 	ciborium@0.2.2
 	cmake@0.1.58
 	cobs@0.3.0
-	codspeed@4.7.0
-	colored@2.2.0
+	codspeed@6.0.0
 	colored@3.1.1
 	compact_str@0.10.0
 	concurrent-queue@2.5.0
@@ -53,7 +52,7 @@ CRATES="
 	cow-utils@0.1.3
 	cpufeatures@0.3.0
 	crc32fast@1.5.0
-	criterion2@3.0.4
+	criterion2@3.0.5
 	crossbeam-deque@0.8.7
 	crossbeam-epoch@0.9.20
 	crossbeam-utils@0.8.22
@@ -63,7 +62,6 @@ CRATES="
 	data-encoding@2.11.0
 	derive_more-impl@2.1.1
 	derive_more@2.1.1
-	dragonbox_ecma@0.1.12
 	dunce@1.0.5
 	dyn-clone@1.0.20
 	either@1.16.0
@@ -99,11 +97,10 @@ CRATES="
 	futures-task@0.3.34
 	futures-util@0.3.34
 	futures@0.3.34
-	getrandom@0.2.17
 	getrandom@0.3.4
 	getrandom@0.4.3
 	glob@0.3.4
-	globset@0.4.20
+	globset@0.4.21
 	globstar@0.0.6
 	half@2.7.1
 	halfbrown@0.4.0
@@ -117,7 +114,7 @@ CRATES="
 	hmac-sha1-compact@1.1.7
 	idna@1.1.0
 	idna_adapter@1.0.0
-	ignore@0.4.33
+	ignore@0.4.34
 	indexmap@2.14.2
 	infer@0.22.0
 	inotify-sys@0.1.8
@@ -129,9 +126,9 @@ CRATES="
 	js-sys@0.3.103
 	json-escape-simd@3.1.3
 	json-strip-comments@3.1.2
-	jsonschema-regex@0.60.1
-	jsonschema-value@0.60.1
-	jsonschema@0.60.1
+	jsonschema-regex@0.60.2
+	jsonschema-value@0.60.2
+	jsonschema@0.60.2
 	kqueue-sys@1.1.2
 	kqueue@1.2.0
 	lazy-regex-proc_macros@3.6.1
@@ -151,10 +148,10 @@ CRATES="
 	miniz_oxide@0.9.1
 	mio@1.2.2
 	napi-build@2.6.0
-	napi-derive-backend@6.1.6
-	napi-derive@3.6.13
+	napi-derive-backend@7.0.0
+	napi-derive@3.7.0
 	napi-sys@3.4.1
-	napi@3.15.0
+	napi@3.16.1
 	nibble_vec@0.1.0
 	nix@0.31.3
 	nodejs-built-in-modules@1.0.0
@@ -180,37 +177,37 @@ CRATES="
 	outref@0.5.2
 	owo-colors@4.4.0
 	oxc-browserslist@5.0.1
-	oxc@0.156.0
-	oxc_allocator@0.156.0
-	oxc_ast@0.156.0
-	oxc_ast_macros@0.156.0
-	oxc_ast_visit@0.156.0
-	oxc_codegen@0.156.0
-	oxc_compat@0.156.0
-	oxc_data_structures@0.156.0
-	oxc_diagnostics@0.156.0
-	oxc_ecmascript@0.156.0
-	oxc_estree@0.156.0
+	oxc@0.157.0
+	oxc_allocator@0.157.0
+	oxc_ast@0.157.0
+	oxc_ast_macros@0.157.0
+	oxc_ast_visit@0.157.0
+	oxc_codegen@0.157.0
+	oxc_compat@0.157.0
+	oxc_data_structures@0.157.0
+	oxc_diagnostics@0.157.0
+	oxc_ecmascript@0.157.0
+	oxc_estree@0.157.0
 	oxc_index@5.0.0
-	oxc_isolated_declarations@0.156.0
-	oxc_mangler@0.156.0
-	oxc_minifier@0.156.0
-	oxc_minify_napi@0.156.0
-	oxc_napi@0.156.0
-	oxc_parser@0.156.0
-	oxc_parser_napi@0.156.0
-	oxc_regular_expression@0.156.0
+	oxc_isolated_declarations@0.157.0
+	oxc_mangler@0.157.0
+	oxc_minifier@0.157.0
+	oxc_minify_napi@0.157.0
+	oxc_napi@0.157.0
+	oxc_parser@0.157.0
+	oxc_parser_napi@0.157.0
+	oxc_regular_expression@0.157.0
 	oxc_resolver@11.24.3
 	oxc_resolver_napi@11.24.3
-	oxc_semantic@0.156.0
+	oxc_semantic@0.157.0
 	oxc_sourcemap@9.0.0
-	oxc_span@0.156.0
-	oxc_str@0.156.0
-	oxc_syntax@0.156.0
-	oxc_transform_napi@0.156.0
-	oxc_transformer@0.156.0
-	oxc_transformer_plugins@0.156.0
-	oxc_traverse@0.156.0
+	oxc_span@0.157.0
+	oxc_str@0.157.0
+	oxc_syntax@0.157.0
+	oxc_transform_napi@0.157.0
+	oxc_transformer@0.157.0
+	oxc_transformer_plugins@0.157.0
+	oxc_traverse@0.157.0
 	parking@2.2.1
 	parking_lot@0.12.5
 	parking_lot@0.13.0
@@ -241,17 +238,18 @@ CRATES="
 	redox_syscall@0.9.5
 	ref-cast-impl@1.0.26
 	ref-cast@1.0.26
-	referencing@0.60.1
+	referencing@0.60.2
 	regex-automata@0.4.18
 	regex-syntax@0.8.11
 	regex@1.13.1
 	regress@0.12.0
-	relative-path@1.9.3
+	relative-path@2.0.3
 	rolldown-ariadne@0.6.0
-	rolldown-file-id@0.2.11
-	rolldown-notify-debouncer-full@0.8.0
-	rolldown-notify-types@2.0.3
-	rolldown-notify@11.0.0
+	rolldown-file-id@0.2.12
+	rolldown-notify-debouncer-full@0.8.1
+	rolldown-notify-napi@0.0.3
+	rolldown-notify-types@2.0.4
+	rolldown-notify@11.0.1
 	ropey@1.6.1
 	rustc-hash@2.1.3
 	rustc_version@0.4.1
@@ -259,8 +257,8 @@ CRATES="
 	rustversion@1.0.23
 	ryu@1.0.23
 	same-file@1.0.6
-	saphyr-parser@0.3.1
-	saphyr@0.3.1
+	saphyr-parser@0.3.3
+	saphyr@0.3.3
 	schemars@1.2.3
 	schemars_derive@1.2.3
 	scopeguard@1.2.0
@@ -277,7 +275,7 @@ CRATES="
 	signal-hook-registry@1.4.8
 	simd-adler32@0.3.10
 	simd-json@0.18.1
-	simd-utf16-len@0.3.0
+	simd-utf16-len@0.3.1
 	simdutf8@0.1.5
 	similar@2.7.0
 	siphasher@1.0.3
@@ -296,7 +294,7 @@ CRATES="
 	tempfile@3.27.0
 	termcolor@1.4.1
 	terminal_size@0.4.4
-	testing_macros@1.0.2
+	testing_macros@2.0.0
 	textwrap@0.16.2
 	thiserror-impl@2.0.21
 	thiserror@2.0.21
@@ -346,19 +344,9 @@ CRATES="
 	windows-numerics@0.3.1
 	windows-result@0.4.1
 	windows-strings@0.5.1
-	windows-sys@0.59.0
 	windows-sys@0.61.2
-	windows-targets@0.52.6
 	windows-threading@0.2.1
 	windows@0.62.2
-	windows_aarch64_gnullvm@0.52.6
-	windows_aarch64_msvc@0.52.6
-	windows_i686_gnu@0.52.6
-	windows_i686_gnullvm@0.52.6
-	windows_i686_msvc@0.52.6
-	windows_x86_64_gnu@0.52.6
-	windows_x86_64_gnullvm@0.52.6
-	windows_x86_64_msvc@0.52.6
 	wit-bindgen@0.57.1
 	xxhash-rust@0.8.19
 	yansi@1.0.1
@@ -366,6 +354,7 @@ CRATES="
 	zerocopy@0.8.54
 	zlib-rs@0.6.6
 	zmij@1.0.23
+	zmij_ecma@1.0.23
 "
 
 inherit cargo
