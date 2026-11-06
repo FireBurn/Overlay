@@ -98,7 +98,7 @@ src_configure() {
 		-DLLVM_LIBC_INCLUDE_SCUDO=ON
 		# scudo is compiled against the headers of the libc it goes into, not
 		# those of whatever C library the build machine has.
-		-DCOMPILER_RT_BUILD_SCUDO_STANDALONE_WITH_LLVM_LIBC=ON
+		-DRUNTIMES_USE_LIBC=llvm-libc
 
 		# The libraries, startup files and loader go in the platform's libdir
 		# like any other C library, and not in a directory per target.
