@@ -70,7 +70,6 @@ CRATES="
 	digest@0.10.7
 	displaydoc@0.2.6
 	document-features@0.2.12
-	dragonbox_ecma@0.1.12
 	dyn-clone@1.0.20
 	editorconfig-parser@0.0.4
 	either@1.16.0
@@ -156,16 +155,15 @@ CRATES="
 	litrs@1.0.0
 	lock_api@0.4.14
 	log@0.4.33
-	macro_rules_attr@0.2.0
 	markdown@1.0.0
 	memchr@2.8.3
 	mimalloc-safe@0.1.66
 	miniz_oxide@0.9.1
 	napi-build@2.6.0
-	napi-derive-backend@6.1.6
-	napi-derive@3.6.13
+	napi-derive-backend@7.0.0
+	napi-derive@3.7.0
 	napi-sys@3.4.1
-	napi@3.15.0
+	napi@3.16.1
 	native-tls@0.2.18
 	natord@1.0.9
 	nix@0.31.3
@@ -189,19 +187,19 @@ CRATES="
 	outref@0.5.2
 	owo-colors@4.3.0
 	oxc-browserslist@5.0.1
-	oxc-css-parser@0.0.18
+	oxc-css-parser@0.0.19
 	oxc-graphql-parser@0.0.9
-	oxc-markdown-parser@0.0.3
+	oxc-htmlish-parser@0.0.2
+	oxc-markdown-parser@0.0.4
 	oxc-schemars@0.9.1
 	oxc-toml@0.15.1
-	oxc-yaml-parser@0.0.7
+	oxc-yaml-parser@0.0.8
 	oxc_index@5.0.0
 	oxc_resolver@11.24.3
 	oxc_schemars_derive@0.8.26
 	oxc_sourcemap@9.0.0
 	papaya@0.2.5
 	parking_lot_core@0.9.12
-	pastey@0.2.3
 	pem-rfc7468@1.0.0
 	percent-encoding@2.3.2
 	pest@2.8.6
@@ -247,8 +245,8 @@ CRATES="
 	rustversion@1.0.22
 	ryu@1.0.23
 	same-file@1.0.6
-	saphyr-parser@0.2.2
-	saphyr@0.2.2
+	saphyr-parser@0.3.3
+	saphyr@0.3.3
 	schannel@0.1.29
 	scopeguard@1.2.0
 	security-framework-sys@2.17.0
@@ -378,6 +376,7 @@ CRATES="
 	zerovec@0.11.6
 	zlib-rs@0.6.7
 	zmij@1.0.21
+	zmij_ecma@1.0.23
 "
 
 inherit cargo
