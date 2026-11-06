@@ -33,7 +33,7 @@
 
 @rocm       github-release ROCm/rocm-systems prefix=therock- pad=3 batch=1
 @libreoffice page https://downloadarchive.documentfoundation.org/libreoffice/old/ href="(\d+\.\d+\.(?:0\.3|[1-9]\d*\.2))/"
-@openjdk     agent one ebuild per major version, each followed by hand
+@openjdk     agent one ebuild per major version, each followed by hand; latest GA per major from api.adoptium.net/v3/assets/latest/<major>/hotspot (release_link tag = jdk-<version>), JDK 8 tags as jdk8u<b>-b<bb>
 
 dev-build/rocm-cmake              @rocm
 dev-libs/rccl                     @rocm
