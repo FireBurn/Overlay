@@ -48,8 +48,8 @@ CRATES="
 	bitvec@1.0.1
 	blake3@1.5.4
 	block-buffer@0.10.4
-	browserslist-data@0.3.1
-	browserslist-rs@0.21.2
+	browserslist-data@0.4.0
+	browserslist-rs@0.22.0
 	bstr@1.10.0
 	bumpalo@3.19.0
 	bus@2.4.1
@@ -108,28 +108,28 @@ CRATES="
 	core-foundation@0.9.4
 	corosensei@0.2.2
 	cpufeatures@0.2.13
-	cranelift-assembler-x64-meta@0.123.19
-	cranelift-assembler-x64@0.123.19
+	cranelift-assembler-x64-meta@0.123.20
+	cranelift-assembler-x64@0.123.20
 	cranelift-bforest@0.110.2
-	cranelift-bforest@0.123.19
+	cranelift-bforest@0.123.20
 	cranelift-bitset@0.110.3
-	cranelift-bitset@0.123.19
+	cranelift-bitset@0.123.20
 	cranelift-codegen-meta@0.110.3
-	cranelift-codegen-meta@0.123.19
+	cranelift-codegen-meta@0.123.20
 	cranelift-codegen-shared@0.110.3
-	cranelift-codegen-shared@0.123.19
+	cranelift-codegen-shared@0.123.20
 	cranelift-codegen@0.110.2
-	cranelift-codegen@0.123.19
+	cranelift-codegen@0.123.20
 	cranelift-control@0.110.3
-	cranelift-control@0.123.19
+	cranelift-control@0.123.20
 	cranelift-entity@0.110.2
-	cranelift-entity@0.123.19
+	cranelift-entity@0.123.20
 	cranelift-frontend@0.110.2
-	cranelift-frontend@0.123.19
+	cranelift-frontend@0.123.20
 	cranelift-isle@0.110.2
-	cranelift-isle@0.123.19
-	cranelift-native@0.123.19
-	cranelift-srcgen@0.123.19
+	cranelift-isle@0.123.20
+	cranelift-native@0.123.20
+	cranelift-srcgen@0.123.20
 	crc-catalog@2.5.0
 	crc32fast@1.5.0
 	crc@3.4.0
@@ -429,8 +429,8 @@ CRATES="
 	ptr_meta_derive@0.1.4
 	ptr_meta_derive@0.3.0
 	pulldown-cmark@0.8.0
-	pulley-interpreter@36.0.19
-	pulley-macros@36.0.19
+	pulley-interpreter@36.0.20
+	pulley-macros@36.0.20
 	quick-error@1.2.3
 	quote@1.0.42
 	r-efi@5.2.0
@@ -642,7 +642,7 @@ CRATES="
 	waker-fn@1.1.1
 	walkdir@2.5.0
 	want@0.3.1
-	wasi-common@36.0.19
+	wasi-common@36.0.20
 	wasi@0.11.0+wasi-snapshot-preview1
 	wasip2@1.0.1+wasi-0.2.4
 	wasm-bindgen-backend@0.2.100
@@ -669,21 +669,21 @@ CRATES="
 	wasmparser@0.235.0
 	wasmparser@0.236.1
 	wasmprinter@0.236.1
-	wasmtime-environ@36.0.19
-	wasmtime-internal-asm-macros@36.0.19
-	wasmtime-internal-component-macro@36.0.19
-	wasmtime-internal-component-util@36.0.19
-	wasmtime-internal-cranelift@36.0.19
-	wasmtime-internal-fiber@36.0.19
-	wasmtime-internal-jit-debug@36.0.19
-	wasmtime-internal-jit-icache-coherence@36.0.19
-	wasmtime-internal-math@36.0.19
-	wasmtime-internal-slab@36.0.19
-	wasmtime-internal-unwinder@36.0.19
-	wasmtime-internal-versioned-export-macros@36.0.19
-	wasmtime-internal-winch@36.0.19
-	wasmtime-internal-wit-bindgen@36.0.19
-	wasmtime@36.0.19
+	wasmtime-environ@36.0.20
+	wasmtime-internal-asm-macros@36.0.20
+	wasmtime-internal-component-macro@36.0.20
+	wasmtime-internal-component-util@36.0.20
+	wasmtime-internal-cranelift@36.0.20
+	wasmtime-internal-fiber@36.0.20
+	wasmtime-internal-jit-debug@36.0.20
+	wasmtime-internal-jit-icache-coherence@36.0.20
+	wasmtime-internal-math@36.0.20
+	wasmtime-internal-slab@36.0.20
+	wasmtime-internal-unwinder@36.0.20
+	wasmtime-internal-versioned-export-macros@36.0.20
+	wasmtime-internal-winch@36.0.20
+	wasmtime-internal-wit-bindgen@36.0.20
+	wasmtime@36.0.20
 	wast@216.0.0
 	wast@35.0.2
 	wat@1.216.0
@@ -691,14 +691,14 @@ CRATES="
 	web-time@1.1.0
 	webc@9.0.0
 	weezl@0.1.7
-	wiggle-generate@36.0.19
-	wiggle-macro@36.0.19
-	wiggle@36.0.19
+	wiggle-generate@36.0.20
+	wiggle-macro@36.0.20
+	wiggle@36.0.20
 	winapi-i686-pc-windows-gnu@0.4.0
 	winapi-util@0.1.11
 	winapi-x86_64-pc-windows-gnu@0.4.0
 	winapi@0.3.9
-	winch-codegen@36.0.19
+	winch-codegen@36.0.20
 	windows-core@0.62.2
 	windows-implement@0.60.2
 	windows-interface@0.59.3
@@ -761,9 +761,9 @@ CRATES="
 	zerotrie@0.2.3
 	zerovec-derive@0.11.2
 	zerovec@0.11.5
-	zstd-safe@7.3.0
-	zstd-sys@2.1.0+zstd.1.5.7
-	zstd@0.13.3
+	zstd-safe@8.2.0
+	zstd-sys@2.1.2+zstd.1.5.7
+	zstd@0.14.3
 "
 
 inherit cargo
