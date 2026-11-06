@@ -606,7 +606,7 @@ CRATES="
 	mime_guess@2.0.5
 	minimal-lexical@0.2.1
 	miniz_oxide@0.8.9
-	mio@1.2.0
+	mio@1.2.4
 	ml-kem@0.2.3
 	moka@0.12.13
 	moxcms@0.7.11
@@ -1366,11 +1366,13 @@ IUSE="+code-mode"
 RESTRICT="mirror test"
 
 DEPEND="
-	dev-libs/openssl:=
 	sys-apps/dbus
 "
 RDEPEND="${DEPEND}"
-BDEPEND="virtual/pkgconfig"
+BDEPEND="
+	dev-lang/perl
+	virtual/pkgconfig
+"
 
 # rust does not use *FLAGS from make.conf, silence portage warning
 QA_FLAGS_IGNORED="usr/bin/${PN}"
@@ -1397,6 +1399,18 @@ gen_git_crate_dir() {
 
 src_prepare() {
 	default
+
+	# Upstream only builds OpenSSL from source for musl targets; glibc
+	# targets use the system library. The pinned openssl-sys predates
+	# OpenSSL 4.x, so force the vendored build on glibc too.
+	local t
+	for t in x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu; do
+		cat >> "${S}/core/Cargo.toml" <<-EOF || die
+
+		[target.${t}.dependencies]
+		openssl-sys = { workspace = true, features = ["vendored"] }
+		EOF
+	done
 
 	# Fix tokio-tungstenite's git dependency on tungstenite
 	sed -i '/^\[dependencies\.tungstenite\]/,/^$/{
