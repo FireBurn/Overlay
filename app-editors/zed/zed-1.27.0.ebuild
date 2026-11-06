@@ -17,9 +17,9 @@ CRATES="
 	adler2@2.0.1
 	adler32@1.2.0
 	aes@0.8.4
-	agent-client-protocol-derive@3.4.0
-	agent-client-protocol-schema@1.12.0
-	agent-client-protocol@3.4.0
+	agent-client-protocol-derive@3.6.0
+	agent-client-protocol-schema@1.13.0
+	agent-client-protocol@3.6.0
 	ahash@0.8.12
 	aho-corasick@1.1.3
 	aliasable@0.1.3
@@ -139,7 +139,6 @@ CRATES="
 	block-padding@0.3.3
 	block2@0.5.1
 	block2@0.6.2
-	block@0.1.6
 	blocking@1.6.2
 	bmrng@0.5.2
 	bon-macros@3.8.2
@@ -200,10 +199,6 @@ CRATES="
 	clap_lex@0.7.6
 	cmake@0.1.56
 	cobs@0.3.0
-	cocoa-foundation@0.1.2
-	cocoa-foundation@0.2.0
-	cocoa@0.25.0
-	cocoa@0.26.0
 	codespan-reporting@0.13.0
 	color_quant@1.1.0
 	colorchoice@1.0.4
@@ -225,10 +220,7 @@ CRATES="
 	core-foundation-sys@0.8.7
 	core-foundation@0.10.0
 	core-foundation@0.9.4
-	core-graphics-helmer-fork@0.24.0
-	core-graphics-types@0.1.3
 	core-graphics-types@0.2.0
-	core-graphics@0.23.2
 	core-graphics@0.24.0
 	core-services@1.0.0
 	core-text@21.0.0
@@ -255,7 +247,6 @@ CRATES="
 	cranelift-isle@0.135.7
 	cranelift-native@0.135.7
 	cranelift-srcgen@0.135.7
-	crash-context@0.8.0
 	crash-handler@0.8.0
 	crc-catalog@2.4.0
 	crc-fast@1.9.0
@@ -627,7 +618,6 @@ CRATES="
 	mach2@0.6.0
 	macro_rules_attribute-proc_macro@0.2.3
 	macro_rules_attribute@0.2.3
-	malloc_buf@0.0.6
 	manatee@0.8.0-alpha.5
 	maplit@1.0.2
 	markup5ever@0.39.0
@@ -647,7 +637,6 @@ CRATES="
 	merman-core@0.8.0-alpha.5
 	merman-render@0.8.0-alpha.5
 	merman@0.8.0-alpha.5
-	metal@0.33.0
 	micromap@0.3.0
 	miette-derive@7.6.0
 	miette@7.6.0
@@ -699,7 +688,6 @@ CRATES="
 	num_enum@0.7.4
 	num_enum_derive@0.7.4
 	num_threads@0.1.7
-	objc-foundation@0.1.1
 	objc-sys@0.3.5
 	objc2-app-kit@0.2.2
 	objc2-app-kit@0.3.2
@@ -727,12 +715,10 @@ CRATES="
 	objc2-screen-capture-kit@0.3.2
 	objc2-security@0.3.2
 	objc2-ui-kit@0.3.2
+	objc2-uniform-type-identifiers@0.3.2
 	objc2-user-notifications@0.3.2
 	objc2@0.5.2
 	objc2@0.6.3
-	objc@0.2.7
-	objc_exception@0.1.2
-	objc_id@0.1.1
 	object@0.37.3
 	object@0.39.1
 	octocrab@0.49.7
@@ -967,8 +953,6 @@ CRATES="
 	schemars_derive@1.0.4
 	scoped-tls@1.0.1
 	scopeguard@1.2.0
-	screencapturekit-sys@0.2.8
-	screencapturekit@0.2.8
 	scroll@0.12.0
 	scroll_derive@0.12.1
 	sdd@4.6.2
@@ -1104,9 +1088,8 @@ CRATES="
 	system-configuration@0.5.1
 	system-configuration@0.8.0
 	system-deps@7.0.7
-	taffy@0.13.0
+	taffy@0.15.0
 	tagptr@0.2.0
-	tao-core-video-sys@0.2.0
 	target-lexicon@0.13.5
 	target-spec@3.7.0
 	tauri-winrt-notification@0.7.3
@@ -1173,7 +1156,6 @@ CRATES="
 	tree-sitter-diff@0.1.0
 	tree-sitter-elixir@0.3.4
 	tree-sitter-embedded-template@0.23.2
-	tree-sitter-go@0.25.0
 	tree-sitter-html@0.23.2
 	tree-sitter-jsdoc@0.23.2
 	tree-sitter-json@0.24.8
@@ -1475,6 +1457,7 @@ declare -A GIT_CRATES=(
 	[async-task]='https://github.com/zed-industries/async-task;015845a19fc31752c02367567d3b8900a406f9da;async-task-%commit%'
 	[calloop]='https://github.com/zed-industries/calloop;3759371fee14c40066d64777e2a36b6ffcc22590;calloop-%commit%'
 	[cpal]='https://github.com/RustAudio/cpal;e1612d5d98152f8dc2a62e1b51ef7cbf4f7f26b7;cpal-%commit%'
+	[crash-context]='https://github.com/rust-minidump/minidump-writer;911b04e09b79b736cc15cbe712e83e2d3f348bb9;minidump-writer-%commit%/crates/crash-context'
 	[dap-types]='https://github.com/zed-industries/dap-types;1b461b310481d01e02b2603c16d7144b926339f8;dap-types-%commit%/dap-types'
 	[gh-workflow]='https://github.com/zed-industries/gh-workflow;37f3c0575d379c218a9c455ee67585184e40d43f;gh-workflow-%commit%/crates/gh-workflow'
 	[gh-workflow-macros]='https://github.com/zed-industries/gh-workflow;37f3c0575d379c218a9c455ee67585184e40d43f;gh-workflow-%commit%/crates/gh-workflow-macros'
@@ -1484,9 +1467,9 @@ declare -A GIT_CRATES=(
 	[livekit-api]='https://github.com/zed-industries/livekit-rust-sdks;0a1c519cfce9b365229026b55de9b9dbdb6fed3c;livekit-rust-sdks-%commit%/livekit-api'
 	[livekit-protocol]='https://github.com/zed-industries/livekit-rust-sdks;0a1c519cfce9b365229026b55de9b9dbdb6fed3c;livekit-rust-sdks-%commit%/livekit-protocol'
 	[livekit-runtime]='https://github.com/zed-industries/livekit-rust-sdks;0a1c519cfce9b365229026b55de9b9dbdb6fed3c;livekit-rust-sdks-%commit%/livekit-runtime'
-	[lsp-types]='https://github.com/zed-industries/lsp-types;f1783e63a7f4eb4397bf51d4148b4895a1f7ab16;lsp-types-%commit%'
-	[naga]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/naga'
-	[naga-types]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/naga-types'
+	[lsp-types]='https://github.com/zed-industries/lsp-types;82d7fc66ebdfabcfeb26ba16bbed9f3d26211fc3;lsp-types-%commit%'
+	[naga]='https://github.com/gfx-rs/wgpu;cddb2f5d80dc0009b2ef6767635140cacf90a007;wgpu-%commit%/naga'
+	[naga-types]='https://github.com/gfx-rs/wgpu;cddb2f5d80dc0009b2ef6767635140cacf90a007;wgpu-%commit%/naga-types'
 	[notify]='https://github.com/zed-industries/notify;d842f16b2716bd60f09caf3ae3a894237ab38f54;notify-%commit%/notify'
 	[notify-types]='https://github.com/zed-industries/notify;d842f16b2716bd60f09caf3ae3a894237ab38f54;notify-%commit%/notify-types'
 	[nvim-rs]='https://github.com/KillTheMule/nvim-rs;764dd270c642f77f10f3e19d05cc178a6cbe69f3;nvim-rs-%commit%'
@@ -1520,37 +1503,38 @@ declare -A GIT_CRATES=(
 	[pet-winpython]='https://github.com/zed-industries/python-environment-tools;5aad7164bfc2a58977b103c8ef8fdd7302ed2e9f;python-environment-tools-%commit%/crates/pet-winpython'
 	[rodio]='https://github.com/RustAudio/rodio;3ee9745862279ce1d18db593155016e7ce024aeb;rodio-%commit%'
 	[trash]='https://github.com/zed-industries/trash-rs;41c6c800d884a89351f3b8856d12894cccee261d;trash-rs-%commit%'
-	[tree-sitter]='https://github.com/tree-sitter/tree-sitter;43623ec9bf0eaaf7113285c46e8a09018f181b18;tree-sitter-%commit%/lib'
+	[tree-sitter]='https://github.com/tree-sitter/tree-sitter;803c6ebaac27d69e1808b45058482e868d073ceb;tree-sitter-%commit%/lib'
 	[tree-sitter-cpp]='https://github.com/tree-sitter/tree-sitter-cpp;5cb9b693cfd7bfacab1d9ff4acac1a4150700609;tree-sitter-cpp-%commit%'
 	[tree-sitter-gitcommit]='https://github.com/zed-industries/tree-sitter-git-commit;88309716a69dd13ab83443721ba6e0b491d37ee9;tree-sitter-git-commit-%commit%'
+	[tree-sitter-go]='https://github.com/zed-industries/tree-sitter-go;6862a49e3c5a7567a6c576420e9a8f944e198a85;tree-sitter-go-%commit%'
 	[tree-sitter-gomod]='https://github.com/camdencheek/tree-sitter-go-mod;2e886870578eeba1927a2dc4bd2e2b3f598c5f9a;tree-sitter-go-mod-%commit%'
 	[tree-sitter-gowork]='https://github.com/zed-industries/tree-sitter-go-work;acb0617bf7f4fda02c6217676cc64acb89536dc7;tree-sitter-go-work-%commit%'
 	[tree-sitter-heex]='https://github.com/zed-industries/tree-sitter-heex;1dd45142fbb05562e35b2040c6129c9bca346592;tree-sitter-heex-%commit%'
-	[tree-sitter-language]='https://github.com/tree-sitter/tree-sitter;43623ec9bf0eaaf7113285c46e8a09018f181b18;tree-sitter-%commit%/crates/language'
+	[tree-sitter-language]='https://github.com/tree-sitter/tree-sitter;803c6ebaac27d69e1808b45058482e868d073ceb;tree-sitter-%commit%/crates/language'
 	[tree-sitter-md]='https://github.com/zed-industries/tree-sitter-markdown;b596e737286780d7bfa9fcddceaeeb754574b352;tree-sitter-markdown-%commit%'
 	[tree-sitter-typescript]='https://github.com/zed-industries/tree-sitter-typescript;e2c53597d6a5d9cf7bbe8dccde576fe1e46c5899;tree-sitter-typescript-%commit%'
 	[tree-sitter-yaml]='https://github.com/zed-industries/tree-sitter-yaml;baff0b51c64ef6a1fb1f8390f3ad6015b83ec13a;tree-sitter-yaml-%commit%'
 	[wasm_thread]='https://github.com/zed-industries/wasm_thread;0cf96c7708dfb97ccf3da50347e25edcf75d6937;wasm_thread-%commit%'
 	[webrtc-sys]='https://github.com/zed-industries/livekit-rust-sdks;0a1c519cfce9b365229026b55de9b9dbdb6fed3c;livekit-rust-sdks-%commit%/webrtc-sys'
 	[webrtc-sys-build]='https://github.com/zed-industries/livekit-rust-sdks;0a1c519cfce9b365229026b55de9b9dbdb6fed3c;livekit-rust-sdks-%commit%/webrtc-sys/build'
-	[wgpu]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu'
-	[wgpu-core]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-core'
-	[wgpu-core-deps-apple]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-core/platform-deps/apple'
-	[wgpu-core-deps-emscripten]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-core/platform-deps/emscripten'
-	[wgpu-core-deps-linux-android-bsd]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-core/platform-deps/linux-android-bsd'
-	[wgpu-core-deps-wasm]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-core/platform-deps/wasm'
-	[wgpu-core-deps-windows]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-core/platform-deps/windows'
-	[wgpu-hal]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-hal'
-	[wgpu-naga-bridge]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-naga-bridge'
-	[wgpu-sync]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-sync'
-	[wgpu-types]='https://github.com/gfx-rs/wgpu;3b3506ea31154edc04de64debda0e780cba2639c;wgpu-%commit%/wgpu-types'
+	[wgpu]='https://github.com/gfx-rs/wgpu;cddb2f5d80dc0009b2ef6767635140cacf90a007;wgpu-%commit%/wgpu'
+	[wgpu-core]='https://github.com/gfx-rs/wgpu;cddb2f5d80dc0009b2ef6767635140cacf90a007;wgpu-%commit%/wgpu-core'
+	[wgpu-core-deps-apple]='https://github.com/gfx-rs/wgpu;cddb2f5d80dc0009b2ef6767635140cacf90a007;wgpu-%commit%/wgpu-core/platform-deps/apple'
+	[wgpu-core-deps-emscripten]='https://github.com/gfx-rs/wgpu;cddb2f5d80dc0009b2ef6767635140cacf90a007;wgpu-%commit%/wgpu-core/platform-deps/emscripten'
+	[wgpu-core-deps-linux-android-bsd]='https://github.com/gfx-rs/wgpu;cddb2f5d80dc0009b2ef6767635140cacf90a007;wgpu-%commit%/wgpu-core/platform-deps/linux-android-bsd'
+	[wgpu-core-deps-wasm]='https://github.com/gfx-rs/wgpu;cddb2f5d80dc0009b2ef6767635140cacf90a007;wgpu-%commit%/wgpu-core/platform-deps/wasm'
+	[wgpu-core-deps-windows]='https://github.com/gfx-rs/wgpu;cddb2f5d80dc0009b2ef6767635140cacf90a007;wgpu-%commit%/wgpu-core/platform-deps/windows'
+	[wgpu-hal]='https://github.com/gfx-rs/wgpu;cddb2f5d80dc0009b2ef6767635140cacf90a007;wgpu-%commit%/wgpu-hal'
+	[wgpu-naga-bridge]='https://github.com/gfx-rs/wgpu;cddb2f5d80dc0009b2ef6767635140cacf90a007;wgpu-%commit%/wgpu-naga-bridge'
+	[wgpu-sync]='https://github.com/gfx-rs/wgpu;cddb2f5d80dc0009b2ef6767635140cacf90a007;wgpu-%commit%/wgpu-sync'
+	[wgpu-types]='https://github.com/gfx-rs/wgpu;cddb2f5d80dc0009b2ef6767635140cacf90a007;wgpu-%commit%/wgpu-types'
 	[windows-capture]='https://github.com/zed-industries/windows-capture;f0d6c1b6691db75461b732f6d5ff56eed002eeb9;windows-capture-%commit%'
 	[wprcontrol]='https://github.com/zed-industries/wprcontrol;cd811f7d744f65291e13131b1d907fda63ed91a1;wprcontrol-%commit%'
 	[xim-ctext]='https://github.com/zed-industries/xim-rs;16f35a2c881b815a2b6cdfd6687988e84f8447d8;xim-rs-%commit%/xim-ctext'
 	[xim-parser]='https://github.com/zed-industries/xim-rs;16f35a2c881b815a2b6cdfd6687988e84f8447d8;xim-rs-%commit%/xim-parser'
 	[zed-font-kit]='https://github.com/zed-industries/font-kit;94b0f28166665e8fd2f53ff6d268a14955c82269;font-kit-%commit%'
 	[zed-reqwest]='https://github.com/zed-industries/reqwest;33bc764aa15ff7b200bf7c93bd96e24878d53e14;reqwest-%commit%'
-	[zed-scap]='https://github.com/zed-industries/scap;4afea48c3b002197176fb19cd0f9b180dd36eaac;scap-%commit%'
+	[zed-scap]='https://github.com/zed-industries/scap;b5c86ec58dd4b6b7732bf6ac8be03d6b1f190a82;scap-%commit%'
 	[zed-xim]='https://github.com/zed-industries/xim-rs;16f35a2c881b815a2b6cdfd6687988e84f8447d8;xim-rs-%commit%'
 )
 
@@ -1698,10 +1682,15 @@ src_prepare() {
 	local WIN_CAP_GIT="windows-capture = { git = \"${zed_gh}/windows-capture.git\", rev = \"${WIN_CAP_COMMIT}\""
 	local WIN_CAP_PATH="windows-capture = \\{ path = \"${WORKDIR}/windows-capture-${WIN_CAP_COMMIT}\""
 
-	local TREE_SITTER_COMMIT="43623ec9bf0eaaf7113285c46e8a09018f181b18"
+	local TREE_SITTER_COMMIT="803c6ebaac27d69e1808b45058482e868d073ceb"
 	local ts_dir="${WORKDIR}/tree-sitter-${TREE_SITTER_COMMIT}"
 	local TREE_SITTER_LANGUAGE_GIT="tree-sitter-language = { git = \"${ts_url}\", rev = \"${TREE_SITTER_COMMIT}\""
 	local TREE_SITTER_LANGUAGE_PATH="tree-sitter-language = \\{ path = \"${ts_dir}/crates/language\""
+
+	# Unused workspace dependency, but cargo still loads its git source
+	local CRASH_CONTEXT_COMMIT="911b04e09b79b736cc15cbe712e83e2d3f348bb9"
+	local CRASH_CONTEXT_GIT="crash-context = { git = \"https://github.com/rust-minidump/minidump-writer\", rev = \"${CRASH_CONTEXT_COMMIT}\""
+	local CRASH_CONTEXT_PATH="crash-context = \\{ path = \"${WORKDIR}/minidump-writer-${CRASH_CONTEXT_COMMIT}/crates/crash-context\""
 
 	sed \
 		-e "s#${ASYNC_PROCESS_GIT}#${ASYNC_PROCESS_PATH}#" \
@@ -1716,6 +1705,7 @@ src_prepare() {
 		-e "s#${NOTIFY_TYPES_GIT}#${NOTIFY_TYPES_PATH}#" \
 		-e "s#${WIN_CAP_GIT}#${WIN_CAP_PATH}#" \
 		-e "s#${TREE_SITTER_LANGUAGE_GIT}#${TREE_SITTER_LANGUAGE_PATH}#" \
+		-e "s#${CRASH_CONTEXT_GIT}#${CRASH_CONTEXT_PATH}#" \
 		-i "${S}/Cargo.toml" || die "Cargo fetch workaround failed"
 
 	if ! use collab; then
