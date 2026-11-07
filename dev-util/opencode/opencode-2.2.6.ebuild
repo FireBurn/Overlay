@@ -26,9 +26,7 @@ NPM_PKGS="
 	@ast-grep/cli-linux-x64-gnu@0.44.0|amd64
 	@astrojs/astro2tsx@0.1.3
 	@astrojs/check@0.9.11
-	@astrojs/check@0.9.6
 	@astrojs/cloudflare@14.1.4
-	@astrojs/compiler@2.13.1
 	@astrojs/compiler-binding@0.5.2
 	@astrojs/compiler-binding-linux-arm64-gnu@0.5.2|arm64
 	@astrojs/compiler-binding-linux-arm64-musl@0.5.2|arm64,elibc_musl
@@ -39,7 +37,6 @@ NPM_PKGS="
 	@astrojs/internal-helpers@0.10.2
 	@astrojs/internal-helpers@0.10.4
 	@astrojs/internal-helpers@0.12.0
-	@astrojs/language-server@2.16.14
 	@astrojs/language-server@2.17.2
 	@astrojs/markdown-remark@7.2.2
 	@astrojs/markdown-remark@7.3.2
@@ -155,6 +152,8 @@ NPM_PKGS="
 	@babel/plugin-transform-private-methods@7.29.7
 	@babel/plugin-transform-private-property-in-object@7.29.7
 	@babel/plugin-transform-property-literals@7.29.7
+	@babel/plugin-transform-react-jsx-self@7.29.7
+	@babel/plugin-transform-react-jsx-source@7.29.7
 	@babel/plugin-transform-regenerator@7.29.8
 	@babel/plugin-transform-regexp-modifiers@7.29.7
 	@babel/plugin-transform-reserved-words@7.29.7
@@ -193,17 +192,21 @@ NPM_PKGS="
 	@clack/core@1.5.1
 	@clack/prompts@1.0.0-alpha.1
 	@clack/prompts@1.8.1
-	@cloudflare/kv-asset-handler@0.4.0
+	@cloudflare/build-output-utils@0.8.5
+	@cloudflare/codemods@0.4.0
+	@cloudflare/config@0.23.0
 	@cloudflare/kv-asset-handler@0.5.0
+	@cloudflare/runtime-types@0.1.7
 	@cloudflare/unenv-preset@2.16.1
-	@cloudflare/unenv-preset@2.7.11
 	@cloudflare/vite-plugin@1.52.1
-	@cloudflare/workerd-linux-64@1.20251118.0|amd64
 	@cloudflare/workerd-linux-64@1.20260708.1|amd64
 	@cloudflare/workerd-linux-64@1.20260811.1|amd64
-	@cloudflare/workerd-linux-arm64@1.20251118.0|arm64
+	@cloudflare/workerd-linux-64@1.20260930.2|amd64
+	@cloudflare/workerd-linux-64@1.20261001.1|amd64
 	@cloudflare/workerd-linux-arm64@1.20260708.1|arm64
 	@cloudflare/workerd-linux-arm64@1.20260811.1|arm64
+	@cloudflare/workerd-linux-arm64@1.20260930.2|arm64
+	@cloudflare/workerd-linux-arm64@1.20261001.1|arm64
 	@cloudflare/workers-types@4.20251008.0
 	@corvu/dialog@0.2.4
 	@corvu/drawer@0.2.4
@@ -211,6 +214,7 @@ NPM_PKGS="
 	@corvu/utils@0.4.2
 	@cspotcode/source-map-support@0.8.1
 	@ctrl/tinycolor@4.2.0
+	@dimforge/rapier3d-compat@0.12.0
 	@dnd-kit/abstract@0.5.0
 	@dnd-kit/collision@0.5.0
 	@dnd-kit/dom@0.5.0
@@ -218,10 +222,11 @@ NPM_PKGS="
 	@dnd-kit/solid@0.5.0
 	@dnd-kit/state@0.5.0
 	@drizzle-team/brocli@0.12.0
-	@effect/opentelemetry@4.0.6
-	@effect/platform-node@4.0.6
-	@effect/platform-node-shared@4.0.6
-	@effect/sql-sqlite-bun@4.0.6
+	@effect/opentelemetry@4.1.0
+	@effect/platform-node@4.1.0
+	@effect/platform-node-shared@4.1.0
+	@effect/sql-sqlite-bun@4.1.0
+	@effect/sql-sqlite-node@4.1.0
 	@electron-internal/extract-zip@1.0.5
 	@electron/asar@3.4.1
 	@electron/fuses@1.8.0
@@ -248,10 +253,8 @@ NPM_PKGS="
 	@emnapi/wasi-threads@1.2.2
 	@emnapi/wasi-threads@1.2.3
 	@esbuild/linux-arm64@0.25.12|arm64
-	@esbuild/linux-arm64@0.25.4|arm64
 	@esbuild/linux-arm64@0.28.1|arm64
 	@esbuild/linux-x64@0.25.12|amd64
-	@esbuild/linux-x64@0.25.4|amd64
 	@esbuild/linux-x64@0.28.1|amd64
 	@expressive-code/core@0.44.2
 	@expressive-code/plugin-frames@0.44.2
@@ -266,7 +269,6 @@ NPM_PKGS="
 	@floating-ui/core@1.8.0
 	@floating-ui/dom@1.8.0
 	@floating-ui/utils@0.2.12
-	@fontsource/commit-mono@5.3.0
 	@fontsource/ibm-plex-mono@5.2.5
 	@formatjs/ecma402-abstract@2.3.6
 	@formatjs/fast-memoize@2.2.7
@@ -276,43 +278,47 @@ NPM_PKGS="
 	@gar/promise-retry@1.0.3
 	@graphql-typed-document-node/core@3.2.0
 	@happy-dom/global-registrator@20.0.11
+	@hona/strobe@0.14.0
+	@hona/strobe-linux-arm64@0.14.0|arm64
+	@hona/strobe-linux-x64@0.14.0|amd64
 	@hono/node-server@2.1.5
 	@ibm/plex@6.4.1
 	@ibm/telemetry-js@1.11.0
 	@img/colour@1.1.0
-	@img/sharp-libvips-linux-arm64@1.0.4|arm64
 	@img/sharp-libvips-linux-arm64@1.2.4|arm64
 	@img/sharp-libvips-linux-arm64@1.3.1|arm64
+	@img/sharp-libvips-linux-arm64@1.3.3|arm64
 	@img/sharp-libvips-linux-arm64@1.3.4|arm64
-	@img/sharp-libvips-linux-x64@1.0.4|amd64
 	@img/sharp-libvips-linux-x64@1.2.4|amd64
 	@img/sharp-libvips-linux-x64@1.3.1|amd64
+	@img/sharp-libvips-linux-x64@1.3.3|amd64
 	@img/sharp-libvips-linux-x64@1.3.4|amd64
-	@img/sharp-libvips-linuxmusl-arm64@1.0.4|arm64
 	@img/sharp-libvips-linuxmusl-arm64@1.2.4|arm64
 	@img/sharp-libvips-linuxmusl-arm64@1.3.1|arm64
+	@img/sharp-libvips-linuxmusl-arm64@1.3.3|arm64,elibc_musl
 	@img/sharp-libvips-linuxmusl-arm64@1.3.4|arm64,elibc_musl
-	@img/sharp-libvips-linuxmusl-x64@1.0.4|amd64
 	@img/sharp-libvips-linuxmusl-x64@1.2.4|amd64
 	@img/sharp-libvips-linuxmusl-x64@1.3.1|amd64
+	@img/sharp-libvips-linuxmusl-x64@1.3.3|amd64,elibc_musl
 	@img/sharp-libvips-linuxmusl-x64@1.3.4|amd64,elibc_musl
-	@img/sharp-linux-arm64@0.33.5|arm64
 	@img/sharp-linux-arm64@0.34.5|arm64
 	@img/sharp-linux-arm64@0.35.2|arm64
+	@img/sharp-linux-arm64@0.35.4|arm64
 	@img/sharp-linux-arm64@0.35.5|arm64
-	@img/sharp-linux-x64@0.33.5|amd64
 	@img/sharp-linux-x64@0.34.5|amd64
 	@img/sharp-linux-x64@0.35.2|amd64
+	@img/sharp-linux-x64@0.35.4|amd64
 	@img/sharp-linux-x64@0.35.5|amd64
-	@img/sharp-linuxmusl-arm64@0.33.5|arm64
 	@img/sharp-linuxmusl-arm64@0.34.5|arm64
 	@img/sharp-linuxmusl-arm64@0.35.2|arm64
+	@img/sharp-linuxmusl-arm64@0.35.4|arm64,elibc_musl
 	@img/sharp-linuxmusl-arm64@0.35.5|arm64,elibc_musl
-	@img/sharp-linuxmusl-x64@0.33.5|amd64
 	@img/sharp-linuxmusl-x64@0.34.5|amd64
 	@img/sharp-linuxmusl-x64@0.35.2|amd64
+	@img/sharp-linuxmusl-x64@0.35.4|amd64,elibc_musl
 	@img/sharp-linuxmusl-x64@0.35.5|amd64,elibc_musl
 	@img/sharp-wasm32@0.35.2
+	@img/sharp-wasm32@0.35.4
 	@img/sharp-wasm32@0.35.5
 	@internationalized/number@3.6.7
 	@isaacs/cliui@8.0.2
@@ -419,13 +425,13 @@ NPM_PKGS="
 	@opentelemetry/sdk-trace-base@2.8.0
 	@opentelemetry/sdk-trace-node@2.8.0
 	@opentelemetry/semantic-conventions@1.43.0
-	@opentui/core@0.8.0
-	@opentui/core-linux-arm64@0.8.0|arm64
-	@opentui/core-linux-arm64-musl@0.8.0|arm64,elibc_musl
-	@opentui/core-linux-x64@0.8.0|amd64
-	@opentui/core-linux-x64-musl@0.8.0|amd64,elibc_musl
-	@opentui/keymap@0.8.0
-	@opentui/solid@0.8.0
+	@opentui/core@0.8.1
+	@opentui/core-linux-arm64@0.8.1|arm64
+	@opentui/core-linux-arm64-musl@0.8.1|arm64,elibc_musl
+	@opentui/core-linux-x64@0.8.1|amd64
+	@opentui/core-linux-x64-musl@0.8.1|amd64,elibc_musl
+	@opentui/keymap@0.8.1
+	@opentui/solid@0.8.1
 	@opentunnel/client@0.6.1
 	@opentunnel/protocol@0.6.1
 	@oslojs/encoding@1.1.0
@@ -481,6 +487,7 @@ NPM_PKGS="
 	@rolldown/binding-linux-x64-gnu@1.2.5|amd64
 	@rolldown/binding-linux-x64-musl@1.2.14|amd64,elibc_musl
 	@rolldown/binding-linux-x64-musl@1.2.5|amd64
+	@rolldown/pluginutils@1.0.0-beta.27
 	@rolldown/pluginutils@1.0.1
 	@rollup/plugin-babel@6.1.0
 	@rollup/plugin-node-resolve@16.0.3
@@ -517,6 +524,7 @@ NPM_PKGS="
 	@shikijs/themes@4.4.3
 	@shikijs/types@4.4.3
 	@shikijs/vscode-textmate@10.0.2
+	@shuding/opentype.js@1.4.0-beta.0
 	@sigstore/bundle@4.0.0
 	@sigstore/core@3.2.1
 	@sigstore/protobuf-specs@0.5.1
@@ -581,6 +589,10 @@ NPM_PKGS="
 	@tanstack/solid-query@5.91.4
 	@tanstack/solid-virtual@3.13.37
 	@tanstack/virtual-core@3.17.8
+	@textjs/app@1.6.1
+	@textjs/core@1.6.1
+	@textjs/opencode@1.6.1
+	@textjs/react@1.6.1
 	@trickfilm400/rollup-plugin-off-main-thread@3.0.0-pre1
 	@tsconfig/bun@1.0.9
 	@tsconfig/node22@22.0.2
@@ -588,6 +600,7 @@ NPM_PKGS="
 	@tufjs/models@4.1.0
 	@turbo/linux-64@2.10.2|amd64
 	@turbo/linux-arm64@2.10.2|arm64
+	@tweenjs/tween.js@23.1.3
 	@tybys/wasm-util@0.10.3
 	@tybys/wasm-util@0.9.0
 	@types/babel__core@7.20.5
@@ -626,15 +639,19 @@ NPM_PKGS="
 	@types/offscreencanvas@2019.7.3
 	@types/pacote@11.1.8
 	@types/react@19.2.17
+	@types/react@19.3.0
 	@types/resolve@1.20.2
 	@types/responselike@1.0.3
 	@types/sax@1.2.7
 	@types/semver@7.7.1
 	@types/semver@7.8.0
 	@types/ssri@7.1.5
+	@types/stats.js@0.17.4
+	@types/three@0.180.0
 	@types/trusted-types@2.0.7
 	@types/unist@2.0.11
 	@types/unist@3.0.3
+	@types/webxr@0.5.24
 	@types/whatwg-mimetype@3.0.2
 	@types/which@3.0.4
 	@types/ws@8.18.1
@@ -643,6 +660,7 @@ NPM_PKGS="
 	@typescript/typescript-linux-x64@7.1.0-beta|amd64
 	@typescript/typescript6@6.0.2
 	@ungap/structured-clone@1.3.3
+	@vitejs/plugin-react@4.7.0
 	@volar/kit@2.4.28
 	@volar/language-core@2.4.28
 	@volar/language-server@2.4.28
@@ -661,16 +679,12 @@ NPM_PKGS="
 	@yuuang/ffi-rs-linux-x64-musl@1.3.7|amd64
 	@zip.js/zip.js@2.7.62
 	abbrev@4.0.0
-	abort-controller@3.0.0
 	accepts@2.0.0
-	acorn@8.14.0
 	acorn@8.15.0
 	acorn@8.18.0
 	acorn-jsx@5.3.2
-	acorn-walk@8.3.2
 	agent-base@6.0.2
 	agent-base@7.1.4
-	agentkeepalive@4.6.0
 	ajv@8.20.0
 	ajv-draft-04@1.0.0
 	ajv-formats@3.0.1
@@ -717,6 +731,7 @@ NPM_PKGS="
 	bail@2.0.2
 	balanced-match@1.0.2
 	balanced-match@4.0.4
+	base64-js@0.0.8
 	base64-js@1.5.1
 	baseline-browser-mapping@2.11.15
 	bcp-47@2.1.1
@@ -753,15 +768,16 @@ NPM_PKGS="
 	call-bind@1.0.9
 	call-bind-apply-helpers@1.0.2
 	call-bound@1.0.4
+	camelize@1.0.1
 	caniuse-lite@1.0.30001809
 	ccount@2.0.1
+	cf@1.0.0-beta.12
 	chalk@4.1.2
 	chalk@5.6.2
 	character-entities@2.0.2
 	character-entities-html4@2.1.0
 	character-entities-legacy@3.0.0
 	character-reference-invalid@2.0.1
-	chokidar@4.0.3
 	chokidar@5.0.0
 	chownr@3.0.0
 	chrome-launcher@1.2.1
@@ -774,15 +790,12 @@ NPM_PKGS="
 	cliui@8.0.1
 	cliui@9.0.1
 	clone-response@1.0.3
-	cloudflare@5.2.0
 	clsx@2.1.1
 	cluster-key-slot@1.1.2
 	cmd-shim@8.0.0
 	collapse-white-space@2.1.0
-	color@4.2.3
 	color-convert@2.0.1
 	color-name@1.1.4
-	color-string@1.9.1
 	combined-stream@1.0.8
 	comma-separated-tokens@2.0.3
 	commander@11.1.0
@@ -818,9 +831,14 @@ NPM_PKGS="
 	crossws@0.4.15
 	crypto-random-string@2.0.0
 	csp_evaluator@1.1.8
+	css-background-parser@0.1.0
+	css-box-shadow@1.0.0-3
+	css-color-keywords@1.0.0
+	css-gradient-parser@0.0.17
 	css-select@5.2.2
 	css-select@6.0.0
 	css-selector-parser@3.3.0
+	css-to-react-native@3.2.0
 	css-tree@2.2.1
 	css-tree@3.2.1
 	css-what@6.2.2
@@ -887,7 +905,7 @@ NPM_PKGS="
 	eastasianwidth@0.2.0
 	ecdsa-sig-formatter@1.0.11
 	ee-first@1.1.1
-	effect@4.0.6
+	effect@4.1.0
 	ejs@3.1.10
 	electron@44.9.1
 	electron-builder@26.15.7
@@ -905,6 +923,7 @@ NPM_PKGS="
 	emoji-regex@10.6.0
 	emoji-regex@8.0.0
 	emoji-regex@9.2.2
+	emoji-regex-xs@2.0.1
 	encodeurl@2.0.0
 	end-of-stream@1.4.5
 	engine.io-client@6.6.6
@@ -934,7 +953,6 @@ NPM_PKGS="
 	esast-util-from-estree@2.0.0
 	esast-util-from-js@2.0.1
 	esbuild@0.25.12
-	esbuild@0.25.4
 	esbuild@0.28.1
 	escalade@3.2.0
 	escape-goat@4.0.0
@@ -954,11 +972,9 @@ NPM_PKGS="
 	esutils@2.0.3
 	eta@4.6.0
 	etag@1.8.1
-	event-target-shim@5.0.1
 	eventemitter3@5.0.4
 	eventsource@3.0.7
 	eventsource-parser@3.1.1
-	exit-hook@2.2.1
 	exponential-backoff@3.1.3
 	express@5.3.0
 	express-rate-limit@8.7.1
@@ -981,6 +997,8 @@ NPM_PKGS="
 	fdir@6.5.0
 	fetch-blob@3.2.0
 	ffi-rs@1.3.7
+	fflate@0.7.3
+	fflate@0.8.3
 	filelist@1.0.6
 	fill-range@7.1.1
 	finalhandler@2.1.1
@@ -994,8 +1012,6 @@ NPM_PKGS="
 	for-each@0.3.5
 	foreground-child@3.3.1
 	form-data@4.0.6
-	form-data-encoder@1.7.2
-	formdata-node@4.4.1
 	formdata-polyfill@4.0.10
 	forwarded@0.2.0
 	fresh@2.0.0
@@ -1034,7 +1050,6 @@ NPM_PKGS="
 	glob@7.2.3
 	glob@9.3.5
 	glob-parent@5.1.2
-	glob-to-regexp@0.4.1
 	global-agent@3.0.0
 	globalthis@1.0.4
 	google-auth-library@10.5.0
@@ -1050,6 +1065,7 @@ NPM_PKGS="
 	h3@1.15.11
 	h3@2.0.7
 	happy-dom@20.11.1
+	harfbuzzjs@0.10.0
 	has-bigints@1.1.0
 	has-flag@4.0.0
 	has-property-descriptors@1.0.2
@@ -1079,6 +1095,7 @@ NPM_PKGS="
 	hast-util-whitespace@3.0.0
 	hastscript@9.0.1
 	he@1.2.0
+	hex-rgb@4.3.0
 	hono@4.13.13
 	hookable@6.1.2
 	hosted-git-info@4.1.0
@@ -1097,7 +1114,6 @@ NPM_PKGS="
 	https-proxy-agent@5.0.1
 	https-proxy-agent@7.0.6
 	httpxy@0.5.5
-	humanize-ms@1.2.1
 	husky@9.1.7
 	i18n-iso-countries@7.14.0
 	i18next@26.5.3
@@ -1120,7 +1136,6 @@ NPM_PKGS="
 	is-alphabetical@2.0.1
 	is-alphanumerical@2.0.1
 	is-array-buffer@3.0.5
-	is-arrayish@0.3.4
 	is-async-function@2.1.1
 	is-bigint@1.1.0
 	is-boolean-object@1.2.2
@@ -1240,6 +1255,7 @@ NPM_PKGS="
 	lightningcss-linux-x64-musl@1.30.1|amd64
 	lightningcss-linux-x64-musl@1.32.0|amd64
 	lightningcss-linux-x64-musl@1.33.0|amd64
+	linebreak@1.1.0
 	locate-path@3.0.0
 	locate-path@6.0.0
 	lodash@4.18.1
@@ -1293,6 +1309,7 @@ NPM_PKGS="
 	merge-anything@5.1.7
 	merge-descriptors@2.0.0
 	merge2@1.4.1
+	meshoptimizer@0.22.0
 	micromark@4.0.2
 	micromark-core-commonmark@2.0.3
 	micromark-extension-directive@4.0.0
@@ -1331,16 +1348,16 @@ NPM_PKGS="
 	micromark-util-types@2.0.2
 	micromatch@4.0.8
 	mime@2.6.0
-	mime@3.0.0
 	mime-db@1.52.0
 	mime-db@1.54.0
 	mime-types@2.1.35
 	mime-types@3.0.2
 	mimic-response@1.0.1
 	mimic-response@3.1.0
-	miniflare@4.20251118.1
 	miniflare@4.20260708.1
 	miniflare@5.20260811.1-alpha
+	miniflare@5.20260930.0-alpha
+	miniflare@5.20261001.0-alpha
 	minimatch@10.2.5
 	minimatch@3.1.5
 	minimatch@5.1.9
@@ -1355,6 +1372,7 @@ NPM_PKGS="
 	minipass-flush@1.0.7
 	minipass-pipeline@1.2.4
 	minipass-sized@2.0.0
+	minisearch@7.2.0
 	minizlib@3.1.0
 	mitt@3.0.1
 	mkdirp@0.5.6
@@ -1431,7 +1449,9 @@ NPM_PKGS="
 	package-manager-detector@1.8.0
 	pacote@21.5.1
 	pagefind@1.5.2
+	pako@0.2.9
 	parse-conflict-json@5.0.1
+	parse-css-color@0.2.1
 	parse-entities@4.0.2
 	parse-latin@7.0.0
 	parse5@7.3.0
@@ -1459,6 +1479,7 @@ NPM_PKGS="
 	pkg-up@3.1.0
 	pkijs@3.4.0
 	playwright@1.60.0
+	playwright-core@1.59.1
 	playwright-core@1.60.0
 	plist@3.1.0
 	possible-typed-array-names@1.1.0
@@ -1467,6 +1488,7 @@ NPM_PKGS="
 	postcss-nested@6.2.0
 	postcss-selector-parser@6.1.5
 	postcss-selector-parser@7.1.6
+	postcss-value-parser@4.2.0
 	postject@1.0.0-alpha.6
 	powershell-utils@0.1.0
 	powershell-utils@0.2.1
@@ -1502,12 +1524,13 @@ NPM_PKGS="
 	radix3@1.1.2
 	range-parser@1.3.0
 	raw-body@3.0.2
-	react@19.2.8
-	react-dom@19.2.8
+	react@19.3.1
+	react-dom@19.3.1
+	react-reconciler@0.34.0
+	react-refresh@0.17.0
 	read-binary-file-arch@1.0.6
 	read-cmd-shim@6.0.0
 	readable-stream@2.3.8
-	readdirp@4.1.2
 	readdirp@5.1.1
 	recma-build-jsx@1.0.0
 	recma-jsx@1.0.1
@@ -1577,10 +1600,12 @@ NPM_PKGS="
 	safe-regex-test@1.1.0
 	safer-buffer@2.1.2
 	sanitize-filename@1.6.4
+	satori@0.63.2
 	satteri@0.10.5
 	satteri@0.9.5
 	sax@1.6.1
 	scheduler@0.27.0
+	scheduler@0.28.0
 	section-matter@1.0.0
 	semver@5.7.2
 	semver@6.3.1
@@ -1597,9 +1622,9 @@ NPM_PKGS="
 	set-function-name@2.0.2
 	set-proto@1.0.0
 	setprototypeof@1.2.0
-	sharp@0.33.5
 	sharp@0.34.5
 	sharp@0.35.2
+	sharp@0.35.4
 	sharp@0.35.5
 	shebang-command@2.0.0
 	shebang-regex@3.0.0
@@ -1611,7 +1636,6 @@ NPM_PKGS="
 	signal-exit@3.0.7
 	signal-exit@4.1.0
 	sigstore@4.1.1
-	simple-swizzle@0.2.4
 	simple-update-notifier@2.0.0
 	sisteransi@1.0.5
 	sitemap@9.0.1
@@ -1657,12 +1681,12 @@ NPM_PKGS="
 	stat-mode@1.0.0
 	statuses@2.0.2
 	stop-iteration-iterator@1.1.0
-	stoppable@1.1.0
 	stream-replace-string@2.0.0
 	string-width@4.2.3
 	string-width@5.1.2
 	string-width@7.2.0
 	string-width@8.2.2
+	string.prototype.codepointat@0.2.1
 	string.prototype.matchall@4.0.12
 	string.prototype.trim@1.2.11
 	string.prototype.trimend@1.0.10
@@ -1694,6 +1718,7 @@ NPM_PKGS="
 	terracotta@1.3.1
 	terser@5.50.0
 	third-party-web@0.29.2
+	three@0.180.0
 	tiny-async-pool@1.3.0
 	tiny-inflate@1.0.3
 	tiny-typed-emitter@2.1.0
@@ -1737,9 +1762,9 @@ NPM_PKGS="
 	unbox-primitive@1.1.0
 	uncrypto@0.1.3
 	undici@6.29.1
-	undici@7.14.0
 	undici@7.28.0
 	undici@7.29.0
+	undici@7.29.1
 	undici@7.30.1
 	undici@8.12.3
 	undici-types@7.16.0
@@ -1748,6 +1773,7 @@ NPM_PKGS="
 	unicode-match-property-ecmascript@2.0.0
 	unicode-match-property-value-ecmascript@2.2.1
 	unicode-property-aliases-ecmascript@2.2.0
+	unicode-trie@2.0.0
 	unified@11.0.5
 	unifont@0.7.5
 	unique-string@2.0.0
@@ -1772,6 +1798,7 @@ NPM_PKGS="
 	unzipper@0.12.5
 	upath@1.2.0
 	update-browserslist-db@1.3.1
+	uqr@0.1.3
 	url-extras@0.1.0
 	utf8-byte-length@1.0.5
 	util-deprecate@1.0.2
@@ -1781,6 +1808,7 @@ NPM_PKGS="
 	vfile@6.0.3
 	vfile-location@5.0.3
 	vfile-message@4.0.3
+	vite@6.4.5
 	vite@7.3.7
 	vite@8.2.4
 	vite@8.3.4
@@ -1813,10 +1841,10 @@ NPM_PKGS="
 	vscode-uri@3.1.0
 	vscode-uri@3.2.0
 	walk-up-path@4.0.0
+	wawoff2@2.0.1
 	web-features@3.37.0
 	web-namespaces@2.0.1
 	web-streams-polyfill@3.3.3
-	web-streams-polyfill@4.0.0-beta.3
 	web-tree-sitter@0.25.10
 	webcrypto-core@1.9.2
 	webdriver-bidi-protocol@0.4.2
@@ -1847,19 +1875,18 @@ NPM_PKGS="
 	workbox-streams@7.4.1
 	workbox-sw@7.4.1
 	workbox-window@7.4.1
-	workerd@1.20251118.0
 	workerd@1.20260708.1
 	workerd@1.20260811.1
+	workerd@1.20260930.2
+	workerd@1.20261001.1
 	wrangler@4.110.0
 	wrangler@4.123.0
-	wrangler@4.50.0
 	wrap-ansi@7.0.0
 	wrap-ansi@8.1.0
 	wrap-ansi@9.0.2
 	wrappy@1.0.2
 	write-file-atomic@7.0.1
 	ws@7.5.13
-	ws@8.18.0
 	ws@8.21.0
 	ws@8.21.3
 	ws@8.22.0
@@ -1883,10 +1910,11 @@ NPM_PKGS="
 	yargs-parser@22.0.0
 	yocto-queue@0.1.0
 	yocto-queue@1.2.2
+	yoga-layout@3.2.1
 	youch@4.1.0-beta.10
 	youch-core@0.3.3
-	zod@3.22.3
 	zod@3.25.76
+	zod@4.4.3
 	zod@4.6.7
 	zod-to-json-schema@3.25.2
 	zwitch@2.0.4
@@ -1917,151 +1945,140 @@ NPM_STUB_PKGS="
 	@bruits/satteri-win32-arm64-msvc@0.9.5
 	@bruits/satteri-win32-x64-msvc@0.10.5
 	@bruits/satteri-win32-x64-msvc@0.9.5
-	@cloudflare/workerd-darwin-64@1.20251118.0
 	@cloudflare/workerd-darwin-64@1.20260708.1
 	@cloudflare/workerd-darwin-64@1.20260811.1
-	@cloudflare/workerd-darwin-arm64@1.20251118.0
+	@cloudflare/workerd-darwin-64@1.20260930.2
+	@cloudflare/workerd-darwin-64@1.20261001.1
 	@cloudflare/workerd-darwin-arm64@1.20260708.1
 	@cloudflare/workerd-darwin-arm64@1.20260811.1
-	@cloudflare/workerd-windows-64@1.20251118.0
+	@cloudflare/workerd-darwin-arm64@1.20260930.2
+	@cloudflare/workerd-darwin-arm64@1.20261001.1
 	@cloudflare/workerd-windows-64@1.20260708.1
 	@cloudflare/workerd-windows-64@1.20260811.1
+	@cloudflare/workerd-windows-64@1.20260930.2
+	@cloudflare/workerd-windows-64@1.20261001.1
 	@esbuild/aix-ppc64@0.25.12
-	@esbuild/aix-ppc64@0.25.4
 	@esbuild/aix-ppc64@0.28.1
 	@esbuild/android-arm64@0.25.12
-	@esbuild/android-arm64@0.25.4
 	@esbuild/android-arm64@0.28.1
 	@esbuild/android-arm@0.25.12
-	@esbuild/android-arm@0.25.4
 	@esbuild/android-arm@0.28.1
 	@esbuild/android-x64@0.25.12
-	@esbuild/android-x64@0.25.4
 	@esbuild/android-x64@0.28.1
 	@esbuild/darwin-arm64@0.25.12
-	@esbuild/darwin-arm64@0.25.4
 	@esbuild/darwin-arm64@0.28.1
 	@esbuild/darwin-x64@0.25.12
-	@esbuild/darwin-x64@0.25.4
 	@esbuild/darwin-x64@0.28.1
 	@esbuild/freebsd-arm64@0.25.12
-	@esbuild/freebsd-arm64@0.25.4
 	@esbuild/freebsd-arm64@0.28.1
 	@esbuild/freebsd-x64@0.25.12
-	@esbuild/freebsd-x64@0.25.4
 	@esbuild/freebsd-x64@0.28.1
 	@esbuild/linux-arm@0.25.12
-	@esbuild/linux-arm@0.25.4
 	@esbuild/linux-arm@0.28.1
 	@esbuild/linux-ia32@0.25.12
-	@esbuild/linux-ia32@0.25.4
 	@esbuild/linux-ia32@0.28.1
 	@esbuild/linux-loong64@0.25.12
-	@esbuild/linux-loong64@0.25.4
 	@esbuild/linux-loong64@0.28.1
 	@esbuild/linux-mips64el@0.25.12
-	@esbuild/linux-mips64el@0.25.4
 	@esbuild/linux-mips64el@0.28.1
 	@esbuild/linux-ppc64@0.25.12
-	@esbuild/linux-ppc64@0.25.4
 	@esbuild/linux-ppc64@0.28.1
 	@esbuild/linux-riscv64@0.25.12
-	@esbuild/linux-riscv64@0.25.4
 	@esbuild/linux-riscv64@0.28.1
 	@esbuild/linux-s390x@0.25.12
-	@esbuild/linux-s390x@0.25.4
 	@esbuild/linux-s390x@0.28.1
 	@esbuild/netbsd-arm64@0.25.12
-	@esbuild/netbsd-arm64@0.25.4
 	@esbuild/netbsd-arm64@0.28.1
 	@esbuild/netbsd-x64@0.25.12
-	@esbuild/netbsd-x64@0.25.4
 	@esbuild/netbsd-x64@0.28.1
 	@esbuild/openbsd-arm64@0.25.12
-	@esbuild/openbsd-arm64@0.25.4
 	@esbuild/openbsd-arm64@0.28.1
 	@esbuild/openbsd-x64@0.25.12
-	@esbuild/openbsd-x64@0.25.4
 	@esbuild/openbsd-x64@0.28.1
 	@esbuild/openharmony-arm64@0.25.12
 	@esbuild/openharmony-arm64@0.28.1
 	@esbuild/sunos-x64@0.25.12
-	@esbuild/sunos-x64@0.25.4
 	@esbuild/sunos-x64@0.28.1
 	@esbuild/win32-arm64@0.25.12
-	@esbuild/win32-arm64@0.25.4
 	@esbuild/win32-arm64@0.28.1
 	@esbuild/win32-ia32@0.25.12
-	@esbuild/win32-ia32@0.25.4
 	@esbuild/win32-ia32@0.28.1
 	@esbuild/win32-x64@0.25.12
-	@esbuild/win32-x64@0.25.4
 	@esbuild/win32-x64@0.28.1
 	@ff-labs/fff-bin-android-arm64@0.10.5
 	@ff-labs/fff-bin-darwin-arm64@0.10.5
 	@ff-labs/fff-bin-darwin-x64@0.10.5
 	@ff-labs/fff-bin-win32-arm64@0.10.5
 	@ff-labs/fff-bin-win32-x64@0.10.5
-	@img/sharp-darwin-arm64@0.33.5
+	@hona/strobe-darwin-arm64@0.14.0
+	@hona/strobe-darwin-x64@0.14.0
+	@hona/strobe-win32-x64@0.14.0
 	@img/sharp-darwin-arm64@0.34.5
 	@img/sharp-darwin-arm64@0.35.2
+	@img/sharp-darwin-arm64@0.35.4
 	@img/sharp-darwin-arm64@0.35.5
-	@img/sharp-darwin-x64@0.33.5
 	@img/sharp-darwin-x64@0.34.5
 	@img/sharp-darwin-x64@0.35.2
+	@img/sharp-darwin-x64@0.35.4
 	@img/sharp-darwin-x64@0.35.5
 	@img/sharp-freebsd-wasm32@0.35.2
+	@img/sharp-freebsd-wasm32@0.35.4
 	@img/sharp-freebsd-wasm32@0.35.5
-	@img/sharp-libvips-darwin-arm64@1.0.4
 	@img/sharp-libvips-darwin-arm64@1.2.4
 	@img/sharp-libvips-darwin-arm64@1.3.1
+	@img/sharp-libvips-darwin-arm64@1.3.3
 	@img/sharp-libvips-darwin-arm64@1.3.4
-	@img/sharp-libvips-darwin-x64@1.0.4
 	@img/sharp-libvips-darwin-x64@1.2.4
 	@img/sharp-libvips-darwin-x64@1.3.1
+	@img/sharp-libvips-darwin-x64@1.3.3
 	@img/sharp-libvips-darwin-x64@1.3.4
-	@img/sharp-libvips-linux-arm@1.0.5
 	@img/sharp-libvips-linux-arm@1.2.4
 	@img/sharp-libvips-linux-arm@1.3.1
+	@img/sharp-libvips-linux-arm@1.3.3
 	@img/sharp-libvips-linux-arm@1.3.4
 	@img/sharp-libvips-linux-ppc64@1.2.4
 	@img/sharp-libvips-linux-ppc64@1.3.1
+	@img/sharp-libvips-linux-ppc64@1.3.3
 	@img/sharp-libvips-linux-ppc64@1.3.4
 	@img/sharp-libvips-linux-riscv64@1.2.4
 	@img/sharp-libvips-linux-riscv64@1.3.1
+	@img/sharp-libvips-linux-riscv64@1.3.3
 	@img/sharp-libvips-linux-riscv64@1.3.4
-	@img/sharp-libvips-linux-s390x@1.0.4
 	@img/sharp-libvips-linux-s390x@1.2.4
 	@img/sharp-libvips-linux-s390x@1.3.1
+	@img/sharp-libvips-linux-s390x@1.3.3
 	@img/sharp-libvips-linux-s390x@1.3.4
-	@img/sharp-linux-arm@0.33.5
 	@img/sharp-linux-arm@0.34.5
 	@img/sharp-linux-arm@0.35.2
+	@img/sharp-linux-arm@0.35.4
 	@img/sharp-linux-arm@0.35.5
 	@img/sharp-linux-ppc64@0.34.5
 	@img/sharp-linux-ppc64@0.35.2
+	@img/sharp-linux-ppc64@0.35.4
 	@img/sharp-linux-ppc64@0.35.5
 	@img/sharp-linux-riscv64@0.34.5
 	@img/sharp-linux-riscv64@0.35.2
+	@img/sharp-linux-riscv64@0.35.4
 	@img/sharp-linux-riscv64@0.35.5
-	@img/sharp-linux-s390x@0.33.5
 	@img/sharp-linux-s390x@0.34.5
 	@img/sharp-linux-s390x@0.35.2
+	@img/sharp-linux-s390x@0.35.4
 	@img/sharp-linux-s390x@0.35.5
-	@img/sharp-wasm32@0.33.5
 	@img/sharp-wasm32@0.34.5
 	@img/sharp-webcontainers-wasm32@0.35.2
+	@img/sharp-webcontainers-wasm32@0.35.4
 	@img/sharp-webcontainers-wasm32@0.35.5
 	@img/sharp-win32-arm64@0.34.5
 	@img/sharp-win32-arm64@0.35.2
+	@img/sharp-win32-arm64@0.35.4
 	@img/sharp-win32-arm64@0.35.5
-	@img/sharp-win32-ia32@0.33.5
 	@img/sharp-win32-ia32@0.34.5
 	@img/sharp-win32-ia32@0.35.2
+	@img/sharp-win32-ia32@0.35.4
 	@img/sharp-win32-ia32@0.35.5
-	@img/sharp-win32-x64@0.33.5
 	@img/sharp-win32-x64@0.34.5
 	@img/sharp-win32-x64@0.35.2
+	@img/sharp-win32-x64@0.35.4
 	@img/sharp-win32-x64@0.35.5
 	@lydell/node-pty-darwin-arm64@1.2.0-beta.12
 	@lydell/node-pty-darwin-x64@1.2.0-beta.12
@@ -2071,10 +2088,10 @@ NPM_STUB_PKGS="
 	@opencode/pty-darwin-x64@0.4.0
 	@opencode/pty-win32-arm64@0.4.0
 	@opencode/pty-win32-x64@0.4.0
-	@opentui/core-darwin-arm64@0.8.0
-	@opentui/core-darwin-x64@0.8.0
-	@opentui/core-win32-arm64@0.8.0
-	@opentui/core-win32-x64@0.8.0
+	@opentui/core-darwin-arm64@0.8.1
+	@opentui/core-darwin-x64@0.8.1
+	@opentui/core-win32-arm64@0.8.1
+	@opentui/core-win32-x64@0.8.1
 	@oxc-parser/binding-android-arm-eabi@0.141.0
 	@oxc-parser/binding-android-arm64@0.141.0
 	@oxc-parser/binding-darwin-arm64@0.141.0
