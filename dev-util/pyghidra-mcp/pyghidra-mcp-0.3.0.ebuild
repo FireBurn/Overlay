@@ -18,7 +18,6 @@ SLOT="0"
 KEYWORDS="~amd64"
 RESTRICT="test"
 
-# upstream pins mcp<2; the mcp2-compat patch ports it to the mcp 2 API
 RDEPEND="
 	>=dev-python/click-8.2.1[${PYTHON_USEDEP}]
 	>=dev-python/click-option-group-0.5.9[${PYTHON_USEDEP}]
@@ -33,15 +32,14 @@ BDEPEND="
 
 PATCHES=(
 	"${FILESDIR}/${P}-optional-chromadb.patch"
-	"${FILESDIR}/${P}-mcp2-compat.patch"
 )
 
 src_prepare() {
 	default
 
 	# chromadb is optional (see the patch), and only the mcp server API is
-	# used, not the [cli] extra; the mcp pin follows the mcp2-compat patch
+	# used, not the [cli] extra; upstream supports both mcp 1 and 2
 	sed -i -e '/chromadb/d' \
-		-e 's/mcp\[cli\]>=1\.26\.0,<2/mcp>=2.0.0,<3/' \
+		-e 's/mcp\[cli\]>=1\.26\.0,<3/mcp>=2.0.0,<3/' \
 		pyproject.toml || die
 }
