@@ -22,6 +22,8 @@ esac
 if [[ -z ${_FRIDA_CORE_ECLASS} ]]; then
 _FRIDA_CORE_ECLASS=1
 
+inherit flag-o-matic toolchain-funcs
+
 # @ECLASS_VARIABLE: FRIDA_CORE_PV
 # @DESCRIPTION:
 # The frida-core release that the pins below belong to.
@@ -63,6 +65,7 @@ FRIDA_CORE_PATCHES=(
 	"${FRIDA_CORE_FILESDIR}"/gum-pthread-from-ptr-integer-pthread_t.patch
 	"${FRIDA_CORE_FILESDIR}"/gum-module-handle-llvm-libc-uses-dlopen.patch
 	"${FRIDA_CORE_FILESDIR}"/libc-shim-stdio-streams-not-const.patch
+	"${FRIDA_CORE_FILESDIR}"/libc-shim-keep-out-of-gcc-lto.patch
 )
 
 # @ECLASS_VARIABLE: FRIDA_CORE_DEPEND
@@ -142,12 +145,16 @@ frida-core_patch() {
 
 # @FUNCTION: frida-core_setup_env
 # @DESCRIPTION:
-# Environment for the build. The devkit is an ar archive of every object in
-# the tree, which cannot hold LTO bitcode, and LTO_SELF keeps a site-wide
-# -flto out of CFLAGS.
+# Environment for the build. The devkit is made by objcopy and ar over every
+# object in the tree, and neither reads LTO bitcode, so objects carry native
+# code next to the bitcode; the final link still runs LTO.
 frida-core_setup_env() {
-	export LTO_SELF=1
-	filter-lto
+	# meson.eclass tells LTO from a plain object by its bitcode, which a fat
+	# object is not, so this has to be asked before the flag is added.
+	_FRIDA_CORE_LTO=
+	tc-is-lto && _FRIDA_CORE_LTO=1
+
+	append-flags -ffat-lto-objects
 
 	# Assembly in the bundled libraries carries no .note.GNU-stack, which makes
 	# the linker ask for an executable stack and glibc refuse to load the module.
@@ -171,7 +178,6 @@ frida-core_setup_env() {
 frida-core_emesonargs() {
 	local p=$1
 	FRIDA_CORE_EMESONARGS=(
-		-Db_lto=false
 		-Ddefault_library=static
 		-D${p}fruity_backend=disabled
 		-D${p}droidy_backend=enabled
@@ -193,6 +199,16 @@ frida-core_emesonargs() {
 		-Dfrida-gum:tests=disabled
 		-Dglib:introspection=disabled
 	)
+
+	if [[ -n ${_FRIDA_CORE_LTO} ]]; then
+		local v=$(get-flag flto)
+		FRIDA_CORE_EMESONARGS+=( -Db_lto=true )
+		case ${v} in
+			thin) FRIDA_CORE_EMESONARGS+=( -Db_lto_mode=thin ) ;;
+			''|*[!0-9]*) ;;
+			*) FRIDA_CORE_EMESONARGS+=( -Db_lto_threads=${v} ) ;;
+		esac
+	fi
 }
 
 fi
