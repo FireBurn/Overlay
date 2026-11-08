@@ -1,0 +1,17 @@
+Subject: [PATCH] ggml-rpc: correct stale GGML_OP_COUNT static assert
+
+The pinned ggml (135ce1e) defines 101 ops in the ggml_op enum, but
+ggml-rpc.h still asserts GGML_OP_COUNT == 105, a stale value left over
+from an earlier sync. Correct the guard so the RPC backend compiles.
+
+--- a/ggml/include/ggml-rpc.h
++++ b/ggml/include/ggml-rpc.h
+@@ -11,7 +11,7 @@
+ #define RPC_PROTO_PATCH_VERSION 3
+ 
+ #ifdef  __cplusplus
+-static_assert(GGML_OP_COUNT == 105, "GGML_OP_COUNT has changed - update RPC_PROTO_PATCH_VERSION");
++static_assert(GGML_OP_COUNT == 101, "GGML_OP_COUNT has changed - update RPC_PROTO_PATCH_VERSION");
+ #endif
+ 
+ #define GGML_RPC_MAX_SERVERS       16
