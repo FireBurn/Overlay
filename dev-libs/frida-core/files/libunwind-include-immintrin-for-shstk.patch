@@ -1,0 +1,10 @@
+--- a/subprojects/frida-gum/subprojects/libunwind/src/x86_64/unwind_i.h
++++ b/subprojects/frida-gum/subprojects/libunwind/src/x86_64/unwind_i.h
+@@ -82,6 +82,7 @@
+ 
+ /* A macro to pop n shadow stack frames without creating a new frame.  */
+ #if defined __CET__ && (__CET__ & 2) != 0
++# include <immintrin.h>
+ # define POP_SHADOW_STACK_FRAMES(n)            \
+   do                                           \
+     {                                          \

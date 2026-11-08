@@ -1,0 +1,15 @@
+--- a/lib/payload/libc-shim.c
++++ b/lib/payload/libc-shim.c
+@@ -274,9 +274,9 @@
+ #else
+ static FridaFileHandle frida_stdio[3];
+ 
+-G_GNUC_INTERNAL FILE * const stdin = (FILE *) &frida_stdio[0];
+-G_GNUC_INTERNAL FILE * const stdout = (FILE *) &frida_stdio[1];
+-G_GNUC_INTERNAL FILE * const stderr = (FILE *) &frida_stdio[2];
++G_GNUC_INTERNAL FILE * stdin = (FILE *) &frida_stdio[0];
++G_GNUC_INTERNAL FILE * stdout = (FILE *) &frida_stdio[1];
++G_GNUC_INTERNAL FILE * stderr = (FILE *) &frida_stdio[2];
+ #endif
+ 
+ static gboolean frida_libc_shim_initialized = FALSE;

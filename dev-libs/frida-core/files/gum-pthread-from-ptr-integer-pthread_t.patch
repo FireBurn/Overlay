@@ -1,0 +1,11 @@
+--- a/subprojects/frida-gum/gum/backend-linux/gumthreadregistry-linux.c
++++ b/subprojects/frida-gum/gum/backend-linux/gumthreadregistry-linux.c
+@@ -11,7 +11,7 @@
+ #include "gum/gumlinux.h"
+ 
+ #ifdef HAVE_MUSL
+-# define GUM_PTHREAD_FROM_PTR(p) (p)
++# define GUM_PTHREAD_FROM_PTR(p) ((pthread_t) GPOINTER_TO_SIZE (p))
+ #else
+ # define GUM_PTHREAD_FROM_PTR(p) GPOINTER_TO_SIZE (p)
+ #endif
