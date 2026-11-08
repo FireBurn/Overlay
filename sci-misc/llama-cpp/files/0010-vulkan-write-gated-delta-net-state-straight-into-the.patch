@@ -13,10 +13,10 @@ Assisted-by: Claude Code (Claude Opus 5.5)
  4 files changed, 111 insertions(+), 9 deletions(-)
 
 diff --git a/ggml/src/ggml-vulkan/ggml-vulkan-push-constants.h b/ggml/src/ggml-vulkan/ggml-vulkan-push-constants.h
-index f066d1064..48c060e23 100644
+index 219c477..ebe0672 100644
 --- a/ggml/src/ggml-vulkan/ggml-vulkan-push-constants.h
 +++ b/ggml/src/ggml-vulkan/ggml-vulkan-push-constants.h
-@@ -699,6 +699,7 @@ struct vk_op_gated_delta_net_push_constants {
+@@ -705,6 +705,7 @@ struct vk_op_gated_delta_net_push_constants {
      uint32_t neq1, rq3;
      float scale;
      uint32_t K;
@@ -25,11 +25,10 @@ index f066d1064..48c060e23 100644
  
  struct vk_op_ssm_scan_push_constants {
 diff --git a/ggml/src/ggml-vulkan/ggml-vulkan-types.h b/ggml/src/ggml-vulkan/ggml-vulkan-types.h
-index 252359bf8..21cdd044e 100644
+index d3b1a8d..a721fe8 100644
 --- a/ggml/src/ggml-vulkan/ggml-vulkan-types.h
 +++ b/ggml/src/ggml-vulkan/ggml-vulkan-types.h
-@@ -62,7 +62,8 @@ typedef struct VkPhysicalDeviceCooperativeMatrixDecodeVectorFeaturesNV {
- #include <limits>
+@@ -62,6 +62,7 @@ typedef struct VkPhysicalDeviceCooperativeMatrixDecodeVectorFeaturesNV {
  #include <map>
  #include <set>
  #include <unordered_map>
@@ -37,7 +36,7 @@ index 252359bf8..21cdd044e 100644
  #include <shared_mutex>
  #include <mutex>
  #include <future>
-@@ -1276,6 +1277,9 @@ struct ggml_backend_vk_context {
+@@ -1279,6 +1280,9 @@ struct ggml_backend_vk_context {
      // number of additional consecutive nodes that are being fused with the
      // node currently being processed
      int num_additional_fused_ops {};
@@ -48,10 +47,10 @@ index 252359bf8..21cdd044e 100644
      // Bit 'i' means nodes[start_of_fusion + i] writes to memory.
      // If there's no fusion, bit 0 is still set.
 diff --git a/ggml/src/ggml-vulkan/ggml-vulkan.cpp b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
-index 11485b4e9..ae295b3de 100644
+index 02c4d4e..3f986bc 100644
 --- a/ggml/src/ggml-vulkan/ggml-vulkan.cpp
 +++ b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
-@@ -3720,7 +3720,7 @@ void ggml_vk_load_shaders(vk_device& device, vk_pipeline requested) {
+@@ -3754,7 +3754,7 @@ void ggml_vk_load_shaders(vk_device& device, vk_pipeline requested) {
  
              for (uint32_t kda = 0; kda < 2; kda++) {
                  ggml_vk_create_pipeline(device, device->pipeline_gated_delta_net[si][kda],
@@ -60,8 +59,8 @@ index 11485b4e9..ae295b3de 100644
                      wg_denoms, {S_V, kda, gdn_subgroup_size, lanes_per_column}, 1, true, use_subgroup_ops, gdn_subgroup_size);
              }
          }
-@@ -10176,7 +10176,8 @@ void ggml_vk_lightning_indexer(ggml_backend_vk_context * ctx, vk_context& subctx
-         pc, {dispatch_x, dispatch_y, 1});
+@@ -10420,7 +10420,8 @@ void ggml_vk_lightning_indexer(ggml_backend_vk_context * ctx, vk_context& subctx
+         pc, {n_tiles_kv, n_tiles_t, n_streams});
  }
  
 -void ggml_vk_gated_delta_net(ggml_backend_vk_context * ctx, vk_context& subctx, ggml_tensor * dst) {
@@ -70,7 +69,7 @@ index 11485b4e9..ae295b3de 100644
      const ggml_tensor * src_q     = dst->src[0];
      const ggml_tensor * src_v     = dst->src[2];
      const ggml_tensor * src_beta  = dst->src[4];
-@@ -10191,7 +10192,8 @@ void ggml_vk_gated_delta_net(ggml_backend_vk_context * ctx, vk_context& subctx,
+@@ -10435,7 +10436,8 @@ void ggml_vk_gated_delta_net(ggml_backend_vk_context * ctx, vk_context& subctx,
      // K (snapshot slot count) is an op param; state holds s0 only [S_v, S_v, H, n_seqs].
      const uint32_t K = (uint32_t)ggml_get_op_params_i32(dst, 0);
  
@@ -80,7 +79,7 @@ index 11485b4e9..ae295b3de 100644
  
      vk_pipeline pipeline = ggml_vk_op_get_pipeline(ctx, dst->src[0], dst->src[1], dst->src[2], dst, dst->op);
      GGML_ASSERT(pipeline != nullptr);
-@@ -10199,6 +10201,12 @@ void ggml_vk_gated_delta_net(ggml_backend_vk_context * ctx, vk_context& subctx,
+@@ -10443,6 +10445,12 @@ void ggml_vk_gated_delta_net(ggml_backend_vk_context * ctx, vk_context& subctx,
      ggml_pipeline_request_descriptor_sets(ctx, pipeline, 1);
  
      vk_subbuffer dst_buf = ggml_vk_tensor_subbuffer(ctx, dst);
@@ -93,7 +92,7 @@ index 11485b4e9..ae295b3de 100644
      vk_subbuffer src_buf[6] = {};
      for (int i = 0; i < 6; i++) {
          src_buf[i] = ggml_vk_tensor_subbuffer(ctx, dst->src[i]);
-@@ -10225,11 +10233,12 @@ void ggml_vk_gated_delta_net(ggml_backend_vk_context * ctx, vk_context& subctx,
+@@ -10469,11 +10477,12 @@ void ggml_vk_gated_delta_net(ggml_backend_vk_context * ctx, vk_context& subctx,
          sb1, sb2, sb3,
          neq1, rq3,
          scale,
@@ -108,7 +107,7 @@ index 11485b4e9..ae295b3de 100644
          pc, { H, n_seqs, S_v });
  }
  
-@@ -12156,6 +12165,9 @@ bool ggml_vk_build_graph(ggml_backend_vk_context * ctx, ggml_cgraph * cgraph, in
+@@ -12415,6 +12424,9 @@ bool ggml_vk_build_graph(ggml_backend_vk_context * ctx, ggml_cgraph * cgraph, in
      if ((node->flags & GGML_TENSOR_FLAG_COMPUTE) == 0) {
          return false;
      }
@@ -118,7 +117,7 @@ index 11485b4e9..ae295b3de 100644
  
      VK_LOG_DEBUG("ggml_vk_build_graph(" << node << ", " << ggml_op_name(node->op) << ")");
      ctx->semaphore_idx = 0;
-@@ -12665,7 +12677,7 @@ bool ggml_vk_build_graph(ggml_backend_vk_context * ctx, ggml_cgraph * cgraph, in
+@@ -12929,7 +12941,7 @@ bool ggml_vk_build_graph(ggml_backend_vk_context * ctx, ggml_cgraph * cgraph, in
          break;
  
      case GGML_OP_GATED_DELTA_NET:
@@ -127,7 +126,7 @@ index 11485b4e9..ae295b3de 100644
  
          break;
  
-@@ -13951,6 +13963,79 @@ bool ggml_vk_can_fuse_rms_norm_set_rows(ggml_backend_vk_context * ctx, const str
+@@ -14231,6 +14243,79 @@ bool ggml_vk_can_fuse_rms_norm_set_rows(ggml_backend_vk_context * ctx, const str
      return true;
  }
  
@@ -207,7 +206,7 @@ index 11485b4e9..ae295b3de 100644
  bool ggml_vk_can_fuse_snake(ggml_backend_vk_context * ctx, const struct ggml_cgraph * cgraph, int node_idx) {
      GGML_UNUSED(ctx);
      if (!ggml_can_fuse(cgraph, node_idx, snake_pattern)) {
-@@ -14146,6 +14231,7 @@ static ggml_status ggml_backend_vk_graph_compute(ggml_backend_t backend, ggml_cg
+@@ -14426,6 +14511,7 @@ static ggml_status ggml_backend_vk_graph_compute(ggml_backend_t backend, ggml_cg
      ctx->prealloc_size_add_rms_partials_offset = 0;
      ctx->do_add_rms_partials = false;
      ctx->do_add_rms_partials_offset_calculation = false;
@@ -215,8 +214,8 @@ index 11485b4e9..ae295b3de 100644
  
      int last_node = cgraph->n_nodes - 1;
  
-@@ -14289,6 +14375,14 @@ static ggml_status ggml_backend_vk_graph_compute(ggml_backend_t backend, ggml_cg
-         ctx->fused_topk_qsa = false;
+@@ -14572,6 +14658,14 @@ static ggml_status ggml_backend_vk_graph_compute(ggml_backend_t backend, ggml_cg
+         ctx->fused_hc_post_gate = false;
          ctx->fused_rms_norm_mode = RMS_NORM_COUNT;
          const char *fusion_string {};
 +        static const bool gdn_state_fusion_disabled = getenv("GGML_VK_DISABLE_GDN_STATE_FUSION") != nullptr;
@@ -231,7 +230,7 @@ index 11485b4e9..ae295b3de 100644
              uint32_t num_adds = ggml_vk_fuse_multi_add(ctx, cgraph, i);
              if (num_adds) {
 diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/gated_delta_net.comp b/ggml/src/ggml-vulkan/vulkan-shaders/gated_delta_net.comp
-index 0e384330b..c9d893680 100644
+index 0e38433..c9d8936 100644
 --- a/ggml/src/ggml-vulkan/vulkan-shaders/gated_delta_net.comp
 +++ b/ggml/src/ggml-vulkan/vulkan-shaders/gated_delta_net.comp
 @@ -32,6 +32,7 @@ layout(push_constant) uniform Parameters {

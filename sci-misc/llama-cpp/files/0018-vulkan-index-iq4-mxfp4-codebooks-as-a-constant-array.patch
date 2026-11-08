@@ -14,10 +14,10 @@ Assisted-by: Claude Code (Claude Opus 5.5)
  3 files changed, 42 insertions(+), 25 deletions(-)
 
 diff --git a/ggml/src/ggml-vulkan/ggml-vulkan.cpp b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
-index 438116249..8a89d320d 100644
+index dff6418..f2a1082 100644
 --- a/ggml/src/ggml-vulkan/ggml-vulkan.cpp
 +++ b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
-@@ -1809,9 +1809,13 @@ void ggml_vk_load_shaders(vk_device& device, vk_pipeline requested) {
+@@ -1816,9 +1816,13 @@ void ggml_vk_load_shaders(vk_device& device, vk_pipeline requested) {
              return cm1_sg * (bm / std::min(cm1_sg, bm)) * (bn / 32);
          };
  
@@ -35,7 +35,7 @@ index 438116249..8a89d320d 100644
          l_warptile_mmq_cm1_int_k = { cm1_bs( 64, 128),  64, 128, 32, std::min(cm1_sg,  64u), 32, 2, itm, itn, itk, cm1_sg, (uint32_t)device->architecture };
          m_warptile_mmq_cm1_int_k = { cm1_bs( 64,  64),  64,  64, 32, std::min(cm1_sg,  64u), 32, 2, itm, itn, itk, cm1_sg, (uint32_t)device->architecture };
 diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/mul_mmq_cm1.comp b/ggml/src/ggml-vulkan/vulkan-shaders/mul_mmq_cm1.comp
-index 9f0596ce7..562989af3 100644
+index 66a6f9e..49a2d16 100644
 --- a/ggml/src/ggml-vulkan/vulkan-shaders/mul_mmq_cm1.comp
 +++ b/ggml/src/ggml-vulkan/vulkan-shaders/mul_mmq_cm1.comp
 @@ -84,6 +84,7 @@ layout (constant_id = 8) const uint TN = 16;
@@ -46,9 +46,9 @@ index 9f0596ce7..562989af3 100644
  #define VK_ARCH_AMD_RDNA4 5u
  
  #define BK 32
-@@ -157,15 +158,19 @@ ACC_TYPE cm1_accumulate(ACC_TYPE prev, int acc_e, float scale_a, float nbias_a,
- 
- void main() {
+@@ -166,15 +167,19 @@ void main() {
+     const uint ic = 0;
+ #endif
  #if defined(DATA_A_IQ4_NL) || defined(DATA_A_IQ4_XS)
 -    if (gl_LocalInvocationIndex < 16u) {
 -        cm1_kvalues[gl_LocalInvocationIndex] = kvalues_iq4nl_const[gl_LocalInvocationIndex];
@@ -73,7 +73,7 @@ index 9f0596ce7..562989af3 100644
      if (gl_LocalInvocationIndex < 16u) {
          cm1_kvalues[gl_LocalInvocationIndex] = kvalues_mxfp4_const[gl_LocalInvocationIndex];
 diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/mul_mmq_cm1_funcs.glsl b/ggml/src/ggml-vulkan/vulkan-shaders/mul_mmq_cm1_funcs.glsl
-index 1760c138e..0d92b98df 100644
+index 50c61f6..590b03c 100644
 --- a/ggml/src/ggml-vulkan/vulkan-shaders/mul_mmq_cm1_funcs.glsl
 +++ b/ggml/src/ggml-vulkan/vulkan-shaders/mul_mmq_cm1_funcs.glsl
 @@ -1,3 +1,11 @@
@@ -88,7 +88,7 @@ index 1760c138e..0d92b98df 100644
  // Per-quant-type data structures and functions for the cm1 int8 coopmat path.
  // Each quant type defines:
  //   struct block_a_prefetch  — register data for one A-block per thread
-@@ -162,11 +170,11 @@ void block_a_to_shmem(block_a_prefetch blk, uint buf_ib, uint ks, uint loadr) {
+@@ -162,11 +170,11 @@ void block_a_to_shmem(block_a_prefetch blk, uint buf_ib, uint ks, uint loadr, bo
      const u8vec4 lo_idx = unpack8(blk.qs & 0x0F0F0F0F);
      const u8vec4 hi_idx = unpack8((blk.qs >> 4) & 0x0F0F0F0F);
      buf_a_qs[buf_ib * QPITCH + ks * (BK / 4) + loadr    ] =
@@ -103,8 +103,8 @@ index 1760c138e..0d92b98df 100644
 +                      KV_LOOKUP(hi_idx.z), KV_LOOKUP(hi_idx.w)));
  
      if (loadr == 0) {
-         buf_a_d[ks * BM + buf_ib] = float(blk.d);
-@@ -198,11 +206,11 @@ void block_a_to_shmem(block_a_prefetch blk, uint buf_ib, uint ks, uint loadr) {
+         buf_a_d[ks * BM + buf_ib] = in_bounds ? float(blk.d) : 0.0f;
+@@ -198,11 +206,11 @@ void block_a_to_shmem(block_a_prefetch blk, uint buf_ib, uint ks, uint loadr, bo
      const u8vec4 lo_idx = unpack8(blk.qs & 0x0F0F0F0F);
      const u8vec4 hi_idx = unpack8((blk.qs >> 4) & 0x0F0F0F0F);
      buf_a_qs[buf_ib * QPITCH + ks * (BK / 4) + loadr    ] =
@@ -119,8 +119,8 @@ index 1760c138e..0d92b98df 100644
 +                      KV_LOOKUP(hi_idx.z), KV_LOOKUP(hi_idx.w)));
  
      if (loadr == 0) {
-         buf_a_d[ks * BM + buf_ib] = blk.d;
-@@ -230,11 +238,11 @@ void block_a_to_shmem(block_a_prefetch blk, uint buf_ib, uint ks, uint loadr) {
+         buf_a_d[ks * BM + buf_ib] = in_bounds ? blk.d : 0.0f;
+@@ -230,11 +238,11 @@ void block_a_to_shmem(block_a_prefetch blk, uint buf_ib, uint ks, uint loadr, bo
      const u8vec4 lo_idx = unpack8(blk.qs & 0x0F0F0F0F);
      const u8vec4 hi_idx = unpack8((blk.qs >> 4) & 0x0F0F0F0F);
      buf_a_qs[buf_ib * QPITCH + ks * (BK / 4) + loadr    ] =
@@ -135,8 +135,8 @@ index 1760c138e..0d92b98df 100644
 +                      KV_LOOKUP(hi_idx.z), KV_LOOKUP(hi_idx.w)));
  
      if (loadr == 0) {
-         buf_a_d[ks * BM + buf_ib] = e8m0_to_fp32(blk.e) * 0.5;
-@@ -492,11 +500,11 @@ void block_a_to_shmem(block_a_prefetch blk, uint buf_ib, uint ks, uint loadr) {
+         buf_a_d[ks * BM + buf_ib] = in_bounds ? e8m0_to_fp32(blk.e) * 0.5 : 0.0f;
+@@ -492,11 +500,11 @@ void block_a_to_shmem(block_a_prefetch blk, uint buf_ib, uint ks, uint loadr, bo
      const uint sub_base = (loadr >> 1) * 4;
      const uint byte_group = loadr & 1u;
      buf_a_qs[buf_ib * QPITCH + ks * (BK / 4) + sub_base + byte_group] =
@@ -151,7 +151,7 @@ index 1760c138e..0d92b98df 100644
 +                      KV_LOOKUP(hi_idx.z), KV_LOOKUP(hi_idx.w)));
  
      if (loadr == 0) {
-         buf_a_d[(ks * KSCALES    ) * BM + buf_ib] = ue4m3_to_fp32(blk.d0) * 0.5;
+         buf_a_d[(ks * KSCALES    ) * BM + buf_ib] = in_bounds ? ue4m3_to_fp32(blk.d0) * 0.5 : 0.0f;
 -- 
 2.55.0
 

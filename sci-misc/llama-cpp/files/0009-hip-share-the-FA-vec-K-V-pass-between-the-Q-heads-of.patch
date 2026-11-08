@@ -11,7 +11,7 @@ Assisted-by: Claude Code (Claude Opus 5.5)
  2 files changed, 105 insertions(+), 39 deletions(-)
 
 diff --git a/ggml/src/ggml-cuda/fattn-vec.cuh b/ggml/src/ggml-cuda/fattn-vec.cuh
-index 57a285565..67e454fd4 100644
+index 9df1512..99b3792 100644
 --- a/ggml/src/ggml-cuda/fattn-vec.cuh
 +++ b/ggml/src/ggml-cuda/fattn-vec.cuh
 @@ -16,7 +16,9 @@ static constexpr __device__ int ggml_cuda_fattn_vec_get_nthreads_device() {
@@ -25,7 +25,7 @@ index 57a285565..67e454fd4 100644
  __launch_bounds__(ggml_cuda_fattn_vec_get_nthreads_device(), 1)
  static __global__ void flash_attn_ext_vec(
          const char * Q_ptr,
-@@ -68,12 +70,15 @@ static __global__ void flash_attn_ext_vec(
+@@ -70,12 +72,15 @@ static __global__ void flash_attn_ext_vec(
  
      //In this kernel Q, K, V are matrices while i, j, k are matrix indices.
  
@@ -42,7 +42,7 @@ index 57a285565..67e454fd4 100644
  #else
      constexpr int nthreads_KQ_q = 4;
  #endif // RDNA
-@@ -101,18 +106,19 @@ static __global__ void flash_attn_ext_vec(
+@@ -103,18 +108,19 @@ static __global__ void flash_attn_ext_vec(
      constexpr dequantize_V_t dequantize_V = get_dequantize_V<type_V, float, V_rows_per_thread>();
  #endif // V_DOT2_F32_F16_AVAILABLE
  
@@ -69,7 +69,7 @@ index 57a285565..67e454fd4 100644
  
      static_assert(D % (2*WARP_SIZE) == 0, "D not divisible by 2*WARP_SIZE == 64.");
      constexpr int nwarps = nthreads / WARP_SIZE;
-@@ -161,7 +167,7 @@ static __global__ void flash_attn_ext_vec(
+@@ -163,7 +169,7 @@ static __global__ void flash_attn_ext_vec(
              float2 * tmp_q_ds  = (float2 *) (tmp_q_i32 + D/sizeof(int));
  
              // Set memory to zero if out of bounds:
@@ -78,7 +78,7 @@ index 57a285565..67e454fd4 100644
  #pragma unroll
                  for (int i0 = 0; i0 < int(D/sizeof(int)); i0 += WARP_SIZE) {
                      const int i = i0 + threadIdx.x;
-@@ -174,7 +180,7 @@ static __global__ void flash_attn_ext_vec(
+@@ -176,7 +182,7 @@ static __global__ void flash_attn_ext_vec(
                      tmp_q_ds[threadIdx.x] = make_float2(0.0f, 0.0f);
                  }
              } else {
@@ -87,7 +87,7 @@ index 57a285565..67e454fd4 100644
                  constexpr int nthreads_quantize = D/sizeof(int) < WARP_SIZE ? D/sizeof(int) : WARP_SIZE;
  #pragma unroll
                  for (int i0 = 0; i0 < int(D/sizeof(int)); i0 += nthreads_quantize) {
-@@ -206,13 +212,13 @@ static __global__ void flash_attn_ext_vec(
+@@ -208,13 +214,13 @@ static __global__ void flash_attn_ext_vec(
          const half2 scale_h2 = make_half2(scale, scale);
  #pragma unroll
          for (int j = 0; j < ncols; ++j) {
@@ -103,7 +103,7 @@ index 57a285565..67e454fd4 100644
                      ggml_cuda_memcpy_1<cpy_nb>(tmp,            &Q_j[i]);
                      ggml_cuda_memcpy_1<cpy_nb>(tmp + cpy_ne/2, &Q_j[i + cpy_ne/2]);
                  }
-@@ -229,11 +235,11 @@ static __global__ void flash_attn_ext_vec(
+@@ -231,11 +237,11 @@ static __global__ void flash_attn_ext_vec(
  #else
  #pragma unroll
          for (int j = 0; j < ncols; ++j) {
@@ -117,7 +117,7 @@ index 57a285565..67e454fd4 100644
                      ggml_cuda_memcpy_1<cpy_nb>(&Q_reg[j][i0/nthreads_KQ],            &Q_j[i]);
                      ggml_cuda_memcpy_1<cpy_nb>(&Q_reg[j][i0/nthreads_KQ + cpy_ne/2], &Q_j[i + cpy_ne/2]);
                  }
-@@ -277,8 +283,8 @@ static __global__ void flash_attn_ext_vec(
+@@ -279,8 +285,8 @@ static __global__ void flash_attn_ext_vec(
                      sum = logit_softcap*tanhf(sum);
                  }
  
@@ -128,7 +128,7 @@ index 57a285565..67e454fd4 100644
                  }
  
                  KQ_max_new[j] = fmaxf(KQ_max_new[j], sum + FATTN_KQ_MAX_OFFSET);
-@@ -377,8 +383,6 @@ static __global__ void flash_attn_ext_vec(
+@@ -381,8 +387,6 @@ static __global__ void flash_attn_ext_vec(
      }
  
      if (sinks && blockIdx.y == 0) {
@@ -137,7 +137,7 @@ index 57a285565..67e454fd4 100644
  #pragma unroll
          for (int j0 = 0; j0 < ncols; j0 += nwarps) {
              const int j = j0 + threadIdx.y;
-@@ -387,6 +391,8 @@ static __global__ void flash_attn_ext_vec(
+@@ -391,6 +395,8 @@ static __global__ void flash_attn_ext_vec(
                  break;
              }
  
@@ -146,7 +146,7 @@ index 57a285565..67e454fd4 100644
              const float kqmax_new_j = fmaxf(sink, KQ_max[j]);
              const float KQ_max_scale = expf(KQ_max[j] - kqmax_new_j);
              KQ_max[j] = kqmax_new_j;
-@@ -431,7 +437,7 @@ static __global__ void flash_attn_ext_vec(
+@@ -435,7 +441,7 @@ static __global__ void flash_attn_ext_vec(
  
  #pragma unroll
      for (int j_VKQ = 0; j_VKQ < ncols; ++j_VKQ) {
@@ -155,7 +155,7 @@ index 57a285565..67e454fd4 100644
              break;
          }
  
-@@ -498,7 +504,7 @@ static __global__ void flash_attn_ext_vec(
+@@ -502,7 +508,7 @@ static __global__ void flash_attn_ext_vec(
                  if (gridDim.y == 1) {
                      dst_val /= KQ_sum[j_VKQ];
                  }
@@ -164,7 +164,7 @@ index 57a285565..67e454fd4 100644
              }
          }
  
-@@ -508,8 +514,8 @@ static __global__ void flash_attn_ext_vec(
+@@ -512,8 +518,8 @@ static __global__ void flash_attn_ext_vec(
  
      }
  
@@ -174,8 +174,8 @@ index 57a285565..67e454fd4 100644
 +        dst_meta[((sequence*int(ne01.z) + ic0 + tid/ncols2)*ne02 + head0 + tid%ncols2)*gridDim.y + blockIdx.y] = make_float2(KQ_max[tid], KQ_sum[tid]);
      }
  #else
-     GGML_UNUSED_VARS(Q_ptr, K_ptr, V_ptr, mask_ptr, sinks_ptr, KV_max_ptr, dst_ptr, dst_meta_ptr, scale,
-@@ -528,17 +534,52 @@ static __global__ void flash_attn_ext_vec(
+     GGML_UNUSED_VARS(Q_ptr, K_ptr, V_ptr, mask_ptr, sinks_ptr, KV_max_ptr, KV_rows_ptr, dst_ptr, dst_meta_ptr, scale,
+@@ -532,17 +538,52 @@ static __global__ void flash_attn_ext_vec(
  #pragma clang diagnostic pop
  #endif // __clang__
  
@@ -231,7 +231,7 @@ index 57a285565..67e454fd4 100644
  }
  
  template <int D, ggml_type type_K, ggml_type type_V>
-@@ -551,24 +592,33 @@ void ggml_cuda_flash_attn_ext_vec_case(ggml_backend_cuda_context & ctx, ggml_ten
+@@ -555,24 +596,33 @@ void ggml_cuda_flash_attn_ext_vec_case(ggml_backend_cuda_context & ctx, ggml_ten
  
      if (Q->ne[1] == 1) {
          constexpr int cols_per_block = 1;
@@ -279,10 +279,10 @@ index 57a285565..67e454fd4 100644
  
  #define DECL_FATTN_VEC_CASE(D, type_K, type_V)                              \
 diff --git a/tests/test-backend-ops.cpp b/tests/test-backend-ops.cpp
-index 32c3f3d2a..7bb3fca89 100644
+index f9cb12c..70a3102 100644
 --- a/tests/test-backend-ops.cpp
 +++ b/tests/test-backend-ops.cpp
-@@ -10970,6 +10970,17 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_eval() {
+@@ -12375,6 +12375,17 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_eval() {
          }
      }
  
@@ -300,7 +300,7 @@ index 32c3f3d2a..7bb3fca89 100644
      // asymmetric head_dim (hsk != hsv) with one or both sides not 64-aligned
      test_cases.emplace_back(new test_flash_attn_ext(72, 64, 4, {1, 1}, 256, 2, true, false, 0, 0, GGML_PREC_F32, GGML_TYPE_F16, GGML_TYPE_F16));
      test_cases.emplace_back(new test_flash_attn_ext(64, 72, 4, {1, 1}, 256, 2, true, false, 0, 0, GGML_PREC_F32, GGML_TYPE_F16, GGML_TYPE_F16));
-@@ -11261,6 +11272,11 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_eval() {
+@@ -12773,6 +12784,11 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_eval() {
  static std::vector<std::unique_ptr<test_case>> make_test_cases_perf() {
      std::vector<std::unique_ptr<test_case>> test_cases;
  
@@ -309,9 +309,9 @@ index 32c3f3d2a..7bb3fca89 100644
 +        test_cases.emplace_back(new test_flash_attn_ext(256, 256, 4, {6, 1}, kv, 1, true, false, 0, 0, GGML_PREC_F32, GGML_TYPE_Q8_0, GGML_TYPE_Q8_0));
 +    }
 +
-     // SWIGLU at a 27B-class FFN width, fused [gate|up] vs split operands
-     // note: same bytes either way, so a backend that indexes them differently shows it here
-     for (ggml_type type : {GGML_TYPE_F16, GGML_TYPE_F32}) {
+     for (float n : {128.0f, 4096.0f, 32768.0f, 1048576.0f}) {
+         test_cases.emplace_back(new test_arange(GGML_TYPE_F32, 0.0f, n, 1.0f));
+     }
 -- 
 2.55.0
 
