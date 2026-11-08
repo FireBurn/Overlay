@@ -5,6 +5,10 @@ Each slot (stable, beta, unstable = Dev channel) holds one ebuild. A milestone
 changes little once it leaves Dev, so an ebuild follows its major version from
 slot to slot; only a new Dev major starts from a copy of the previous Dev ebuild.
 
+The channels only say which major each slot follows. The version is the newest
+release of that major that chromium-tarballs has published a source tarball
+for; a major with no tarball yet leaves its slot as it is.
+
 Prints the file operations in the order they must be applied, or nothing when
 every slot is current. Exits 1 if the plan cannot be made.
 """
@@ -18,8 +22,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 PKG = REPO / "www-client" / "chromium"
 CHANNELS = {"stable": "Stable", "beta": "Beta", "unstable": "Dev"}
-TARBALL = ("https://github.com/chromium-linux-tarballs/chromium-tarballs/releases/"
-           "download/{v}/chromium-{v}-linux.tar.xz")
+RELEASES = "https://api.github.com/repos/chromium-linux-tarballs/chromium-tarballs/releases?per_page=100"
 
 
 def fetch(url, method="GET"):
@@ -32,6 +35,15 @@ def key(v):
     return tuple(int(x) for x in v.split("."))
 
 
+def published():
+    """Versions that have a source tarball, not just a release entry."""
+    out = set()
+    for rel in json.loads(fetch(RELEASES)):
+        if any(a["name"].endswith("-linux.tar.xz") for a in rel["assets"]):
+            out.add(rel["tag_name"])
+    return out
+
+
 def main():
     ebuilds = {}
     for f in PKG.glob("chromium-*.ebuild"):
@@ -40,26 +52,21 @@ def main():
         if m and m.group(1) in CHANNELS:
             ebuilds[m.group(1)] = v
 
+    have = published()
     targets = {}
     for slot, channel in CHANNELS.items():
         data = json.loads(fetch("https://chromiumdash.appspot.com/fetch_releases"
                                 f"?channel={channel}&platform=Linux&num=1"))
-        targets[slot] = data[0]["version"]
+        major = data[0]["version"].split(".")[0]
+        built = [v for v in have if v.split(".")[0] == major]
+        if built:
+            targets[slot] = max(built, key=key)
+        else:
+            targets[slot] = ebuilds[slot]
+            print(f"hold     {slot:8} no source tarball for major {major} yet", file=sys.stderr)
 
     if all(ebuilds.get(s) == v for s, v in targets.items()):
         return 0
-
-    missing = []
-    for slot, v in targets.items():
-        if ebuilds.get(slot) == v:
-            continue
-        try:
-            fetch(TARBALL.format(v=v), "HEAD")
-        except Exception:
-            missing.append(f"{slot} {v}")
-    if missing:
-        print("source tarball not published yet: " + ", ".join(missing))
-        return 1
 
     by_major = {v.split(".")[0]: v for v in ebuilds.values()}
     newest = max(ebuilds.values(), key=key)
