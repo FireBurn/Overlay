@@ -33,7 +33,7 @@
 
 @rocm       github-release ROCm/rocm-systems prefix=therock- pad=3 batch=1
 @libreoffice page https://downloadarchive.documentfoundation.org/libreoffice/old/ href="(\d+\.\d+\.(?:0\.3|[1-9]\d*\.2))/"
-@openjdk     agent one ebuild per major version, each followed by hand; latest GA per major from api.adoptium.net/v3/assets/latest/<major>/hotspot (release_link tag = jdk-<version>), JDK 8 tags as jdk8u<b>-b<bb>
+@openjdk     agent one ebuild per major version, each followed by hand; latest GA per major from api.adoptium.net/v3/assets/latest/<major>/hotspot (release_link tag = jdk-<version>), JDK 8 tags as jdk8u<b>-b<bb>; ebuilds fetch the +N tag (MY_PV), not the -ga tag, which is missing for some releases during OpenJDK's tag transition (e.g. 17.0.21+9)
 
 dev-build/rocm-cmake              @rocm
 dev-libs/rccl                     @rocm
@@ -91,7 +91,8 @@ dev-lang/bun                      github-release oven-sh/bun prefix=bun-v
 dev-lang/rust                     github-release rust-lang/rust
 dev-libs/libixion                 gitlab-tag ixion/ixion
 dev-libs/liborcus                 gitlab-tag orcus/orcus
-dev-python/frida                  pypi frida
+dev-libs/frida-core               skip bumped with dev-python/frida
+dev-python/frida                  agent frida-core.eclass pins one release of every subproject; follow scripts/frida-core/README.md to regenerate them, then rename dev-libs/frida-core and dev-python/frida together and build both
 dev-python/ghidrecomp             pypi ghidrecomp
 dev-python/httpx-sse              pypi httpx-sse
 dev-python/jpype                  pypi JPype1
@@ -133,5 +134,6 @@ sys-libs/musl-abi                 skip ABI marker package
 sys-power/asusctl                 github-release OpenGamingCollective/asusctl
 sys-power/supergfxctl             gitlab-tag asus-linux/supergfxctl
 virtual/libc                      skip virtual
+virtual/libintl                   skip virtual
 www-client/chromium               agent assess the stable, beta and dev channels
 www-client/firefox                json https://product-details.mozilla.org/1.0/firefox_versions.json LATEST_FIREFOX_VERSION

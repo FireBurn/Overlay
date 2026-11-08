@@ -1,0 +1,11 @@
+--- a/subprojects/frida-gum/gum/backend-linux/gummoduleregistry-linux.c
++++ b/subprojects/frida-gum/gum/backend-linux/gummoduleregistry-linux.c
+@@ -403,7 +403,7 @@
+ gum_create_module_handle (GumNativeModule * module,
+                           gpointer user_data)
+ {
+-#if defined (HAVE_MUSL)
++#if defined (HAVE_MUSL) && !defined (__LLVM_LIBC__)
+   struct link_map * cur;
+ 
+   for (cur = dlopen (NULL, 0); cur != NULL; cur = cur->l_next)

@@ -4,49 +4,88 @@
 EAPI=8
 
 PYTHON_COMPAT=( python3_{11..14} )
-inherit pypi python-r1
+inherit flag-o-matic frida-core meson python-r1
 
 DESCRIPTION="Dynamic instrumentation toolkit for developers, reverse-engineers, and researchers"
 HOMEPAGE="https://frida.re/ https://github.com/frida/frida-python"
 
-# Upstream's sdist downloads a prebuilt frida-core devkit at build time, so
-# the prebuilt wheel is no less "from source"
+# frida-bindgen is a submodule of the release, pinned by the tag.
+FRIDA_BINDGEN_REV=eace04901ef6300429e8c343095297df042dba0e
+
 SRC_URI="
-	amd64? ( $(pypi_wheel_url ${PN} ${PV} cp37 abi3-manylinux1_x86_64) )
-	arm64? ( $(pypi_wheel_url ${PN} ${PV} cp37 abi3-manylinux_2_17_aarch64) )
-	x86? ( $(pypi_wheel_url ${PN} ${PV} cp37 abi3-manylinux1_i686) )
+	https://github.com/frida/frida-python/archive/refs/tags/${PV}.tar.gz -> frida-python-${PV}.tar.gz
+	https://github.com/frida/frida-bindgen/archive/${FRIDA_BINDGEN_REV}.tar.gz -> frida-bindgen-${FRIDA_BINDGEN_REV}.tar.gz
+	${FRIDA_CORE_SRC_URI}
 "
+S=${WORKDIR}/frida-python-${PV}
 
-S="${WORKDIR}"
-LICENSE="wxWinLL-3.1"
+LICENSE="wxWinLL-3.1 LGPL-2.1+ BSD MIT"
 SLOT="0"
-KEYWORDS="~amd64 ~arm64 ~x86"
-REQUIRED_USE="${PYTHON_REQUIRED_USE}"
+KEYWORDS="~amd64"
+REQUIRED_USE=${PYTHON_REQUIRED_USE}
 
+DEPEND="${FRIDA_CORE_DEPEND}"
+RDEPEND="
+	${PYTHON_DEPS}
+	${DEPEND}
+"
 BDEPEND="
 	${PYTHON_DEPS}
-	dev-python/gpep517[${PYTHON_USEDEP}]
+	${FRIDA_CORE_BDEPEND}
 "
-RDEPEND="${PYTHON_DEPS}"
 
-QA_PREBUILT="usr/lib*/python*/*-packages/frida/_frida.abi3.so"
+pkg_setup() {
+	[[ ${PV} == "${FRIDA_CORE_PV}" ]] || die "frida-core.eclass pins ${FRIDA_CORE_PV}, not ${PV}"
+	python_setup
+}
 
 src_unpack() {
-	:
+	unpack frida-python-${PV}.tar.gz
+
+	mkdir -p "${S}/frida-bindgen" || die
+	tar -xzf "${DISTDIR}/frida-bindgen-${FRIDA_BINDGEN_REV}.tar.gz" -C "${S}/frida-bindgen" \
+		--strip-components=1 || die "unpacking frida-bindgen"
+
+	# The bindings are generated from the GIR files of frida-core, which is
+	# built here as a subproject so that both share one copy of glib.
+	frida-core_unpack "${S}/subprojects/frida-core"
+}
+
+src_prepare() {
+	frida-core_patch "${S}/subprojects/frida-core"
+
+	# Both projects look for releng at the top of the tree.
+	rm -rf "${S}/releng" || die
+	cp -a "${S}/subprojects/frida-core/releng" "${S}/releng" || die
+
+	default
+}
+
+src_configure() {
+	frida-core_setup_env
+	frida-core_emesonargs "frida-core:"
+
+	local emesonargs=(
+		"${FRIDA_CORE_EMESONARGS[@]}"
+		--force-fallback-for=frida-core-1.0,glib-2.0,gobject-2.0,gio-2.0,gio-unix-2.0,gmodule-2.0,gthread-2.0,json-glib-1.0,gee-0.8,capstone
+	)
+	meson_src_configure
 }
 
 src_install() {
-	local wheel
-	case ${ARCH} in
-		amd64) wheel="${DISTDIR}/${P}-cp37-abi3-manylinux1_x86_64.whl" ;;
-		arm64) wheel="${DISTDIR}/${P}-cp37-abi3-manylinux_2_17_aarch64.whl" ;;
-		x86)   wheel="${DISTDIR}/${P}-cp37-abi3-manylinux1_i686.whl" ;;
-		*)     die "Unsupported architecture: ${ARCH}" ;;
-	esac
+	# The extension only uses the stable ABI, so one build serves every
+	# interpreter.
+	local stage=${T}/stage
+	meson install -C "${BUILD_DIR}" --no-rebuild --destdir "${stage}" || die
 
-	install_wheel() {
-		gpep517 install-wheel --destdir="${D}" --interpreter="${PYTHON}" "${wheel}" || die
-		python_optimize "${D}$(python_get_sitedir)"
+	local pkgdir
+	pkgdir=$(find "${stage}" -type d -name frida -path '*/site-packages/*' -print -quit)
+	[[ -n ${pkgdir} ]] || die "the frida package was not installed"
+
+	install_package() {
+		python_moduleinto .
+		python_domodule "${pkgdir}"
+		python_optimize
 	}
-	python_foreach_impl install_wheel
+	python_foreach_impl install_package
 }
