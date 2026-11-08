@@ -13,7 +13,8 @@ inherit check-reqs flag-o-matic java-pkg-2 java-vm-2 multiprocessing toolchain-f
 # -ga tag is just for humans to easily identify General Availability release tag.
 # we need -ga tag to fetch tarball and unpack it, but exact number everywhere else to
 # set build version properly
-MY_PV="${PV%_p*}-ga"
+MY_PV="${PV%_p*}"
+MY_PV="${MY_PV%.*.*}+${MY_PV##*.}"
 
 # variable name format: <UPPERCASE_KEYWORD>_XPAK
 PPC64_XPAK="11.0.13_p8" # big-endian bootstrap tarball
@@ -46,7 +47,7 @@ SRC_URI="
 	)
 	riscv? ( https://dev.gentoo.org/~arthurzam/distfiles/dev-java/openjdk/openjdk-11.0.18-riscv.patch.xz )
 "
-S="${WORKDIR}/jdk${SLOT}u-jdk-${MY_PV}"
+S="${WORKDIR}/jdk${SLOT}u-jdk-${MY_PV//+/-}"
 
 LICENSE="GPL-2-with-classpath-exception"
 SLOT="$(ver_cut 1)"

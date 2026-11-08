@@ -111,7 +111,6 @@ PATCHES=(
 	"${FILESDIR}/openjdk-8-fpu-control-x86-only.patch"
 	"${FILESDIR}/openjdk-8-saproc-needs-thread-db.patch"
 	"${FILESDIR}/openjdk-8-sigrtmax.patch"
-	"${FILESDIR}/openjdk-8-isnanf.patch"
 )
 
 # The space required to build varies wildly depending on USE flags,
