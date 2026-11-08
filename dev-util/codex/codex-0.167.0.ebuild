@@ -678,8 +678,8 @@ CRATES="
 	openssl-probe@0.1.6
 	openssl-probe@0.2.1
 	openssl-src@300.6.1+3.6.3
-	openssl-sys@0.9.111
-	openssl@0.10.75
+	openssl-sys@0.9.118
+	openssl@0.10.82
 	opentelemetry-appender-tracing@0.31.1
 	opentelemetry-http@0.31.0
 	opentelemetry-otlp@0.31.0
@@ -1400,18 +1400,6 @@ gen_git_crate_dir() {
 src_prepare() {
 	default
 
-	# Upstream only builds OpenSSL from source for musl targets; glibc
-	# targets use the system library. The pinned openssl-sys predates
-	# OpenSSL 4.x, so force the vendored build on glibc too.
-	local t
-	for t in x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu; do
-		cat >> "${S}/core/Cargo.toml" <<-EOF || die
-
-		[target.${t}.dependencies]
-		openssl-sys = { workspace = true, features = ["vendored"] }
-		EOF
-	done
-
 	# Fix tokio-tungstenite's git dependency on tungstenite
 	sed -i '/^\[dependencies\.tungstenite\]/,/^$/{
 		s|git = "https://github.com/openai-oss-forks/tungstenite-rs"|path = "'"$(gen_git_crate_dir tungstenite)"'"|
@@ -1436,6 +1424,11 @@ src_prepare() {
 	sed -i '1i #![recursion_limit = "512"]' "${S}/cli/src/main.rs" || die
 	# Same overflow now occurs in codex-chatgpt's connectors layout
 	sed -i '1i #![recursion_limit = "512"]' "${S}/chatgpt/src/lib.rs" || die
+
+	# The locked openssl-sys rejects OpenSSL 4; 0.9.118 and the openssl
+	# crate that requires it (0.10.82) accept it. Only those versions are
+	# in CRATES, so unlocking the pair re-resolves to exactly them.
+	cargo update --offline -p openssl-sys -p openssl || die
 
 	# The daemon requires the upstream package layout, which is not installed
 	sed -i '/key: "daemon_auto_start",/,/default_enabled:/s/default_enabled: true/default_enabled: false/' \

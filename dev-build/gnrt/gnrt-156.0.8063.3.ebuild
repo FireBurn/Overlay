@@ -127,8 +127,8 @@ CRATES="
 	once_cell@1.21.3
 	openssl-macros@0.1.1
 	openssl-probe@0.1.6
-	openssl-sys@0.9.108
-	openssl@0.10.72
+	openssl-sys@0.9.118
+	openssl@0.10.82
 	pathdiff@0.2.3
 	percent-encoding@2.3.1
 	pest@2.8.0
@@ -318,6 +318,10 @@ src_prepare() {
         }
 ' lib/condition.rs || die
 	eapply_user
+
+	# The locked openssl-sys rejects OpenSSL 4; 0.9.118 and the openssl
+	# crate that requires it (0.10.82) accept it.
+	"${CARGO}" update --offline -p openssl-sys -p openssl || die
 }
 
 src_configure() {
