@@ -65,11 +65,6 @@ BDEPEND="
 REQUIRED_USE="|| ( qt5 qt6 sdl ) discord? ( webservice )"
 RESTRICT="!test? ( test )"
 
-PATCHES=(
-	"${FILESDIR}"/${PN}-9999-renderdoc-1.7.patch
-	"${FILESDIR}"/${PN}-9999-const-flow-block.patch
-)
-
 pkg_setup() {
 	if tc-is-gcc; then
 		[[ "$(gcc-major-version)" -lt 11 ]] && \
