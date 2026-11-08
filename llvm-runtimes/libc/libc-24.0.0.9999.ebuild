@@ -41,8 +41,12 @@ BDEPEND="
 	$(python_gen_any_dep 'dev-python/pyyaml[${PYTHON_USEDEP}]')
 "
 DEPEND="virtual/os-headers"
-# ldd below is a wrapper around lddtree
-RDEPEND="app-misc/pax-utils"
+# ldd below is a wrapper around lddtree. fts.h and fts_open come from libc, so
+# the standalone copy would collide with them.
+RDEPEND="
+	app-misc/pax-utils
+	!sys-libs/fts-standalone
+"
 
 # The libc is built through the runtimes directory rather than on its own, so
 # that scudo can be taken from compiler-rt in the same configure.
