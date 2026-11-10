@@ -187,9 +187,9 @@ CRATES="
 	outref@0.5.2
 	owo-colors@4.3.0
 	oxc-browserslist@5.0.1
-	oxc-css-parser@0.0.19
+	oxc-css-parser@0.0.21
 	oxc-graphql-parser@0.0.9
-	oxc-htmlish-parser@0.0.2
+	oxc-htmlish-parser@0.0.3
 	oxc-markdown-parser@0.0.4
 	oxc-schemars@0.9.1
 	oxc-toml@0.15.1
@@ -236,7 +236,7 @@ CRATES="
 	regex@1.13.1
 	ring@0.17.14
 	ropey@1.6.1
-	rust-lapper@1.3.0
+	rust-lapper@2.0.0
 	rustc-hash@2.1.3
 	rustix@1.1.4
 	rustls-pki-types@1.15.0
