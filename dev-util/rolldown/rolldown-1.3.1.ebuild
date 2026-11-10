@@ -75,13 +75,13 @@ CRATES="
 	escape-simd@0.1.1
 	event-listener-strategy@0.5.4
 	event-listener@5.4.1
-	fancy-regex@0.19.0
+	fancy-regex@0.20.0
 	fast-glob@1.1.2
 	fastrand@2.5.0
 	filetime@0.2.29
 	find-msvc-tools@0.1.9
 	fixedbitset@0.5.7
-	flate2@1.1.10
+	flate2@1.1.11
 	float-cmp@0.10.0
 	fluent-uri@0.4.1
 	foldhash@0.1.5
@@ -126,9 +126,9 @@ CRATES="
 	js-sys@0.3.103
 	json-escape-simd@3.1.3
 	json-strip-comments@3.1.2
-	jsonschema-regex@0.60.2
-	jsonschema-value@0.60.2
-	jsonschema@0.60.2
+	jsonschema-regex@0.61.0
+	jsonschema-value@0.61.0
+	jsonschema@0.61.0
 	kqueue-sys@1.1.2
 	kqueue@1.2.0
 	lazy-regex-proc_macros@3.6.1
@@ -136,15 +136,15 @@ CRATES="
 	lazy_static@1.5.0
 	libc@0.2.191
 	libloading@0.9.0
-	libmimalloc-sys2@0.1.65
+	libmimalloc-sys2@0.1.66
 	linux-raw-sys@0.12.1
 	lock_api@0.4.14
 	lock_api@0.5.0
 	log@0.4.33
 	memchr@2.8.3
 	micromap@0.3.0
-	mimalloc-safe@0.1.69
-	mime@0.3.17
+	mimalloc-safe@0.1.70
+	mime@0.3.18
 	miniz_oxide@0.9.1
 	mio@1.2.2
 	napi-build@2.6.0
@@ -238,7 +238,7 @@ CRATES="
 	redox_syscall@0.9.5
 	ref-cast-impl@1.0.26
 	ref-cast@1.0.26
-	referencing@0.60.2
+	referencing@0.61.0
 	regex-automata@0.4.18
 	regex-syntax@0.8.11
 	regex@1.13.1
@@ -275,12 +275,12 @@ CRATES="
 	signal-hook-registry@1.4.8
 	simd-adler32@0.3.10
 	simd-json@0.18.1
-	simd-utf16-len@0.3.1
+	simd-utf16-len@0.4.0
 	simdutf8@0.1.5
 	similar@2.7.0
 	siphasher@1.0.3
 	slab@0.4.12
-	smallvec@1.16.4
+	smallvec@1.16.5
 	smawk@0.3.3
 	static_assertions@1.1.0
 	statrs@0.18.0
@@ -321,7 +321,7 @@ CRATES="
 	url@2.5.8
 	utf8_iter@1.0.4
 	uuid-simd@0.8.0
-	uuid@1.29.0
+	uuid@1.29.2
 	valuable@0.1.1
 	value-trait@0.12.2
 	version_check@0.9.5
@@ -352,7 +352,7 @@ CRATES="
 	yansi@1.0.1
 	zerocopy-derive@0.8.54
 	zerocopy@0.8.54
-	zlib-rs@0.6.6
+	zlib-rs@0.6.8
 	zmij@1.0.23
 	zmij_ecma@1.0.23
 "
