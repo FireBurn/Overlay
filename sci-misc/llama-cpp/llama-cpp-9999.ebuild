@@ -92,7 +92,6 @@ PATCHES=(
 	"${FILESDIR}/0012-vulkan-dual-issue-friendly-int8-epilogue-in-cm1-mmq-.patch"
 	"${FILESDIR}/0013-vulkan-keep-Q-fragments-in-registers-in-coopmat1-fla.patch"
 	"${FILESDIR}/0014-vulkan-store-the-flash-attention-quantized-K-V-scrat.patch"
-	"${FILESDIR}/0015-vulkan-concat-with-a-transposed-src1-through-shared-.patch"
 	"${FILESDIR}/0016-vulkan-load-16-values-per-thread-for-q4_K-q5_K-q6_K-.patch"
 	"${FILESDIR}/0017-vulkan-stage-large-writes-to-host-visible-VRAM-throu.patch"
 	"${FILESDIR}/0018-vulkan-index-iq4-mxfp4-codebooks-as-a-constant-array.patch"
