@@ -10,7 +10,6 @@ NPM_PKGS="
 	@ai-sdk/provider@3.0.19
 	@ai-sdk/provider@3.0.8
 	@ai-sdk/provider-utils@4.0.23
-	@ai-sdk/provider-utils@4.0.62
 	@ampproject/remapping@2.3.0
 	@anthropic-ai/claude-agent-sdk@0.3.301
 	@anthropic-ai/claude-agent-sdk-linux-arm64@0.3.301|arm64
@@ -198,15 +197,18 @@ NPM_PKGS="
 	@cloudflare/kv-asset-handler@0.5.0
 	@cloudflare/runtime-types@0.1.7
 	@cloudflare/unenv-preset@2.16.1
+	@cloudflare/unenv-preset@2.16.2
 	@cloudflare/vite-plugin@1.52.1
 	@cloudflare/workerd-linux-64@1.20260708.1|amd64
 	@cloudflare/workerd-linux-64@1.20260811.1|amd64
 	@cloudflare/workerd-linux-64@1.20260930.2|amd64
 	@cloudflare/workerd-linux-64@1.20261001.1|amd64
+	@cloudflare/workerd-linux-64@1.20261102.1|amd64
 	@cloudflare/workerd-linux-arm64@1.20260708.1|arm64
 	@cloudflare/workerd-linux-arm64@1.20260811.1|arm64
 	@cloudflare/workerd-linux-arm64@1.20260930.2|arm64
 	@cloudflare/workerd-linux-arm64@1.20261001.1|arm64
+	@cloudflare/workerd-linux-arm64@1.20261102.1|arm64
 	@cloudflare/workers-types@4.20251008.0
 	@corvu/dialog@0.2.4
 	@corvu/drawer@0.2.4
@@ -254,8 +256,10 @@ NPM_PKGS="
 	@emnapi/wasi-threads@1.2.3
 	@esbuild/linux-arm64@0.25.12|arm64
 	@esbuild/linux-arm64@0.28.1|arm64
+	@esbuild/linux-arm64@0.28.2|arm64
 	@esbuild/linux-x64@0.25.12|amd64
 	@esbuild/linux-x64@0.28.1|amd64
+	@esbuild/linux-x64@0.28.2|amd64
 	@expressive-code/core@0.44.2
 	@expressive-code/plugin-frames@0.44.2
 	@expressive-code/plugin-shiki@0.44.2
@@ -278,9 +282,9 @@ NPM_PKGS="
 	@gar/promise-retry@1.0.3
 	@graphql-typed-document-node/core@3.2.0
 	@happy-dom/global-registrator@20.0.11
-	@hona/strobe@0.14.0
-	@hona/strobe-linux-arm64@0.14.0|arm64
-	@hona/strobe-linux-x64@0.14.0|amd64
+	@hona/strobe@0.28.0
+	@hona/strobe-linux-arm64@0.28.0|arm64
+	@hona/strobe-linux-x64@0.28.0|amd64
 	@hono/node-server@2.1.5
 	@ibm/plex@6.4.1
 	@ibm/telemetry-js@1.11.0
@@ -345,10 +349,10 @@ NPM_PKGS="
 	@malept/cross-spawn-promise@2.0.0
 	@malept/flatpak-bundler@0.4.0
 	@mdx-js/mdx@3.1.1
-	@modelcontextprotocol/client@2.3.1
-	@modelcontextprotocol/core@2.3.1
+	@modelcontextprotocol/client@2.4.0
+	@modelcontextprotocol/core@2.4.0
 	@modelcontextprotocol/sdk@1.32.2
-	@modelcontextprotocol/server@2.3.1
+	@modelcontextprotocol/server@2.4.0
 	@napi-rs/lzma-linux-x64-gnu@1.5.1|amd64
 	@napi-rs/wasm-runtime@0.2.12
 	@napi-rs/wasm-runtime@1.2.3
@@ -479,6 +483,7 @@ NPM_PKGS="
 	@redis/json@6.2.1
 	@redis/search@6.2.1
 	@redis/time-series@6.2.1
+	@resvg/resvg-wasm@2.6.2
 	@rolldown/binding-linux-arm64-gnu@1.2.14|arm64
 	@rolldown/binding-linux-arm64-gnu@1.2.5|arm64
 	@rolldown/binding-linux-arm64-musl@1.2.14|arm64,elibc_musl
@@ -954,12 +959,12 @@ NPM_PKGS="
 	esast-util-from-js@2.0.1
 	esbuild@0.25.12
 	esbuild@0.28.1
+	esbuild@0.28.2
 	escalade@3.2.0
 	escape-goat@4.0.0
 	escape-html@1.0.3
 	escape-string-regexp@4.0.0
 	escape-string-regexp@5.0.0
-	esm-env@1.2.2
 	esprima@4.0.1
 	estree-util-attach-comments@3.0.0
 	estree-util-build-jsx@3.0.1
@@ -1358,6 +1363,7 @@ NPM_PKGS="
 	miniflare@5.20260811.1-alpha
 	miniflare@5.20260930.0-alpha
 	miniflare@5.20261001.0-alpha
+	miniflare@5.20261102.0-beta
 	minimatch@10.2.5
 	minimatch@3.1.5
 	minimatch@5.1.9
@@ -1414,7 +1420,6 @@ NPM_PKGS="
 	npm-pick-manifest@11.0.3
 	npm-registry-fetch@19.1.1
 	nth-check@2.1.1
-	number-flow@0.6.2
 	object-assign@4.1.1
 	object-hash@2.2.0
 	object-inspect@1.13.4
@@ -1879,8 +1884,10 @@ NPM_PKGS="
 	workerd@1.20260811.1
 	workerd@1.20260930.2
 	workerd@1.20261001.1
+	workerd@1.20261102.1
 	wrangler@4.110.0
 	wrangler@4.123.0
+	wrangler@4.156.2
 	wrap-ansi@7.0.0
 	wrap-ansi@8.1.0
 	wrap-ansi@9.0.2
@@ -1949,70 +1956,98 @@ NPM_STUB_PKGS="
 	@cloudflare/workerd-darwin-64@1.20260811.1
 	@cloudflare/workerd-darwin-64@1.20260930.2
 	@cloudflare/workerd-darwin-64@1.20261001.1
+	@cloudflare/workerd-darwin-64@1.20261102.1
 	@cloudflare/workerd-darwin-arm64@1.20260708.1
 	@cloudflare/workerd-darwin-arm64@1.20260811.1
 	@cloudflare/workerd-darwin-arm64@1.20260930.2
 	@cloudflare/workerd-darwin-arm64@1.20261001.1
+	@cloudflare/workerd-darwin-arm64@1.20261102.1
 	@cloudflare/workerd-windows-64@1.20260708.1
 	@cloudflare/workerd-windows-64@1.20260811.1
 	@cloudflare/workerd-windows-64@1.20260930.2
 	@cloudflare/workerd-windows-64@1.20261001.1
+	@cloudflare/workerd-windows-64@1.20261102.1
 	@esbuild/aix-ppc64@0.25.12
 	@esbuild/aix-ppc64@0.28.1
+	@esbuild/aix-ppc64@0.28.2
 	@esbuild/android-arm64@0.25.12
 	@esbuild/android-arm64@0.28.1
+	@esbuild/android-arm64@0.28.2
 	@esbuild/android-arm@0.25.12
 	@esbuild/android-arm@0.28.1
+	@esbuild/android-arm@0.28.2
 	@esbuild/android-x64@0.25.12
 	@esbuild/android-x64@0.28.1
+	@esbuild/android-x64@0.28.2
 	@esbuild/darwin-arm64@0.25.12
 	@esbuild/darwin-arm64@0.28.1
+	@esbuild/darwin-arm64@0.28.2
 	@esbuild/darwin-x64@0.25.12
 	@esbuild/darwin-x64@0.28.1
+	@esbuild/darwin-x64@0.28.2
 	@esbuild/freebsd-arm64@0.25.12
 	@esbuild/freebsd-arm64@0.28.1
+	@esbuild/freebsd-arm64@0.28.2
 	@esbuild/freebsd-x64@0.25.12
 	@esbuild/freebsd-x64@0.28.1
+	@esbuild/freebsd-x64@0.28.2
 	@esbuild/linux-arm@0.25.12
 	@esbuild/linux-arm@0.28.1
+	@esbuild/linux-arm@0.28.2
 	@esbuild/linux-ia32@0.25.12
 	@esbuild/linux-ia32@0.28.1
+	@esbuild/linux-ia32@0.28.2
 	@esbuild/linux-loong64@0.25.12
 	@esbuild/linux-loong64@0.28.1
+	@esbuild/linux-loong64@0.28.2
 	@esbuild/linux-mips64el@0.25.12
 	@esbuild/linux-mips64el@0.28.1
+	@esbuild/linux-mips64el@0.28.2
 	@esbuild/linux-ppc64@0.25.12
 	@esbuild/linux-ppc64@0.28.1
+	@esbuild/linux-ppc64@0.28.2
 	@esbuild/linux-riscv64@0.25.12
 	@esbuild/linux-riscv64@0.28.1
+	@esbuild/linux-riscv64@0.28.2
 	@esbuild/linux-s390x@0.25.12
 	@esbuild/linux-s390x@0.28.1
+	@esbuild/linux-s390x@0.28.2
 	@esbuild/netbsd-arm64@0.25.12
 	@esbuild/netbsd-arm64@0.28.1
+	@esbuild/netbsd-arm64@0.28.2
 	@esbuild/netbsd-x64@0.25.12
 	@esbuild/netbsd-x64@0.28.1
+	@esbuild/netbsd-x64@0.28.2
 	@esbuild/openbsd-arm64@0.25.12
 	@esbuild/openbsd-arm64@0.28.1
+	@esbuild/openbsd-arm64@0.28.2
 	@esbuild/openbsd-x64@0.25.12
 	@esbuild/openbsd-x64@0.28.1
+	@esbuild/openbsd-x64@0.28.2
 	@esbuild/openharmony-arm64@0.25.12
 	@esbuild/openharmony-arm64@0.28.1
+	@esbuild/openharmony-arm64@0.28.2
 	@esbuild/sunos-x64@0.25.12
 	@esbuild/sunos-x64@0.28.1
+	@esbuild/sunos-x64@0.28.2
 	@esbuild/win32-arm64@0.25.12
 	@esbuild/win32-arm64@0.28.1
+	@esbuild/win32-arm64@0.28.2
 	@esbuild/win32-ia32@0.25.12
 	@esbuild/win32-ia32@0.28.1
+	@esbuild/win32-ia32@0.28.2
 	@esbuild/win32-x64@0.25.12
 	@esbuild/win32-x64@0.28.1
+	@esbuild/win32-x64@0.28.2
 	@ff-labs/fff-bin-android-arm64@0.10.5
 	@ff-labs/fff-bin-darwin-arm64@0.10.5
 	@ff-labs/fff-bin-darwin-x64@0.10.5
 	@ff-labs/fff-bin-win32-arm64@0.10.5
 	@ff-labs/fff-bin-win32-x64@0.10.5
-	@hona/strobe-darwin-arm64@0.14.0
-	@hona/strobe-darwin-x64@0.14.0
-	@hona/strobe-win32-x64@0.14.0
+	@hona/strobe-darwin-arm64@0.28.0
+	@hona/strobe-darwin-x64@0.28.0
+	@hona/strobe-win32-arm64@0.28.0
+	@hona/strobe-win32-x64@0.28.0
 	@img/sharp-darwin-arm64@0.34.5
 	@img/sharp-darwin-arm64@0.35.2
 	@img/sharp-darwin-arm64@0.35.4
