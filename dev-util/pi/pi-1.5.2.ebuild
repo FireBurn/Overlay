@@ -32,7 +32,9 @@ NPM_PKGS="
 	@aws-sdk/types@3.974.5
 	@aws-sdk/xml-builder@3.972.40
 	@aws/lambda-invoke-store@0.3.0
-	@babel/runtime@7.29.2
+	@babel/runtime@7.29.10
+	@base-ui/react@1.8.0
+	@base-ui/utils@0.4.0
 	@biomejs/biome@2.3.5
 	@biomejs/cli-linux-arm64@2.3.5|arm64
 	@biomejs/cli-linux-arm64-musl@2.3.5|arm64
@@ -47,11 +49,26 @@ NPM_PKGS="
 	@cloudflare/workerd-linux-arm64@1.20261023.1|arm64
 	@cspotcode/source-map-support@0.8.1
 	@cto.af/wtf8@0.0.5
+	@discordjs/builders@1.15.0
+	@discordjs/collection@1.5.3
+	@discordjs/collection@2.1.1
+	@discordjs/formatters@0.6.2
+	@discordjs/rest@2.6.3
+	@discordjs/util@1.2.0
+	@discordjs/ws@1.2.3
+	@earendil-works/design-tokens@0.1.0
+	@earendil-works/elanor-fonts@0.1.0
+	@earendil-works/elanor-icons-react@0.1.0
+	@earendil-works/elanor-react@0.1.0
 	@earendil-works/gondolin@0.14.0
 	@earendil-works/gondolin-krun-runner-linux-x64@0.14.0|amd64
 	@emnapi/runtime@1.11.3
 	@esbuild/linux-arm64@0.28.2|arm64
 	@esbuild/linux-x64@0.28.2|amd64
+	@floating-ui/core@1.8.0
+	@floating-ui/dom@1.8.0
+	@floating-ui/react-dom@2.1.9
+	@floating-ui/utils@0.2.12
 	@google/genai@2.21.0
 	@img/colour@1.1.0
 	@img/sharp-libvips-linux-arm64@1.3.4|arm64
@@ -86,6 +103,9 @@ NPM_PKGS="
 	@rolldown/binding-linux-x64-gnu@1.2.14|amd64
 	@rolldown/binding-linux-x64-musl@1.2.14|amd64,elibc_musl
 	@rolldown/pluginutils@1.0.1
+	@sapphire/async-queue@1.5.5
+	@sapphire/shapeshift@4.0.0
+	@sapphire/snowflake@3.5.5
 	@silvia-odwyer/photon@0.3.3
 	@silvia-odwyer/photon-node@0.3.4
 	@sindresorhus/is@7.2.0
@@ -102,13 +122,17 @@ NPM_PKGS="
 	@types/cross-spawn@6.0.6
 	@types/deep-eql@4.0.2
 	@types/estree@1.0.9
+	@types/hast@3.0.5
 	@types/hosted-git-info@3.0.5
 	@types/ms@2.1.0
 	@types/node@22.19.19
 	@types/proper-lockfile@4.1.4
+	@types/react@19.2.14
+	@types/react-dom@19.2.3
 	@types/retry@0.12.0
 	@types/retry@0.12.5
 	@types/semver@7.7.1
+	@types/unist@3.0.3
 	@types/ws@8.18.2
 	@typescript/typescript-linux-arm64@7.0.2|arm64
 	@typescript/typescript-linux-x64@7.0.2|amd64
@@ -121,6 +145,7 @@ NPM_PKGS="
 	@vitest/snapshot@4.1.12
 	@vitest/spy@4.1.12
 	@vitest/utils@4.1.12
+	@vladfrangu/async_event_emitter@2.4.7
 	@xterm/headless@5.5.0
 	agent-base@7.1.4
 	agent-base@9.0.0
@@ -150,12 +175,17 @@ NPM_PKGS="
 	cookie@1.1.1
 	cpu-features@0.0.10
 	cross-spawn@7.0.6
+	csstype@3.2.3
 	data-uri-to-buffer@4.0.1
 	debug@4.4.3
 	decompress-response@6.0.0
 	deep-extend@0.6.0
+	dequal@2.0.3
 	detect-libc@2.1.2
+	devlop@1.1.0
 	diff@8.0.4
+	discord-api-types@0.38.57
+	discord.js@14.28.1
 	ecdsa-sig-formatter@1.0.11
 	end-of-stream@1.4.5
 	error-stack-parser-es@1.0.5
@@ -182,6 +212,7 @@ NPM_PKGS="
 	graceful-fs@4.2.11
 	grok-mermaid@0.2.3
 	highlight.js@10.7.3
+	highlight.js@11.11.2
 	hosted-git-info@9.0.3
 	http-proxy-agent@9.1.0
 	https-proxy-agent@7.0.6
@@ -204,10 +235,16 @@ NPM_PKGS="
 	lightningcss-linux-arm64-musl@1.33.0|arm64,elibc_musl
 	lightningcss-linux-x64-gnu@1.33.0|amd64
 	lightningcss-linux-x64-musl@1.33.0|amd64,elibc_musl
+	lodash@4.18.1
+	lodash.snakecase@4.1.1
 	long@5.3.2
+	lovely-mermaid@0.3.3
+	lowlight@3.3.0
 	lru-cache@11.4.0
+	magic-bytes.js@1.13.1
 	magic-string@0.30.21
 	marked@18.0.11
+	marked@18.0.14
 	marked-cjk-friendly@0.1.2
 	mimic-response@3.1.0
 	miniflare@5.20261023.2-beta
@@ -241,13 +278,17 @@ NPM_PKGS="
 	pump@3.0.4
 	quickjs-wasi@3.6.2
 	rc@1.2.8
+	react@19.3.0
+	react-dom@19.3.0
 	readable-stream@3.6.2
 	require-from-string@2.0.2
+	reselect@5.3.0
 	retry@0.12.0
 	retry@0.13.1
 	rolldown@1.2.14
 	safe-buffer@5.2.1
 	safer-buffer@2.1.2
+	scheduler@0.28.0
 	semver@7.8.5
 	sharp@0.35.5
 	shebang-command@2.0.0
@@ -271,17 +312,20 @@ NPM_PKGS="
 	tinyglobby@0.2.17
 	tinyrainbow@3.1.0
 	ts-algebra@2.0.0
+	ts-mixer@6.0.4
 	tslib@2.8.1
 	tunnel-agent@0.6.0
 	tweetnacl@0.14.5
 	typebox@1.1.38
 	typebox@1.3.27
+	typescript@5.9.3
 	typescript@7.0.2
 	undici@6.29.1
 	undici@7.30.1
 	undici@8.12.3
 	undici-types@6.21.0
 	unenv@2.0.0-rc.24
+	use-sync-external-store@1.7.0
 	util-deprecate@1.0.2
 	vite@8.3.4
 	vitest@4.1.12
@@ -294,6 +338,7 @@ NPM_PKGS="
 	wrappy@1.0.2
 	ws@8.21.0
 	yaml@2.9.0
+	yaml@2.9.1
 	youch@4.1.0-beta.10
 	youch-core@0.3.3
 	zod@4.6.6
