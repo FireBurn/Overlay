@@ -36,6 +36,7 @@ PATCHES=(
 	"${FILESDIR}"/${PN}-10.1.0-fix-lib-version.patch
 	"${FILESDIR}"/${PN}-10.1.0-vega-apu-xnack.patch
 	"${FILESDIR}"/${PN}-10.1.0-aligned-new.patch
+	"${FILESDIR}/rocclr-no-gnu-basename.patch"
 )
 
 src_prepare() {
