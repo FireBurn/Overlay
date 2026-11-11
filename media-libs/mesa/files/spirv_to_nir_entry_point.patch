@@ -1,0 +1,14 @@
+--- a/src/compiler/spirv/spirv_to_nir.c	2026-04-11 11:30:24.902457251 +0000
++++ b/src/compiler/spirv/spirv_to_nir.c	2026-04-11 11:31:25.367221032 +0000
+@@ -322,6 +322,11 @@
+    ralloc_asprintf_append(&msg, "\n    %zu bytes into the SPIR-V binary",
+                           b->spirv_offset);
+ 
++   if (b->entry_point_name) {
++      ralloc_asprintf_append(&msg, "\n    Entry point: %s",
++                             b->entry_point_name);
++   }
++
+    if (b->file) {
+       ralloc_asprintf_append(&msg,
+                              "\n    in SPIR-V source file %s, line %d, col %d",

@@ -186,6 +186,9 @@ x86? (
 
 PATCHES=(
 		"${FILESDIR}/spirv-target.patch"
+		"${FILESDIR}/0001-radv-hoist-loop-invariants-out-of-coopmat-loops-gfx12.patch"
+		"${FILESDIR}/0002-nir-opt-large-constants-byte-perm-small-tables.patch"
+		"${FILESDIR}/spirv_to_nir_entry_point.patch"
 	)
 
 src_unpack() {

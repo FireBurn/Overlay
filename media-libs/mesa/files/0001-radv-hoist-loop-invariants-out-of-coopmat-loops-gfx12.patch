@@ -1,0 +1,97 @@
+From b91b9ab36ad2f84f79f94b853a57ce8ca1d5e89b Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Thu, 1 Oct 2026 02:42:39 +0100
+Subject: [PATCH] radv: hoist loop invariants out of cooperative matrix loops
+ on GFX12
+
+The address math in cooperative matrix loops (e.g. the tile loaders in
+llama.cpp's matmuls) is invariant but sits in conditional blocks, which
+nir_opt_licm without a filter doesn't hoist from, because it only visits
+blocks that dominate the loop exit. Much of it also only appears after the
+lowering passes, which run after the existing nir_opt_licm call.
+
+Run nir_opt_licm again after the lowering, with a filter that allows ALU
+instructions (which have no side effects) in loops that contain a
+cmat_muladd_amd. Only enable it for GFX12: on GFX11 (780M, gfx1103) the extra
+live values push 59 llama.cpp shaders from 128 to 256 VGPRs, halving their
+occupancy, so it's a regression there. Hoisting only multiplies, or capping
+the number of hoisted instructions per loop, avoids that but loses most of
+the gain.
+
+Foz-DB Navi48:
+Totals from 727 (1.27% of 57138) affected shaders:
+Instrs: 1686623 -> 1652468 (-2.03%); split: -2.03%, +0.01%
+CodeSize: 9107124 -> 8950044 (-1.72%); split: -1.74%, +0.01%
+VGPRs: 78520 -> 79612 (+1.39%)
+Latency: 19810694 -> 19242625 (-2.87%); split: -2.89%, +0.02%
+InvThroughput: 5941623 -> 5679865 (-4.41%); split: -4.41%, +0.00%
+VClause: 30484 -> 30498 (+0.05%); split: -0.18%, +0.23%
+SClause: 36380 -> 36152 (-0.63%); split: -0.65%, +0.02%
+Copies: 158343 -> 157695 (-0.41%); split: -0.57%, +0.16%
+Branches: 60868 -> 61125 (+0.42%)
+PreSGPRs: 31283 -> 36555 (+16.85%); split: -0.17%, +17.02%
+PreVGPRs: 36162 -> 43922 (+21.46%)
+VALU: 784989 -> 769466 (-1.98%); split: -1.98%, +0.00%
+SALU: 321330 -> 315213 (-1.90%); split: -1.98%, +0.08%
+VOPD: 7321 -> 7351 (+0.41%); split: +1.35%, -0.94%
+
+No shaders change on Phoenix (GFX11) with the GFX12 gate.
+
+llama.cpp matmuls on Navi48 (4096x512x14336): f16 813 -> 771 us, q4_K 719 ->
+691 us, q5_K 744 -> 721 us, q8_0 761 -> 742 us; Qwen3.x 27B pp2048 1382 ->
+1407 t/s (+1.7%).
+
+Assisted-by: Claude Code (Claude Opus 5.5)
+Signed-off-by: Mike Lothian <mike@fireburn.co.uk>
+---
+ src/amd/vulkan/radv_pipeline.c | 27 +++++++++++++++++++++++++++
+ 1 file changed, 27 insertions(+)
+
+diff --git a/src/amd/vulkan/radv_pipeline.c b/src/amd/vulkan/radv_pipeline.c
+index 7bc63a544c0..1776d186793 100644
+--- a/src/amd/vulkan/radv_pipeline.c
++++ b/src/amd/vulkan/radv_pipeline.c
+@@ -250,6 +250,26 @@ non_uniform_access_callback(const nir_src *src, void *_)
+    return nir_chase_binding(*src).success ? 0x2 : 0x3;
+ }
+ 
++static bool
++loop_has_cmat_muladd(nir_loop *loop)
++{
++   nir_foreach_block_in_cf_node (block, &loop->cf_node) {
++      nir_foreach_instr (instr, block) {
++         if (instr->type == nir_instr_type_intrinsic &&
++             nir_instr_as_intrinsic(instr)->intrinsic == nir_intrinsic_cmat_muladd_amd)
++            return true;
++      }
++   }
++   return false;
++}
++
++/* ALU has no side effects, so it can be executed speculatively when it is loop invariant. */
++static bool
++radv_licm_speculate_alu_in_wmma_loops(nir_instr *instr, nir_loop *loop, bool instr_block_dominates_exit)
++{
++   return instr->type == nir_instr_type_alu && loop_has_cmat_muladd(loop);
++}
++
+ void
+ radv_postprocess_nir(const struct radv_compiler_info *compiler_info, const struct radv_graphics_state_key *gfx_state,
+                      struct radv_shader_stage *stage)
+@@ -613,6 +633,13 @@ radv_postprocess_nir(const struct radv_compiler_info *compiler_info, const struc
+    NIR_PASS(_, stage->nir, nir_opt_copy_prop);
+    NIR_PASS(_, stage->nir, nir_opt_dce);
+ 
++   /* The lowering above creates address math that is invariant in cooperative matrix loops, but sits
++    * in conditional blocks. Only done on GFX12, where it was measured to help: on GFX11 the extra live
++    * registers push some shaders over an occupancy step.
++    */
++   if (!stage->key.optimisations_disabled && gfx_level >= GFX12)
++      NIR_PASS(_, stage->nir, nir_opt_licm, radv_licm_speculate_alu_in_wmma_loops);
++
+    if (!stage->key.optimisations_disabled) {
+       sink_opts |= nir_move_comparisons | nir_move_load_ubo | nir_move_load_ssbo | nir_move_alu;
+       NIR_PASS(_, stage->nir, nir_opt_sink, sink_opts);
+-- 
+2.56.0
+
