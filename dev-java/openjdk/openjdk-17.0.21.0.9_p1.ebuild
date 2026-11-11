@@ -108,6 +108,7 @@ DEPEND="
 PATCHES=(
 	"${FILESDIR}"/openjdk-17.0.16_p8-lto-memory.patch
 	"${FILESDIR}"/openjdk-17.0.20.1_p1-headless.patch
+	"${FILESDIR}"/openjdk-sysinfo-new-include.patch
 )
 
 # The space required to build varies wildly depending on USE flags,

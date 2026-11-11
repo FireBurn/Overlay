@@ -1,0 +1,12 @@
+Include <new> for std::nothrow_t, which libstdc++ pulls in elsewhere and libc++ does not.
+
+--- a/src/jdk.jpackage/share/native/common/SysInfo.h
++++ b/src/jdk.jpackage/share/native/common/SysInfo.h
+@@ -27,6 +27,7 @@
+ #ifndef SYSINFO_H
+ #define SYSINFO_H
+ 
++#include <new>
+ #include "tstrings.h"
+ 
+ 
