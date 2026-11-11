@@ -680,7 +680,7 @@ agent_context() {
     [[ -f "$hints" ]] && printf 'Read %s first; it lists this package'"'"'s pitfalls and coupled files. ' "$hints"
     last="$(git log -1 --format=%h -i --grep='bump\|update\|add' -- "$pkg")"
     [[ -n "$last" ]] && printf 'The previous bump of this package is commit %s; start from git show %s and repeat what it changed. ' "$last" "$last"
-    printf 'The Gentoo tree at /usr/portage may already have this version of the package or its eclasses; diff against it before writing changes. '
+    printf 'The Gentoo tree at /var/db/repos/gentoo may already have this version of the package or its eclasses; diff against it before writing changes. '
 }
 
 # Returns 0 on a commit, 1 when no bump was needed, 2 on failure.

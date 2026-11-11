@@ -2,7 +2,7 @@
 
 Coupled files: `dev-lang/rust/rust-<ver>.ebuild`, `dev-lang/rust/Manifest`, `eclass/rust.eclass`, `dev-lang/rust/files/`.
 
-1. Check `/usr/portage/dev-lang/rust` and `/usr/portage/eclass/rust.eclass` for the new version first. Port what it changed (new patch set, `RUST_MIN_VER`, bootstrap versions, config keys) rather than rediscovering it.
+1. Check `/var/db/repos/gentoo/dev-lang/rust` and `/var/db/repos/gentoo/eclass/rust.eclass` for the new version first. Port what it changed (new patch set, `RUST_MIN_VER`, bootstrap versions, config keys) rather than rediscovering it.
 2. `git cp`-style: copy the old ebuild to the new version and keep the old one, since rust is slotted per version and installed packages (zed, zellij, the mingw cross compilers) stay on the old slot. Removing it makes Portage fall back to the gentoo ebuild, which lacks `rustc-dev`. Drop an old version only when nothing installed uses its slot. Then bump `RUST_MAX_VER`/`RUST_PV` handling if the filename scheme changed. `RUST_PATCH_VER`: if `https://gitweb.gentoo.org/proj/rust-patches.git/snapshot/rust-patches-<ver>.tar.bz2` does not exist (HTTP 404), keep the newest existing patch set and say so in a comment.
 3. `eclass/rust.eclass`: add the version to `_RUST_LLVM_MAP` with the LLVM slots the release supports (read `src/llvm-project` version and `src/bootstrap` minimum in the release tarball). Check that the `RUST_MIN_VER` bootstrap compiler chain is satisfiable from this overlay or Gentoo.
 4. Patches in `files/<ver>/` may be obsolete; try them with `ebuild ... prepare` and drop any that upstream merged. Carry LLVM compatibility patches only if the build needs them.
