@@ -57,6 +57,10 @@ pkg_pretend() {
 	fi
 }
 
+PATCHES=(
+	"${FILESDIR}/vkd3d-proton-terminate-exception.patch"
+)
+
 src_prepare() {
 	default
 

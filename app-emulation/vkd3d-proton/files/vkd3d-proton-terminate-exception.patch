@@ -1,0 +1,15 @@
+std::terminate is declared in <exception>, which this never includes, the
+same way std::launder was missing <new>. libstdc++ brings it along and
+libc++ does not.
+
+--- a/subprojects/dxil-spirv/scratch_pool.hpp
++++ b/subprojects/dxil-spirv/scratch_pool.hpp
+@@ -25,6 +25,8 @@
+ #ifndef DXIL_SPV_SCRATCH_POOL_H_
+ #define DXIL_SPV_SCRATCH_POOL_H_
+ 
++#include <exception>
++
+ #include "thread_local_allocator.hpp"
+ 
+ namespace dxil_spv
