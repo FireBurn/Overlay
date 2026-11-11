@@ -35,6 +35,10 @@ BDEPEND="
 	test? ( dev-cpp/gtest )
 "
 
+PATCHES=(
+	"${FILESDIR}/rccl-libstdcxx-only.patch"
+)
+
 src_prepare() {
 	# do not force /usr/lib, break multilib
 	sed -i '/set(CMAKE_INSTALL_LIBDIR lib CACHE STRING/d' cmake/Dependencies.cmake || die
