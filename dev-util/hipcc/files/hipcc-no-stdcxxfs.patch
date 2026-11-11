@@ -1,0 +1,18 @@
+Link libstdc++fs only where it exists.
+
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -24,8 +24,11 @@
+ set(CMAKE_CXX_STANDARD 17)
+ set(CMAKE_CXX_STANDARD_REQUIRED True)
+ 
+-set(ADDITIONAL_SHARED_LIBRARIES_TO_LINK
+-  libstdc++fs.so)
++# libc++ has no libstdc++fs and does not need it.
++find_library(HIPCC_STDCXXFS NAMES libstdc++fs.so)
++if(HIPCC_STDCXXFS)
++  set(ADDITIONAL_SHARED_LIBRARIES_TO_LINK ${HIPCC_STDCXXFS})
++endif()
+ 
+ set(HIPCC_BIN
+   hipcc)

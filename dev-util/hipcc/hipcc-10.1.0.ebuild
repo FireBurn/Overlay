@@ -48,6 +48,10 @@ src_unpack() {
 	fi
 }
 
+PATCHES=(
+	"${FILESDIR}/hipcc-no-stdcxxfs.patch"
+)
+
 src_prepare() {
 	cmake_src_prepare
 
