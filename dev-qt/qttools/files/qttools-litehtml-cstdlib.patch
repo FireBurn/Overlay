@@ -1,0 +1,11 @@
+atoi is declared in <cstdlib>, which libc++ no longer brings in through the other headers.
+
+--- a/src/assistant/qlitehtml/src/3rdparty/litehtml/src/el_font.cpp	2026-10-09 12:22:23.236024639 +0100
++++ b/src/assistant/qlitehtml/src/3rdparty/litehtml/src/el_font.cpp	2026-10-09 12:22:23.237021885 +0100
+@@ -1,5 +1,6 @@
+ #include "el_font.h"
+ #include "document.h"
++#include <cstdlib>
+ 
+ 
+ litehtml::el_font::el_font(const std::shared_ptr<document>& doc) : html_tag(doc)

@@ -68,6 +68,8 @@ DEPEND="
 
 PATCHES=(
 	"${FILESDIR}"/${PN}-6.12.0-litehtml-no-unity.patch
+	"${FILESDIR}/qdoc-build-pie.patch"
+	"${FILESDIR}/qttools-litehtml-cstdlib.patch"
 )
 
 src_prepare() {
