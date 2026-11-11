@@ -43,6 +43,10 @@ DEPEND="${RDEPEND}
 "
 BDEPEND="dev-build/rocm-cmake"
 
+PATCHES=(
+	"${FILESDIR}/amdsmi-cstdlib-include.patch"
+)
+
 src_prepare() {
 	# Compatibility with CMake < 3.10 will be removed
 	sed -e "/cmake_minimum_required/ s/3\.5\.0/3.10/" \

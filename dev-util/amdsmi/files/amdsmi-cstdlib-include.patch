@@ -1,0 +1,12 @@
+Include <cstdlib> for calloc, which libstdc++ pulls in elsewhere and libc++ does not.
+
+--- a/rocm_smi/src/rocm_smi_binary_parser.cc
++++ b/rocm_smi/src/rocm_smi_binary_parser.cc
+@@ -6,6 +6,7 @@
+ #include <dirent.h>
+ 
+ #include <cassert>
++#include <cstdlib>
+ #include <cinttypes>
+ #include <cstdint>
+ #include <cstring>
