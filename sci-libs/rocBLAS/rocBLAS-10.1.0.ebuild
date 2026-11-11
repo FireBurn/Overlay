@@ -60,6 +60,10 @@ DEPEND="
 
 QA_FLAGS_IGNORED="/usr/lib64/rocblas/library/.*"
 
+PATCHES=(
+	"${FILESDIR}/rocblas-no-stdcxxfs.patch"
+)
+
 src_prepare() {
 	cmake_src_prepare
 

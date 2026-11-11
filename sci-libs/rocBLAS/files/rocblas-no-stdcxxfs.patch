@@ -1,0 +1,35 @@
+Do not link libstdc++fs, which libc++ has no equivalent of and needs none.
+
+--- a/library/CMakeLists.txt
++++ b/library/CMakeLists.txt
+@@ -81,7 +81,7 @@
+   if (WIN32)
+     target_link_libraries( ${lib_target_} PRIVATE hip::device )
+   else()
+-    target_link_libraries( ${lib_target_} PRIVATE hip::device -lstdc++fs --rtlib=compiler-rt --unwindlib=libgcc)
++    target_link_libraries( ${lib_target_} PRIVATE hip::device --rtlib=compiler-rt --unwindlib=libgcc)
+ 
+     if(BUILD_SHARED_LIBS)
+       set(ROCTX_PATH "" CACHE STRING "Path to the roctx library (directory containing libroctx64.so)")
+--- a/clients/benchmarks/CMakeLists.txt
++++ b/clients/benchmarks/CMakeLists.txt
+@@ -68,7 +68,7 @@
+ endif()
+ 
+ if (NOT WIN32)
+-  list( APPEND COMMON_LINK_LIBS "-lm -lstdc++fs" )
++  list( APPEND COMMON_LINK_LIBS "-lm" )
+ endif()
+ 
+ 
+--- a/clients/gtest/CMakeLists.txt
++++ b/clients/gtest/CMakeLists.txt
+@@ -135,7 +135,7 @@
+ target_link_libraries( rocblas-test PRIVATE roc::rocblas hip::host hip::device )
+ 
+ if (NOT WIN32)
+-  list( APPEND COMMON_LINK_LIBS "-lm -lstdc++fs" )
++  list( APPEND COMMON_LINK_LIBS "-lm" )
+ endif()
+ target_link_libraries( rocblas-test PRIVATE ${COMMON_LINK_LIBS} )
+ apply_omp_settings( rocblas-test )
