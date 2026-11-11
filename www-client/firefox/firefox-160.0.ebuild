@@ -521,6 +521,9 @@ src_prepare() {
 			gfx/skia/skia/src/pdf/SkPDFSubsetFont.cpp || die
 	fi
 
+	eapply "${FILESDIR}/safe_strerror-llvm-libc.patch"
+	eapply "${FILESDIR}/authenticator-nfds_t.patch"
+
 	# Allow user to apply any additional patches without modifying ebuild
 	eapply_user
 

@@ -1,0 +1,23 @@
+Use libc::nfds_t for the count poll takes, rather than assuming it is
+an unsigned long as it is with glibc.
+
+--- a/dom/webauthn/authenticator/src/transport/linux/monitor.rs	2026-11-10 17:08:36.760923852 +0000
++++ b/dom/webauthn/authenticator/src/transport/linux/monitor.rs	2026-11-10 17:08:36.761765361 +0000
+@@ -3,7 +3,7 @@
+  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ 
+ use crate::transport::device_selector::DeviceSelectorEvent;
+-use libc::{c_int, c_short, c_ulong};
++use libc::{c_int, c_short};
+ use libudev::EventType;
+ use runloop::RunLoop;
+ use std::collections::HashMap;
+@@ -18,7 +18,7 @@
+ const POLL_TIMEOUT: c_int = 100;
+ 
+ fn poll(fds: &mut [::libc::pollfd]) -> io::Result<()> {
+-    let nfds = fds.len() as c_ulong;
++    let nfds = fds.len() as ::libc::nfds_t;
+ 
+     let rv = unsafe { ::libc::poll((fds[..]).as_mut_ptr(), nfds, POLL_TIMEOUT) };
+ 
