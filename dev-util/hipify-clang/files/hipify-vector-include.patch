@@ -1,0 +1,12 @@
+Include <vector>, which libstdc++ pulls in elsewhere and libc++ does not.
+
+--- a/src/Statistics.h
++++ b/src/Statistics.h
+@@ -27,6 +27,7 @@
+ #include <fstream>
+ #include <map>
+ #include <set>
++#include <vector>
+ #include <list>
+ #include <llvm/ADT/StringRef.h>
+ #include <llvm/Support/raw_ostream.h>

@@ -26,6 +26,7 @@ SLOT="0/$(ver_cut 1-2)"
 
 PATCHES=(
 	"${FILESDIR}/${PN}-10.1.0-link-clang-cpp.patch"
+	"${FILESDIR}/hipify-vector-include.patch"
 )
 
 # upstream CMake adds a $ORIGIN/../lib RUNPATH to hipify-clang
