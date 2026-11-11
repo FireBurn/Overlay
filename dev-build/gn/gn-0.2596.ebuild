@@ -26,7 +26,10 @@ BDEPEND="
 	app-alternatives/ninja
 "
 
-PATCHES=( "${FILESDIR}/gn-0.2574-respect-flags.patch" )
+PATCHES=(
+	"${FILESDIR}/gn-0.2574-respect-flags.patch"
+	"${FILESDIR}/gn-llvmlibc-strerror-r.patch"
+)
 
 pkg_setup() {
 	:

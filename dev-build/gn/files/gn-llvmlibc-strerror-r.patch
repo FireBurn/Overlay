@@ -1,0 +1,15 @@
+This libc declares the GNU form of strerror_r, the one returning char *,
+but does not define __GLIBC__. Only the POSIX wrapper was then compiled
+and neither overload matched the declaration.
+
+--- a/src/base/posix/safe_strerror.cc
++++ b/src/base/posix/safe_strerror.cc
+@@ -20,7 +20,7 @@
+ 
+ namespace base {
+ 
+-#if defined(__GLIBC__)
++#if defined(__GLIBC__) || defined(__LLVM_LIBC__)
+ #define USE_HISTORICAL_STRERRO_R 1
+ #else
+ #define USE_HISTORICAL_STRERRO_R 0
