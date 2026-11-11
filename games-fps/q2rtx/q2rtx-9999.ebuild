@@ -46,6 +46,10 @@ src_unpack() {
 	unpack q2rtx-${RELEASE_VER}-linux.tar.gz
 }
 
+PATCHES=(
+	"${FILESDIR}/ffx-vk-include-mutex.patch"
+)
+
 src_prepare() {
 	cmake_src_prepare
 

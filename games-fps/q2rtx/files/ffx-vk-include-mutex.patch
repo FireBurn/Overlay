@@ -1,0 +1,13 @@
+ffx_vk.cpp uses std::lock_guard but only gets <mutex> through libstdc++'s
+own headers. Include it.
+
+--- a/extern/ffx-vulkan/upstream/ffx-1.1.4/sdk/src/backends/vk/ffx_vk.cpp
++++ b/extern/ffx-vulkan/upstream/ffx-1.1.4/sdk/src/backends/vk/ffx_vk.cpp
+@@ -34,6 +34,7 @@
+ #endif  // _WIN32
+ 
+ #include <vulkan/vulkan.h>
++#include <mutex>
+ 
+ // prototypes for functions in the interface
+ FfxVersionNumber       GetSDKVersionVK(FfxInterface* backendInterface);
