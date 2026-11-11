@@ -1,0 +1,15 @@
+Let the test applications be left out with ROCTRACER_BUILD_TESTS=OFF. They are built
+whether or not tests are asked for, and they need a HIP compiler and GPU headers.
+
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -65,7 +65,8 @@
+ add_subdirectory(src)
+ 
+ ## Build tests
+-if(${LIBRARY_TYPE} STREQUAL SHARED)
++option(ROCTRACER_BUILD_TESTS "build the test applications" ON)
++if(${LIBRARY_TYPE} STREQUAL SHARED AND ROCTRACER_BUILD_TESTS)
+   add_subdirectory(test)
+ endif()
+ 

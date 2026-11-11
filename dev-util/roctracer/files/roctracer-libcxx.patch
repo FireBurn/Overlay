@@ -1,0 +1,24 @@
+Include <functional> for std::function, and do not link libstdc++fs, which libc++ has no
+equivalent of and needs none.
+
+--- a/src/roctracer/memory_pool.h
++++ b/src/roctracer/memory_pool.h
+@@ -28,6 +28,7 @@
+ #include <cstdlib>
+ #include <cstddef>
+ #include <cstring>
++#include <functional>
+ #include <future>
+ #include <mutex>
+ #include <type_traits>
+--- a/plugin/file/CMakeLists.txt
++++ b/plugin/file/CMakeLists.txt
+@@ -44,7 +44,7 @@
+ 
+ target_link_options(file_plugin PRIVATE -Wl,--version-script=${CMAKE_CURRENT_SOURCE_DIR}/../exportmap -Wl,--no-undefined)
+ 
+-target_link_libraries(file_plugin PRIVATE util roctracer  amd_comgr hsa-runtime64::hsa-runtime64 stdc++fs amd_comgr)
++target_link_libraries(file_plugin PRIVATE util roctracer  amd_comgr hsa-runtime64::hsa-runtime64 amd_comgr)
+ 
+ install(TARGETS file_plugin LIBRARY
+         DESTINATION ${CMAKE_INSTALL_LIBDIR}

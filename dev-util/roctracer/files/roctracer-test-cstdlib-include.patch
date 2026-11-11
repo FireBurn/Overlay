@@ -1,0 +1,12 @@
+Include <stdlib.h> for abort, which libstdc++ pulls in elsewhere and libc++ does not.
+
+--- a/test/hsa/copy.cpp
++++ b/test/hsa/copy.cpp
+@@ -24,6 +24,7 @@
+ 
+ #include <fcntl.h>
+ #include <assert.h>
++#include <stdlib.h>
+ #include <stdio.h>
+ #include <string.h>
+ #include <unistd.h>

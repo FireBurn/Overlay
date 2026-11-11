@@ -43,6 +43,12 @@ pkg_setup() {
 	python-any-r1_pkg_setup
 }
 
+PATCHES=(
+	"${FILESDIR}/roctracer-libcxx.patch"
+	"${FILESDIR}/roctracer-optional-tests.patch"
+	"${FILESDIR}/roctracer-test-cstdlib-include.patch"
+)
+
 src_prepare() {
 	cmake_src_prepare
 
