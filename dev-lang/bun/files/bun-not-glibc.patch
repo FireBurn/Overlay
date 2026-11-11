@@ -1,0 +1,57 @@
+Skip what is meant for glibc when BUN_NOT_GLIBC is set: the wrapping of glibc symbols down
+to 2.17, the static libstdc++ and the removal of the unwind sections. LLVM libc
+has none of the symbols, and does not use libstdc++.
+
+--- a/scripts/build/flags.ts
++++ b/scripts/build/flags.ts
+@@ -1226,7 +1226,7 @@
+       "_dl_find_object",
+       "posix_spawn_file_actions_addchdir_np",
+     ].map(s => `-Wl,--wrap=${s}`),
+-    when: c => c.linux && c.abi === "gnu",
++    when: c => c.linux && c.abi === "gnu" && !process.env.BUN_NOT_GLIBC,
+     desc: "Wrap glibc 2.18+ symbols (portable down to glibc 2.17)",
+   },
+   {
+@@ -1240,7 +1240,7 @@
+   },
+   {
+     flag: ["-static-libstdc++", "-static-libgcc"],
+-    when: c => c.linux && c.abi === "gnu",
++    when: c => c.linux && c.abi === "gnu" && !process.env.BUN_NOT_GLIBC,
+     desc: "Static C++ runtime (don't depend on host libstdc++)",
+   },
+   {
+@@ -1270,12 +1270,12 @@
+     // runtime regardless of LTO. Backtraces walk frame pointers (forced on
+     // both sides). Debug builds keep .eh_frame for gdb/libunwind.
+     flag: "-Wl,--no-eh-frame-hdr",
+-    when: c => c.linux && c.abi === "gnu" && c.release,
++    when: c => c.linux && c.abi === "gnu" && !process.env.BUN_NOT_GLIBC && c.release,
+     desc: "Omit eh_frame header (release; size/RSS opt; see stripFlags for matching -R .eh_frame)",
+   },
+   {
+     flag: "-Wl,--eh-frame-hdr",
+-    when: c => c.linux && !(c.abi === "gnu" && c.release),
++    when: c => c.linux && !(c.abi === "gnu" && !process.env.BUN_NOT_GLIBC && c.release),
+     desc: "Keep eh_frame header (debug/musl/android; needed for DWARF backtraces)",
+   },
+   {
+@@ -1596,7 +1596,7 @@
+     // .eh_frame_hdr 142 KB + .gcc_except_table 13 KB) that otherwise gets
+     // dragged into RSS via 64 KB fault-around on adjacent .rodata reads.
+     flag: ["-R", ".eh_frame", "-R", ".eh_frame_hdr", "-R", ".gcc_except_table"],
+-    when: c => c.linux && c.abi === "gnu" && c.release,
++    when: c => c.linux && c.abi === "gnu" && !process.env.BUN_NOT_GLIBC && c.release,
+     desc: "Remove unwind sections (GNU strip required — llvm-strip leaves [LOAD #2 [R]])",
+   },
+ ];
+@@ -1677,7 +1677,7 @@
+     // -fwhole-program-vtables requires -flto; disabling one requires
+     // disabling the other or clang errors.
+     extraFlags: ["-fno-lto", "-fno-whole-program-vtables"],
+-    when: c => c.linux && c.lto && c.abi === "gnu",
++    when: c => c.linux && c.lto && c.abi === "gnu" && !process.env.BUN_NOT_GLIBC,
+     desc: "Disable LTO: LLD (first seen with 21; not re-checked on 23) emits glibc versioned symbols (exp@GLIBC_2.17) into .lto_discard which fails to parse '@'",
+   },
+   {

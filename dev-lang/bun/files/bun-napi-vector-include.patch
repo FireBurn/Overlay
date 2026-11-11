@@ -1,0 +1,12 @@
+Include <vector>, which libstdc++ pulls in elsewhere and libc++ does not.
+
+--- a/src/jsc/bindings/napi.h
++++ b/src/jsc/bindings/napi.h
+@@ -1,6 +1,7 @@
+ #pragma once
+ 
+ #include "root.h"
++#include <vector>
+ #include <JavaScriptCore/DeferGC.h>
+ #include <JavaScriptCore/JSFunction.h>
+ #include <JavaScriptCore/VM.h>

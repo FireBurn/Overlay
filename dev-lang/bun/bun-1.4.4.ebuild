@@ -527,6 +527,8 @@ src_prepare() {
 
 	eapply "${FILESDIR}/${P}-type-info.patch"
 	eapply "${FILESDIR}/${P}-once-default.patch"
+	eapply "${FILESDIR}/bun-napi-vector-include.patch"
+	eapply "${FILESDIR}/bun-not-glibc.patch"
 
 	# Use the CPU target from CFLAGS instead of upstream's portable baseline.
 	# The same table feeds WebKit's flags and rustc's -Ctarget-cpu.
