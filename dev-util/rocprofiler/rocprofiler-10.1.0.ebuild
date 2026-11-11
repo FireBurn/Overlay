@@ -45,6 +45,10 @@ BDEPEND="
 	$(llvm_gen_dep "llvm-core/clang:\${LLVM_SLOT}")
 "
 
+PATCHES=(
+	"${FILESDIR}/rocprofiler-no-stdcxx-header.patch"
+)
+
 src_prepare() {
 	# the perfetto submodule is not vendored in the release tarball
 	# and would otherwise be git-cloned at configure time
