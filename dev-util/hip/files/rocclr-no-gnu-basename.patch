@@ -1,0 +1,14 @@
+Find the name of the program without basename, which only <string.h> declares and only on glibc.
+
+--- a/rocclr/os/os_posix.cpp
++++ b/rocclr/os/os_posix.cpp
+@@ -820,8 +820,8 @@
+ 
+   if (readlink("/proc/self/exe", buff.get(), FILE_PATH_MAX_LENGTH) > 0) {
+     // Get filename without path and extension.
+-    appName = std::string(basename(buff.get()));
+     appPathAndName = std::string(buff.get());
++    appName = appPathAndName.substr(appPathAndName.find_last_of('/') + 1);
+   } else {
+     appName = "";
+     appPathAndName = "";
