@@ -1,0 +1,74 @@
+diff -ruN a/compiler/rustc_target/src/spec/mod.rs b/compiler/rustc_target/src/spec/mod.rs
+--- a/compiler/rustc_target/src/spec/mod.rs	2026-09-01 07:56:03.000000000 +0100
++++ b/compiler/rustc_target/src/spec/mod.rs	2026-09-13 13:25:44.856153463 +0100
+@@ -1439,6 +1439,7 @@
+ 
+ supported_targets! {
+     ("x86_64-unknown-linux-gnu", x86_64_unknown_linux_gnu),
++    ("x86_64-unknown-linux-llvmlibc", x86_64_unknown_linux_llvmlibc),
+     ("x86_64-unknown-linux-gnux32", x86_64_unknown_linux_gnux32),
+     ("i686-unknown-linux-gnu", i686_unknown_linux_gnu),
+     ("i586-unknown-linux-gnu", i586_unknown_linux_gnu),
+@@ -2079,6 +2080,7 @@
+         Ilp32 = "ilp32",
+         Ilp32e = "ilp32e",
+         Llvm = "llvm",
++        LlvmLibc = "llvmlibc",
+         MacAbi = "macabi",
+         Pauthtest = "pauthtest",
+         Sim = "sim",
+@@ -3342,6 +3344,7 @@
+                         None,
+                         CfgAbi::X32
+                             | CfgAbi::Llvm
++                            | CfgAbi::LlvmLibc
+                             | CfgAbi::Fortanix
+                             | CfgAbi::Uwp
+                             | CfgAbi::MacAbi
+diff -ruN a/compiler/rustc_target/src/spec/targets/x86_64_unknown_linux_llvmlibc.rs b/compiler/rustc_target/src/spec/targets/x86_64_unknown_linux_llvmlibc.rs
+--- a/compiler/rustc_target/src/spec/targets/x86_64_unknown_linux_llvmlibc.rs	1970-01-01 01:00:00.000000000 +0100
++++ b/compiler/rustc_target/src/spec/targets/x86_64_unknown_linux_llvmlibc.rs	2026-09-13 13:25:44.856323473 +0100
+@@ -0,0 +1,43 @@
++use crate::spec::{
++    Arch, Cc, CfgAbi, LinkerFlavor, Lld, SanitizerSet, StackProbeType, Target, TargetMetadata,
++    base,
++};
++
++pub(crate) fn target() -> Target {
++    // Built the way the gnu target is: LLVM's libc provides the GNU
++    // extensions glibc programs call, and the system it runs on calls itself
++    // glibc to its packages. Its types are its own, though. A sigset_t is the
++    // kernel's eight bytes rather than glibc's 128, and struct sigaction,
++    // struct stat and the pthread types differ with it, so target_abi says
++    // which C library this is and the libc crate uses that to give its
++    // definitions. The separate name is also what lets a compiler that runs
++    // on this libc be built by one that runs on glibc.
++    let mut base = base::linux_gnu::opts();
++    base.cfg_abi = CfgAbi::LlvmLibc;
++    base.cpu = "x86-64".into();
++    base.plt_by_default = false;
++    base.max_atomic_width = Some(64);
++    base.add_pre_link_args(LinkerFlavor::Gnu(Cc::Yes, Lld::No), &["-m64"]);
++    base.stack_probes = StackProbeType::Inline;
++    base.static_position_independent_executables = true;
++    base.supported_sanitizers = SanitizerSet::empty();
++    base.supports_fentry = true;
++    base.supports_xray = true;
++
++    Target {
++        // What LLVM is told, which stays the gnu triple: the code generated
++        // is the same and LLVM knows nothing of this libc by name.
++        llvm_target: "x86_64-unknown-linux-gnu".into(),
++        metadata: TargetMetadata {
++            description: Some("64-bit Linux on LLVM's libc".into()),
++            tier: Some(3),
++            host_tools: Some(true),
++            std: Some(true),
++        },
++        pointer_width: 64,
++        data_layout:
++            "e-m:e-p270:32:32-p271:32:32-p272:64:64-i64:64-i128:128-f80:128-n8:16:32:64-S128".into(),
++        arch: Arch::X86_64,
++        options: base,
++    }
++}

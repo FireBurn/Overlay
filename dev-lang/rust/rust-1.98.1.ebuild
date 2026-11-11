@@ -355,6 +355,7 @@ src_prepare() {
 	PATCHES=(
 		"${WORKDIR}/rust-patches-${RUST_PATCH_VER}/"
 		"${FILESDIR}/1.98.0/1.98.0-llvm-23-compatibility.patch"
+		"${FILESDIR}/llvmlibc-target.patch"
 	)
 
 	if use lto && tc-is-clang && ! tc-ld-is-lld && ! tc-ld-is-mold; then

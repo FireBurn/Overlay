@@ -356,6 +356,7 @@ src_prepare() {
 	PATCHES=(
 		"${WORKDIR}/rust-patches-${RUST_PATCH_VER}/"
 		"${FILESDIR}/1.99.0-bootstrap-stage0-rustc-src.patch"
+		"${FILESDIR}/llvmlibc-target.patch"
 	)
 
 	if use lto && tc-is-clang && ! tc-ld-is-lld && ! tc-ld-is-mold; then

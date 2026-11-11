@@ -355,6 +355,7 @@ src_prepare() {
 		"${FILESDIR}/${PV}/1.89.0-compiler-link-with-system-libs-unconditionally.patch"
 		"${FILESDIR}/${PV}/1.98.0-compiler-musl-dynamic-linking.patch"
 		"${FILESDIR}/${PV}/1.98.0-llvm-23-compatibility.patch"
+		"${FILESDIR}/llvmlibc-target.patch"
 	)
 
 	if use lto && tc-is-clang && ! tc-ld-is-lld && ! tc-ld-is-mold; then
