@@ -56,6 +56,10 @@ LLVM_COMPONENTS=( libc runtimes cmake llvm/cmake compiler-rt third-party/siphash
 LLVM_TEST_COMPONENTS=( llvm/utils )
 llvm.org_set_globals
 
+# The libc work is carried on a fork branch until it is merged upstream.
+EGIT_REPO_URI="https://github.com/FireBurn/llvm-project.git"
+EGIT_BRANCH="libc-shared-lib-support"
+
 pkg_pretend() {
 	# This is the C library of the system it goes on: it owns the headers in
 	# /usr/include and installs a loader and libc.so of its own. On a system
