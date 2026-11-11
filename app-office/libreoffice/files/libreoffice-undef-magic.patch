@@ -1,0 +1,17 @@
+Undefine the filesystem magic numbers before declaring them as constants, as <sys/vfs.h> includes <linux/magic.h> on LLVM libc.
+
+--- a/sal/osl/unx/file.cxx
++++ b/sal/osl/unx/file.cxx
+@@ -70,7 +70,11 @@
+ 
+ #ifdef LINUX
+ #include <sys/vfs.h>
+-// As documented by the kernel
++// As documented by the kernel. <sys/vfs.h> includes <linux/magic.h> here, which
++// defines them as macros.
++#undef SMB_SUPER_MAGIC
++#undef CIFS_SUPER_MAGIC
++#undef SMB2_SUPER_MAGIC
+ constexpr decltype(std::declval<struct statfs>().f_type) SMB_SUPER_MAGIC = 0x517B;
+ constexpr decltype(std::declval<struct statfs>().f_type) CIFS_SUPER_MAGIC = 0xFF534D42;
+ constexpr decltype(std::declval<struct statfs>().f_type) SMB2_SUPER_MAGIC = 0xFE534D42;

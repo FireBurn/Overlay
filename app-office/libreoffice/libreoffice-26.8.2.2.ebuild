@@ -310,6 +310,7 @@ PATCHES=(
 	# https://bugs.documentfoundation.org/show_bug.cgi?id=172896
 	# https://bugs.documentfoundation.org/show_bug.cgi?id=173298
 	"${FILESDIR}/${PN}-26.8-qt6-fractional-scaling.patch"
+	"${FILESDIR}/libreoffice-undef-magic.patch"
 )
 
 _check_reqs() {
