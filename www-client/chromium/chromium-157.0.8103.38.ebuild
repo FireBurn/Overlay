@@ -531,6 +531,9 @@ src_prepare() {
 		PATCHES+=(
 			"${FILESDIR}/cr156-llvm-libc-rust-target.patch"
 			"${FILESDIR}/cr156-llvm-libc-qt-libcxx.patch"
+			"${FILESDIR}/chromium-libcxx-llvm-libc.patch"
+			"${FILESDIR}/chromium-llvmlibc-backtrace.patch"
+			"${FILESDIR}/chromium-llvmlibc-strerror_r.patch"
 		)
 	fi
 

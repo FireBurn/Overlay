@@ -1,0 +1,16 @@
+llvm-libc has execinfo.h and backtrace(3), as glibc does. The file
+declares OutputToStreamWithPrefixImpl either way and defines it only where
+there is a backtrace.
+
+--- a/base/debug/stack_trace_posix.cc
++++ b/base/debug/stack_trace_posix.cc
+@@ -48,7 +48,8 @@
+ // execinfo.h and backtrace(3) are really only present in glibc and in macOS
+ // libc.
+ #if BUILDFLAG(IS_APPLE) || \
+-    (defined(__GLIBC__) && !defined(__UCLIBC__) && !defined(__AIX))
++    (defined(__GLIBC__) && !defined(__UCLIBC__) && !defined(__AIX)) || \
++    defined(__LLVM_LIBC__)
+ #define HAVE_BACKTRACE
+ #include <execinfo.h>
+ #endif

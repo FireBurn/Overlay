@@ -1,0 +1,23 @@
+Tell LLVM's libc from the others by the header directory it installs.
+
+The bundled libc++ names the C library it is built for here. This file is
+read before any of the C library's headers, so a macro cannot be tested,
+but llvm-libc-macros exists only where LLVM's libc is installed, and the
+value stays 0 everywhere else.
+
+--- a/buildtools/third_party/libc++/__config_site
++++ b/buildtools/third_party/libc++/__config_site
+@@ -79,7 +79,13 @@
+ 
+ #define _LIBCPP_LIBC_PICOLIBC 0
+ #define _LIBCPP_LIBC_NEWLIB 0
++// LLVM's libc installs llvm-libc-macros, which no other C library has. This
++// header is read before any of the C library's, so the macro cannot be tested.
++#if __has_include(<llvm-libc-macros/stdint-macros.h>)
++#define _LIBCPP_LIBC_LLVM_LIBC 1
++#else
+ #define _LIBCPP_LIBC_LLVM_LIBC 0
++#endif
+ 
+ // Settings below aren't part of __config_site upstream.
+ // We set them here since we want them to take effect everywhere,
