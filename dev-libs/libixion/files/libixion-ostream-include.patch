@@ -1,0 +1,12 @@
+Include <ostream> for the operator<< declared here.
+
+--- a/include/ixion/types.hpp
++++ b/include/ixion/types.hpp
+@@ -14,6 +14,7 @@
+ #include <cstdint>
+ #include <string_view>
+ #include <functional>
++#include <ostream>
+ 
+ namespace ixion {
+ 

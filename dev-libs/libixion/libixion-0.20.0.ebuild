@@ -36,6 +36,7 @@ DEPEND="${RDEPEND}"
 
 PATCHES=(
 	"${FILESDIR}"/${PN}-0.20.0-boost-m4.patch # bug 961528
+	"${FILESDIR}/libixion-ostream-include.patch"
 )
 
 pkg_setup() {
