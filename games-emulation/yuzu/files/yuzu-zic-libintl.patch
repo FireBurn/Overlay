@@ -1,0 +1,27 @@
+Let zic be linked against libintl when TZDB2NX_USE_INTL is set, as it is on macOS,
+where gettext is not in libc either.
+
+--- a/externals/nx_tzdb/tzdb_to_nx/CMakeLists.txt
++++ b/externals/nx_tzdb/tzdb_to_nx/CMakeLists.txt
+@@ -11,7 +11,9 @@
+ 
+ set(CMAKE_CXX_STANDARD 20)
+ 
+-if (APPLE)
++# gettext is a library of its own wherever libc does not have it.
++option(TZDB2NX_USE_INTL "link zic against libintl" OFF)
++if (APPLE OR TZDB2NX_USE_INTL)
+     find_package(Intl REQUIRED)
+ endif()
+ 
+--- a/externals/nx_tzdb/tzdb_to_nx/externals/tz/CMakeLists.txt
++++ b/externals/nx_tzdb/tzdb_to_nx/externals/tz/CMakeLists.txt
+@@ -28,7 +28,7 @@
+             COMMAND_ERROR_IS_FATAL ANY
+         )
+ 
+-        if (APPLE)
++        if (APPLE OR TZDB2NX_USE_INTL)
+             set(TZ_MAKEFLAGS "LDLIBS=${Intl_LIBRARY}")
+         else()
+             set(TZ_MAKEFLAGS)

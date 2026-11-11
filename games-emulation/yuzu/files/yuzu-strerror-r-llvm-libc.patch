@@ -1,0 +1,13 @@
+LLVM libc has the GNU strerror_r under _GNU_SOURCE, as glibc does.
+
+--- a/src/common/error.cpp
++++ b/src/common/error.cpp
+@@ -31,7 +31,7 @@
+ #else
+     char err_str[255];
+ #if defined(ANDROID) ||                                                                            \
+-    (defined(__GLIBC__) && (_GNU_SOURCE || (_POSIX_C_SOURCE < 200112L && _XOPEN_SOURCE < 600)))
++    ((defined(__GLIBC__) || defined(__LLVM_LIBC__)) && (_GNU_SOURCE || (_POSIX_C_SOURCE < 200112L && _XOPEN_SOURCE < 600)))
+     // Thread safe (GNU-specific)
+     const char* str = strerror_r(e, err_str, sizeof(err_str));
+     return std::string(str);

@@ -90,6 +90,11 @@ src_unpack() {
 	#use compatibility-list && curl https://api.yuzu-emu.org/gamedb/ > "${S}"/compatibility_list.json
 }
 
+PATCHES=(
+	"${FILESDIR}/yuzu-strerror-r-llvm-libc.patch"
+	"${FILESDIR}/yuzu-zic-libintl.patch"
+)
+
 src_prepare() {
 	# temporary fix
 	sed -i -e '/Werror/d' src/CMakeLists.txt || die
