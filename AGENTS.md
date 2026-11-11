@@ -41,3 +41,14 @@
 - Do not add `Co-Authored-By`, assistant attribution or session trailers. Do not take credit for work adopted from elsewhere.
 - Do not amend or rewrite commits that may already be pushed without checking the branch and remote state.
 - Do not commit `AGENTS.md` or add it to `.gitignore`.
+
+## Long-running jobs
+
+- Start builds with the harness background mode so exit notifies you. Do not rely on `nohup`, tmux or a polling loop alone.
+- Never wait with `pgrep -f <pattern>` in a Monitor or `bash -c`: it matches the watcher's own command line and never ends. Wait on the PID with `[ -d /proc/PID ]`. `kill -0` fails with EPERM on root-owned processes such as emerge.
+- A watcher must also end on `ERROR:`, `FAILED:` or `ninja: error` in the log and on a log not written for 15 minutes, not only on process exit.
+- After starting a job, read its log at +2 and +10 minutes and confirm the step counter advances. Do not report a job as running or compiling before you have seen it advance.
+- `ebuild ... prepare` proves only unpack and patches. A bad `keeplibs`, a moved source tree or a missing generated header fails at compile time, so look at the first minutes of the real build.
+- On a failed Chromium build, fix the ebuild, then resume with `ebuild <ebuild> compile install qmerge` instead of a fresh emerge.
+- Do not stop the `llama` server on quark while the bumper agents may be running; they use it.
+- Do not queue builds one machine at a time when the other is idle. Check `uptime` on quark and axion first.
