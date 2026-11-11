@@ -205,6 +205,14 @@ src_prepare() {
 	sed -i 's/std::max(/(std::max)(/' lsteamclient/unixlib.cpp || die
 
 	cd "${S}" || die
+
+	# LTO drops what only module level asm refers to, and the RTTI data of
+	# the builtin DLLs needs image relative references
+	eapply "${FILESDIR}"/ntdll-seh-handlers-used.patch \
+		"${FILESDIR}"/proton-ge-wow64-asm-callees.patch \
+		"${FILESDIR}"/lto-0003-msvcrt-Use-image-relative-builtin-for-the-RTTI-data-.patch \
+		"${FILESDIR}"/lto-0004-msvcp90-Use-image-relative-builtin-for-the-RTTI-data.patch \
+		"${FILESDIR}"/lto-0005-vccorlib140-Use-image-relative-builtin-for-the-RTTI-.patch
 	wine_src_prepare
 
 	# generated files Proton's build makes after patching

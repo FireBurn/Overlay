@@ -1,0 +1,31 @@
+The functions that module level asm refers to must be visible to the linker, so with LTO they cannot be static, since the compiler does not see the asm as a use and renames or drops them.
+
+--- a/dlls/wow64/syscall.c
++++ b/dlls/wow64/syscall.c
+@@ -102,7 +102,7 @@
+ static void     (WINAPI *pBTCpuProcessInit)(void);
+ static NTSTATUS (WINAPI *pBTCpuSetContext)(HANDLE,HANDLE,void *,void *);
+ static void     (WINAPI *pBTCpuThreadInit)(void);
+-static void     (WINAPI *pBTCpuSimulate)(void) __attribute__((used));
++void     (WINAPI *pBTCpuSimulate)(void) __attribute__((used));
+ static void *   (WINAPI *p__wine_get_unix_opcode)(void);
+ static void *   (WINAPI *pKiRaiseUserExceptionDispatcher)(void);
+ void     (WINAPI *pBTCpuFlushInstructionCache2)( const void *, SIZE_T ) = NULL;
+@@ -195,7 +195,7 @@
+ /**********************************************************************
+  *           call_user_exception_dispatcher
+  */
+-static void __attribute__((used)) call_user_exception_dispatcher( EXCEPTION_RECORD32 *rec, void *ctx32_ptr,
++void __attribute__((used)) call_user_exception_dispatcher( EXCEPTION_RECORD32 *rec, void *ctx32_ptr,
+                                                                   void *ctx64_ptr )
+ {
+     switch (current_machine)
+@@ -298,7 +298,7 @@
+ /**********************************************************************
+  *           call_raise_user_exception_dispatcher
+  */
+-static void __attribute__((used)) call_raise_user_exception_dispatcher( ULONG code )
++void __attribute__((used)) call_raise_user_exception_dispatcher( ULONG code )
+ {
+     NtCurrentTeb32()->ExceptionCode = code;
+ 

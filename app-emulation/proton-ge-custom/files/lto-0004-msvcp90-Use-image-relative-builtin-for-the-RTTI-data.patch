@@ -1,0 +1,102 @@
+From e8036a85c17bf0e063294e024ec1f72a2366749d Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Fri, 30 Oct 2026 07:11:39 +0000
+Subject: [PATCH 4/5] msvcp90: Use image relative builtin for the RTTI data in
+ PE builds
+
+On 64-bit PE builds the RTTI and exception type data holds 32-bit image
+relative references, which were written in assembly inside a function body.
+LTO does not see symbols defined there, so the link fails with undefined
+symbols for the _rtti and _exception_type objects.
+
+With a compiler that has __builtin_imgrel32 the data is written as ordinary
+static C data. The assembly is kept for compilers without it
+
+Signed-off-by: Mike Lothian <mike@fireburn.co.uk>
+---
+ dlls/msvcp90/cxx.h | 55 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 55 insertions(+)
+
+diff --git a/dlls/msvcp90/cxx.h b/dlls/msvcp90/cxx.h
+index 8887217..508a41b 100644
+--- a/dlls/msvcp90/cxx.h
++++ b/dlls/msvcp90/cxx.h
+@@ -42,6 +42,31 @@
+ #define RTTI_USE_RVA 1
+ #endif
+ 
++#if defined(__WINE_PE_BUILD) && defined(__has_builtin)
++# if __has_builtin(__builtin_imgrel32)
++#  define CXX_USE_IMGREL32 1
++# endif
++#endif
++
++#ifdef CXX_USE_IMGREL32
++#define IMGREL32(x) __builtin_imgrel32(x)
++#define IMGREL32_NARGS_(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,n,...) n
++#define IMGREL32_NARGS(...) IMGREL32_NARGS_(__VA_ARGS__,10,9,8,7,6,5,4,3,2,1,0)
++#define IMGREL32_CAT_(a,b) a##b
++#define IMGREL32_CAT(a,b) IMGREL32_CAT_(a,b)
++#define IMGREL32_1(a) IMGREL32(a)
++#define IMGREL32_2(a,...) IMGREL32(a), IMGREL32_1(__VA_ARGS__)
++#define IMGREL32_3(a,...) IMGREL32(a), IMGREL32_2(__VA_ARGS__)
++#define IMGREL32_4(a,...) IMGREL32(a), IMGREL32_3(__VA_ARGS__)
++#define IMGREL32_5(a,...) IMGREL32(a), IMGREL32_4(__VA_ARGS__)
++#define IMGREL32_6(a,...) IMGREL32(a), IMGREL32_5(__VA_ARGS__)
++#define IMGREL32_7(a,...) IMGREL32(a), IMGREL32_6(__VA_ARGS__)
++#define IMGREL32_8(a,...) IMGREL32(a), IMGREL32_7(__VA_ARGS__)
++#define IMGREL32_9(a,...) IMGREL32(a), IMGREL32_8(__VA_ARGS__)
++#define IMGREL32_10(a,...) IMGREL32(a), IMGREL32_9(__VA_ARGS__)
++#define IMGREL32_LIST(...) IMGREL32_CAT(IMGREL32_, IMGREL32_NARGS(__VA_ARGS__))(__VA_ARGS__)
++#endif
++
+ #ifdef _WIN64
+ 
+ #define VTABLE_ADD_FUNC(name) "\t.quad " THISCALL_NAME(name) "\n"
+@@ -85,6 +110,22 @@ const rtti_object_locator name ## _rtti = \
+ 
+ #define INIT_RTTI(name,base) /* nothing to do */
+ 
++#elif defined CXX_USE_IMGREL32
++
++#define DEFINE_RTTI_DATA2(name, off, mangled_name, ...) \
++type_info name ## _type_info = { &type_info_vtable, NULL, mangled_name }; \
++const rtti_base_descriptor name ## _rtti_base_descriptor[1] = \
++    { { IMGREL32(&name ## _type_info), ARRAY_SIZE(((const void *[]){ __VA_ARGS__ })) - 1, { 0, -1, 0 }, 64 } }; \
++static const rtti_base_array name ## _rtti_base_array = { { IMGREL32_LIST(__VA_ARGS__) } }; \
++static const rtti_object_hierarchy name ## _hierarchy = \
++    { 0, 0, ARRAY_SIZE(((const void *[]){ __VA_ARGS__ })), IMGREL32(&name ## _rtti_base_array) }; \
++const rtti_object_locator name ## _rtti = \
++    { 1, off, 0, IMGREL32(&name ## _type_info), IMGREL32(&name ## _hierarchy), IMGREL32(&name ## _rtti) };
++#define DEFINE_RTTI_DATA(name, off, mangled_name, ...) \
++    DEFINE_RTTI_DATA2(name, off, mangled_name, name ## _rtti_base_descriptor, ##__VA_ARGS__)
++
++#define INIT_RTTI(name,base) /* nothing to do */
++
+ #elif defined __WINE_PE_BUILD
+ 
+ #define DEFINE_RTTI_DATA2(name, off, mangled_name, ...) \
+@@ -160,6 +201,20 @@ static const cxx_exception_type type ## _exception_type = \
+ 
+ #define INIT_CXX_TYPE(name,base) (void)name ## _exception_type
+ 
++#elif defined CXX_USE_IMGREL32
++
++#define DEFINE_CXX_TYPE2(type, dtor, ...) \
++const cxx_type_info type ## _cxx_type_info[1] = \
++    { { 0, IMGREL32(&type ## _type_info), { 0, -1, 0 }, sizeof(type), IMGREL32(type ## _copy_ctor) } }; \
++static const cxx_type_info_table type ## _type_table = \
++    { ARRAY_SIZE(((const void *[]){ &__VA_ARGS__ })), { IMGREL32_LIST(__VA_ARGS__) } }; \
++const cxx_exception_type type ## _exception_type = \
++    { 0, IMGREL32(dtor), 0, IMGREL32(&type ## _type_table) };
++#define DEFINE_CXX_TYPE(type, dtor, ...) \
++    DEFINE_CXX_TYPE2(type, dtor, type ## _cxx_type_info, ##__VA_ARGS__)
++
++#define INIT_CXX_TYPE(name,base) /* nothing to do */
++
+ #elif defined __WINE_PE_BUILD
+ 
+ #define DEFINE_CXX_TYPE2(type, dtor, ...) \
+-- 
+2.56.0
+
