@@ -29,11 +29,10 @@ bootstrap_uri() {
 # don't change versioning scheme
 # to find correct _p number, look at
 # https://github.com/openjdk/jdk${SLOT}u/tags
-# OpenJDK is mid tag-transition: the -ga tag is missing for some releases
-# (e.g. 17.0.21+9) while the +N tag always exists and is the clean GA
-# (no ea designator). Fetch the +N tag: 17.0.21.0.9 -> jdk-17.0.21+9.
-MY_PV="${PV%_p*}"
-MY_PV="${MY_PV%.*.*}+${MY_PV##*.}"
+# you will see, for example, jdk-17.0.4.1-ga and jdk-17.0.4.1+1, both point
+# to exact same commit sha. we should always use the full version.
+# -ga tag is just for humans to easily identify General Availability release tag.
+MY_PV="${PV%_p*}-ga"
 
 DESCRIPTION="Open source implementation of the Java programming language"
 HOMEPAGE="https://openjdk.org"
