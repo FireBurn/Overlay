@@ -5,6 +5,9 @@ EAPI=8
 
 ROCM_VERSION="10.0"
 
+# Web UI dependency that is a GitHub tarball, not a registry package
+LLAMA_BRAND_COMMIT="f05540643c1ca2a18d732ed6491c839686da9a3a"
+
 if [[ ${PV} == 9999 ]]; then
 	# The web UI's npm dependencies change with every commit, so the live
 	# ebuild installs them from the checked-out lockfile in src_unpack
@@ -113,6 +116,17 @@ else
 		@canvas/image-data@1.1.0
 		@chevrotain/types@11.1.2
 		@chromatic-com/storybook@5.5.1
+		@codemirror/autocomplete@6.20.4
+		@codemirror/commands@6.11.1
+		@codemirror/lang-css@6.3.1
+		@codemirror/lang-html@6.4.12
+		@codemirror/lang-javascript@6.2.5
+		@codemirror/lang-markdown@6.5.2
+		@codemirror/language@6.13.1
+		@codemirror/lint@6.9.7
+		@codemirror/state@6.7.6
+		@codemirror/streamparser@6.0.0
+		@codemirror/view@6.43.15
 		@emnapi/core@1.11.0
 		@emnapi/core@1.9.2
 		@emnapi/runtime@1.11.0
@@ -163,7 +177,15 @@ else
 		@jridgewell/source-map@0.3.11
 		@jridgewell/sourcemap-codec@1.6.0
 		@jridgewell/trace-mapping@0.3.31
+		@lezer/common@1.5.3
+		@lezer/css@1.3.9
+		@lezer/highlight@1.2.5
+		@lezer/html@1.3.13
+		@lezer/javascript@1.5.6
+		@lezer/lr@1.4.11
+		@lezer/markdown@1.8.1
 		@lucide/svelte@1.46.0
+		@marijn/find-cluster-break@1.0.4
 		@mdx-js/react@3.1.1
 		@mermaid-js/parser@1.2.1
 		@modelcontextprotocol/sdk@1.32.1
@@ -409,6 +431,7 @@ else
 		corser@2.0.1
 		cose-base@1.0.3
 		cose-base@2.2.0
+		crelt@1.0.7
 		cross-spawn@7.0.6
 		crypto-random-string@2.0.0
 		css.escape@1.5.1
@@ -929,6 +952,7 @@ else
 		strip-comments@2.0.1
 		strip-indent@3.0.0
 		strip-json-comments@3.1.1
+		style-mod@4.1.4
 		style-to-object@1.0.14
 		stylis@4.4.0
 		supports-color@7.2.0
@@ -1028,6 +1052,7 @@ else
 		vitefu@1.1.3
 		vitest@4.1.12
 		vitest-browser-svelte@2.1.1
+		w3c-keyname@2.2.8
 		web-namespaces@2.0.1
 		webidl-conversions@4.0.2
 		webpack-virtual-modules@0.6.2
@@ -1213,7 +1238,11 @@ else
 			https://github.com/FireBurn/ggml-xdna1/archive/${XDNA_COMMIT}.tar.gz
 				-> ggml-xdna1-${XDNA_COMMIT:0:10}.gh.tar.gz
 		)
-		webui? ( ${NPM_PKG_URIS} )
+		webui? (
+			${NPM_PKG_URIS}
+			https://codeload.github.com/ggml-org/llama-brand/tar.gz/${LLAMA_BRAND_COMMIT}
+				-> llama-brand-${LLAMA_BRAND_COMMIT:0:10}.tar.gz
+		)
 	"
 	S="${WORKDIR}/llama.cpp-${PV}"
 fi
@@ -1265,7 +1294,6 @@ PATCHES=(
 	"${FILESDIR}/0012-vulkan-dual-issue-friendly-int8-epilogue-in-cm1-mmq-.patch"
 	"${FILESDIR}/0013-vulkan-keep-Q-fragments-in-registers-in-coopmat1-fla.patch"
 	"${FILESDIR}/0014-vulkan-store-the-flash-attention-quantized-K-V-scrat.patch"
-	"${FILESDIR}/0015-vulkan-concat-with-a-transposed-src1-through-shared-.patch"
 	"${FILESDIR}/0016-vulkan-load-16-values-per-thread-for-q4_K-q5_K-q6_K-.patch"
 	"${FILESDIR}/0017-vulkan-stage-large-writes-to-host-visible-VRAM-throu.patch"
 	"${FILESDIR}/0018-vulkan-index-iq4-mxfp4-codebooks-as-a-constant-array.patch"
@@ -1443,6 +1471,8 @@ src_compile() {
 
 		# Releases install the UI's dependencies from the offline registry
 		if [[ ${PV} != 9999 ]]; then
+			sed -i "s|https://codeload.github.com/ggml-org/llama-brand/tar.gz/${LLAMA_BRAND_COMMIT}|file:${DISTDIR}/llama-brand-${LLAMA_BRAND_COMMIT:0:10}.tar.gz|" \
+				package.json package-lock.json || die
 			npm_with_registry npm ci --ignore-scripts
 		fi
 		_llama_build_sharp
