@@ -148,10 +148,10 @@ CRATES="
 	miniz_oxide@0.9.1
 	mio@1.2.2
 	napi-build@2.6.0
-	napi-derive-backend@7.0.0
-	napi-derive@3.7.0
+	napi-derive-backend@7.0.1
+	napi-derive@3.7.1
 	napi-sys@3.4.1
-	napi@3.16.1
+	napi@3.16.2
 	nibble_vec@0.1.0
 	nix@0.31.3
 	nodejs-built-in-modules@1.0.0
@@ -177,37 +177,37 @@ CRATES="
 	outref@0.5.2
 	owo-colors@4.4.0
 	oxc-browserslist@5.0.1
-	oxc@0.157.0
-	oxc_allocator@0.157.0
-	oxc_ast@0.157.0
-	oxc_ast_macros@0.157.0
-	oxc_ast_visit@0.157.0
-	oxc_codegen@0.157.0
-	oxc_compat@0.157.0
-	oxc_data_structures@0.157.0
-	oxc_diagnostics@0.157.0
-	oxc_ecmascript@0.157.0
-	oxc_estree@0.157.0
+	oxc@0.158.0
+	oxc_allocator@0.158.0
+	oxc_ast@0.158.0
+	oxc_ast_macros@0.158.0
+	oxc_ast_visit@0.158.0
+	oxc_codegen@0.158.0
+	oxc_compat@0.158.0
+	oxc_data_structures@0.158.0
+	oxc_diagnostics@0.158.0
+	oxc_ecmascript@0.158.0
+	oxc_estree@0.158.0
 	oxc_index@5.0.0
-	oxc_isolated_declarations@0.157.0
-	oxc_mangler@0.157.0
-	oxc_minifier@0.157.0
-	oxc_minify_napi@0.157.0
-	oxc_napi@0.157.0
-	oxc_parser@0.157.0
-	oxc_parser_napi@0.157.0
-	oxc_regular_expression@0.157.0
+	oxc_isolated_declarations@0.158.0
+	oxc_mangler@0.158.0
+	oxc_minifier@0.158.0
+	oxc_minify_napi@0.158.0
+	oxc_napi@0.158.0
+	oxc_parser@0.158.0
+	oxc_parser_napi@0.158.0
+	oxc_regular_expression@0.158.0
 	oxc_resolver@11.24.3
 	oxc_resolver_napi@11.24.3
-	oxc_semantic@0.157.0
+	oxc_semantic@0.158.0
 	oxc_sourcemap@9.0.0
-	oxc_span@0.157.0
-	oxc_str@0.157.0
-	oxc_syntax@0.157.0
-	oxc_transform_napi@0.157.0
-	oxc_transformer@0.157.0
-	oxc_transformer_plugins@0.157.0
-	oxc_traverse@0.157.0
+	oxc_span@0.158.0
+	oxc_str@0.158.0
+	oxc_syntax@0.158.0
+	oxc_transform_napi@0.158.0
+	oxc_transformer@0.158.0
+	oxc_transformer_plugins@0.158.0
+	oxc_traverse@0.158.0
 	parking@2.2.1
 	parking_lot@0.12.5
 	parking_lot@0.13.0
