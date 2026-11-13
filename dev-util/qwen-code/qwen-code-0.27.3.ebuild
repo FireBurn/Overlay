@@ -78,9 +78,11 @@ NPM_PKGS="
 	@csstools/css-color-parser@3.0.10
 	@csstools/css-parser-algorithms@3.0.5
 	@csstools/css-tokenizer@3.0.4
-	@datafe-open/markdown-chart@0.1.12
-	@datafe-open/markdown-chart-echarts@0.1.12
-	@datafe-open/markdown-chart-react@0.1.12
+	@datafe-open/markdown-chart@0.4.1
+	@datafe-open/markdown-chart-echarts@0.4.1
+	@datafe-open/markdown-chart-kpi@0.4.1
+	@datafe-open/markdown-chart-react@0.4.1
+	@datafe-open/markdown-chart-table@0.4.1
 	@dotenvx/dotenvx@1.75.1
 	@dotenvx/primitives@0.8.0
 	@emnapi/core@1.11.3
@@ -414,6 +416,7 @@ NPM_PKGS="
 	@types/babel__template@7.4.4
 	@types/babel__traverse@7.28.0
 	@types/body-parser@1.19.6
+	@types/browserify@12.0.40
 	@types/chai@5.2.2
 	@types/chrome@0.1.43
 	@types/command-exists@1.2.3
@@ -470,6 +473,7 @@ NPM_PKGS="
 	@types/hast@3.0.5
 	@types/html-to-text@9.0.4
 	@types/http-errors@2.0.5
+	@types/insert-module-globals@7.0.6
 	@types/istanbul-lib-coverage@2.0.6
 	@types/jsdom@28.0.3
 	@types/json-schema@7.0.15
@@ -497,6 +501,7 @@ NPM_PKGS="
 	@types/picomatch@4.0.1
 	@types/prompts@2.4.9
 	@types/proper-lockfile@4.1.4
+	@types/qrcode@1.5.6
 	@types/qrcode-terminal@0.12.2
 	@types/qs@6.14.0
 	@types/range-parser@1.2.7
@@ -576,14 +581,21 @@ NPM_PKGS="
 	@yarnpkg/lockfile@1.1.0
 	@zone-eu/mailsplit@5.4.16
 	@zone-eu/mailsplit@5.4.17
+	JSONStream@1.3.5
 	abbrev@3.0.1
 	abort-controller@3.0.0
 	accepts@2.0.0
+	acorn@7.4.1
 	acorn@8.15.0
 	acorn@8.18.0
 	acorn-jsx@5.3.2
+	acorn-node@1.8.2
+	acorn-walk@7.2.0
 	acorn-walk@8.3.4
 	acorn-walk@8.3.5
+	ag-charts-types@14.2.0
+	ag-grid-community@36.2.0
+	ag-stack@36.2.0
 	agent-base@6.0.2
 	agent-base@7.1.3
 	agentkeepalive@4.6.0
@@ -623,6 +635,8 @@ NPM_PKGS="
 	array.prototype.tosorted@1.1.4
 	arraybuffer.prototype.slice@1.0.4
 	asap@2.0.6
+	asn1.js@4.10.1
+	assert@1.5.1
 	assertion-error@1.1.0
 	assertion-error@2.0.1
 	ast-types@0.16.1
@@ -654,6 +668,8 @@ NPM_PKGS="
 	binaryextensions@6.11.0
 	bl@4.1.0
 	bluebird@3.4.7
+	bn.js@4.12.5
+	bn.js@5.2.5
 	body-parser@2.3.0
 	boolbase@1.0.0
 	boundary@2.0.0
@@ -661,24 +677,40 @@ NPM_PKGS="
 	brace-expansion@2.1.7
 	brace-expansion@5.0.9
 	braces@3.0.3
+	brorand@1.1.0
+	browser-pack@6.1.0
+	browser-resolve@2.0.0
+	browserify@17.0.1
+	browserify-aes@1.2.0
+	browserify-cipher@1.0.1
+	browserify-des@1.0.2
+	browserify-rsa@4.1.1
+	browserify-sign@4.2.6
+	browserify-zlib@0.2.0
 	browserslist@4.28.0
+	buffer@5.2.1
 	buffer@5.7.1
 	buffer@6.0.3
 	buffer-crc32@0.2.13
 	buffer-crc32@1.0.0
 	buffer-equal-constant-time@1.0.1
+	buffer-from@1.1.2
 	buffer-indexof-polyfill@1.0.2
+	buffer-xor@1.0.3
 	buffers@0.1.1
+	builtin-status-codes@3.0.0
 	bun-ffi-structs@0.3.1
 	bundle-name@4.1.0
 	bytes@3.1.2
 	c8@10.1.3
 	cac@6.7.14
 	cacache@19.0.1
+	cached-path-relative@1.1.0
 	call-bind@1.0.8
 	call-bind-apply-helpers@1.0.2
 	call-bound@1.0.4
 	callsites@3.1.0
+	camelcase@5.3.1
 	camelcase-css@2.0.1
 	caniuse-lite@1.0.30001757
 	ccount@2.0.1
@@ -703,6 +735,7 @@ NPM_PKGS="
 	chownr@1.1.4
 	chownr@3.0.0
 	ci-info@3.9.0
+	cipher-base@1.0.7
 	cjs-module-lexer@2.2.1
 	class-variance-authority@0.7.1
 	cli-boxes@4.0.1
@@ -712,6 +745,7 @@ NPM_PKGS="
 	cli-truncate@5.2.0
 	cli-truncate@6.0.0
 	cli-width@4.1.0
+	cliui@6.0.0
 	cliui@8.0.1
 	clsx@2.1.1
 	cockatiel@3.2.1
@@ -724,6 +758,7 @@ NPM_PKGS="
 	color-name@1.1.4
 	colorette@1.4.0
 	colorette@2.0.20
+	combine-source-map@0.8.0
 	combined-stream@1.0.8
 	comma-separated-tokens@2.0.3
 	command-exists@1.2.9
@@ -738,11 +773,15 @@ NPM_PKGS="
 	compress-commons@4.1.2
 	compress-commons@6.0.2
 	concat-map@0.0.1
+	concat-stream@1.6.2
 	conf@10.2.0
 	confbox@0.1.8
+	console-browserify@1.2.0
+	constants-browserify@1.0.0
 	content-disposition@1.1.0
 	content-type@1.0.5
 	content-type@2.0.0
+	convert-source-map@1.1.3
 	convert-source-map@2.0.0
 	convert-to-spaces@2.0.1
 	cookie@0.7.2
@@ -756,10 +795,14 @@ NPM_PKGS="
 	crc-32@1.2.2
 	crc32-stream@4.0.3
 	crc32-stream@6.0.0
+	create-ecdh@4.0.4
+	create-hash@1.2.0
+	create-hmac@1.1.7
 	crelt@1.0.6
 	cross-env@7.0.3
 	cross-spawn@6.0.6
 	cross-spawn@7.0.6
+	crypto-browserify@3.12.1
 	css-select@5.2.2
 	css-what@6.2.2
 	cssesc@3.0.0
@@ -804,6 +847,7 @@ NPM_PKGS="
 	d3-transition@3.0.1
 	d3-zoom@3.0.0
 	dagre-d3-es@7.0.14
+	dash-ast@1.0.0
 	data-uri-to-buffer@4.0.1
 	data-urls@5.0.0
 	data-view-buffer@1.0.2
@@ -813,6 +857,7 @@ NPM_PKGS="
 	debounce-fn@4.0.0
 	debug@3.2.7
 	debug@4.4.3
+	decamelize@1.2.0
 	decimal.js@10.5.0
 	decode-named-character-reference@1.3.0
 	decompress-response@6.0.0
@@ -829,12 +874,16 @@ NPM_PKGS="
 	define-lazy-prop@2.0.0
 	define-lazy-prop@3.0.0
 	define-properties@1.2.1
+	defined@1.0.1
 	delaunator@5.1.0
 	delayed-stream@1.0.0
 	depd@2.0.0
+	deps-sort@2.0.1
 	dequal@2.0.3
+	des.js@1.1.0
 	detect-libc@2.1.2
 	detect-node-es@1.1.0
+	detective@5.2.1
 	devlop@1.1.0
 	dezalgo@1.0.4
 	didyoumean@1.2.2
@@ -842,6 +891,8 @@ NPM_PKGS="
 	diff@8.0.3
 	diff@9.0.0
 	diff-sequences@29.6.3
+	diffie-hellman@5.0.3
+	dijkstrajs@1.0.3
 	dingtalk-stream-sdk-nodejs@2.0.4
 	dir-glob@3.0.1
 	dlv@1.1.3
@@ -850,6 +901,7 @@ NPM_PKGS="
 	docx-preview@0.4.1
 	dom-accessibility-api@0.5.16
 	dom-serializer@2.0.0
+	domain-browser@1.2.0
 	domelementtype@2.3.0
 	domhandler@5.0.3
 	dompurify@3.4.14
@@ -865,6 +917,7 @@ NPM_PKGS="
 	editions@6.22.0
 	ee-first@1.1.1
 	electron-to-chromium@1.5.262
+	elliptic@6.6.1
 	emoji-regex@10.6.0
 	emoji-regex@8.0.0
 	emoji-regex@9.2.2
@@ -939,6 +992,7 @@ NPM_PKGS="
 	eventsource@3.0.7
 	eventsource-parser@3.0.3
 	eventsource-parser@3.1.1
+	evp_bytestokey@1.0.3
 	exceljs@4.4.0
 	execa@5.1.1
 	execa@8.0.1
@@ -973,6 +1027,7 @@ NPM_PKGS="
 	finalhandler@2.1.1
 	find-root@1.1.0
 	find-up@3.0.0
+	find-up@4.1.0
 	find-up@5.0.0
 	find-up-simple@1.0.1
 	find-yarn-workspace-root@2.0.0
@@ -1006,6 +1061,7 @@ NPM_PKGS="
 	gaxios@7.1.4
 	gcp-metadata@8.1.2
 	gensync@1.0.0-beta.2
+	get-assigned-identifiers@1.2.0
 	get-caller-file@2.0.5
 	get-east-asian-width@1.5.0
 	get-func-name@2.0.2
@@ -1047,6 +1103,9 @@ NPM_PKGS="
 	has-proto@1.2.0
 	has-symbols@1.1.0
 	has-tostringtag@1.0.2
+	hash-base@3.0.5
+	hash-base@3.1.2
+	hash.js@1.1.7
 	hasown@2.0.4
 	hast-util-from-dom@5.0.1
 	hast-util-from-html@2.0.3
@@ -1062,6 +1121,7 @@ NPM_PKGS="
 	he@1.2.0
 	headers-polyfill@4.0.3
 	highlight.js@11.11.1
+	hmac-drbg@1.0.1
 	hono@4.13.3
 	hosted-git-info@4.1.0
 	hosted-git-info@8.1.0
@@ -1070,10 +1130,12 @@ NPM_PKGS="
 	html-to-text@10.0.1
 	html-url-attributes@3.0.1
 	html-void-elements@3.0.0
+	htmlescape@1.1.1
 	htmlparser2@10.1.0
 	http-cache-semantics@4.2.0
 	http-errors@2.0.1
 	http-proxy-agent@7.0.2
+	https-browserify@1.0.0
 	https-proxy-agent@5.0.1
 	https-proxy-agent@7.0.6
 	human-signals@2.1.0
@@ -1097,6 +1159,7 @@ NPM_PKGS="
 	indent-string@5.0.0
 	index-to-position@1.1.0
 	inflight@1.0.6
+	inherits@2.0.3
 	inherits@2.0.4
 	ini@1.3.8
 	ink@7.0.3
@@ -1104,7 +1167,9 @@ NPM_PKGS="
 	ink-link@4.1.0
 	ink-spinner@5.0.0
 	ink-testing-library@4.0.0
+	inline-source-map@0.6.3
 	inline-style-parser@0.2.7
+	insert-module-globals@7.2.1
 	internal-slot@1.1.0
 	internmap@1.0.1
 	internmap@2.0.3
@@ -1112,12 +1177,14 @@ NPM_PKGS="
 	ipaddr.js@1.9.1
 	is-alphabetical@2.0.1
 	is-alphanumerical@2.0.1
+	is-arguments@1.2.0
 	is-array-buffer@3.0.5
 	is-arrayish@0.2.1
 	is-async-function@2.1.1
 	is-bigint@1.1.0
 	is-binary-path@2.1.0
 	is-boolean-object@1.2.2
+	is-buffer@1.1.6
 	is-callable@1.2.7
 	is-core-module@2.16.1
 	is-data-view@1.0.2
@@ -1203,19 +1270,21 @@ NPM_PKGS="
 	jsonc-parser@3.3.1
 	jsonfile@6.2.0
 	jsonify@0.0.1
+	jsonparse@1.3.1
 	jsonrepair@3.13.1
 	jsonwebtoken@9.0.3
 	jsx-ast-utils@3.3.5
 	jszip@3.10.2
 	jwa@2.0.1
 	jws@4.0.1
-	katex@0.16.47
+	katex@0.18.2
 	keytar@7.9.0
 	keyv@4.5.4
 	khroma@2.1.0
 	klaw-sync@6.0.0
 	kleur@3.0.3
 	kleur@4.1.5
+	labeled-stream-splicer@2.0.2
 	layout-base@1.0.2
 	layout-base@2.0.1
 	lazystream@1.0.1
@@ -1242,6 +1311,7 @@ NPM_PKGS="
 	load-json-file@4.0.0
 	local-pkg@0.5.1
 	locate-path@3.0.0
+	locate-path@5.0.0
 	locate-path@6.0.0
 	lodash@4.18.1
 	lodash-es@4.18.1
@@ -1262,6 +1332,7 @@ NPM_PKGS="
 	lodash.isplainobject@4.0.6
 	lodash.isstring@4.0.1
 	lodash.isundefined@3.0.1
+	lodash.memoize@3.0.4
 	lodash.merge@4.6.2
 	lodash.once@4.1.1
 	lodash.pickby@4.6.0
@@ -1295,6 +1366,7 @@ NPM_PKGS="
 	marked@16.4.2
 	marked@17.0.1
 	math-intrinsics@1.1.0
+	md5.js@1.3.5
 	mdast-util-find-and-replace@3.0.2
 	mdast-util-from-markdown@2.0.3
 	mdast-util-gfm@3.1.0
@@ -1354,6 +1426,7 @@ NPM_PKGS="
 	micromark-util-symbol@2.0.1
 	micromark-util-types@2.0.2
 	micromatch@4.0.8
+	miller-rabin@4.0.1
 	mime@1.6.0
 	mime@2.6.0
 	mime@4.0.7
@@ -1366,6 +1439,8 @@ NPM_PKGS="
 	mimic-fn@4.0.0
 	mimic-function@5.0.1
 	mimic-response@3.1.0
+	minimalistic-assert@1.0.1
+	minimalistic-crypto-utils@1.0.1
 	minimatch@10.2.5
 	minimatch@3.1.5
 	minimatch@5.1.9
@@ -1387,6 +1462,7 @@ NPM_PKGS="
 	mobilecli@1.0.0
 	mobilewright@0.0.53
 	mock-fs@5.5.0
+	module-deps@6.2.3
 	module-details-from-path@1.0.4
 	ms@2.1.3
 	msw@2.10.4
@@ -1453,6 +1529,7 @@ NPM_PKGS="
 	openapi-typescript@7.13.0
 	optionator@0.9.4
 	ora@8.2.0
+	os-browserify@0.3.0
 	outvariant@1.4.3
 	own-keys@1.0.1
 	p-limit@2.3.0
@@ -1460,6 +1537,7 @@ NPM_PKGS="
 	p-limit@5.0.0
 	p-limit@7.3.0
 	p-locate@3.0.0
+	p-locate@4.1.0
 	p-locate@5.0.0
 	p-map@7.0.4
 	p-retry@4.6.2
@@ -1469,6 +1547,8 @@ NPM_PKGS="
 	pako@1.0.11
 	papaparse@5.5.4
 	parent-module@1.0.1
+	parents@1.0.1
+	parse-asn1@5.1.10
 	parse-entities@4.0.2
 	parse-json@4.0.0
 	parse-json@5.2.0
@@ -1493,6 +1573,7 @@ NPM_PKGS="
 	path-key@3.1.1
 	path-key@4.0.0
 	path-parse@1.0.7
+	path-platform@0.11.15
 	path-scurry@1.11.1
 	path-scurry@2.0.2
 	path-to-regexp@6.3.0
@@ -1504,6 +1585,7 @@ NPM_PKGS="
 	pathe@2.0.3
 	pathval@1.1.1
 	pathval@2.0.1
+	pbkdf2@3.1.7
 	peberminta@0.10.0
 	pend@1.2.0
 	picocolors@1.1.1
@@ -1528,6 +1610,7 @@ NPM_PKGS="
 	playwright-core@1.62.1
 	pluralize@2.0.0
 	pluralize@8.0.0
+	pngjs@5.0.0
 	points-on-curve@0.2.0
 	points-on-path@0.2.1
 	possible-typed-array-names@1.1.0
@@ -1563,16 +1646,22 @@ NPM_PKGS="
 	proxy-addr@2.0.7
 	proxy-from-env@2.1.0
 	psl@1.15.0
+	public-encrypt@4.0.3
 	pump@3.0.3
+	punycode@1.4.1
 	punycode@2.3.1
 	punycode.js@2.3.1
+	qrcode@1.5.4
 	qrcode-terminal@0.12.0
 	qs@6.16.0
+	querystring-es3@0.2.1
 	querystringify@2.2.0
 	queue-microtask@1.2.3
 	quick-format-unescaped@4.0.4
 	quickjs-emscripten-core@0.32.0
 	radix-ui@1.6.2
+	randombytes@2.1.0
+	randomfill@1.0.4
 	range-parser@1.2.1
 	rate-limiter-flexible@4.0.1
 	raw-body@3.0.2
@@ -1593,6 +1682,7 @@ NPM_PKGS="
 	react-style-singleton@2.2.3
 	read@1.0.7
 	read-cache@1.0.0
+	read-only-stream@2.0.0
 	read-package-json-fast@4.0.0
 	read-package-up@11.0.0
 	read-pkg@3.0.0
@@ -1624,6 +1714,7 @@ NPM_PKGS="
 	require-directory@2.1.1
 	require-from-string@2.0.2
 	require-in-the-middle@8.0.1
+	require-main-filename@2.0.0
 	requireindex@1.1.0
 	requireindex@1.2.0
 	requires-port@1.0.0
@@ -1639,6 +1730,7 @@ NPM_PKGS="
 	rfdc@1.4.1
 	rimraf@2.7.1
 	rimraf@3.0.2
+	ripemd160@2.0.3
 	robust-predicates@3.0.3
 	rollup@4.62.5
 	roughjs@4.6.6
@@ -1665,13 +1757,16 @@ NPM_PKGS="
 	semver@7.8.5
 	send@1.2.1
 	serve-static@2.2.1
+	set-blocking@2.0.0
 	set-function-length@1.2.2
 	set-function-name@2.0.2
 	set-proto@1.0.0
 	setimmediate@1.0.5
 	setprototypeof@1.2.0
+	sha.js@2.4.12
 	shadcn@4.13.0
 	sharp@0.35.4
+	shasum-object@1.0.1
 	shebang-command@1.2.0
 	shebang-command@2.0.0
 	shebang-regex@1.0.0
@@ -1701,6 +1796,7 @@ NPM_PKGS="
 	socks@2.8.9
 	socks-proxy-agent@8.0.5
 	sonic-boom@4.2.1
+	source-map@0.5.7
 	source-map@0.6.1
 	source-map-js@1.2.1
 	space-separated-tokens@2.0.2
@@ -1717,6 +1813,10 @@ NPM_PKGS="
 	std-env@3.9.0
 	stdin-discarder@0.2.2
 	stop-iteration-iterator@1.1.0
+	stream-browserify@3.0.0
+	stream-combiner2@1.1.1
+	stream-http@3.2.0
+	stream-splicer@2.0.1
 	streamx@2.23.0
 	strict-event-emitter@0.5.1
 	strictdom@1.0.1
@@ -1751,6 +1851,7 @@ NPM_PKGS="
 	style-to-js@1.1.21
 	style-to-object@1.0.14
 	stylis@4.4.0
+	subarg@1.0.0
 	sucrase@3.35.1
 	superagent@10.3.0
 	supertest@7.2.2
@@ -1760,6 +1861,7 @@ NPM_PKGS="
 	supports-hyperlinks@3.2.0
 	supports-preserve-symlinks-flag@1.0.0
 	symbol-tree@3.2.4
+	syntax-error@1.4.0
 	systeminformation@5.31.16
 	table@6.9.0
 	tagged-tag@1.0.0
@@ -1784,6 +1886,9 @@ NPM_PKGS="
 	thenify-all@1.6.0
 	thingies@2.5.0
 	thread-stream@4.2.0
+	through@2.3.8
+	through2@2.0.5
+	timers-browserify@1.4.2
 	tiny-invariant@1.3.3
 	tinybench@2.9.0
 	tinycolor2@1.6.0
@@ -1800,6 +1905,7 @@ NPM_PKGS="
 	tldts@6.1.86
 	tldts-core@6.1.86
 	tmp@0.2.7
+	to-buffer@1.2.2
 	to-regex-range@5.0.1
 	toidentifier@1.0.1
 	tough-cookie@4.1.4
@@ -1821,6 +1927,7 @@ NPM_PKGS="
 	tslib@2.3.0
 	tslib@2.8.1
 	tsx@4.20.3
+	tty-browserify@0.0.1
 	tunnel@0.0.6
 	tunnel-agent@0.6.0
 	turndown@7.2.4
@@ -1838,13 +1945,16 @@ NPM_PKGS="
 	typed-array-byte-offset@1.0.4
 	typed-array-length@1.0.7
 	typed-rest-client@1.8.11
+	typedarray@0.0.6
 	typescript@5.8.2
 	typescript@5.8.3
 	typescript-eslint@8.35.0
 	uc.micro@2.1.0
 	uc.micro@3.0.0
 	ufo@1.6.1
+	umd@3.0.3
 	unbox-primitive@1.1.0
+	undeclared-identifiers@1.1.3
 	underscore@1.13.8
 	undici@7.29.0
 	undici-types@5.26.5
@@ -1871,13 +1981,16 @@ NPM_PKGS="
 	update-browserslist-db@1.1.4
 	uri-js@4.4.1
 	uri-js-replace@1.0.1
+	url@0.11.4
 	url-join@4.0.1
 	url-parse@1.5.10
 	use-callback-ref@1.3.3
 	use-sidecar@1.1.3
+	util@0.10.4
+	util@0.12.5
 	util-deprecate@1.0.2
+	uuid@11.1.1
 	uuid@14.0.0
-	uuid@8.3.2
 	uuid@9.0.1
 	v8-to-istanbul@9.3.0
 	validate-npm-package-license@3.0.4
@@ -1894,6 +2007,7 @@ NPM_PKGS="
 	vite-node@3.2.4
 	vitest@1.6.1
 	vitest@3.2.7
+	vm-browserify@1.1.2
 	w3c-keyname@2.2.8
 	w3c-xmlserializer@5.0.0
 	web-namespaces@2.0.1
@@ -1914,6 +2028,7 @@ NPM_PKGS="
 	which-boxed-primitive@1.1.1
 	which-builtin-type@1.2.1
 	which-collection@1.0.2
+	which-module@2.0.1
 	which-typed-array@1.1.19
 	why-is-node-running@2.3.0
 	widest-line@6.0.0
@@ -1934,13 +2049,17 @@ NPM_PKGS="
 	xml2js@0.5.0
 	xmlbuilder@11.0.1
 	xmlchars@2.2.0
+	xtend@4.0.2
+	y18n@4.0.3
 	y18n@5.0.8
 	yallist@3.1.1
 	yallist@4.0.0
 	yallist@5.0.0
 	yaml@2.9.0
 	yaml-ast-parser@0.0.43
+	yargs@15.4.1
 	yargs@17.7.2
+	yargs-parser@18.1.3
 	yargs-parser@21.1.1
 	yauzl@2.10.0
 	yauzl@3.4.0
@@ -1954,7 +2073,7 @@ NPM_PKGS="
 	zip-stream@4.1.1
 	zip-stream@6.0.1
 	zod@3.25.76
-	zod@4.4.3
+	zod@4.6.6
 	zod-to-json-schema@3.25.0
 	zod-to-json-schema@3.25.2
 	zrender@6.1.0
