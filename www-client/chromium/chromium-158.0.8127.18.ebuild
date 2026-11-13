@@ -41,8 +41,7 @@ CHROMIUM_LANGS="af am ar bg bn ca cs da de el en-GB es es-419 et fa fi fil fr gu
 LLVM_COMPAT=( 21 22 23 )
 PYTHON_COMPAT=( python3_{11..14} )
 PYTHON_REQ_USE="xml(+)"
-RUST_MIN_VER=1.98.1
-RUST_MAX_VER=${RUST_MIN_VER}
+RUST_MIN_VER=1.99.1
 RUST_NEEDS_LLVM="yes please"
 CHROMIUM_CRUBIT_VERSION=0_pre20260811
 RUST_OPTIONAL="yes" # Not actually optional, but we don't need system Rust (or LLVM) with USE=bundled-toolchain
