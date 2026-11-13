@@ -258,7 +258,7 @@ CRATES="
 	der-parser@10.0.0
 	der-parser@9.0.0
 	der@0.7.10
-	deranged@0.5.5
+	deranged@0.5.9
 	derivative@2.2.0
 	derive_more-impl@1.0.0
 	derive_more-impl@2.1.1
@@ -459,6 +459,7 @@ CRATES="
 	hermit-abi@0.5.2
 	hex@0.4.3
 	hickory-proto@0.25.2
+	hickory-proto@0.26.3
 	hickory-resolver@0.25.2
 	hkdf@0.12.4
 	hkdf@0.13.0
@@ -506,7 +507,7 @@ CRATES="
 	ident_case@1.0.1
 	idna@1.1.0
 	idna_adapter@1.2.1
-	ignore@0.4.25
+	ignore@0.4.30
 	image-webp@0.2.4
 	image@0.25.9
 	include_dir@0.7.4
@@ -567,7 +568,7 @@ CRATES="
 	libloading@0.8.9
 	libm@0.2.16
 	libredox@0.1.12
-	libsqlite3-sys@0.37.0
+	libsqlite3-sys@0.39.1
 	libz-sys@1.1.29
 	line-clipping@0.3.7
 	link-section@0.17.2
@@ -632,7 +633,7 @@ CRATES="
 	nu-ansi-term@0.50.3
 	num-bigint@0.4.6
 	num-complex@0.4.6
-	num-conv@0.2.0
+	num-conv@0.2.2
 	num-derive@0.4.2
 	num-integer@0.1.46
 	num-iter@0.1.45
@@ -958,6 +959,7 @@ CRATES="
 	smol_str@0.3.5
 	socket2@0.5.10
 	socket2@0.6.3
+	socks5-protocol@0.3.5
 	sonora-aec3@0.2.0
 	sonora-agc2@0.2.0
 	sonora-common-audio@0.2.0
@@ -968,12 +970,10 @@ CRATES="
 	sorted_vector_map@0.2.1
 	spin@0.9.8
 	spki@0.7.3
-	sqlx-core@0.9.0
 	sqlx-macros-core@0.9.0
 	sqlx-macros@0.9.0
 	sqlx-mysql@0.9.0
 	sqlx-postgres@0.9.0
-	sqlx-sqlite@0.9.0
 	sqlx@0.9.0
 	sse-stream@0.2.5
 	stable_deref_trait@1.2.1
@@ -1050,9 +1050,9 @@ CRATES="
 	tiff@0.10.3
 	tikv-jemalloc-sys@0.7.1+5.3.1-0-g81034ce1f1373e37dc865038e1bc8eeecf559ce8
 	tikv-jemallocator@0.7.0
-	time-core@0.1.8
-	time-macros@0.2.27
-	time@0.3.47
+	time-core@0.1.9
+	time-macros@0.2.32
+	time@0.3.55
 	timezone_provider@0.2.3
 	tiny_http@0.12.0
 	tinystr@0.8.3
@@ -1312,9 +1312,11 @@ declare -A GIT_CRATES=(
 	[rmcp]='https://github.com/modelcontextprotocol/rust-sdk;98a54789b80110ad210495c4ad845c89e1980471;rust-sdk-%commit%/crates/rmcp'
 	[rmcp-macros]='https://github.com/modelcontextprotocol/rust-sdk;98a54789b80110ad210495c4ad845c89e1980471;rust-sdk-%commit%/crates/rmcp-macros'
 	[runfiles]='https://github.com/dzbarsky/rules_rust;b56cbaa8465e74127f1ea216f813cd377295ad81;rules_rust-%commit%/rust/runfiles'
-	[tokio-tungstenite]='https://github.com/openai-oss-forks/tokio-tungstenite;0e5b2d73aa18dd9f0a50ee9ff199d5aef7594186;tokio-tungstenite-%commit%'
-	[tungstenite]='https://github.com/openai-oss-forks/tungstenite-rs;4fffad30fe373adbdcffab9545e9e9bf4f2fc19f;tungstenite-rs-%commit%'
-	[v8]='https://github.com/seanh-oai/rusty_v8;350c5a859a9b3c84ab8701b3ad51e3b7699b30c0;rusty_v8-%commit%'
+	[sqlx-core]='https://github.com/transact-rs/sqlx;10462fa4414c6c7f1ed1d39bb31678e3b726878c;sqlx-%commit%/sqlx-core'
+	[sqlx-sqlite]='https://github.com/transact-rs/sqlx;10462fa4414c6c7f1ed1d39bb31678e3b726878c;sqlx-%commit%/sqlx-sqlite'
+	[tokio-tungstenite]='https://github.com/openai-oss-forks/tokio-tungstenite;7447c427513cfe685f236e1ac0513c4ea3dd9c0b;tokio-tungstenite-%commit%'
+	[tungstenite]='https://github.com/openai-oss-forks/tungstenite-rs;bc589d684755a8c02da0fc7e58d0861cbfc306f1;tungstenite-rs-%commit%'
+	[v8]='https://github.com/openai-oss-forks/rusty_v8;90a65f887a0c0f048f3784afbcb320b373c8a2e0;rusty_v8-%commit%'
 )
 
 RUST_MIN_VER="1.95.0"
@@ -1415,6 +1417,8 @@ src_prepare() {
 
 	[patch.crates-io]
 	crossterm = { path = "$(gen_git_crate_dir crossterm)" }
+	sqlx-core = { path = "$(gen_git_crate_dir sqlx-core)" }
+	sqlx-sqlite = { path = "$(gen_git_crate_dir sqlx-sqlite)" }
 	tokio-tungstenite = { path = "$(gen_git_crate_dir tokio-tungstenite)" }
 	tungstenite = { path = "$(gen_git_crate_dir tungstenite)" }
 	v8 = { path = "$(gen_git_crate_dir v8)" }
