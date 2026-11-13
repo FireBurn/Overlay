@@ -399,7 +399,7 @@ PYTHON_COMPAT=( python3_{11..14} )
 # JavaScriptCore's offlineasm, same range as net-libs/webkit-gtk
 USE_RUBY="ruby32 ruby33 ruby34 ruby40"
 # CRATES includes std's own crates for -Zbuild-std, which are per Rust version
-RUST_MIN_VER="1.99.0"
+RUST_MIN_VER="1.99.1"
 RUST_MAX_VER="${RUST_MIN_VER}"
 RUST_NEEDS_LLVM=1
 NPM_OPTIONAL=1
