@@ -17,9 +17,9 @@ CRATES="
 	adler2@2.0.1
 	adler32@1.2.0
 	aes@0.8.4
-	agent-client-protocol-derive@3.6.0
-	agent-client-protocol-schema@1.13.0
-	agent-client-protocol@3.6.0
+	agent-client-protocol-derive@5.0.0
+	agent-client-protocol-schema@1.15.1
+	agent-client-protocol@5.0.0
 	ahash@0.8.12
 	aho-corasick@1.1.3
 	aliasable@0.1.3
@@ -160,8 +160,6 @@ CRATES="
 	bytes-utils@0.1.4
 	bytes@0.4.12
 	bytes@1.11.1
-	bzip2-sys@0.1.13+1.0.8
-	bzip2@0.4.4
 	bzip2@0.6.1
 	c-enum@0.2.3
 	cached@0.56.0
@@ -214,7 +212,6 @@ CRATES="
 	const-random@0.1.18
 	const_format@0.2.35
 	const_format_proc_macros@0.2.34
-	constant_time_eq@0.1.5
 	convert_case@0.10.0
 	convert_case@0.11.0
 	core-foundation-sys@0.8.7
@@ -505,6 +502,8 @@ CRATES="
 	icu_properties@2.3.0
 	icu_properties_data@2.3.0
 	icu_provider@2.3.0
+	icu_segmenter@2.3.0
+	icu_segmenter_data@2.3.0
 	id-arena@2.3.0
 	ident_case@1.0.1
 	idna@1.1.0
@@ -663,6 +662,7 @@ CRATES="
 	nested@0.1.1
 	new_debug_unreachable@1.0.6
 	nix@0.30.1
+	nix@0.31.3
 	no_std_io2@0.9.4
 	nom@7.1.3
 	nom@8.0.0
@@ -748,7 +748,6 @@ CRATES="
 	parking_lot_core@0.9.12
 	parse_int@0.9.0
 	partial-json-fixer@0.5.3
-	password-hash@0.4.2
 	paste@1.0.15
 	pastey@0.1.1
 	pastey@0.2.3
@@ -758,7 +757,6 @@ CRATES="
 	pbjson-build@0.9.0
 	pbjson-types@0.9.0
 	pbjson@0.9.0
-	pbkdf2@0.11.0
 	pbkdf2@0.12.2
 	pciid-parser@0.8.0
 	peg-macros@0.8.5
@@ -1168,6 +1166,7 @@ CRATES="
 	ttf-parser@0.25.1
 	tungstenite@0.20.1
 	tungstenite@0.28.0
+	typed-path@0.13.0
 	typeid@1.0.3
 	typenum@1.19.0
 	ucd-trie@0.1.7
@@ -1434,12 +1433,11 @@ CRATES="
 	zerotrie@0.2.5
 	zerovec-derive@0.11.5
 	zerovec@0.11.8
-	zip@0.6.6
+	zip@9.1.3
+	zlib-rs@0.5.5
 	zmij@1.0.23
-	zstd-safe@5.0.2+zstd.1.5.2
 	zstd-safe@7.3.0
 	zstd-sys@2.0.16+zstd.1.5.7
-	zstd@0.11.2+zstd.1.5.2
 	zstd@0.13.3
 	zune-core@0.5.1
 	zune-inflate@0.2.54
@@ -1462,11 +1460,11 @@ declare -A GIT_CRATES=(
 	[gh-workflow]='https://github.com/zed-industries/gh-workflow;37f3c0575d379c218a9c455ee67585184e40d43f;gh-workflow-%commit%/crates/gh-workflow'
 	[gh-workflow-macros]='https://github.com/zed-industries/gh-workflow;37f3c0575d379c218a9c455ee67585184e40d43f;gh-workflow-%commit%/crates/gh-workflow-macros'
 	[khronos-egl]='https://github.com/zed-industries/khronos-egl;42214b36347b108fd9630ca6254b96dde59e04fe;khronos-egl-%commit%'
-	[libwebrtc]='https://github.com/zed-industries/livekit-rust-sdks;0a1c519cfce9b365229026b55de9b9dbdb6fed3c;livekit-rust-sdks-%commit%/libwebrtc'
-	[livekit]='https://github.com/zed-industries/livekit-rust-sdks;0a1c519cfce9b365229026b55de9b9dbdb6fed3c;livekit-rust-sdks-%commit%/livekit'
-	[livekit-api]='https://github.com/zed-industries/livekit-rust-sdks;0a1c519cfce9b365229026b55de9b9dbdb6fed3c;livekit-rust-sdks-%commit%/livekit-api'
-	[livekit-protocol]='https://github.com/zed-industries/livekit-rust-sdks;0a1c519cfce9b365229026b55de9b9dbdb6fed3c;livekit-rust-sdks-%commit%/livekit-protocol'
-	[livekit-runtime]='https://github.com/zed-industries/livekit-rust-sdks;0a1c519cfce9b365229026b55de9b9dbdb6fed3c;livekit-rust-sdks-%commit%/livekit-runtime'
+	[libwebrtc]='https://github.com/zed-industries/livekit-rust-sdks;fbda05eb278b4a7c5be8fc9b2a92e9b62e732236;livekit-rust-sdks-%commit%/libwebrtc'
+	[livekit]='https://github.com/zed-industries/livekit-rust-sdks;fbda05eb278b4a7c5be8fc9b2a92e9b62e732236;livekit-rust-sdks-%commit%/livekit'
+	[livekit-api]='https://github.com/zed-industries/livekit-rust-sdks;fbda05eb278b4a7c5be8fc9b2a92e9b62e732236;livekit-rust-sdks-%commit%/livekit-api'
+	[livekit-protocol]='https://github.com/zed-industries/livekit-rust-sdks;fbda05eb278b4a7c5be8fc9b2a92e9b62e732236;livekit-rust-sdks-%commit%/livekit-protocol'
+	[livekit-runtime]='https://github.com/zed-industries/livekit-rust-sdks;fbda05eb278b4a7c5be8fc9b2a92e9b62e732236;livekit-rust-sdks-%commit%/livekit-runtime'
 	[lsp-types]='https://github.com/zed-industries/lsp-types;82d7fc66ebdfabcfeb26ba16bbed9f3d26211fc3;lsp-types-%commit%'
 	[naga]='https://github.com/gfx-rs/wgpu;cddb2f5d80dc0009b2ef6767635140cacf90a007;wgpu-%commit%/naga'
 	[naga-types]='https://github.com/gfx-rs/wgpu;cddb2f5d80dc0009b2ef6767635140cacf90a007;wgpu-%commit%/naga-types'
@@ -1515,8 +1513,8 @@ declare -A GIT_CRATES=(
 	[tree-sitter-typescript]='https://github.com/zed-industries/tree-sitter-typescript;e2c53597d6a5d9cf7bbe8dccde576fe1e46c5899;tree-sitter-typescript-%commit%'
 	[tree-sitter-yaml]='https://github.com/zed-industries/tree-sitter-yaml;baff0b51c64ef6a1fb1f8390f3ad6015b83ec13a;tree-sitter-yaml-%commit%'
 	[wasm_thread]='https://github.com/zed-industries/wasm_thread;0cf96c7708dfb97ccf3da50347e25edcf75d6937;wasm_thread-%commit%'
-	[webrtc-sys]='https://github.com/zed-industries/livekit-rust-sdks;0a1c519cfce9b365229026b55de9b9dbdb6fed3c;livekit-rust-sdks-%commit%/webrtc-sys'
-	[webrtc-sys-build]='https://github.com/zed-industries/livekit-rust-sdks;0a1c519cfce9b365229026b55de9b9dbdb6fed3c;livekit-rust-sdks-%commit%/webrtc-sys/build'
+	[webrtc-sys]='https://github.com/zed-industries/livekit-rust-sdks;fbda05eb278b4a7c5be8fc9b2a92e9b62e732236;livekit-rust-sdks-%commit%/webrtc-sys'
+	[webrtc-sys-build]='https://github.com/zed-industries/livekit-rust-sdks;fbda05eb278b4a7c5be8fc9b2a92e9b62e732236;livekit-rust-sdks-%commit%/webrtc-sys/build'
 	[wgpu]='https://github.com/gfx-rs/wgpu;cddb2f5d80dc0009b2ef6767635140cacf90a007;wgpu-%commit%/wgpu'
 	[wgpu-core]='https://github.com/gfx-rs/wgpu;cddb2f5d80dc0009b2ef6767635140cacf90a007;wgpu-%commit%/wgpu-core'
 	[wgpu-core-deps-apple]='https://github.com/gfx-rs/wgpu;cddb2f5d80dc0009b2ef6767635140cacf90a007;wgpu-%commit%/wgpu-core/platform-deps/apple'
@@ -1662,7 +1660,7 @@ src_prepare() {
 	local KHRONOS_EGL_GIT="khronos-egl = { git = \"${zed_gh}/khronos-egl\", rev = \"${KHRONOS_EGL_COMMIT}\""
 	local KHRONOS_EGL_PATH="khronos-egl = \\{ path = \"${WORKDIR}/khronos-egl-${KHRONOS_EGL_COMMIT}\""
 
-	local LIVEKIT_COMMIT="0a1c519cfce9b365229026b55de9b9dbdb6fed3c"
+	local LIVEKIT_COMMIT="fbda05eb278b4a7c5be8fc9b2a92e9b62e732236"
 	local LIVEKIT_GIT="livekit = { git = \"${zed_gh}/livekit-rust-sdks\", rev = \"${LIVEKIT_COMMIT}\""
 	local LIVEKIT_PATH="livekit = \\{ path = \"${WORKDIR}/livekit-rust-sdks-${LIVEKIT_COMMIT}/livekit\""
 
