@@ -91,9 +91,12 @@ def main():
         context,
     )
 
-    # Generate AppData (AppStream)
+    # Generate AppData (AppStream); renamed to metainfo.xml.template in M160
+    appdata_template = Path("chrome/installer/linux/common/metainfo.xml.template")
+    if not appdata_template.exists():
+        appdata_template = Path("chrome/installer/linux/common/appdata.xml.template")
     installer.process_template(
-        Path("chrome/installer/linux/common/appdata.xml.template"),
+        appdata_template,
         Path(f"out/Release/chromium-browser{channel_suffix}.appdata.xml"),
         context,
     )
