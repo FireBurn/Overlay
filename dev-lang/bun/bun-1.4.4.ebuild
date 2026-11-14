@@ -56,7 +56,7 @@ CRATES="
 	bytemuck@1.25.0
 	byteorder@1.5.0
 	cast@0.3.0
-	cc@1.2.0
+	cc@1.4.3
 	cfg-if@1.0.4
 	ciborium-io@0.2.2
 	ciborium-ll@0.2.2
@@ -96,6 +96,7 @@ CRATES="
 	equivalent@1.0.2
 	errno@0.3.14
 	fastrand@2.4.1
+	find-msvc-tools@0.1.11
 	fnv@1.0.7
 	foldhash@0.1.5
 	foldhash@0.2.0
@@ -114,6 +115,7 @@ CRATES="
 	hashbrown@0.17.1
 	heck@0.5.0
 	hermit-abi@0.5.2
+	hermit-abi@0.5.3
 	id-arena@2.3.0
 	ident_case@1.0.1
 	indexmap@2.14.0
@@ -134,7 +136,7 @@ CRATES="
 	memchr@2.8.3
 	mime@0.3.17
 	miniz_oxide@0.9.1
-	moto-rt@0.16.4
+	moto-rt@0.17.4
 	new_debug_unreachable@1.0.6
 	num-traits@0.2.19
 	object@0.39.1
@@ -183,7 +185,7 @@ CRATES="
 	serde_json@1.0.149
 	servo_arc@0.4.3
 	sha3@0.10.9
-	shlex@1.3.0
+	shlex@2.0.1
 	siphasher@1.0.3
 	slab@0.4.12
 	smallvec@1.15.1
@@ -204,9 +206,9 @@ CRATES="
 	walkdir@2.5.0
 	wasip1@1.0.0
 	wasip2@1.0.3+wasi-0.2.9
-	wasip2@1.0.4+wasi-0.2.12
+	wasip2@2.0.1+wasi-0.2.12
 	wasip3@0.4.0+wasi-0.3.0-rc-2026-01-06
-	wasip3@0.7.0+wasi-0.3.0
+	wasip3@0.9.0+wasi-0.3.0
 	wasm-bindgen-macro-support@0.2.121
 	wasm-bindgen-macro@0.2.121
 	wasm-bindgen-shared@0.2.121
@@ -233,6 +235,7 @@ CRATES="
 	wit-bindgen-rust@0.51.0
 	wit-bindgen@0.51.0
 	wit-bindgen@0.57.1
+	wit-bindgen@0.62.0
 	wit-component@0.244.0
 	wit-parser@0.244.0
 	xml-rs@0.8.29
@@ -399,7 +402,7 @@ PYTHON_COMPAT=( python3_{11..14} )
 # JavaScriptCore's offlineasm, same range as net-libs/webkit-gtk
 USE_RUBY="ruby32 ruby33 ruby34 ruby40"
 # CRATES includes std's own crates for -Zbuild-std, which are per Rust version
-RUST_MIN_VER="1.99.1"
+RUST_MIN_VER="1.100.0"
 RUST_MAX_VER="${RUST_MIN_VER}"
 RUST_NEEDS_LLVM=1
 NPM_OPTIONAL=1
@@ -529,6 +532,19 @@ src_prepare() {
 	eapply "${FILESDIR}/${P}-once-default.patch"
 	eapply "${FILESDIR}/bun-napi-vector-include.patch"
 	eapply "${FILESDIR}/bun-not-glibc.patch"
+
+	# Rust 1.100 stabilised part of allocator_api, and the rest moved to
+	# allocator_ext. -D warnings turns the stale gate into an error, as it
+	# does for a crate that needs neither.
+	local lib
+	for lib in sema react_compiler css collections bundler bun_alloc bun_core; do
+		sed -i -E '/feature\(|^    allocator_api,$/ s/\ballocator_api\b/allocator_ext/' \
+			src/${lib}/lib.rs || die
+	done
+	for lib in ptr shell_parser ast parsers sourcemap; do
+		sed -i -E '/feature\(/ { s/, allocator_api//; s/#!\[feature\(allocator_api\)\]//; }' \
+			src/${lib}/lib.rs || die
+	done
 
 	# Use the CPU target from CFLAGS instead of upstream's portable baseline.
 	# The same table feeds WebKit's flags and rustc's -Ctarget-cpu.
