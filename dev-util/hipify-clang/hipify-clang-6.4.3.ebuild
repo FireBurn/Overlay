@@ -5,7 +5,7 @@ EAPI=8
 
 LLVM_COMPAT=( 20 21 )
 
-inherit cmake flag-o-matic llvm-r1
+inherit cmake flag-o-matic llvm-r2
 
 DESCRIPTION="A set of tools to translate CUDA source code into portable HIP C++"
 HOMEPAGE="https://github.com/ROCm/HIPIFY"
