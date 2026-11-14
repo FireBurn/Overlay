@@ -1,0 +1,17 @@
+Treat definition kinds added by newer compilers as having no attributes
+
+Rust 1.100 adds DefKind::TestBinderConstraints, which rustc does not encode
+attributes for, so the exhaustive match in supports_attrs no longer compiles.
+
+--- a/cc_bindings_from_rs/crubit_attr.rs
++++ b/cc_bindings_from_rs/crubit_attr.rs
+@@ -375,6 +375,9 @@
+         | DefKind::LifetimeParam
+         | DefKind::Static { nested: true, .. }
+         | DefKind::GlobalAsm => false,
++        // Kinds added by newer compilers, such as TestBinderConstraints, carry no attributes
++        #[allow(unreachable_patterns)]
++        _ => false,
+     }
+ }
+ 

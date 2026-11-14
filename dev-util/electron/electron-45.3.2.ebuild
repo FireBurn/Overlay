@@ -871,8 +871,7 @@ NPM_STUB_PKGS="
 LLVM_COMPAT=( 21 22 23 )
 PYTHON_COMPAT=( python3_{11..14} )
 PYTHON_REQ_USE="xml(+)"
-RUST_MIN_VER=1.98.1
-RUST_MAX_VER=1.99.1
+RUST_MIN_VER=1.99.1
 RUST_NEEDS_LLVM="yes please"
 CHROMIUM_CRUBIT_VERSION=0_pre20260811
 RUST_REQ_USE="rustfmt"
@@ -1225,6 +1224,13 @@ for e in json.load(open("electron/patches/config.json")):
 src_prepare() {
 	chromium_rust_prepare_crubit
 	python_setup
+
+	# 45.3.2 updates these against Chromium 156.0.8078.100, which has no
+	# tarball; use the 45.3.0 patches made for the 156.0.8078.93 code
+	cp "${FILESDIR}/electron-45.3.0-refactor_expose_file_system_access_blocklist.patch" \
+		electron/patches/chromium/refactor_expose_file_system_access_blocklist.patch || die
+	cp "${FILESDIR}/electron-45.3.0-skia-cherry-pick-ffae953f7ec8.patch" \
+		electron/patches/skia/cherry-pick-ffae953f7ec8.patch || die
 
 	# Electron's patches are made against pristine Chromium, apply them first
 	electron_apply_patches
