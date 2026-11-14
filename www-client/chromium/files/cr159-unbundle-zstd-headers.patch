@@ -1,0 +1,20 @@
+From: Gentoo Overlay <gentoo@localhost>
+Subject: [PATCH] unbundle: provide the zstd headers target
+
+Chromium 159 added //third_party/zstd:headers to the bundled BUILD.gn
+and caspian-lib depends on it, so the system zstd shim needs the same
+target.
+
+--- a/build/linux/unbundle/zstd.gn
++++ b/build/linux/unbundle/zstd.gn
+@@ -15,6 +15,10 @@
+   ]
+ }
+ 
++source_set("headers") {
++  public_deps = [ ":zstd_headers" ]
++}
++
+ source_set("compress") {
+   public_configs = [ ":system_zstd" ]
+   public_deps = [ ":zstd_headers" ]

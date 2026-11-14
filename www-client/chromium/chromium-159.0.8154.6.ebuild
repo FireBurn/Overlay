@@ -23,7 +23,7 @@ EAPI=8
 # using an external CI system that we have some control over, in case
 # issues pop up again with official tarball generation.
 
-GN_MIN_VER=0.2596
+GN_MIN_VER=0.2617
 # chromium-tools/get-chromium-toolchain-strings.py (or just use Chromicler)
 # Node for M145+ should be 24.12.0 but that's not packaged in Gentoo yet. See #969145
 TEST_FONT="9c07d19d9c5ee1ff94f717e6fb17e0c8c354e6f9"
@@ -43,7 +43,35 @@ PYTHON_COMPAT=( python3_{11..14} )
 PYTHON_REQ_USE="xml(+)"
 RUST_MIN_VER=1.99.1
 RUST_NEEDS_LLVM="yes please"
-CHROMIUM_CRUBIT_VERSION=0_pre20260811
+CRUBIT_COMMIT=6cdbd6b427cbaf539e32c84d8df42a4830981304
+CHROMIUM_CRUBIT_VERSION=0_pre20261104
+CRUBIT_CRATES="
+	aho-corasick@1.1.5 anstream@1.0.0 anstyle-parse@1.0.0 anstyle-query@1.1.5
+	anstyle-wincon@3.0.11 anstyle@1.0.14 anyhow@1.0.104 autocfg@1.5.1
+	base64@0.22.1 bitflags@2.13.1 camino@1.2.5 cargo-platform@0.3.3
+	cargo_metadata@0.23.1 cc@1.4.4 cfg-if@1.0.4 clap-cargo@0.18.3 clap@4.6.7
+	clap_builder@4.6.7 clap_derive@4.6.7 clap_lex@1.1.0 colorchoice@1.0.5
+	either@1.18.0 errno@0.3.14 fastrand@2.5.0 find-msvc-tools@0.1.11
+	flagset@0.4.7 futures-channel@0.3.34 futures-core@0.3.34
+	futures-executor@0.3.34 futures-io@0.3.34 futures-macro@0.3.34
+	futures-sink@0.3.34 futures-task@0.3.34 futures-timer@3.0.4
+	futures-util@0.3.34 futures@0.3.34 getrandom@0.4.3 googletest@0.14.3
+	googletest_macro@0.14.3 heck@0.5.0 indenter@0.3.4
+	is_terminal_polyfill@1.70.2 itertools@0.13.0 itoa@1.0.18 jobserver@0.1.35
+	libc@0.2.189 linux-raw-sys@0.12.1 memchr@2.8.3 num-traits@0.2.19
+	object@0.36.7 once_cell@1.21.4 once_cell_polyfill@1.70.2
+	open-enum-derive@0.5.3 open-enum@0.5.3 phf@0.11.3 phf_generator@0.11.3
+	phf_macros@0.11.3 phf_shared@0.11.3 pin-project-lite@0.2.17
+	proc-macro2@1.0.107 quote@1.0.47 r-efi@6.0.0 rand@0.8.8 rand_core@0.6.4
+	regex-automata@0.4.18 regex-syntax@0.8.11 regex@1.13.1 rstest@0.16.0
+	rstest_macros@0.16.0 rustc-stable-hash@0.1.2 rustc_version@0.4.1
+	rustix@1.1.4 rustversion@1.0.23 semver@1.0.28 serde@1.0.229
+	serde_core@1.0.229 serde_derive@1.0.229 serde_json@1.0.151 shlex@2.0.1
+	siphasher@1.0.3 slab@0.4.12 static_assertions@1.1.0 strsim@0.11.1
+	syn@1.0.109 syn@2.0.119 syn@3.0.4 tempfile@3.27.0 thiserror-impl@2.0.20
+	thiserror@2.0.20 unicode-ident@1.0.27 utf8parse@0.2.2 windows-link@0.2.1
+	windows-sys@0.61.2 zmij@1.0.23
+"
 RUST_OPTIONAL="yes" # Not actually optional, but we don't need system Rust (or LLVM) with USE=bundled-toolchain
 RUST_REQ_USE="rustfmt" # Upstream run rustfmt on bindgen output, so we need it to be available.
 
@@ -84,7 +112,7 @@ LICENSE+=" IJG ISC LGPL-2 LGPL-2.1 MIT MPL-1.1 MPL-2.0 Ms-PL PSF-2 SGI-B-2.0 SSL
 LICENSE+=" Unicode-DFS-2015 Unlicense UoI-NCSA ZLIB libtiff openssl"
 LICENSE+=" rar? ( unRAR )"
 
-SLOT="unstable"
+SLOT="beta"
 # Unstable in gentoo exists mostly to give devs some breathing room for beta/stable releases.
 # It shouldn't be keyworded but adventurous users are encouraged to select it;
 # there's official dev channel Google Chrome after all.
@@ -515,7 +543,7 @@ src_prepare() {
 		"${FILESDIR}/cr144-glibc-2.43.patch"
 		"${FILESDIR}/cr145-oauth2-client-switches.patch"
 		"${FILESDIR}/cr148-v8-fix-cfi-sanitizer-set-death-callback.patch"
-		"${FILESDIR}/cr149-channel-aware-build.patch"
+		"${FILESDIR}/cr159-channel-aware-build.patch"
 		"${FILESDIR}/cr156-devtools-public-inputs.patch"
 		"${FILESDIR}/cr156-devtools-isolated-declarations.patch"
 		"${FILESDIR}/cr156-bidi-isolated-declarations.patch"
@@ -523,6 +551,7 @@ src_prepare() {
 		"${FILESDIR}/cr156-devtools-tsc-native.patch"
 		"${FILESDIR}/cr152-dawn-system-go.patch"
 		"${FILESDIR}/cr152-unbundle-minizip-undo-unicode.patch"
+		"${FILESDIR}/cr159-unbundle-zstd-headers.patch"
 		"${FILESDIR}/cross-compile.patch"
 	)
 
@@ -566,10 +595,9 @@ src_prepare() {
 
 		# Copium patches go here.
 		PATCHES+=(
-			"${FILESDIR}/cr158-libsync-__BEGIN_DECLS.patch"
+			"${FILESDIR}/cr158-libsync-src-__BEGIN_DECLS.patch"
 			"${FILESDIR}/cr158-system-crubit.patch"
-			"${FILESDIR}/cr156-cbor-crubit-enable-cpp-api-from-rust.patch"
-			"${FILESDIR}/cr157-cbor-mapentry-from-tuple.patch"
+			"${FILESDIR}/cr159-cbor-crubit-enable-cpp-api-from-rust.patch"
 			"${FILESDIR}/cr158-bindgen-libclang-path.patch"
 			"${FILESDIR}/cr157-system-clang-runtime.patch"
 			"${FILESDIR}/cr153-bytemuck-stable-simd.patch"
@@ -692,7 +720,6 @@ src_prepare() {
 		third_party/angle
 		third_party/angle/src/common/third_party/xxhash
 		third_party/angle/src/third_party/ceval
-		third_party/angle/src/third_party/libXNVCtrl
 		third_party/angle/src/third_party/volk
 		third_party/anonymous_tokens
 		third_party/apple_apsl
@@ -767,7 +794,6 @@ src_prepare() {
 		third_party/devtools-frontend/src/front_end/third_party/wasmparser
 		third_party/devtools-frontend/src/front_end/third_party/web-vitals
 		third_party/devtools-frontend/src/third_party
-		third_party/dom_distiller_js
 		third_party/dragonbox
 		third_party/eigen3
 		third_party/emoji-segmenter
@@ -807,13 +833,11 @@ src_prepare() {
 		third_party/ipcz
 		third_party/jinja2
 		third_party/jsoncpp
-		third_party/khronos
 		third_party/lens_server_proto
 		third_party/leveldatabase
 		third_party/libaddressinput
 		third_party/libaom
 		third_party/libaom/source/libaom/third_party/fastfeat
-		third_party/libaom/source/libaom/third_party/vector
 		third_party/libaom/source/libaom/third_party/x86inc
 		third_party/libc++
 		third_party/libdrm
@@ -856,8 +880,10 @@ src_prepare() {
 		third_party/node
 		third_party/oak/chromium/proto
 		third_party/oak/chromium/proto/attestation
+		third_party/oak/src/oak_session/tls
 		third_party/omnibox_proto
 		third_party/one_euro_filter
+		third_party/openh264rs
 		third_party/openscreen
 		third_party/openscreen/src/third_party/
 		third_party/openscreen/src/third_party/tinycbor/src/src
@@ -895,6 +921,7 @@ src_prepare() {
 		third_party/rust
 		third_party/ruy
 		third_party/s2cellid
+		third_party/safeint
 		third_party/search_engines_data
 		third_party/securemessage
 		third_party/selenium-atoms
@@ -1171,6 +1198,9 @@ chromium_configure() {
 			# metagen parses V8 headers with the bundled clang's libclang and
 			# builtin headers; generate the instance types with Torque instead.
 			"v8_use_metagen=false"
+			# M159 passes -falloc-token-mode=typefunchashpointersplit, which
+			# Clang 23.1 does not have.
+			"use_alloc_token=false"
 		)
 
 		if tc-ld-is-mold; then
