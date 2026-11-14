@@ -22,8 +22,20 @@ _CHROMIUM_RUST_ECLASS=1
 # @DESCRIPTION:
 # Crubit source revision corresponding to Chromium's pinned revision.
 [[ -n ${CHROMIUM_CRUBIT_VERSION} ]] || die "CHROMIUM_CRUBIT_VERSION is required"
-CRUBIT_COMMIT=69b85cba43f85a6439dc0be86a6fe424bb07a100
-CRATES="
+# @ECLASS_VARIABLE: CRUBIT_COMMIT
+# @PRE_INHERIT
+# @DESCRIPTION:
+# Crubit commit to build. Defaults to the one the older Chromium releases pin;
+# set it, with CRUBIT_CRATES and CHROMIUM_CRUBIT_VERSION, for a release that
+# pins another.
+: "${CRUBIT_COMMIT:=69b85cba43f85a6439dc0be86a6fe424bb07a100}"
+
+# @ECLASS_VARIABLE: CRUBIT_CRATES
+# @PRE_INHERIT
+# @DESCRIPTION:
+# Registry crates of the Crubit commit, in CRATES format. Defaults to the list
+# for the default CRUBIT_COMMIT.
+: "${CRUBIT_CRATES:="
 	aho-corasick@1.1.4 anstream@1.0.0 anstyle@1.0.14
 	anstyle-parse@1.0.0 anstyle-query@1.1.5 anstyle-wincon@3.0.11
 	anyhow@1.0.104 autocfg@1.5.1 base64@0.22.1 bitflags@2.13.1
@@ -45,7 +57,8 @@ CRATES="
 	syn@2.0.119 syn@3.0.3 tempfile@3.27.0 thiserror@2.0.19
 	thiserror-impl@2.0.19 unicode-ident@1.0.24 utf8parse@0.2.2
 	windows-link@0.2.1 windows-sys@0.61.2 zmij@1.0.23
-"
+"}"
+CRATES=${CRUBIT_CRATES}
 
 # @ECLASS_VARIABLE: RUST_REQ_USE
 # @PRE_INHERIT
@@ -105,7 +118,12 @@ chromium_rust_build_crubit() (
 
 chromium_rust_prepare_crubit() {
 	pushd "${WORKDIR}/crubit-${CRUBIT_COMMIT}" >/dev/null || die
-	eapply "${FILESDIR}/cr153-crubit-return-error-invalid-trait-name.patch"
+	# Later Crubit commits already handle newer compilers
+	if [[ ${CRUBIT_COMMIT} == 69b85cba43f85a6439dc0be86a6fe424bb07a100 ]]; then
+		eapply "${FILESDIR}/cr153-crubit-return-error-invalid-trait-name.patch"
+		eapply "${FILESDIR}/crubit-defkind-added-by-newer-rustc.patch"
+		ver_test "${RUST_SLOT}" -ge 1.100.0 && eapply "${FILESDIR}/crubit-rustc-1.100-api.patch"
+	fi
 	sed -i 's/const LIB_EXTENSION: &str = "a";/const LIB_EXTENSION: \&str = "so";/' \
 		cargo/build/absl.rs cargo/build/clang.rs || die
 	popd >/dev/null || die

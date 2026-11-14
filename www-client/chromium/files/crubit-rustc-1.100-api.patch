@@ -1,0 +1,67 @@
+Port Crubit to the compiler API of rustc 1.100.0: ModChild and Reexport moved
+to middle::resolve, RegionExt became inherent::RegionName, TraitPredicate and
+PredicatePolarity became TraitClause and ClausePolarity, and
+try_to_target_usize moved to ConstExt.
+
+diff -ruN a/cc_bindings_from_rs/generate_bindings/format_type.rs b/cc_bindings_from_rs/generate_bindings/format_type.rs
+--- a/cc_bindings_from_rs/generate_bindings/format_type.rs
++++ b/cc_bindings_from_rs/generate_bindings/format_type.rs
+@@ -45,7 +45,8 @@
+ 
+ #[rustversion::since(2026-07-31)]
+ #[allow(unused_imports)]
+-use rustc_middle::ty::RegionExt as _;
++use rustc_type_ir::inherent::RegionName as _;
++use rustc_middle::ty::consts::ConstExt as _;
+ 
+ #[cfg_accessible(rustc_middle::ty::RegionUtilitiesExt)]
+ use rustc_middle::ty::RegionUtilitiesExt as _;
+diff -ruN a/cc_bindings_from_rs/generate_bindings/get_generic_args.rs b/cc_bindings_from_rs/generate_bindings/get_generic_args.rs
+--- a/cc_bindings_from_rs/generate_bindings/get_generic_args.rs
++++ b/cc_bindings_from_rs/generate_bindings/get_generic_args.rs
+@@ -122,13 +122,13 @@
+ /// using the given `def_id` as its scope.
+ fn get_replacement_for_trait_predicate<'tcx>(
+     db: &BindingsGenerator<'tcx>,
+-    trait_predicate: ty::TraitPredicate<'tcx>,
++    trait_predicate: ty::TraitClause<'tcx>,
+     predicates: GenericClauses<'tcx>,
+     new_anon_lifetime: impl Fn() -> ty::Region<'tcx>,
+     is_used_in_return_type: bool,
+ ) -> Option<Ty<'tcx>> {
+     let tcx = db.tcx();
+-    if trait_predicate.polarity != ty::PredicatePolarity::Positive {
++    if trait_predicate.polarity != ty::ClausePolarity::Positive {
+         return None;
+     }
+     let trait_ref = trait_predicate.trait_ref;
+diff -ruN a/cc_bindings_from_rs/generate_bindings/lib.rs b/cc_bindings_from_rs/generate_bindings/lib.rs
+--- a/cc_bindings_from_rs/generate_bindings/lib.rs
++++ b/cc_bindings_from_rs/generate_bindings/lib.rs
+@@ -63,7 +63,7 @@
+ use quote::{format_ident, quote};
+ use rustc_abi::{AddressSpace, BackendRepr, HasDataLayout, Integer, Primitive, Scalar};
+ use rustc_hir::def::{DefKind, Res};
+-use rustc_middle::metadata::{ModChild, Reexport};
++use rustc_middle::middle::resolve::{ModChild, Reexport};
+ use rustc_middle::mir::ConstValue;
+ use rustc_middle::ty::{self, GenericParamDefKind, Ty, TyCtxt};
+ use rustc_span::def_id::{CrateNum, DefId, LOCAL_CRATE};
+@@ -160,7 +160,7 @@
+                     .source_crate_name()
+                     .is_some_and(|name| name.as_ref() == mod_child.ident.as_str())
+                 {
+-                    use rustc_middle::metadata::Reexport;
++                    use rustc_middle::middle::resolve::Reexport;
+                     mod_child.reexport_chain.first().and_then(|reexport| match reexport {
+                         Reexport::ExternCrate(def_id) => def_id.as_local(),
+                         _ => None,
+@@ -480,7 +480,7 @@
+     /// This is retooled logic from rustc's `visible_parent_map` function. Except where that only
+     /// selects the shortest visible path, we track all paths and defer selecting the correct one
+     /// to callers.
+-    use rustc_middle::metadata::ModChild;
++    use rustc_middle::middle::resolve::ModChild;
+     use rustc_span::kw;
+     use std::collections::vec_deque::VecDeque;
+ 
