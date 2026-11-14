@@ -219,7 +219,7 @@ _rocm_set_globals() {
 				gfx908 gfx90a gfx942 gfx1030 gfx1100 gfx1101 gfx1200 gfx1201
 			)
 			;;
-		7.*|9999)
+		7.*)
 			unofficial_amdgpu_targets=(
 				gfx803 gfx900 gfx906 gfx940 gfx941
 				gfx1010 gfx1011 gfx1012
@@ -229,7 +229,7 @@ _rocm_set_globals() {
 				gfx908 gfx90a gfx942 gfx950 gfx1030 gfx1100 gfx1101 gfx1200 gfx1201
 			)
 			;;
-		10.*)
+		10.*|9999)
 			# https://github.com/ROCm/TheRock/blob/therock-10.0/SUPPORTED_GPUS.md
 			unofficial_amdgpu_targets=(
 				gfx803 gfx900 gfx906 gfx908 gfx90a gfx90c gfx950
