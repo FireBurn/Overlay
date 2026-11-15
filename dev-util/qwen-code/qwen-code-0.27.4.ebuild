@@ -122,8 +122,7 @@ NPM_PKGS="
 	@grammyjs/types@3.25.0
 	@grpc/grpc-js@1.14.4
 	@grpc/proto-loader@0.8.1
-	@hono/node-server@1.19.17
-	@hono/node-server@2.0.12
+	@hono/node-server@2.1.7
 	@humanfs/core@0.19.1
 	@humanfs/node@0.16.6
 	@humanwhocodes/config-array@0.13.0
@@ -148,8 +147,8 @@ NPM_PKGS="
 	@inquirer/core@10.1.15
 	@inquirer/figures@1.0.13
 	@inquirer/type@3.0.8
-	@isaacs/cliui@8.0.2
 	@isaacs/fs-minipass@4.0.1
+	@isaacs/nonrecursive-glob-match@1.1.0
 	@istanbuljs/schema@0.1.3
 	@jest/schemas@29.6.3
 	@jest/schemas@30.0.1
@@ -188,8 +187,7 @@ NPM_PKGS="
 	@modelcontextprotocol/client@2.4.0
 	@modelcontextprotocol/core@2.4.0
 	@modelcontextprotocol/ext-apps@1.7.5
-	@modelcontextprotocol/sdk@1.26.0
-	@modelcontextprotocol/sdk@1.30.0
+	@modelcontextprotocol/sdk@1.32.2
 	@mswjs/interceptors@0.39.5
 	@napi-rs/lzma-linux-x64-gnu@1.5.1|amd64
 	@napi-rs/wasm-runtime@1.2.4
@@ -268,7 +266,6 @@ NPM_PKGS="
 	@pierre/theming@1.0.1
 	@pierre/trees@1.0.0-beta.6
 	@pinojs/redact@0.4.0
-	@pkgjs/parseargs@0.11.0
 	@playwright/test@1.61.1
 	@protobufjs/aspromise@1.1.2
 	@protobufjs/base64@1.1.2
@@ -661,21 +658,19 @@ NPM_PKGS="
 	base64-js@1.5.1
 	baseline-browser-mapping@2.9.19
 	before-after-hook@3.0.2
-	big-integer@1.6.52
 	bignumber.js@9.3.1
-	binary@0.3.0
 	binary-extensions@2.3.0
 	binaryextensions@6.11.0
 	bl@4.1.0
-	bluebird@3.4.7
+	bluebird@3.7.2
 	bn.js@4.12.5
 	bn.js@5.2.5
-	body-parser@2.3.0
+	body-parser@2.4.0
 	boolbase@1.0.0
 	boundary@2.0.0
 	brace-expansion@1.1.21
 	brace-expansion@2.1.7
-	brace-expansion@5.0.9
+	brace-expansion@5.0.13
 	braces@3.0.3
 	brorand@1.1.0
 	browser-pack@6.1.0
@@ -695,9 +690,7 @@ NPM_PKGS="
 	buffer-crc32@1.0.0
 	buffer-equal-constant-time@1.0.1
 	buffer-from@1.1.2
-	buffer-indexof-polyfill@1.0.2
 	buffer-xor@1.0.3
-	buffers@0.1.1
 	builtin-status-codes@3.0.0
 	bun-ffi-structs@0.3.1
 	bundle-name@4.1.0
@@ -716,7 +709,6 @@ NPM_PKGS="
 	ccount@2.0.1
 	chai@4.5.0
 	chai@5.2.0
-	chainsaw@0.1.0
 	chalk@2.4.2
 	chalk@4.1.2
 	chalk@5.6.2
@@ -781,6 +773,7 @@ NPM_PKGS="
 	content-disposition@1.1.0
 	content-type@1.0.5
 	content-type@2.0.0
+	content-type@2.1.0
 	convert-source-map@1.1.3
 	convert-source-map@2.0.0
 	convert-to-spaces@2.0.1
@@ -904,14 +897,13 @@ NPM_PKGS="
 	domain-browser@1.2.0
 	domelementtype@2.3.0
 	domhandler@5.0.3
-	dompurify@3.4.14
+	dompurify@3.4.17
 	domutils@3.2.2
 	dot-prop@6.0.1
 	dotenv@17.4.2
 	dts-bundle-generator@9.5.1
 	dunder-proto@1.0.1
 	duplexer2@0.1.4
-	eastasianwidth@0.2.0
 	ecdsa-sig-formatter@1.0.11
 	echarts@6.1.0
 	editions@6.22.0
@@ -920,7 +912,6 @@ NPM_PKGS="
 	elliptic@6.6.1
 	emoji-regex@10.6.0
 	emoji-regex@8.0.0
-	emoji-regex@9.2.2
 	emoji-regex-xs@1.0.0
 	encodeurl@2.0.0
 	encoding@0.1.13
@@ -990,7 +981,6 @@ NPM_PKGS="
 	events@3.3.0
 	events-universal@1.0.1
 	eventsource@3.0.7
-	eventsource-parser@3.0.3
 	eventsource-parser@3.1.1
 	evp_bytestokey@1.0.3
 	exceljs@4.4.0
@@ -1012,7 +1002,7 @@ NPM_PKGS="
 	fast-json-stable-stringify@2.1.0
 	fast-levenshtein@2.0.6
 	fast-safe-stringify@2.1.1
-	fast-uri@3.1.7
+	fast-uri@3.1.9
 	fast-xml-builder@1.2.1
 	fast-xml-parser@5.8.0
 	fastdom@1.0.12
@@ -1052,7 +1042,6 @@ NPM_PKGS="
 	fs-extra@11.3.1
 	fs-minipass@3.0.3
 	fs.realpath@1.0.0
-	fstream@1.0.12
 	function-bind@1.1.2
 	function.prototype.name@1.1.8
 	functions-have-names@1.2.3
@@ -1075,8 +1064,7 @@ NPM_PKGS="
 	get-symbol-description@1.1.0
 	get-tsconfig@4.10.1
 	github-from-package@0.0.0
-	glob@10.5.0
-	glob@13.0.6
+	glob@14.0.6
 	glob@7.2.3
 	glob-parent@5.1.2
 	glob-parent@6.0.2
@@ -1122,7 +1110,7 @@ NPM_PKGS="
 	headers-polyfill@4.0.3
 	highlight.js@11.11.1
 	hmac-drbg@1.0.1
-	hono@4.13.3
+	hono@4.13.18
 	hosted-git-info@4.1.0
 	hosted-git-info@8.1.0
 	html-encoding-sniffer@4.0.0
@@ -1145,7 +1133,6 @@ NPM_PKGS="
 	husky@9.1.7
 	hyperdyperid@1.2.0
 	iconv-lite@0.6.3
-	iconv-lite@0.7.2
 	iconv-lite@0.7.3
 	ieee754@1.2.1
 	ignore@5.3.2
@@ -1173,7 +1160,7 @@ NPM_PKGS="
 	internal-slot@1.1.0
 	internmap@1.0.1
 	internmap@2.0.3
-	ip-address@10.5.0
+	ip-address@10.7.4
 	ipaddr.js@1.9.1
 	is-alphabetical@2.0.1
 	is-alphanumerical@2.0.1
@@ -1241,10 +1228,8 @@ NPM_PKGS="
 	istanbul-reports@3.1.7
 	istextorbinary@9.5.0
 	iterator.prototype@1.1.5
-	jackspeak@3.4.3
 	jiti@1.21.7
 	jiti@2.7.0
-	jose@6.1.3
 	jose@6.2.12
 	js-levenshtein@1.1.6
 	js-tokens@4.0.0
@@ -1306,7 +1291,6 @@ NPM_PKGS="
 	linkify-it@5.0.2
 	linkify-it@6.1.0
 	lint-staged@16.1.6
-	listenercount@1.0.1
 	listr2@9.0.4
 	load-json-file@4.0.0
 	local-pkg@0.5.1
@@ -1441,10 +1425,9 @@ NPM_PKGS="
 	mimic-response@3.1.0
 	minimalistic-assert@1.0.1
 	minimalistic-crypto-utils@1.0.1
-	minimatch@10.2.5
+	minimatch@11.0.8
 	minimatch@3.1.5
 	minimatch@5.1.9
-	minimatch@9.0.9
 	minimist@1.2.8
 	minipass@3.3.6
 	minipass@4.2.8
@@ -1455,7 +1438,6 @@ NPM_PKGS="
 	minipass-pipeline@1.2.4
 	minipass-sized@1.0.3
 	minizlib@3.1.0
-	mkdirp@0.5.6
 	mkdirp-classic@0.5.3
 	mlly@1.8.0
 	mnemonist@0.40.3
@@ -1483,6 +1465,7 @@ NPM_PKGS="
 	node-fetch@3.3.2
 	node-gyp@11.5.0
 	node-gyp-build@4.8.4
+	node-int64@0.4.0
 	node-pty@1.1.0
 	node-releases@2.0.27
 	node-sarif-builder@3.4.0
@@ -1542,7 +1525,6 @@ NPM_PKGS="
 	p-map@7.0.4
 	p-retry@4.6.2
 	p-try@2.2.0
-	package-json-from-dist@1.0.1
 	package-manager-detector@1.6.0
 	pako@1.0.11
 	papaparse@5.5.4
@@ -1574,8 +1556,7 @@ NPM_PKGS="
 	path-key@4.0.0
 	path-parse@1.0.7
 	path-platform@0.11.15
-	path-scurry@1.11.1
-	path-scurry@2.0.2
+	path-scurry@3.0.0
 	path-to-regexp@6.3.0
 	path-to-regexp@8.4.2
 	path-type@3.0.0
@@ -1653,7 +1634,7 @@ NPM_PKGS="
 	punycode.js@2.3.1
 	qrcode@1.5.4
 	qrcode-terminal@0.12.0
-	qs@6.16.0
+	qs@6.17.1
 	querystring-es3@0.2.1
 	querystringify@2.2.0
 	queue-microtask@1.2.3
@@ -1690,7 +1671,7 @@ NPM_PKGS="
 	readable-stream@2.3.8
 	readable-stream@3.6.2
 	readable-stream@4.7.0
-	readdir-glob@1.1.3
+	readdir-glob@4.0.0
 	readdirp@3.6.0
 	readdirp@4.1.2
 	real-require@0.2.0
@@ -1728,7 +1709,6 @@ NPM_PKGS="
 	retry@0.13.1
 	reusify@1.1.0
 	rfdc@1.4.1
-	rimraf@2.7.1
 	rimraf@3.0.2
 	ripemd160@2.0.3
 	robust-predicates@3.0.3
@@ -1822,7 +1802,6 @@ NPM_PKGS="
 	strictdom@1.0.1
 	string-argv@0.3.2
 	string-width@4.2.3
-	string-width@5.1.2
 	string-width@7.2.0
 	string-width@8.2.1
 	string.prototype.matchall@4.0.12
@@ -1912,7 +1891,6 @@ NPM_PKGS="
 	tough-cookie@5.1.2
 	tr46@0.0.3
 	tr46@5.1.1
-	traverse@0.3.9
 	tree-dump@1.0.3
 	tree-sitter-wasms@0.1.13
 	trim-lines@3.0.1
@@ -1977,7 +1955,7 @@ NPM_PKGS="
 	universalify@0.2.0
 	universalify@2.0.1
 	unpipe@1.0.0
-	unzipper@0.10.14
+	unzipper@0.12.5
 	update-browserslist-db@1.1.4
 	uri-js@4.4.1
 	uri-js-replace@1.0.1
@@ -2036,7 +2014,6 @@ NPM_PKGS="
 	wrap-ansi@10.0.0
 	wrap-ansi@6.2.0
 	wrap-ansi@7.0.0
-	wrap-ansi@8.1.0
 	wrap-ansi@9.0.2
 	wrappy@1.0.2
 	ws@7.5.13
