@@ -1,12 +1,6 @@
-Subject: [PATCH] vulkan : fa cm1: shift the last partial KV block instead of staging every block
-
-Assisted-by: Claude Code (Claude Opus 5.5)
-
-diff --git a/ggml/src/ggml-vulkan/ggml-vulkan-common.h b/ggml/src/ggml-vulkan/ggml-vulkan-common.h
-index 4ae5fea..e087f82 100644
 --- a/ggml/src/ggml-vulkan/ggml-vulkan-common.h
 +++ b/ggml/src/ggml-vulkan/ggml-vulkan-common.h
-@@ -31,7 +31,7 @@ bool ggml_vk_intel_windows_driver_in_range(uint32_t driver_version, uint32_t low
+@@ -35,7 +35,7 @@
  // shaders
  void ggml_vk_destroy_pipeline(vk::Device& device, vk_pipeline& pipeline);
  vk_fa_tuning_params get_fa_tuning_params(const vk_device& device, uint32_t hsk, uint32_t hsv, uint32_t n_rows, uint32_t n_kv, ggml_type k_type, ggml_type v_type, bool f32acc);
@@ -15,11 +9,9 @@ index 4ae5fea..e087f82 100644
  uint32_t get_subgroup_size(const std::string &pipeline_name, const vk_device_architecture &arch);
  void ggml_vk_load_shaders(vk_device& device, vk_pipeline requested = nullptr);
  bool ggml_vk_flash_attn_scalar_shmem_support(const vk_device& device, const vk_fa_tuning_params& params, uint32_t hsk, uint32_t hsv, bool f32acc, ggml_type k_type, ggml_type v_type);
-diff --git a/ggml/src/ggml-vulkan/ggml-vulkan.cpp b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
-index fe11023..e90ed0c 100644
 --- a/ggml/src/ggml-vulkan/ggml-vulkan.cpp
 +++ b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
-@@ -1365,7 +1365,8 @@ vk_fa_tuning_params get_fa_tuning_params(const vk_device& device, uint32_t hsk,
+@@ -1412,7 +1412,8 @@
  }
  
  vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_tuning_params& params, uint32_t hsk, uint32_t hsv, bool aligned, bool f32acc,
@@ -29,7 +21,7 @@ index fe11023..e90ed0c 100644
      const bool old_amd_windows = device->vendor_id == VK_VENDOR_ID_AMD && device->driver_id == vk::DriverId::eAmdProprietary &&
                                   (device->architecture == AMD_GCN || device->architecture == AMD_RDNA1 || device->architecture == AMD_RDNA2);
  
-@@ -1373,7 +1374,8 @@ vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_
+@@ -1420,7 +1421,8 @@
                       (use_mask          ? 2 : 0) |
                       (use_logit_softcap ? 4 : 0) |
                       (old_amd_windows   ? 8 : 0) |
@@ -39,20 +31,16 @@ index fe11023..e90ed0c 100644
  
      const uint32_t subgroup_size = params.disable_subgroups ? 0 : params.subgroup_size;
  
-@@ -8144,9 +8146,9 @@ void ggml_vk_flash_attn(ggml_backend_vk_context * ctx, vk_context& subctx, const
-         nbv3_eff = (uint32_t)((uint64_t)HSV * KV * nev2 * sizeof(ggml_fp16_t));
-     }
-     const uint32_t alignment = tuning_params.block_cols;
--    bool aligned = (KV % alignment) == 0 &&
--                   // the "aligned" shader variant will forcibly align strides, for performance
--                   (q_stride & 7) == 0 && (k_stride & 7) == 0 && (v_stride & 7) == 0;
-+    const bool strides_aligned = (q_stride & 7) == 0 && (k_stride & 7) == 0 && (v_stride & 7) == 0;
-+    // the "aligned" shader variant will forcibly align strides, for performance
-+    bool aligned = (KV % alignment) == 0 && strides_aligned;
+@@ -8698,6 +8700,8 @@
+     bool aligned = (KV % alignment) == 0 && (q_stride_eff & 7) == 0 &&
+                    (cm2_decode_k || (k_stride & 7) == 0) && (cm2_decode_v || (v_stride & 7) == 0);
  
++    const bool strides_aligned = (q_stride_eff & 7) == 0 && (k_stride & 7) == 0 && (v_stride & 7) == 0;
++
      // Need to use the coopmat2 variant that clamps loads when HSK/HSV aren't sufficiently aligned.
      if (((HSK | HSV) % 16) != 0 && tuning_params.path == FA_COOPMAT2) {
-@@ -8156,8 +8158,15 @@ void ggml_vk_flash_attn(ggml_backend_vk_context * ctx, vk_context& subctx, const
+         aligned = false;
+@@ -8706,8 +8710,15 @@
      // Only use mask opt when the mask is fairly large. This hasn't been tuned extensively.
      bool use_mask_opt = mask && !use_sparse && nem1 >= 32 && nem0 * nem1 > 32768 && nem0 >= tuning_params.block_cols * 16
                          && (ctx->device->architecture != vk_device_architecture::AMD_GCN || HSK > 256 || HSV > 256);
@@ -67,13 +55,11 @@ index fe11023..e90ed0c 100644
 +                                                                   mask != nullptr, use_mask_opt, logit_softcap != 0, use_sparse, k_type_eff, v_type_eff,
 +                                                                   use_kv_tail_shift);
  
-     vk_pipeline pipeline = nullptr;
- 
-diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl
-index 2e0e23b..1f16e18 100644
+     if (affine != nullptr) {
+         fa_pipeline_state.flags |= 64;
 --- a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl
 +++ b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl
-@@ -26,6 +26,8 @@ const bool LOGIT_SOFTCAP   = (Flags & 4) != 0;
+@@ -26,6 +26,8 @@
  const bool OLD_AMD_WINDOWS = (Flags & 8) != 0;
  // Sparse: gather binding-7 indices instead of scanning [0,KV); p.split_kv = n_kv_max.
  const bool USE_SPARSE      = (Flags & 16) != 0;
@@ -82,11 +68,9 @@ index 2e0e23b..1f16e18 100644
  
  // Round up head sizes to a multiple of 16, for coopmat1/coopmat2 paths
  const uint32_t HSK_pad = (HSK + 15) & ~15;
-diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp
-index aa9dd62..982b63b 100644
 --- a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp
 +++ b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp
-@@ -62,6 +62,37 @@ shared O_TYPEV4 pvsh[MatBc * osh_stride];
+@@ -62,6 +62,37 @@
  
  shared ACC_TYPE slope[Br];
  
@@ -124,7 +108,7 @@ index aa9dd62..982b63b 100644
  void main() {
  #ifdef NEEDS_INIT_IQ_SHMEM
      if (fa_type_needs_shmem(FaTypeK) || fa_type_needs_shmem(FaTypeV)) {
-@@ -152,6 +183,10 @@ void main() {
+@@ -152,6 +183,10 @@
  
      [[dont_unroll]]
      for (uint32_t j = start_j; j < end_j; ++j) {
@@ -135,7 +119,7 @@ index aa9dd62..982b63b 100644
  
          [[unroll]] for (uint32_t idx = 0; idx < mask_cache.length(); ++idx) {
              mask_cache[idx] = f16vec4(0);
-@@ -177,7 +212,7 @@ void main() {
+@@ -177,7 +212,7 @@
                      uint32_t r = (idx + tid) % (Br / 4);
                      if (idx + tid < Bc * Br / 4 || idx + gl_WorkGroupSize.x <= Bc * Br / 4) {
                          uint32_t kcol;
@@ -144,7 +128,7 @@ index aa9dd62..982b63b 100644
                          if (kv_active) {
                              f16vec4 m;
                              if (USE_SPARSE) {
-@@ -186,25 +221,25 @@ void main() {
+@@ -186,25 +221,25 @@
                                  m = f16vec4(mv);
                                  max_mask = max(max_mask, float(mv));
                              } else if (!nem1_bounds_check || i * Br + r * 4 + 3 < p.nem1) {
@@ -180,7 +164,7 @@ index aa9dd62..982b63b 100644
                                              0.0,
                                              0.0,
                                              0.0);
-@@ -277,7 +312,7 @@ void main() {
+@@ -277,7 +312,7 @@
              if (SHMEM_STAGING == 0) {
              // For quants we always need to dequant into kvsh; for f16/bf16 we can load
              // directly from global memory when alignment / bounds allow it.
@@ -189,7 +173,7 @@ index aa9dd62..982b63b 100644
              if (stage_k) {
                  barrier();
                  [[unroll]] for (uint32_t idx = 0; idx < Bc * MatBr / 4; idx += gl_WorkGroupSize.x) {
-@@ -286,7 +321,7 @@ void main() {
+@@ -286,7 +321,7 @@
                      if (idx + tid < Bc * MatBr / 4) {
                          FLOAT_TYPEV4 K_Tf = FLOAT_TYPEV4(0);
                          uint32_t kcol;
@@ -198,7 +182,7 @@ index aa9dd62..982b63b 100644
                          if (kv_active && (HSK == HSK_pad || d * 16 + col_vec * 4 < HSK)) {
  #if !defined(BFLOAT16)
                              if (USE_DECODE_K) {
-@@ -311,7 +346,7 @@ void main() {
+@@ -311,7 +346,7 @@
                  uint coord = (gl_SubgroupID * MatBc) * kvsh_stride;
                  coopMatLoad(KMat, kvsh, coord, kvsh_stride, gl_CooperativeMatrixLayoutRowMajor);
              } else {
@@ -207,7 +191,7 @@ index aa9dd62..982b63b 100644
                  coopMatLoad(KMat, data_kv4, coord, k_stride / 4, gl_CooperativeMatrixLayoutRowMajor);
              }
              } else {
-@@ -344,7 +379,7 @@ void main() {
+@@ -344,7 +379,7 @@
                  uint32_t c = (idx + tid) / (Br / 4);
                  uint32_t r = (idx + tid) % (Br / 4);
                  if (idx + tid < Bc * Br / 4 || idx + gl_WorkGroupSize.x <= Bc * Br / 4) {
@@ -216,7 +200,7 @@ index aa9dd62..982b63b 100644
                          // Mask nem1 bounds check is handled when loading masks
                          ACC_TYPEV4 masks = ACC_TYPEV4(mask_cache[idx / WorkGroupSize]);
                          ACC_TYPEV4 slopes = ACC_TYPEV4(slope[r * 4], slope[r * 4 + 1], slope[r * 4 + 2], slope[r * 4 + 3]);
-@@ -362,7 +397,7 @@ void main() {
+@@ -362,7 +397,7 @@
  
              float rowmaxf = NEG_FLT_MAX_OVER_2;
              [[unroll]] for (uint32_t c = 0; c < cols_per_thread; ++c) {
@@ -225,7 +209,7 @@ index aa9dd62..982b63b 100644
                      continue;
                  }
                  rowmaxf = max(rowmaxf, float(sfsh[r_vec + (c * cols_per_iter + col_tid) * sfshstride][r_comp]));
-@@ -395,7 +430,7 @@ void main() {
+@@ -395,7 +430,7 @@
  
              [[unroll]] for (uint32_t r = 0; r < rows_per_thread; r += 4) {
                  const uint row = tile_row(r);
@@ -234,7 +218,7 @@ index aa9dd62..982b63b 100644
                      Psh[col * psh_stride + row / 4] = FLOAT_TYPEV4(0.0f);
                  } else {
                      const vec4 mfvec = vec4(Mf[r], Mf[r + 1], Mf[r + 2], Mf[r + 3]);
-@@ -456,7 +491,7 @@ void main() {
+@@ -456,7 +491,7 @@
              if (SHMEM_STAGING == 0) {
              // For quants we always preload via kvsh. For f16/bf16 we only preload when
              // alignment / bounds force it (otherwise we coopMatLoad direct from data_vv4).
@@ -243,7 +227,7 @@ index aa9dd62..982b63b 100644
              if (stage_v) {
                  [[unroll]] for (uint32_t i = 0; i < v_loads_per_thread; ++i) {
                      const uint idx = i * gl_WorkGroupSize.x + tid;
-@@ -464,14 +499,14 @@ void main() {
+@@ -464,14 +499,14 @@
                      const uint col = idx % v_cols;
  
                      uint32_t v_row;
@@ -260,7 +244,7 @@ index aa9dd62..982b63b 100644
  #if !defined(BFLOAT16)
                          if (USE_DECODE_V) {
                              kvsh[row * vsh_stride + col] = dequantize4(ib, iqs, v_offset, BINDING_IDX_V);
-@@ -495,9 +530,9 @@ void main() {
+@@ -495,9 +530,9 @@
                      coopMatLoad(KMat, Psh, bc_chunk * MatBc * psh_stride, psh_stride, gl_CooperativeMatrixLayoutColumnMajor);
  
                      if (SHMEM_STAGING == 0) {

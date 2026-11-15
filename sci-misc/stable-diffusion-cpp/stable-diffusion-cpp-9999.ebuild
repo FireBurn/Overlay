@@ -90,7 +90,6 @@ BDEPEND="
 "
 
 PATCHES=(
-	"${FILESDIR}/0001-hip-fix-gfx12-bf16-wmma-with-llvm-23.patch"
 	"${FILESDIR}/0003-model-loader-dequantize-int8-tensorwise-when-converting.patch"
 	"${FILESDIR}/0006-ggml-rpc-fix-stale-op-count-assert.patch"
 )
