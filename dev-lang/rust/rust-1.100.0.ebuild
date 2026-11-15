@@ -359,6 +359,11 @@ src_prepare() {
 		"${FILESDIR}/1.100.0-llvmlibc-target.patch"
 	)
 
+	# Needed when the stage0 is 1.100 or later, see the patch
+	local stage0_ver=$("${RUSTC}" --version | cut -d' ' -f2)
+	ver_test "${stage0_ver}" -ge 1.100.0 &&
+		PATCHES+=( "${FILESDIR}/1.100.0-cargo-unused-dependencies.patch" )
+
 	if use lto && tc-is-clang && ! tc-ld-is-lld && ! tc-ld-is-mold; then
 		export RUSTFLAGS+=" -C link-arg=-fuse-ld=lld"
 	fi

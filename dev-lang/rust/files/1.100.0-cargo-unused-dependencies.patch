@@ -1,0 +1,70 @@
+Adapt the tree to the unused_dependencies lint of a 1.100 cargo
+
+A stage0 cargo of 1.100 or later checks for unused dependencies by running
+rustc with --force-warn=unused_crate_dependencies. A forced lint never
+satisfies #![expect], so the one in rustc-main is reported as unfulfilled, and
+the sysroot crates are reported for dependencies that they only link. With
+deny-warnings both fail the build. This is the part of rust-lang/rust#163483
+(daa2432490) that touches the build. Apply it only when the stage0 is 1.100 or
+later: an older cargo neither forces the lint nor knows the lint name.
+
+--- a/compiler/rustc/src/main.rs
++++ b/compiler/rustc/src/main.rs
+@@ -1,7 +1,5 @@
+ // We need this feature as it changes `dylib` linking behavior and allows us to link to `rustc_driver`.
+ #![feature(rustc_private)]
+-// Several crates are depended upon but unused so that they are present in the sysroot
+-#![expect(unused_crate_dependencies)]
+ 
+ use std::process::ExitCode;
+ 
+--- a/library/alloc/Cargo.toml
++++ b/library/alloc/Cargo.toml
+@@ -31,3 +31,7 @@ check-cfg = [
+     'cfg(no_rc)',
+     'cfg(no_sync)',
+ ]
++
++[lints.cargo]
++# compiler-builtins is claimed unused?
++unused_dependencies = "allow"
+--- a/library/panic_unwind/Cargo.toml
++++ b/library/panic_unwind/Cargo.toml
+@@ -18,3 +18,6 @@ unwind = { path = "../unwind" }
+ 
+ [target.'cfg(not(all(windows, target_env = "msvc")))'.dependencies]
+ libc = { version = "0.2", default-features = false }
++
++[lints.cargo]
++unused_dependencies = "allow"
+--- a/library/std/Cargo.toml
++++ b/library/std/Cargo.toml
+@@ -167,3 +167,7 @@ check-cfg = [
+     'cfg(target_has_reliable_f128)',
+     'cfg(target_has_reliable_f128_math)',
+ ]
++
++[lints.cargo]
++# panic_abort is not directly used but must be linked in
++unused_dependencies = "allow"
+--- a/library/std_detect/Cargo.toml
++++ b/library/std_detect/Cargo.toml
+@@ -24,3 +24,7 @@ libc = { version = "0.2.0", default-features = false }
+ 
+ [features]
+ std_detect_env_override = []
++
++[lints.cargo]
++# libc is definitely used in code but the lint doesn't realize that (unclear why)
++unused_dependencies = "allow"
+--- a/library/sysroot/Cargo.toml
++++ b/library/sysroot/Cargo.toml
+@@ -32,3 +32,8 @@ optimize_for_size = ["std/optimize_for_size"]
+ panic-unwind = ["std/panic-unwind"]
+ profiler = ["dep:profiler_builtins"]
+ windows_raw_dylib = ["std/windows_raw_dylib"]
++
++[lints.cargo]
++# We expect some of these dependencies to not actually be used since this is
++# just an aggregator crate.
++unused_dependencies = "allow"
