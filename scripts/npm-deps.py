@@ -35,6 +35,7 @@ LIBC = {"glibc": "elibc_glibc", "musl": "elibc_musl"}
 NATIVES = {
     "@oxc-parser/binding-": "dev-util/oxc-parser",
     "@oxc-resolver/binding-": "dev-util/oxc-resolver",
+    "@rolldown/binding-": "dev-util/rolldown",
     "@rollup/rollup-": "dev-util/rollup",
     "@swc/core-": "dev-util/swc",
     "@tailwindcss/oxide-": "dev-util/tailwindcss-oxide",
