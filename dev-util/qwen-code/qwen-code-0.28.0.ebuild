@@ -120,7 +120,7 @@ NPM_PKGS="
 	@gitbeaker/rest@42.5.0
 	@google/genai@2.6.0
 	@grammyjs/types@3.25.0
-	@grpc/grpc-js@1.14.4
+	@grpc/grpc-js@1.14.5
 	@grpc/proto-loader@0.8.1
 	@hono/node-server@2.1.7
 	@humanfs/core@0.19.1
@@ -455,7 +455,6 @@ NPM_PKGS="
 	@types/d3-zoom@3.0.8
 	@types/debug@4.1.13
 	@types/deep-eql@4.0.2
-	@types/diff@7.0.2
 	@types/dotenv@6.1.1
 	@types/estree@1.0.9
 	@types/estree-jsx@1.0.5
@@ -648,7 +647,7 @@ NPM_PKGS="
 	auto-bind@5.0.1
 	autoprefixer@10.4.22
 	available-typed-arrays@1.0.7
-	axios@1.19.0
+	axios@1.20.0
 	azure-devops-node-api@12.5.0
 	b4a@1.7.3
 	bail@2.0.2
@@ -880,7 +879,6 @@ NPM_PKGS="
 	devlop@1.1.0
 	dezalgo@1.0.4
 	didyoumean@1.2.2
-	diff@7.0.0
 	diff@8.0.3
 	diff@9.0.0
 	diff-sequences@29.6.3
@@ -992,7 +990,7 @@ NPM_PKGS="
 	exponential-backoff@3.1.3
 	express@5.1.0
 	express@5.2.1
-	express-rate-limit@8.5.2
+	express-rate-limit@8.7.2
 	extend@3.0.2
 	fast-content-type-parse@2.0.1
 	fast-csv@4.3.6
@@ -1934,7 +1932,7 @@ NPM_PKGS="
 	unbox-primitive@1.1.0
 	undeclared-identifiers@1.1.3
 	underscore@1.13.8
-	undici@7.29.0
+	undici@7.30.2
 	undici-types@5.26.5
 	undici-types@6.21.0
 	undici-types@7.29.0
@@ -1969,7 +1967,6 @@ NPM_PKGS="
 	util-deprecate@1.0.2
 	uuid@11.1.1
 	uuid@14.0.0
-	uuid@9.0.1
 	v8-to-istanbul@9.3.0
 	validate-npm-package-license@3.0.4
 	validate-npm-package-name@7.0.2
