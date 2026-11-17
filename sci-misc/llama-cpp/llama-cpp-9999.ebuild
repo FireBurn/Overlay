@@ -12,17 +12,23 @@ if [[ ${PV} == 9999 ]]; then
 	# scripts/npm-deps.py --natives-only when the lockfile moves
 	NPM_PKGS=""
 	NPM_NATIVE_DEPEND="
-		dev-util/lightningcss:1.30.1
+		dev-util/lightningcss:1.33.0
 		dev-util/oxc-parser:0.127.0
 		dev-util/oxc-resolver:11.21.2
-		dev-util/rollup:4.61.1
-		dev-util/tailwindcss-oxide:4.1.11
+		dev-util/rolldown:1.2.18
+		dev-util/tailwindcss-oxide:4.3.5
 	"
 else
 	# Generated from tools/ui/package-lock.json by scripts/npm-deps.py
 	NPM_PKGS=""
 	NPM_STUB_PKGS=""
 	XDNA_COMMIT=""
+fi
+
+if [[ ${PV} == 9999 ]]; then
+	UI_DIR=ui/apps/chat
+else
+	UI_DIR=tools/ui
 fi
 
 inherit cmake cuda flag-o-matic linux-info npm rocm
@@ -133,7 +139,7 @@ src_unpack() {
 
 		if use webui; then
 			# A live ebuild may use the network here; the build then runs offline
-			pushd "${S}/tools/ui" >/dev/null || die
+			pushd "${S}/${UI_DIR}" >/dev/null || die
 			HOME="${T}/npm-home" npm ci --ignore-scripts --no-audit --no-fund \
 				--cache "${T}/npm-cache" || die "npm ci failed"
 			popd >/dev/null || die
@@ -186,7 +192,7 @@ src_configure() {
 		-DLLAMA_BUILD_SERVER=ON
 		-DLLAMA_BUILD_UI=$(usex webui ON OFF)
 		# Point CMake to the directory where we will build the UI assets
-		-DUI_SOURCE_DIR="${S}/tools/ui"
+		-DUI_SOURCE_DIR="${S}/${UI_DIR}"
 		-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON
 		-DGGML_NATIVE=0
 		-DGGML_RPC=ON
@@ -262,7 +268,7 @@ _llama_link_natives() {
 		rm -rf node_modules/${native}-linux-* || die
 		npm_native_link_all "${pkg}" "${native}-${platform}" "${lib}/${file}"
 	done <<-EOF
-		rollup @rollup/rollup rollup-@V@/rollup.node
+		rolldown @rolldown/binding rolldown-@V@/rolldown-binding.node
 		lightningcss lightningcss lightningcss-@V@/lightningcss.node
 		@tailwindcss/oxide @tailwindcss/oxide tailwindcss-oxide-@V@/tailwindcss-oxide.node
 		oxc-resolver @oxc-resolver/binding oxc-resolver-@V@/resolver.node
@@ -276,7 +282,7 @@ src_compile() {
 	if use webui; then
 		# 1. Build the Web UI assets from source
 		einfo "Building Web UI assets using npm..."
-		pushd "${S}/tools/ui" > /dev/null || die
+		pushd "${S}/${UI_DIR}" > /dev/null || die
 
 		# Releases install the UI's dependencies from the offline registry
 		if [[ ${PV} != 9999 ]]; then
