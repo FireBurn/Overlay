@@ -86,6 +86,10 @@ NPM_PKGS="
 	@kwsites/promise-deferred@1.1.1
 	@malept/cross-spawn-promise@2.0.0
 	@napi-rs/canvas@0.1.100
+	@napi-rs/canvas-linux-arm64-gnu@0.1.100|arm64
+	@napi-rs/canvas-linux-arm64-musl@0.1.100|arm64,elibc_musl
+	@napi-rs/canvas-linux-x64-gnu@0.1.100|amd64
+	@napi-rs/canvas-linux-x64-musl@0.1.100|amd64,elibc_musl
 	@nodable/entities@2.1.0
 	@nodelib/fs.scandir@2.1.5
 	@nodelib/fs.stat@2.0.3
@@ -106,16 +110,32 @@ NPM_PKGS="
 	@octokit/plugin-paginate-rest@14.0.0
 	@octokit/plugin-request-log@6.0.0
 	@octokit/plugin-rest-endpoint-methods@17.0.0
-	@octokit/request-error@7.1.0
 	@octokit/request@10.0.7
+	@octokit/request-error@7.1.0
 	@octokit/rest@22.0.1
 	@octokit/types@16.0.0
 	@opentelemetry/api@1.0.4
 	@oxc-project/types@0.149.0
 	@oxc-project/types@0.150.0
+	@oxfmt/binding-linux-arm64-gnu@0.42.0|arm64
+	@oxfmt/binding-linux-arm64-musl@0.42.0|arm64,elibc_musl
+	@oxfmt/binding-linux-x64-gnu@0.42.0|amd64
+	@oxfmt/binding-linux-x64-musl@0.42.0|amd64,elibc_musl
+	@oxlint/binding-linux-arm64-gnu@1.80.0|arm64
+	@oxlint/binding-linux-arm64-musl@1.80.0|arm64,elibc_musl
+	@oxlint/binding-linux-x64-gnu@1.80.0|amd64
+	@oxlint/binding-linux-x64-musl@1.80.0|amd64,elibc_musl
 	@primer/octicons@10.0.0
-	@protobuf-ts/runtime-rpc@2.11.1
 	@protobuf-ts/runtime@2.11.1
+	@protobuf-ts/runtime-rpc@2.11.1
+	@rolldown/binding-linux-arm64-gnu@1.2.8|arm64
+	@rolldown/binding-linux-arm64-gnu@1.2.9|arm64
+	@rolldown/binding-linux-arm64-musl@1.2.8|arm64,elibc_musl
+	@rolldown/binding-linux-arm64-musl@1.2.9|arm64,elibc_musl
+	@rolldown/binding-linux-x64-gnu@1.2.8|amd64
+	@rolldown/binding-linux-x64-gnu@1.2.9|amd64
+	@rolldown/binding-linux-x64-musl@1.2.8|amd64,elibc_musl
+	@rolldown/binding-linux-x64-musl@1.2.9|amd64,elibc_musl
 	@rolldown/pluginutils@1.0.1
 	@sec-ant/readable-stream@0.4.1
 	@sentry/cli@1.72.0
@@ -139,8 +159,8 @@ NPM_PKGS="
 	@types/debug@4.1.7
 	@types/deep-eql@4.0.2
 	@types/estree@1.0.9
-	@types/express-serve-static-core@4.19.7
 	@types/express@4.17.23
+	@types/express-serve-static-core@4.19.7
 	@types/hast@3.0.4
 	@types/http-cache-semantics@4.0.1
 	@types/http-cache-semantics@4.0.4
@@ -235,8 +255,8 @@ NPM_PKGS="
 	chai@5.1.1
 	chai@6.2.2
 	chalk@5.3.0
-	character-entities-legacy@3.0.0
 	character-entities@2.0.0
+	character-entities-legacy@3.0.0
 	character-reference-invalid@2.0.0
 	check-error@2.1.1
 	check-for-leaks@1.2.1
@@ -260,8 +280,8 @@ NPM_PKGS="
 	content-disposition@1.1.0
 	content-type@1.0.5
 	content-type@2.0.0
-	cookie-signature@1.2.2
 	cookie@0.7.2
+	cookie-signature@1.2.2
 	core-util-is@1.0.2
 	cross-spawn@7.0.6
 	css-selector-parser@3.2.0
@@ -314,8 +334,8 @@ NPM_PKGS="
 	etag@1.8.1
 	event-stream@4.0.1
 	eventemitter3@5.0.4
-	events-to-array@1.1.2
 	events@3.3.0
+	events-to-array@1.1.2
 	expect-type@1.4.0
 	exponential-backoff@3.1.3
 	express@5.2.1
@@ -358,10 +378,10 @@ NPM_PKGS="
 	get-stream@5.2.0
 	get-stream@9.0.1
 	getos@3.2.1
-	glob-parent@5.1.2
 	glob@11.1.0
 	glob@7.2.3
 	glob@9.3.5
+	glob-parent@5.1.2
 	global-agent@3.0.0
 	globalthis@1.0.3
 	globby@14.1.0
@@ -431,12 +451,16 @@ NPM_PKGS="
 	keyv@4.3.1
 	keyv@5.5.4
 	lightningcss@1.33.0
+	lightningcss-linux-arm64-gnu@1.33.0|arm64
+	lightningcss-linux-arm64-musl@1.33.0|arm64,elibc_musl
+	lightningcss-linux-x64-gnu@1.33.0|amd64
+	lightningcss-linux-x64-musl@1.33.0|amd64,elibc_musl
 	linkify-it@5.0.2
 	lint-staged@17.0.8
 	listr2@10.2.1
+	lodash@4.18.1
 	lodash.camelcase@4.3.0
 	lodash.get@4.4.2
-	lodash@4.18.1
 	log-symbols@6.0.0
 	log-update@6.1.0
 	long@4.0.0
@@ -450,11 +474,11 @@ NPM_PKGS="
 	magic-string@1.4.1
 	map-stream@0.0.7
 	markdown-it@14.3.0
-	markdownlint-cli2-formatter-default@0.0.5
-	markdownlint-cli2@0.18.0
 	markdownlint@0.38.0
-	matcher-collection@1.1.2
+	markdownlint-cli2@0.18.0
+	markdownlint-cli2-formatter-default@0.0.5
 	matcher@3.0.0
+	matcher-collection@1.1.2
 	math-intrinsics@1.1.0
 	mdast-util-from-markdown@2.0.2
 	mdast-util-to-string@4.0.0
@@ -462,6 +486,8 @@ NPM_PKGS="
 	media-typer@1.1.0
 	merge-descriptors@2.0.0
 	merge2@1.4.1
+	micromark@4.0.0
+	micromark@4.0.2
 	micromark-core-commonmark@2.0.3
 	micromark-extension-directive@4.0.0
 	micromark-extension-gfm-autolink-literal@2.1.0
@@ -488,12 +514,10 @@ NPM_PKGS="
 	micromark-util-symbol@2.0.0
 	micromark-util-types@2.0.0
 	micromark-util-types@2.0.2
-	micromark@4.0.0
-	micromark@4.0.2
 	micromatch@4.0.8
+	mime@1.6.0
 	mime-db@1.54.0
 	mime-types@3.0.2
-	mime@1.6.0
 	mimic-function@5.0.1
 	mimic-response@1.0.1
 	mimic-response@3.1.0
@@ -522,8 +546,8 @@ NPM_PKGS="
 	node-addon-api@8.7.0
 	node-fetch@2.6.8
 	node-fetch@2.7.0
-	node-gyp-build@4.8.4
 	node-gyp@12.3.0
+	node-gyp-build@4.8.4
 	nopt@9.0.0
 	normalize-path@3.0.0
 	normalize-url@6.1.0
@@ -612,12 +636,12 @@ NPM_PKGS="
 	safe-buffer@5.2.1
 	safer-buffer@2.1.2
 	sax@1.4.1
-	semver-compare@1.0.0
 	semver@6.3.1
 	semver@7.5.2
 	semver@7.6.3
 	semver@7.7.3
 	semver@7.8.5
+	semver-compare@1.0.0
 	send@0.19.1
 	send@1.2.1
 	serialize-error@7.0.1
@@ -626,10 +650,10 @@ NPM_PKGS="
 	setprototypeof@1.2.0
 	shebang-command@2.0.0
 	shebang-regex@3.0.0
+	side-channel@1.1.1
 	side-channel-list@1.0.1
 	side-channel-map@1.0.1
 	side-channel-weakmap@1.0.2
-	side-channel@1.1.1
 	siginfo@2.0.0
 	signal-exit@3.0.7
 	signal-exit@4.1.0
@@ -671,8 +695,8 @@ NPM_PKGS="
 	tap-xunit@2.4.1
 	tar@7.5.22
 	temp@0.9.4
-	through2@2.0.5
 	through@2.3.8
+	through2@2.0.5
 	tinybench@6.1.4
 	tinyexec@1.2.4
 	tinyexec@1.3.0
@@ -692,16 +716,16 @@ NPM_PKGS="
 	type-is@2.1.0
 	typescript@7.0.2
 	uc.micro@2.1.0
-	undici-types@6.19.8
-	undici-types@7.16.0
 	undici@6.28.0
 	undici@7.29.0
+	undici-types@6.19.8
+	undici-types@7.16.0
 	unicorn-magic@0.3.0
 	unist-util-is@6.0.0
 	unist-util-select@5.1.0
 	unist-util-stringify-position@4.0.0
-	unist-util-visit-parents@6.0.1
 	unist-util-visit@5.0.0
+	unist-util-visit-parents@6.0.1
 	universal-github-app-jwt@2.2.2
 	universal-user-agent@7.0.3
 	universalify@0.1.2
@@ -711,17 +735,17 @@ NPM_PKGS="
 	util-deprecate@1.0.2
 	uuid@14.0.1
 	vary@1.1.2
+	vfile@6.0.2
 	vfile-location@5.0.3
 	vfile-message@4.0.2
-	vfile@6.0.2
 	vite@8.3.0
 	vitest@5.0.1
 	vscode-jsonrpc@8.1.0
+	vscode-languageserver@8.1.0
 	vscode-languageserver-protocol@3.17.3
 	vscode-languageserver-textdocument@1.0.8
 	vscode-languageserver-types@3.17.2
 	vscode-languageserver-types@3.17.3
-	vscode-languageserver@8.1.0
 	vscode-uri@3.1.0
 	walk-sync@0.3.4
 	web-namespaces@2.0.1
@@ -750,9 +774,9 @@ NPM_PKGS="
 	yallist@5.0.0
 	yaml@2.8.3
 	yaml@2.9.0
+	yargs@16.2.0
 	yargs-parser@20.2.9
 	yargs-parser@22.0.0
-	yargs@16.2.0
 	yauzl@2.10.0
 	zwitch@2.0.2
 "
@@ -762,11 +786,7 @@ NPM_STUB_PKGS="
 	@napi-rs/canvas-darwin-arm64@0.1.100
 	@napi-rs/canvas-darwin-x64@0.1.100
 	@napi-rs/canvas-linux-arm-gnueabihf@0.1.100
-	@napi-rs/canvas-linux-arm64-gnu@0.1.100
-	@napi-rs/canvas-linux-arm64-musl@0.1.100
 	@napi-rs/canvas-linux-riscv64-gnu@0.1.100
-	@napi-rs/canvas-linux-x64-gnu@0.1.100
-	@napi-rs/canvas-linux-x64-musl@0.1.100
 	@napi-rs/canvas-win32-arm64-msvc@0.1.100
 	@napi-rs/canvas-win32-x64-msvc@0.1.100
 	@oxfmt/binding-android-arm-eabi@0.42.0
@@ -776,14 +796,10 @@ NPM_STUB_PKGS="
 	@oxfmt/binding-freebsd-x64@0.42.0
 	@oxfmt/binding-linux-arm-gnueabihf@0.42.0
 	@oxfmt/binding-linux-arm-musleabihf@0.42.0
-	@oxfmt/binding-linux-arm64-gnu@0.42.0
-	@oxfmt/binding-linux-arm64-musl@0.42.0
 	@oxfmt/binding-linux-ppc64-gnu@0.42.0
 	@oxfmt/binding-linux-riscv64-gnu@0.42.0
 	@oxfmt/binding-linux-riscv64-musl@0.42.0
 	@oxfmt/binding-linux-s390x-gnu@0.42.0
-	@oxfmt/binding-linux-x64-gnu@0.42.0
-	@oxfmt/binding-linux-x64-musl@0.42.0
 	@oxfmt/binding-openharmony-arm64@0.42.0
 	@oxfmt/binding-win32-arm64-msvc@0.42.0
 	@oxfmt/binding-win32-ia32-msvc@0.42.0
@@ -795,14 +811,10 @@ NPM_STUB_PKGS="
 	@oxlint/binding-freebsd-x64@1.80.0
 	@oxlint/binding-linux-arm-gnueabihf@1.80.0
 	@oxlint/binding-linux-arm-musleabihf@1.80.0
-	@oxlint/binding-linux-arm64-gnu@1.80.0
-	@oxlint/binding-linux-arm64-musl@1.80.0
 	@oxlint/binding-linux-ppc64-gnu@1.80.0
 	@oxlint/binding-linux-riscv64-gnu@1.80.0
 	@oxlint/binding-linux-riscv64-musl@1.80.0
 	@oxlint/binding-linux-s390x-gnu@1.80.0
-	@oxlint/binding-linux-x64-gnu@1.80.0
-	@oxlint/binding-linux-x64-musl@1.80.0
 	@oxlint/binding-openharmony-arm64@1.80.0
 	@oxlint/binding-win32-arm64-msvc@1.80.0
 	@oxlint/binding-win32-ia32-msvc@1.80.0
@@ -819,18 +831,10 @@ NPM_STUB_PKGS="
 	@rolldown/binding-freebsd-x64@1.2.9
 	@rolldown/binding-linux-arm-gnueabihf@1.2.8
 	@rolldown/binding-linux-arm-gnueabihf@1.2.9
-	@rolldown/binding-linux-arm64-gnu@1.2.8
-	@rolldown/binding-linux-arm64-gnu@1.2.9
-	@rolldown/binding-linux-arm64-musl@1.2.8
-	@rolldown/binding-linux-arm64-musl@1.2.9
 	@rolldown/binding-linux-ppc64-gnu@1.2.8
 	@rolldown/binding-linux-ppc64-gnu@1.2.9
 	@rolldown/binding-linux-s390x-gnu@1.2.8
 	@rolldown/binding-linux-s390x-gnu@1.2.9
-	@rolldown/binding-linux-x64-gnu@1.2.8
-	@rolldown/binding-linux-x64-gnu@1.2.9
-	@rolldown/binding-linux-x64-musl@1.2.8
-	@rolldown/binding-linux-x64-musl@1.2.9
 	@rolldown/binding-openharmony-arm64@1.2.8
 	@rolldown/binding-openharmony-arm64@1.2.9
 	@rolldown/binding-win32-arm64-msvc@1.2.8
@@ -860,10 +864,6 @@ NPM_STUB_PKGS="
 	lightningcss-darwin-x64@1.33.0
 	lightningcss-freebsd-x64@1.33.0
 	lightningcss-linux-arm-gnueabihf@1.33.0
-	lightningcss-linux-arm64-gnu@1.33.0
-	lightningcss-linux-arm64-musl@1.33.0
-	lightningcss-linux-x64-gnu@1.33.0
-	lightningcss-linux-x64-musl@1.33.0
 	lightningcss-win32-arm64-msvc@1.33.0
 	lightningcss-win32-x64-msvc@1.33.0
 "
@@ -1659,8 +1659,8 @@ src_prepare() {
 
 	# Electron's own JavaScript (typescript, webpack) comes from its yarn.lock
 	pushd electron >/dev/null || die
-	# The prebuilt glibc and musl addons (rolldown, oxlint, lightningcss) are
-	# stubs; a libc none of them declares makes yarn skip them
+	# The prebuilt glibc and musl addons (rolldown, oxlint, lightningcss,
+	# canvas) are skipped; a libc none of them declares makes yarn skip them
 	printf '\nsupportedArchitectures:\n  libc:\n    - none\n' >> .yarnrc.yml || die
 	npm_with_registry node .yarn/releases/yarn-*.cjs install --immutable
 	found=$(node -p 'require("./node_modules/rolldown/package.json").version') || die
