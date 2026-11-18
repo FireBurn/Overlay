@@ -225,9 +225,9 @@ NPM_PKGS="
 	@gar/promise-retry@1.0.3
 	@graphql-typed-document-node/core@3.2.0
 	@happy-dom/global-registrator@20.0.11
-	@hona/strobe@0.34.0
-	@hona/strobe-linux-arm64@0.34.0|arm64
-	@hona/strobe-linux-x64@0.34.0|amd64
+	@hona/strobe@0.42.0
+	@hona/strobe-linux-arm64@0.42.0|arm64
+	@hona/strobe-linux-x64@0.42.0|amd64
 	@hono/node-server@2.1.5
 	@ibm/plex@6.4.1
 	@ibm/telemetry-js@1.11.0
@@ -336,11 +336,11 @@ NPM_PKGS="
 	@opencode-ai/client@0.0.0-beta-18050
 	@opencode-ai/protocol@0.0.0-beta-18050
 	@opencode-ai/schema@0.0.0-beta-18050
-	@opencode/pty@0.5.2
-	@opencode/pty-linux-arm64-gnu@0.5.2|arm64
-	@opencode/pty-linux-arm64-musl@0.5.2|arm64,elibc_musl
-	@opencode/pty-linux-x64-gnu@0.5.2|amd64
-	@opencode/pty-linux-x64-musl@0.5.2|amd64,elibc_musl
+	@opencode/pty@0.6.0
+	@opencode/pty-linux-arm64-gnu@0.6.0|arm64
+	@opencode/pty-linux-arm64-musl@0.6.0|arm64,elibc_musl
+	@opencode/pty-linux-x64-gnu@0.6.0|amd64
+	@opencode/pty-linux-x64-musl@0.6.0|amd64,elibc_musl
 	@opentelemetry/api@1.9.0
 	@opentelemetry/api@1.9.1
 	@opentelemetry/api-logs@0.219.0
@@ -377,11 +377,11 @@ NPM_PKGS="
 	@oxc-project/types@0.141.0
 	@oxc-project/types@0.146.0
 	@oxc-project/types@0.154.0
-	@oxlint/binding-linux-arm64-gnu@1.60.0|arm64
-	@oxlint/binding-linux-arm64-musl@1.60.0|arm64
-	@oxlint/binding-linux-x64-gnu@1.60.0|amd64
-	@oxlint/binding-linux-x64-musl@1.60.0|amd64
-	@oxlint/plugins@1.60.0
+	@oxlint/binding-linux-arm64-gnu@1.93.0|arm64
+	@oxlint/binding-linux-arm64-musl@1.93.0|arm64,elibc_musl
+	@oxlint/binding-linux-x64-gnu@1.93.0|amd64
+	@oxlint/binding-linux-x64-musl@1.93.0|amd64,elibc_musl
+	@oxlint/plugins@1.93.0
 	@pagefind/linux-arm64@1.5.2|arm64
 	@pagefind/linux-x64@1.5.2|amd64
 	@parcel/watcher@2.5.1
@@ -1270,7 +1270,7 @@ NPM_PKGS="
 	openai@6.49.0
 	own-keys@1.0.2
 	oxc-parser@0.141.0
-	oxlint@1.60.0
+	oxlint@1.93.0
 	p-cancelable@2.1.1
 	p-limit@2.3.0
 	p-limit@3.1.0
@@ -1780,10 +1780,10 @@ NPM_STUB_PKGS="
 	@ff-labs/fff-bin-darwin-x64@0.10.5
 	@ff-labs/fff-bin-win32-arm64@0.10.5
 	@ff-labs/fff-bin-win32-x64@0.10.5
-	@hona/strobe-darwin-arm64@0.34.0
-	@hona/strobe-darwin-x64@0.34.0
-	@hona/strobe-win32-arm64@0.34.0
-	@hona/strobe-win32-x64@0.34.0
+	@hona/strobe-darwin-arm64@0.42.0
+	@hona/strobe-darwin-x64@0.42.0
+	@hona/strobe-win32-arm64@0.42.0
+	@hona/strobe-win32-x64@0.42.0
 	@img/sharp-darwin-arm64@0.34.5
 	@img/sharp-darwin-arm64@0.35.4
 	@img/sharp-darwin-arm64@0.35.5
@@ -1838,10 +1838,10 @@ NPM_STUB_PKGS="
 	@lydell/node-pty-darwin-x64@1.2.0-beta.12
 	@lydell/node-pty-win32-arm64@1.2.0-beta.12
 	@lydell/node-pty-win32-x64@1.2.0-beta.12
-	@opencode/pty-darwin-arm64@0.5.2
-	@opencode/pty-darwin-x64@0.5.2
-	@opencode/pty-win32-arm64@0.5.2
-	@opencode/pty-win32-x64@0.5.2
+	@opencode/pty-darwin-arm64@0.6.0
+	@opencode/pty-darwin-x64@0.6.0
+	@opencode/pty-win32-arm64@0.6.0
+	@opencode/pty-win32-x64@0.6.0
 	@opentui/core-darwin-arm64@0.8.4
 	@opentui/core-darwin-x64@0.8.4
 	@opentui/core-win32-arm64@0.8.4
@@ -1862,21 +1862,21 @@ NPM_STUB_PKGS="
 	@oxc-parser/binding-win32-arm64-msvc@0.141.0
 	@oxc-parser/binding-win32-ia32-msvc@0.141.0
 	@oxc-parser/binding-win32-x64-msvc@0.141.0
-	@oxlint/binding-android-arm-eabi@1.60.0
-	@oxlint/binding-android-arm64@1.60.0
-	@oxlint/binding-darwin-arm64@1.60.0
-	@oxlint/binding-darwin-x64@1.60.0
-	@oxlint/binding-freebsd-x64@1.60.0
-	@oxlint/binding-linux-arm-gnueabihf@1.60.0
-	@oxlint/binding-linux-arm-musleabihf@1.60.0
-	@oxlint/binding-linux-ppc64-gnu@1.60.0
-	@oxlint/binding-linux-riscv64-gnu@1.60.0
-	@oxlint/binding-linux-riscv64-musl@1.60.0
-	@oxlint/binding-linux-s390x-gnu@1.60.0
-	@oxlint/binding-openharmony-arm64@1.60.0
-	@oxlint/binding-win32-arm64-msvc@1.60.0
-	@oxlint/binding-win32-ia32-msvc@1.60.0
-	@oxlint/binding-win32-x64-msvc@1.60.0
+	@oxlint/binding-android-arm-eabi@1.93.0
+	@oxlint/binding-android-arm64@1.93.0
+	@oxlint/binding-darwin-arm64@1.93.0
+	@oxlint/binding-darwin-x64@1.93.0
+	@oxlint/binding-freebsd-x64@1.93.0
+	@oxlint/binding-linux-arm-gnueabihf@1.93.0
+	@oxlint/binding-linux-arm-musleabihf@1.93.0
+	@oxlint/binding-linux-ppc64-gnu@1.93.0
+	@oxlint/binding-linux-riscv64-gnu@1.93.0
+	@oxlint/binding-linux-riscv64-musl@1.93.0
+	@oxlint/binding-linux-s390x-gnu@1.93.0
+	@oxlint/binding-openharmony-arm64@1.93.0
+	@oxlint/binding-win32-arm64-msvc@1.93.0
+	@oxlint/binding-win32-ia32-msvc@1.93.0
+	@oxlint/binding-win32-x64-msvc@1.93.0
 	@pagefind/darwin-arm64@1.5.2
 	@pagefind/darwin-x64@1.5.2
 	@pagefind/freebsd-x64@1.5.2
