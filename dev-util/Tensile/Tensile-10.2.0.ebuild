@@ -21,7 +21,7 @@ if [[ "${PV}" == 9999 ]] ; then
 	SLOT="0/9999"
 	SLOT_NOLIVE="0/7.2"
 else
-	SRC_URI="https://github.com/ROCm/rocm-libraries/releases/download/therock-10.1/tensile.tar.gz -> ${P}.tar.gz"
+	SRC_URI="https://github.com/ROCm/rocm-libraries/releases/download/therock-10.2/tensile.tar.gz -> ${P}.tar.gz"
 	S="${WORKDIR}/tensile"
 	SLOT="0/$(ver_cut 1-2)"
 	SLOT_NOLIVE=${SLOT}
