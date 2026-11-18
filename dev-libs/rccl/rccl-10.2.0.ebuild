@@ -10,7 +10,7 @@ inherit cmake python-any-r1 rocm
 
 DESCRIPTION="Collective communication library for AMD GPUs (NCCL-compatible)"
 HOMEPAGE="https://github.com/ROCm/rocm-systems/tree/develop/projects/rccl"
-SRC_URI="https://github.com/ROCm/rocm-systems/releases/download/therock-10.1/${PN}.tar.gz -> ${P}.tar.gz"
+SRC_URI="https://github.com/ROCm/rocm-systems/releases/download/therock-10.2/${PN}.tar.gz -> ${P}.tar.gz"
 S="${WORKDIR}/${PN}"
 
 LICENSE="BSD"
@@ -45,7 +45,7 @@ src_prepare() {
 
 	# Skip fp8 kernels for targets without hardware fp8: their struct-based
 	# software path trips an assertion in vanilla llvm-24's AMDGPU backend.
-	patch -p1 < "${FILESDIR}/rccl-10.1.0-vanilla-llvm-skip-fp8-kernels.patch" || die
+	patch -p1 < "${FILESDIR}/rccl-10.2.0-vanilla-llvm-skip-fp8-kernels.patch" || die
 
 	cmake_src_prepare
 }
