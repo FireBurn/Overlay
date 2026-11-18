@@ -10,7 +10,7 @@ inherit cmake flag-o-matic llvm-r2 rocm
 
 DESCRIPTION="AMD's Machine Intelligence Library"
 HOMEPAGE="https://github.com/ROCm/rocm-libraries/tree/develop/projects/miopen"
-SRC_URI="https://github.com/ROCm/rocm-libraries/releases/download/therock-10.1/${PN}.tar.gz -> ${P}.tar.gz"
+SRC_URI="https://github.com/ROCm/rocm-libraries/releases/download/therock-10.2/${PN}.tar.gz -> ${P}.tar.gz"
 S="${WORKDIR}/${PN}"
 
 LICENSE="MIT"
@@ -50,12 +50,6 @@ BDEPEND="
 
 src_prepare() {
 	cmake_src_prepare
-	# hipconv builds every arch dir regardless of GPU_TARGETS; for unserved
-	# archs it fell back to the first build GPU, which cannot compile the
-	# arch-specific builtins (target-feature check). The _1k bf16 MFMA
-	# builtins take i16 vectors, so cast the __bf16x4 operands explicitly.
-	patch -p1 < "${FILESDIR}/miopen-10.1.0-hipconv-vanilla-llvm.patch" || die
-
 	if (( LLVM_SLOT < 24 )); then
 		# llvm-23's AMDGPU backend aborts on the gfx950 kernels ("illegal VGPR
 		# to SGPR copy"); leave out the arch libraries that were not asked for
