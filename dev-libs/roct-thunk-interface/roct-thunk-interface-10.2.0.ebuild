@@ -13,7 +13,7 @@ if [[ ${PV} == *9999 ]] ; then
 	inherit git-r3
 	S="${WORKDIR}/${P}/projects/rocr-runtime/libhsakmt"
 else
-	SRC_URI="https://github.com/ROCm/rocm-systems/releases/download/therock-10.1/rocr-runtime.tar.gz -> ${P}.tar.gz"
+	SRC_URI="https://github.com/ROCm/rocm-systems/releases/download/therock-10.2/rocr-runtime.tar.gz -> ${P}.tar.gz"
 	S="${WORKDIR}/rocr-runtime/libhsakmt"
 	KEYWORDS="~amd64"
 fi
@@ -40,7 +40,7 @@ RESTRICT="!test? ( test )"
 CMAKE_BUILD_TYPE=Release
 
 PATCHES=(
-	"${FILESDIR}/${PN}-10.1.0-exports.patch"
+	"${FILESDIR}/${PN}-10.2.0-exports.patch"
 )
 
 test_wrapper() {
