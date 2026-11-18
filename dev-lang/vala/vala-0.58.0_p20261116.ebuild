@@ -10,7 +10,7 @@ inherit flag-o-matic meson
 # relies on (its meson.build rejects any compiler whose version does not end
 # in "-frida"). The commit is the one pinned in releng/deps.toml of the frida
 # release. SLOT 0.58 is the API version this snapshot will become upstream.
-COMMIT="fb982b3ccfb57bd9b6a833fc1653fbc6b0cd7b53"
+COMMIT="cfc8f31cad85a58559f6e18061944bc87fca3f11"
 
 DESCRIPTION="Compiler for the GObject type system (Frida's 0.58 snapshot)"
 HOMEPAGE="https://vala.dev https://github.com/frida-forks/vala"
