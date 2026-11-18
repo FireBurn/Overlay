@@ -18,9 +18,9 @@ inherit cmake flag-o-matic llvm-r2 multiprocessing python-any-r1 rocm
 DESCRIPTION="General matrix-matrix operations library for AMD Instinct accelerators"
 HOMEPAGE="https://github.com/ROCm/rocm-libraries/tree/develop/projects/hipblaslt"
 SRC_URI="
-	https://github.com/ROCm/rocm-libraries/releases/download/therock-10.1/hipblaslt.tar.gz -> hipblaslt-${PV}.tar.gz
-	https://github.com/ROCm/rocm-libraries/releases/download/therock-10.1/origami.tar.gz -> origami-${PV}.tar.gz
-	https://github.com/ROCm/rocm-libraries/releases/download/therock-10.1/stinkytofu.tar.gz -> stinkytofu-${PV}.tar.gz
+	https://github.com/ROCm/rocm-libraries/releases/download/therock-10.2/hipblaslt.tar.gz -> hipblaslt-${PV}.tar.gz
+	https://github.com/ROCm/rocm-libraries/releases/download/therock-10.2/origami.tar.gz -> origami-${PV}.tar.gz
+	https://github.com/ROCm/rocm-libraries/releases/download/therock-10.2/stinkytofu.tar.gz -> stinkytofu-${PV}.tar.gz
 "
 
 S="${WORKDIR}/hipblaslt"
@@ -66,7 +66,7 @@ BDEPEND="
 "
 
 PATCHES=(
-	"${FILESDIR}/${PN}-10.1.0-codegen.patch"
+	"${FILESDIR}/${PN}-10.2.0-codegen.patch"
 )
 
 python_check_deps() {
@@ -84,7 +84,7 @@ pkg_setup() {
 
 src_prepare() {
 	local shebangs=()
-	mapfile -t shebangs < <(grep -rl "#!/usr/bin/env python3" tensilelite/Tensile || true)
+	mapfile -t shebangs < <(grep -rl "#!/usr/bin/env python3" tensilelite/tensilelite || true)
 	if (( ${#shebangs[@]} )); then
 		python_fix_shebang -q "${shebangs[@]}"
 	fi
@@ -96,8 +96,8 @@ src_prepare() {
 
 	# Fix compiler validation (just a validation)
 	sed -e 's/amdclang++/hipcc/g' -e 's/amdclang/hipcc/g' \
-		-i tensilelite/Tensile/Toolchain/Validators.py \
-		-i tensilelite/Tensile/Tests/unit/test_MatrixInstructionConversion.py || die
+		-i tensilelite/tensilelite/Toolchain/Validators.py \
+		-i tensilelite/tensilelite/Tests/unit/test_MatrixInstructionConversion.py || die
 
 	# hipcc adds -lamdhip64 when linking, which breaks device code objects
 	sed -e 's:${CMAKE_CXX_COMPILER};-target;amdgcn:${TENSILELITE_ASSEMBLER};-target;amdgcn:' \
@@ -109,7 +109,7 @@ src_prepare() {
 	sed -e 's:../../shared/origami:../origami:' -i CMakeLists.txt || die
 	sed -e '/        include(FetchContent)/,/        FetchContent_MakeAvailable(nanobind)/c\        find_package(nanobind REQUIRED CONFIG)' \
 		-i tensilelite/rocisa/CMakeLists.txt || die
-	sed -e 's:../../../../shared/stinkytofu:../../../stinkytofu:' \
+	sed -e "s:\${ROCM_LIBRARIES_ROOT}/shared/stinkytofu:${WORKDIR}/stinkytofu:" \
 		-i tensilelite/rocisa/CMakeLists.txt || die
 	sed -e '/include(ClangTidy)/d' -e '/add_clang_tidy_custom_target()/d' \
 		-i "${WORKDIR}/stinkytofu/CMakeLists.txt" || die
