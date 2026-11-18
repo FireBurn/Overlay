@@ -23,10 +23,11 @@ if [[ ${PV} == 9999 ]]; then
 	SLOT="0/7.2"
 else
 	SRC_URI="
-		https://github.com/ROCm/rocm-systems/releases/download/therock-10.1/clr.tar.gz -> rocm-clr-${PV}.tar.gz
-		https://github.com/ROCm/rocm-systems/releases/download/therock-10.1/${PN}.tar.gz -> ${P}.tar.gz
+		https://github.com/ROCm/rocm-systems/releases/download/therock-10.2/clr.tar.gz -> rocm-clr-${PV}.tar.gz
+		https://github.com/ROCm/rocm-systems/releases/download/therock-10.2/${PN}.tar.gz -> ${P}.tar.gz
+		https://github.com/ROCm/rocm-systems/releases/download/therock-10.2/hrr.tar.gz -> rocm-hrr-${PV}.tar.gz
 		test? (
-			https://github.com/ROCm/rocm-systems/releases/download/therock-10.1/hip-tests.tar.gz -> hip-tests-${PV}.tar.gz
+			https://github.com/ROCm/rocm-systems/releases/download/therock-10.2/hip-tests.tar.gz -> hip-tests-${PV}.tar.gz
 		)
 	"
 	S="${WORKDIR}/clr/"
