@@ -7,12 +7,12 @@ LLVM_COMPAT=( 23 24 )
 
 inherit cmake llvm-r2
 
-MY_P=llvm-project-therock-10.1
+MY_P=llvm-project-therock-10.2
 components=( "amd/comgr" )
 
 DESCRIPTION="Radeon Open Compute Code Object Manager"
 HOMEPAGE="https://github.com/ROCm/llvm-project/tree/amd-staging/amd/comgr"
-SRC_URI="https://github.com/ROCm/llvm-project/archive/refs/tags/therock-10.1.tar.gz -> ${MY_P}.tar.gz"
+SRC_URI="https://github.com/ROCm/llvm-project/archive/refs/tags/therock-10.2.tar.gz -> ${MY_P}.tar.gz"
 S="${WORKDIR}/${MY_P}/${components[0]}"
 
 LICENSE="MIT"
@@ -54,19 +54,10 @@ src_unpack() {
 }
 
 src_prepare() {
-	# ROCm's llvm fork keeps the legacy ArchFeatureKind bitmask API;
-	# upstream llvm-24 replaced it with the generated feature bitset.
-	if (( LLVM_SLOT >= 24 )); then
-		patch -p1 < "${FILESDIR}"/rocm-comgr-10.1.0-llvm24-feature-bitset.patch || die
-	else
-		# llvm-23 has no SGPR helpers in AMDGPUTargetParser.h
-		patch -p1 < "${FILESDIR}"/rocm-comgr-10.1.0-llvm23-sgpr-helpers.patch || die
-
-		# Drop ISA entries whose ELF machine value llvm-23 does not know yet
-		local def=src/comgr-isa-metadata.def elf="$(get_llvm_prefix)/include/llvm/BinaryFormat/ELF.h" mach
-		for mach in $(grep -o 'EF_AMDGPU_MACH_AMDGCN_[A-Z0-9_]*' "${def}" | sort -u); do
-			grep -q "${mach}\b" "${elf}" || sed -i "/${mach}\b/d" "${def}" || die
-		done
+	# LLVM 23 lacks the per-GPU TargetParser queries that the ROCm fork added.
+	# They are provided from the fork's generated GPU table; LLVM 24 has them.
+	if (( LLVM_SLOT < 24 )); then
+		patch -p1 < "${FILESDIR}"/rocm-comgr-10.2.0-llvm23-compat.patch || die
 	fi
 
 	sed -e "s:\${CLANG_CMAKE_DIR}/../../../\*:${EPREFIX}/usr/lib/clang/${LLVM_SLOT}/include:" \

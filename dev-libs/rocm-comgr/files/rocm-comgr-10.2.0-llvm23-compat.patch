@@ -1,0 +1,245 @@
+--- a/src/comgr-metadata.cpp
++++ b/src/comgr-metadata.cpp
+@@ -32,6 +32,7 @@
+ #include "llvm/Support/TargetSelect.h"
+ #include "llvm/Support/raw_ostream.h"
+ #include "llvm/TargetParser/AMDGPUTargetParser.h"
++#include "comgr-llvm23-compat.h"
+ #include <cstddef>
+ #include <iostream>
+ #include <optional>
+--- /dev/null
++++ b/src/comgr-llvm23-compat.h
+@@ -0,0 +1,232 @@
++//===- comgr-llvm23-compat.h - AMDGPU TargetParser queries for LLVM 23 ------===//
++//
++// The ROCm fork's TargetParser answers per-GPU questions that the TargetParser
++// of LLVM 23 cannot. The table is the fork's generated AMDGPUTargetParserDef.inc
++// (llvm-tblgen -gen-amdgpu-target-def on AMDGPU.td), reduced to the fields
++// Comgr reads, and the accessors follow AMDGPUTargetParser.cpp of the fork.
++//
++//===----------------------------------------------------------------------===//
++
++#ifndef COMGR_LLVM23_COMPAT_H
++#define COMGR_LLVM23_COMPAT_H
++
++#include "llvm/ADT/StringRef.h"
++#include "llvm/TargetParser/AMDGPUTargetParser.h"
++
++namespace llvm {
++namespace AMDGPU {
++
++namespace compat {
++
++enum : unsigned {
++  F_IMAGE_INSTS = 1u << 0,
++  F_GFX10_INSTS = 1u << 1,
++  F_GFX10_3_INSTS = 1u << 2,
++  F_GFX90A_INSTS = 1u << 3,
++  F_SRAMECC_SUPPORT = 1u << 4,
++  F_XNACK_ON_OFF_MODES = 1u << 5,
++  F_SGPR_INIT_BUG = 1u << 6,
++  F_1536_PHYSICAL_VGPRS = 1u << 7,
++  F_1024_ADDRESSABLE_VGPRS = 1u << 8,
++  F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY = 1u << 9,
++};
++
++struct GPUData {
++  const char *Name;
++  unsigned Major;
++  unsigned MaxWavesPerEU;
++  unsigned MaxHWLocalMemory;
++  unsigned LDSBankCount;
++  unsigned Features;
++};
++
++inline const GPUData *find(GPUKind Kind) {
++  static const GPUData Table[] = {
++    {"generic", 6, 10, 32768, 32, 0},
++    {"generic-hsa", 7, 10, 32768, 32, 0},
++    {"gfx600", 6, 10, 32768, 32, F_IMAGE_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx601", 6, 10, 32768, 32, F_IMAGE_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx602", 6, 10, 32768, 32, F_IMAGE_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx700", 7, 10, 65536, 32, F_IMAGE_INSTS},
++    {"gfx701", 7, 10, 65536, 32, F_IMAGE_INSTS},
++    {"gfx702", 7, 10, 65536, 16, F_IMAGE_INSTS},
++    {"gfx703", 7, 10, 65536, 16, F_IMAGE_INSTS},
++    {"gfx704", 7, 10, 65536, 32, F_IMAGE_INSTS},
++    {"gfx705", 7, 10, 65536, 16, F_IMAGE_INSTS},
++    {"gfx801", 8, 10, 65536, 32, F_IMAGE_INSTS | F_XNACK_ON_OFF_MODES},
++    {"gfx802", 8, 10, 65536, 32, F_IMAGE_INSTS | F_SGPR_INIT_BUG},
++    {"gfx803", 8, 10, 65536, 32, F_IMAGE_INSTS},
++    {"gfx805", 8, 10, 65536, 32, F_IMAGE_INSTS | F_SGPR_INIT_BUG},
++    {"gfx810", 8, 10, 65536, 16, F_IMAGE_INSTS | F_XNACK_ON_OFF_MODES},
++    {"gfx900", 9, 10, 65536, 32, F_IMAGE_INSTS | F_XNACK_ON_OFF_MODES},
++    {"gfx902", 9, 10, 65536, 32, F_IMAGE_INSTS | F_XNACK_ON_OFF_MODES},
++    {"gfx904", 9, 10, 65536, 32, F_IMAGE_INSTS | F_XNACK_ON_OFF_MODES},
++    {"gfx906", 9, 10, 65536, 32, F_IMAGE_INSTS | F_SRAMECC_SUPPORT | F_XNACK_ON_OFF_MODES},
++    {"gfx908", 9, 10, 65536, 32, F_IMAGE_INSTS | F_SRAMECC_SUPPORT | F_XNACK_ON_OFF_MODES},
++    {"gfx909", 9, 10, 65536, 32, F_IMAGE_INSTS | F_XNACK_ON_OFF_MODES},
++    {"gfx90a", 9, 8, 65536, 32, F_IMAGE_INSTS | F_GFX90A_INSTS | F_SRAMECC_SUPPORT | F_XNACK_ON_OFF_MODES},
++    {"gfx90c", 9, 10, 65536, 32, F_IMAGE_INSTS | F_XNACK_ON_OFF_MODES},
++    {"gfx942", 9, 8, 65536, 32, F_GFX90A_INSTS | F_SRAMECC_SUPPORT | F_XNACK_ON_OFF_MODES},
++    {"gfx950", 9, 8, 163840, 64, F_GFX90A_INSTS | F_SRAMECC_SUPPORT | F_XNACK_ON_OFF_MODES},
++    {"gfx1010", 10, 20, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_XNACK_ON_OFF_MODES | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1011", 10, 20, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_XNACK_ON_OFF_MODES | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1012", 10, 20, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_XNACK_ON_OFF_MODES | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1013", 10, 20, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_XNACK_ON_OFF_MODES | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1030", 10, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1031", 10, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1032", 10, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1033", 10, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1034", 10, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1035", 10, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1036", 10, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1100", 11, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_1536_PHYSICAL_VGPRS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1101", 11, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_1536_PHYSICAL_VGPRS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1102", 11, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1103", 11, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1150", 11, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1151", 11, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_1536_PHYSICAL_VGPRS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1152", 11, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1153", 11, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1154", 11, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1170", 11, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1171", 11, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1172", 11, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1200", 12, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_1536_PHYSICAL_VGPRS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1201", 12, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_1536_PHYSICAL_VGPRS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx1250-strict", 12, 16, 327680, 64, F_GFX10_INSTS | F_GFX10_3_INSTS | F_SRAMECC_SUPPORT | F_1024_ADDRESSABLE_VGPRS},
++    {"gfx1250", 12, 16, 327680, 64, F_GFX10_INSTS | F_GFX10_3_INSTS | F_SRAMECC_SUPPORT | F_1024_ADDRESSABLE_VGPRS},
++    {"gfx1251", 12, 16, 327680, 64, F_GFX10_INSTS | F_GFX10_3_INSTS | F_SRAMECC_SUPPORT | F_1024_ADDRESSABLE_VGPRS},
++    {"gfx1310", 13, 16, 196608, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS},
++    {"gfx9-generic", 9, 10, 65536, 32, F_IMAGE_INSTS | F_XNACK_ON_OFF_MODES},
++    {"gfx9-4-generic", 9, 8, 65536, 32, F_GFX90A_INSTS | F_SRAMECC_SUPPORT | F_XNACK_ON_OFF_MODES},
++    {"gfx10-1-generic", 10, 20, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_XNACK_ON_OFF_MODES | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx10-3-generic", 10, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx11-generic", 11, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx11-7-generic", 11, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx12-generic", 12, 16, 65536, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS | F_1536_PHYSICAL_VGPRS | F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY},
++    {"gfx12-5-generic", 12, 16, 327680, 64, F_GFX10_INSTS | F_GFX10_3_INSTS | F_SRAMECC_SUPPORT | F_1024_ADDRESSABLE_VGPRS},
++    {"gfx13-generic", 13, 16, 196608, 32, F_IMAGE_INSTS | F_GFX10_INSTS | F_GFX10_3_INSTS},
++  };
++  StringRef Name = getArchNameAMDGCN(Kind);
++  for (const GPUData &D : Table)
++    if (Name == D.Name)
++      return &D;
++  return nullptr;
++}
++
++} // namespace compat
++
++enum AMDGPUFeature : unsigned {
++  FEAT_IMAGE_INSTS = compat::F_IMAGE_INSTS,
++  FEAT_GFX10_INSTS = compat::F_GFX10_INSTS,
++  FEAT_GFX10_3_INSTS = compat::F_GFX10_3_INSTS,
++  FEAT_GFX90A_INSTS = compat::F_GFX90A_INSTS,
++  FEAT_SRAMECC_SUPPORT = compat::F_SRAMECC_SUPPORT,
++  FEAT_XNACK_ON_OFF_MODES = compat::F_XNACK_ON_OFF_MODES,
++  FEAT_SGPR_INIT_BUG = compat::F_SGPR_INIT_BUG,
++  FEAT_1536_PHYSICAL_VGPRS = compat::F_1536_PHYSICAL_VGPRS,
++  FEAT_1024_ADDRESSABLE_VGPRS = compat::F_1024_ADDRESSABLE_VGPRS,
++  FEAT_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY =
++      compat::F_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY,
++};
++
++struct AMDGPUFeatureBitset {
++  unsigned Bits = 0;
++  bool test(unsigned F) const { return Bits & F; }
++};
++
++inline AMDGPUFeatureBitset getFeatureBitset(GPUKind Kind) {
++  const compat::GPUData *D = compat::find(Kind);
++  return AMDGPUFeatureBitset{D ? D->Features : 0};
++}
++
++enum { FIXED_NUM_SGPRS_FOR_INIT_BUG = 96 };
++
++inline unsigned getTotalNumSGPRs(GPUKind Kind) {
++  const compat::GPUData *D = compat::find(Kind);
++  return D && D->Major >= 8 ? 800 : 512;
++}
++
++inline unsigned getAddressableNumSGPRs(GPUKind Kind) {
++  if (getFeatureBitset(Kind).test(FEAT_SGPR_INIT_BUG))
++    return FIXED_NUM_SGPRS_FOR_INIT_BUG;
++  const compat::GPUData *D = compat::find(Kind);
++  unsigned Major = D ? D->Major : 0;
++  if (Major >= 10)
++    return 106;
++  if (Major >= 8)
++    return 102;
++  return 104;
++}
++
++inline unsigned getSGPRAllocGranule(GPUKind Kind) {
++  const compat::GPUData *D = compat::find(Kind);
++  unsigned Major = D ? D->Major : 0;
++  if (Major >= 10)
++    return getAddressableNumSGPRs(Kind);
++  if (Major >= 8)
++    return 16;
++  return 8;
++}
++
++inline unsigned getVGPRAllocGranule(GPUKind Kind, bool IsWave32) {
++  AMDGPUFeatureBitset F = getFeatureBitset(Kind);
++  if (F.test(FEAT_GFX90A_INSTS))
++    return 8;
++  if (F.test(FEAT_1536_PHYSICAL_VGPRS))
++    return IsWave32 ? 24 : 12;
++  if (F.test(FEAT_GFX10_3_INSTS))
++    return IsWave32 ? 16 : 8;
++  return IsWave32 ? 8 : 4;
++}
++
++inline unsigned getTotalNumVGPRs(GPUKind Kind, bool IsWave32) {
++  AMDGPUFeatureBitset F = getFeatureBitset(Kind);
++  if (F.test(FEAT_GFX90A_INSTS))
++    return 512;
++  if (!F.test(FEAT_GFX10_INSTS))
++    return 256;
++  if (F.test(FEAT_1536_PHYSICAL_VGPRS))
++    return IsWave32 ? 1536 : 768;
++  return IsWave32 ? 1024 : 512;
++}
++
++inline unsigned getAddressableNumVGPRs(GPUKind Kind, bool IsWave32) {
++  AMDGPUFeatureBitset F = getFeatureBitset(Kind);
++  if (F.test(FEAT_GFX90A_INSTS))
++    return 512;
++  if (F.test(FEAT_1024_ADDRESSABLE_VGPRS))
++    return IsWave32 ? 1024 : 512;
++  return 256;
++}
++
++inline unsigned getMaxHWAddressableLocalMemorySize(GPUKind Kind) {
++  const compat::GPUData *D = compat::find(Kind);
++  return D ? D->MaxHWLocalMemory : 32768;
++}
++
++inline unsigned getLocalMemorySize(GPUKind Kind, bool FullSIMDMode) {
++  unsigned Size = getMaxHWAddressableLocalMemorySize(Kind);
++  if (getFeatureBitset(Kind).test(FEAT_HALF_ADDRESSABLE_PHYSICAL_LOCAL_MEMORY))
++    Size *= 2;
++  if (!FullSIMDMode)
++    Size /= 2;
++  return Size;
++}
++
++inline unsigned getLDSBankCount(GPUKind Kind) {
++  const compat::GPUData *D = compat::find(Kind);
++  return D ? D->LDSBankCount : 32;
++}
++
++inline unsigned getMaxWavesPerEU(GPUKind Kind) {
++  const compat::GPUData *D = compat::find(Kind);
++  return D ? D->MaxWavesPerEU : 10;
++}
++
++constexpr unsigned getMaxFlatWorkGroupSize() { return 1024; }
++
++} // namespace AMDGPU
++} // namespace llvm
++
++#endif // COMGR_LLVM23_COMPAT_H
