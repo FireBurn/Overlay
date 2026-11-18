@@ -27,15 +27,15 @@ inherit flag-o-matic toolchain-funcs
 # @ECLASS_VARIABLE: FRIDA_CORE_PV
 # @DESCRIPTION:
 # The frida-core release that the pins below belong to.
-FRIDA_CORE_PV=17.26.3
+FRIDA_CORE_PV=17.27.0
 
 # @ECLASS_VARIABLE: FRIDA_CORE_SRC_URI
 # @DESCRIPTION:
 # The frida-core release tarball and every pinned subproject.
 FRIDA_CORE_SRC_URI="
 	https://github.com/frida/frida-core/archive/refs/tags/${FRIDA_CORE_PV}.tar.gz -> frida-core-${FRIDA_CORE_PV}.tar.gz
-	https://github.com/frida/efni/archive/4fdc5f4c0d7ec4086362961150a80a92bc6e4b72.tar.gz -> frida-efni-4fdc5f4c0d7ec4086362961150a80a92bc6e4b72.tar.gz
-	https://github.com/frida/frida-gum/archive/refs/tags/17.26.3.tar.gz -> frida-frida-gum-17.26.3.tar.gz
+	https://github.com/frida/efni/archive/9df236442d675b8671d002af15facc03d0892450.tar.gz -> frida-efni-9df236442d675b8671d002af15facc03d0892450.tar.gz
+	https://github.com/frida/frida-gum/archive/refs/tags/17.27.0.tar.gz -> frida-frida-gum-17.27.0.tar.gz
 	https://github.com/frida-forks/capstone/archive/f919a03a5417e1c7ea3af7035225073437030ef2.tar.gz -> frida-forks-capstone-f919a03a5417e1c7ea3af7035225073437030ef2.tar.gz
 	https://github.com/frida-forks/json-glib/archive/0242c39f1f60f844c9df41e83434251b06609e82.tar.gz -> frida-forks-json-glib-0242c39f1f60f844c9df41e83434251b06609e82.tar.gz
 	https://github.com/frida-forks/libdwarf/archive/9ac8cc22cab54d72cb355a44e85db716a7006f47.tar.gz -> frida-forks-libdwarf-9ac8cc22cab54d72cb355a44e85db716a7006f47.tar.gz
@@ -47,7 +47,7 @@ FRIDA_CORE_SRC_URI="
 	https://gitlab.gnome.org/GNOME/gvdb/-/archive/2b42fc75f09dbe1cd1057580b5782b08f2dcb400/gvdb-2b42fc75f09dbe1cd1057580b5782b08f2dcb400.tar.gz -> gnome-gvdb-2b42fc75f09dbe1cd1057580b5782b08f2dcb400.tar.gz
 	https://github.com/frida-forks/libbpf/archive/9c4e176810717e27b6990a8722b252fc1967667f.tar.gz -> frida-forks-libbpf-9c4e176810717e27b6990a8722b252fc1967667f.tar.gz
 	https://github.com/frida-forks/libgee/archive/69621d2c665b75c1e064abdecd540ef1749615ee.tar.gz -> frida-forks-libgee-69621d2c665b75c1e064abdecd540ef1749615ee.tar.gz
-	https://github.com/frida/releng/archive/fe7d31dfbcfe34701851411773cf82c0359b44bd.tar.gz -> frida-releng-fe7d31dfbcfe34701851411773cf82c0359b44bd.tar.gz
+	https://github.com/frida/releng/archive/47d771e6f1cf074d97051be7a24d8e4a09e97361.tar.gz -> frida-releng-47d771e6f1cf074d97051be7a24d8e4a09e97361.tar.gz
 	https://github.com/frida-forks/meson/archive/145667c57ed2649ddcc6fbb11b6008e0d451df1d.tar.gz -> frida-forks-meson-145667c57ed2649ddcc6fbb11b6008e0d451df1d.tar.gz
 	https://github.com/python-poetry/tomlkit/archive/911cccd630965ff423316e25b4685ecf7df0ec0a.tar.gz -> python-poetry-tomlkit-911cccd630965ff423316e25b4685ecf7df0ec0a.tar.gz
 "
@@ -94,8 +94,8 @@ FRIDA_CORE_BDEPEND="
 
 # <directory inside the tree> <distfile>
 _FRIDA_PINS=(
-	"subprojects/efni frida-efni-4fdc5f4c0d7ec4086362961150a80a92bc6e4b72.tar.gz"
-	"subprojects/frida-gum frida-frida-gum-17.26.3.tar.gz"
+	"subprojects/efni frida-efni-9df236442d675b8671d002af15facc03d0892450.tar.gz"
+	"subprojects/frida-gum frida-frida-gum-17.27.0.tar.gz"
 	"subprojects/frida-gum/subprojects/capstone frida-forks-capstone-f919a03a5417e1c7ea3af7035225073437030ef2.tar.gz"
 	"subprojects/frida-gum/subprojects/json-glib frida-forks-json-glib-0242c39f1f60f844c9df41e83434251b06609e82.tar.gz"
 	"subprojects/frida-gum/subprojects/libdwarf frida-forks-libdwarf-9ac8cc22cab54d72cb355a44e85db716a7006f47.tar.gz"
@@ -107,7 +107,7 @@ _FRIDA_PINS=(
 	"subprojects/glib/subprojects/gvdb gnome-gvdb-2b42fc75f09dbe1cd1057580b5782b08f2dcb400.tar.gz"
 	"subprojects/libbpf frida-forks-libbpf-9c4e176810717e27b6990a8722b252fc1967667f.tar.gz"
 	"subprojects/libgee frida-forks-libgee-69621d2c665b75c1e064abdecd540ef1749615ee.tar.gz"
-	"releng frida-releng-fe7d31dfbcfe34701851411773cf82c0359b44bd.tar.gz"
+	"releng frida-releng-47d771e6f1cf074d97051be7a24d8e4a09e97361.tar.gz"
 	"releng/meson frida-forks-meson-145667c57ed2649ddcc6fbb11b6008e0d451df1d.tar.gz"
 	"releng/tomlkit python-poetry-tomlkit-911cccd630965ff423316e25b4685ecf7df0ec0a.tar.gz"
 )
