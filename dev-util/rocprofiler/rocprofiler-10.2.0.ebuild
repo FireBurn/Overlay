@@ -20,7 +20,7 @@ if [[ ${PV} == *9999 ]] ; then
 	S="${WORKDIR}/${P}/projects/rocprofiler"
 else
 	SRC_URI="
-		https://github.com/ROCm/rocm-systems/releases/download/therock-10.1/${PN}.tar.gz -> ${P}.tar.gz
+		https://github.com/ROCm/rocm-systems/releases/download/therock-10.2/${PN}.tar.gz -> ${P}.tar.gz
 		https://github.com/google/perfetto/archive/refs/tags/${PERFETTO_PV}.tar.gz -> perfetto-${PERFETTO_PV}.tar.gz
 	"
 	S="${WORKDIR}/${PN}"
