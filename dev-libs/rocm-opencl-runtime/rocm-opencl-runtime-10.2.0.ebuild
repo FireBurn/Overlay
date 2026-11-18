@@ -10,7 +10,7 @@ inherit cmake flag-o-matic llvm-r2 rocm
 
 DESCRIPTION="Radeon Open Compute OpenCL runtime"
 HOMEPAGE="https://github.com/ROCm/rocm-systems/tree/develop/projects/clr"
-SRC_URI="https://github.com/ROCm/rocm-systems/releases/download/therock-10.1/clr.tar.gz -> rocm-clr-${PV}.tar.gz"
+SRC_URI="https://github.com/ROCm/rocm-systems/releases/download/therock-10.2/clr.tar.gz -> rocm-clr-${PV}.tar.gz"
 S="${WORKDIR}/clr"
 
 LICENSE="Apache-2.0 MIT"
@@ -33,9 +33,9 @@ BDEPEND="
 "
 
 PATCHES=(
-	"${FILESDIR}"/${PN}-10.1.0-fix-lib-version.patch
-	"${FILESDIR}"/${PN}-10.1.0-vega-apu-xnack.patch
-	"${FILESDIR}"/${PN}-10.1.0-aligned-new.patch
+	"${FILESDIR}"/${PN}-10.2.0-fix-lib-version.patch
+	"${FILESDIR}"/${PN}-10.2.0-vega-apu-xnack.patch
+	"${FILESDIR}"/${PN}-10.2.0-aligned-new.patch
 	"${FILESDIR}/rocclr-no-gnu-basename.patch"
 )
 
