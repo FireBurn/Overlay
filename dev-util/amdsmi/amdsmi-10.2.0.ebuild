@@ -18,7 +18,7 @@ if [[ ${PV} == *9999 ]] ; then
 	inherit git-r3
 	S="${WORKDIR}/${P}/projects/amdsmi"
 else
-	SRC_URI="https://github.com/ROCm/rocm-systems/releases/download/therock-10.1/${PN}.tar.gz -> ${P}.tar.gz"
+	SRC_URI="https://github.com/ROCm/rocm-systems/releases/download/therock-10.2/${PN}.tar.gz -> ${P}.tar.gz"
 	S="${WORKDIR}/${PN}"
 	KEYWORDS="~amd64"
 fi
