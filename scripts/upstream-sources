@@ -89,6 +89,7 @@ dev-build/gnrt                    skip follows www-client/chromium; reviewed in 
 dev-cpp/cpp-jwt                   github-release arun11299/cpp-jwt prefix=v
 dev-lang/bun                      github-release oven-sh/bun prefix=bun-v
 dev-lang/rust                     github-release rust-lang/rust
+dev-lang/vala                     agent snapshot of frida-forks/vala pinned to the commit in releng/deps.toml of the frida-core release; version is 0.58.0_p<commit date YYYYMMDD> and it must match the vala pin of dev-libs/frida-core, so it moves with a frida-core bump, not on its own
 dev-libs/libixion                 gitlab-tag ixion/ixion
 dev-libs/liborcus                 gitlab-tag orcus/orcus
 dev-libs/frida-core               skip bumped with dev-python/frida
@@ -127,7 +128,8 @@ media-libs/vkBasalt               github-release DadSchoorse/vkBasalt prefix=v
 net-im/discord                    json https://discord.com/api/updates/stable?platform=linux name
 net-libs/libwebrtc                skip fork pinned by hand
 sci-misc/llama-cpp                github-tag ggml-org/llama.cpp prefix=v
-sci-misc/stable-diffusion-cpp     page https://api.github.com/repos/leejet/stable-diffusion.cpp/releases?per_page=100 master-(\d+)-[0-9a-f]{7}
+# The unauthenticated releases API is rate-limited; the tags page lists the newest tags and the PV is the build number.
+sci-misc/stable-diffusion-cpp     page https://github.com/leejet/stable-diffusion.cpp/tags master-(\d+)-[0-9a-f]{7}
 sys-apps/keyutils                 git-tag https://git.kernel.org/pub/scm/linux/kernel/git/dhowells/keyutils.git prefix=v
 sys-libs/glibc-abi                skip ABI marker package
 sys-libs/musl-abi                 skip ABI marker package
