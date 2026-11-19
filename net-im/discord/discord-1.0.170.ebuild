@@ -53,8 +53,7 @@ KEYWORDS="~amd64"
 IUSE="appindicator bundled-electron elibc_llvm +seccomp wayland"
 REQUIRED_USE="${PYTHON_REQUIRED_USE}"
 RESTRICT="bindist mirror strip test"
-BDEPEND="app-arch/brotli
-	app-arch/zip"
+BDEPEND="app-arch/brotli"
 RDEPEND="
 	${PYTHON_DEPS}
 	!bundled-electron? ( ${ELECTRON_DEPEND} )
@@ -95,7 +94,7 @@ QA_PREBUILT="*"
 
 CONFIG_CHECK="~USER_NS"
 
-repackage_node_modules() {
+install_node_module() {
 	brotli -d "${DISTDIR}/${P}"-$1.distro -o "${T}"/$1.tar 2>/dev/null || die
 	unpack "${T}"/$1.tar || die
 	if [[ $1 == discord_krisp ]]; then
@@ -105,45 +104,33 @@ repackage_node_modules() {
 		"${EPYTHON}" "${FILESDIR}/patch-krisp.py" "${WORKDIR}/files/discord_krisp.node" ||
 			die "failed to patch the Krisp signature check"
 	fi
-	pushd "${WORKDIR}"/files 2>/dev/null || die
-	zip -rq "${WORKDIR}"/$1.zip . || die
-	popd 2>/dev/null || die
-	mv $1.zip "${S}"/resources/bootstrap/ || die
-	rm -r "${WORKDIR}"/files || die
+	# discord_voice.node and discord_krisp.node need libstdc++ and libatomic,
+	# which llvm-libc does not have. The stubs make the client start without voice.
+	if use elibc_llvm && [[ $1 == discord_voice || $1 == discord_krisp ]]; then
+		cp "${FILESDIR}/${1#discord_}-stub.js" "${WORKDIR}/files/index.js" || die
+	fi
+	mv "${WORKDIR}"/files "${S}/resources/standalone_modules/$1" || die
 }
 
 src_unpack() {
-	# Upstream now only ships an autoupdater, where the binaries downloaded from the
-	# upstream package do not contain the app, but instead contain software that
-	# downloads and installs the app. To work around this, we manually download
-	# the same Brotli-compressed tar archives that the autoupdater would, for both
-	# the base app itself and the required Node modules. The Node modules need to be
-	# unpacked and installed in ~/.config/discord/${PV}/modules, and luckily the base app
-	# can automatically do this for us on the first launch if we package the Node
-	# modules into a .zip and put them in <base app location>/resources/bootstrap.
-	# Some modules are installed at runtime, but we want to bootstrap those too,
-	# so we use a custom <base app location>/resources/bootstrap/manifest.json
-	# copied over from $FILESDIR.
+	# Upstream ships only an autoupdater. Fetch the same Brotli-compressed
+	# archives it would, and install the modules where build_info.json's
+	# standaloneModules flag makes the app look for them. For any new module,
+	# add its archive to SRC_URI and a call to install_node_module below.
 	brotli -d "${DISTDIR}/${P}".distro -o "${T}/${P}.tar" 2>/dev/null || die
 	unpack "${T}/${P}.tar"
 	mv "${WORKDIR}"/files "${S}" || die
 	rm "${T}/${P}.tar" || die
-	# For any new Node modules, add the Brotli-compressed archive to SRC_URI
-	# following the same pattern, and then add a corressponding call to
-	# repackage_node_modules here. You can find a list of required modules
-	# at <base app location>/resources/bootstrap/manifest.json, as well as
-	# running the application and looking for lines in the output about "modules".
-	# If checking manifest.json, make sure to check the one directly from upstream,
-	# as the one installed on the system is copied over from $FILESDIR.
-	repackage_node_modules "discord_desktop_core"
-	repackage_node_modules "discord_erlpack"
-	repackage_node_modules "discord_spellcheck"
-	repackage_node_modules "discord_utils"
-	repackage_node_modules "discord_voice"
-	repackage_node_modules "discord_zstd"
-	repackage_node_modules "discord_rpc"
-	repackage_node_modules "discord_game_utils"
-	repackage_node_modules "discord_krisp"
+	mkdir "${S}/resources/standalone_modules" || die
+	install_node_module "discord_desktop_core"
+	install_node_module "discord_erlpack"
+	install_node_module "discord_spellcheck"
+	install_node_module "discord_utils"
+	install_node_module "discord_voice"
+	install_node_module "discord_zstd"
+	install_node_module "discord_rpc"
+	install_node_module "discord_game_utils"
+	install_node_module "discord_krisp"
 }
 
 src_configure() {
@@ -175,35 +162,27 @@ src_prepare() {
 			"${T}/launcher.sh" || die "sed failed for seccomp"
 	fi
 
-	# No voice engine on llvm-libc
-	if use elibc_llvm; then
-		sed --in-place --expression '/^EBUILD_NO_VOICE=/s/false/true/' \
-			"${T}/launcher.sh" || die "sed failed for the voice stub"
-	fi
-
 	# USE wayland in launcher
 	if use wayland; then
 		sed --in-place --expression '/^EBUILD_WAYLAND=/s/false/true/' \
 			"${T}/launcher.sh" || die "sed failed for wayland"
 	fi
-	cp "${FILESDIR}/manifest.json" resources/bootstrap/manifest.json || die "Failed copying manifest.json"
 
-	if ! use bundled-electron; then
-		# The updater added in 1.0.136 relaunches Discord through its own
-		# binary, which is not installed without the bundled Electron
-		"${EPYTHON}" - <<-EOF || die "Failed disabling the new updater"
-		import json
-		with open("resources/build_info.json") as f:
-		    info = json.load(f)
-		info["newUpdater"] = False
-		with open("resources/build_info.json", "w") as f:
-		    json.dump(info, f, indent=2)
-		EOF
+	"${EPYTHON}" - <<-EOF || die "Failed updating build_info.json"
+	import json
+	with open("resources/build_info.json") as f:
+	    info = json.load(f)
+	info["disableUpdater"] = True
+	info["standaloneModules"] = True
+	info["newUpdater"] = False
+	with open("resources/build_info.json", "w") as f:
+	    json.dump(info, f, indent=2)
+	EOF
 
-		# Preload scripts do not see the override the loader installs
-		"${EPYTHON}" "${FILESDIR}/asar-resources-path.py" resources/app.asar ||
-			die "Failed pointing app.asar at its resources"
-	fi
+	# Preload scripts do not see the resourcesPath override the loader installs,
+	# and module data must not go in the read-only install directory
+	"${EPYTHON}" "${FILESDIR}/asar-resources-path.py" resources/app.asar ||
+		die "Failed patching app.asar"
 }
 
 src_install() {
@@ -255,12 +234,6 @@ src_install() {
 	newins "${DISTDIR}/discord-disable-breaking-updates-${UPDATE_DISABLER_COMMIT}.py" disable-breaking-updates.py
 	python_fix_shebang "${ED}/${DESTDIR}/disable-breaking-updates.py"
 
-	if use elibc_llvm; then
-		insinto "${DESTDIR}"
-		doins "${FILESDIR}/voice-stub.js"
-		doins "${FILESDIR}/krisp-stub.js"
-	fi
-
 	exeinto "/usr/bin"
 	newexe "${T}/launcher.sh" "discord" || die "failing to install launcher"
 
@@ -272,15 +245,6 @@ src_install() {
 
 pkg_postinst() {
 	xdg_pkg_postinst
-
-	# Modules are only (re)extracted from the bootstrap zips on the first
-	# launch, so patch the already-installed Krisp module for upgrades from
-	# unpatched builds.
-	local krisp_node="${XDG_CONFIG_HOME:-${HOME}/.config}/discord/${PV}/modules/discord_krisp/discord_krisp.node"
-	if [[ -f ${krisp_node} ]]; then
-		"${EPYTHON}" "${FILESDIR}/patch-krisp.py" "${krisp_node}" >/dev/null ||
-			ewarn "The installed discord_krisp module could not be patched; Krisp noise cancellation will not work until the module is reinstalled (remove ~/.config/discord/${PV}/modules and relaunch Discord)."
-	fi
 
 	optfeature_header "Install the following packages for additional support:"
 	optfeature "sound support" \

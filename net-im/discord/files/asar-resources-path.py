@@ -3,6 +3,10 @@
 # Distributed under the terms of the GNU General Public License v2
 """Point Discord's app.asar at its own resources directory.
 
+Also keep the module data directory in the user's profile: with
+standaloneModules set, Discord would otherwise write it inside the read-only
+standalone_modules directory.
+
 Discord reads process.resourcesPath, which Electron sets to its own
 installation. The loader in resources/app overrides it for the main process,
 but preload scripts run elsewhere and see the real value, so the string is
@@ -21,9 +25,17 @@ import json
 import struct
 import sys
 
-OLD = b"process.resourcesPath"
-NEW = b"process.env.DISCORD_R"
-assert len(OLD) == len(NEW), "the replacement must not change any offset"
+REPLACEMENTS = [
+    (b"process.resourcesPath", b"process.env.DISCORD_R"),
+    (
+        b'path_1.default.join(resourcesPath,"standalone_modules")',
+        b'path_1.default.join(userDataPath,"module_data")'.ljust(
+            len(b'path_1.default.join(resourcesPath,"standalone_modules")')
+        ),
+    ),
+]
+for old, new in REPLACEMENTS:
+    assert len(old) == len(new), "the replacement must not change any offset"
 
 path = sys.argv[1]
 data = bytearray(open(path, "rb").read())
@@ -51,10 +63,11 @@ for name, entry in files(header):
     start = content_start + int(entry["offset"])
     end = start + entry["size"]
     content = bytes(data[start:end])
-    if OLD not in content:
+    if not any(old in content for old, _ in REPLACEMENTS):
         continue
 
-    content = content.replace(OLD, NEW)
+    for old, new in REPLACEMENTS:
+        content = content.replace(old, new)
     data[start:end] = content
     patched += 1
 
@@ -76,7 +89,7 @@ for name, entry in files(header):
         data[index:index + len(old)] = new.encode()
 
 if not patched:
-    sys.exit(f"{path}: {OLD.decode()} not found")
+    sys.exit(f"{path}: nothing to patch")
 
 open(path, "wb").write(bytes(data))
 print(f"patched {patched} file(s) in {path}")
