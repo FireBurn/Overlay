@@ -60,7 +60,7 @@ NPM_PKGS="
 	@dsanders11/vscode-markdown-languageservice@0.3.0
 	@electron-internal/extract-zip@1.0.4
 	@electron/asar@4.0.1
-	@electron/docs-parser@3.0.2
+	@electron/docs-parser@3.0.3
 	@electron/fiddle-core@1.3.4
 	@electron/fiddle-core@2.0.1
 	@electron/fuses@2.1.2
@@ -72,7 +72,7 @@ NPM_PKGS="
 	@electron/notarize@3.1.1
 	@electron/osx-sign@2.6.0
 	@electron/packager@20.0.4
-	@electron/typescript-definitions@9.2.0
+	@electron/typescript-definitions@10.0.0
 	@electron/universal@3.0.6
 	@electron/windows-sign@2.0.6
 	@hurdlegroup/robotjs@0.12.3
@@ -175,7 +175,7 @@ NPM_PKGS="
 	@types/mime@1.3.5
 	@types/minimist@1.2.5
 	@types/ms@0.7.31
-	@types/node@20.16.12
+	@types/node@22.20.5
 	@types/node@22.7.7
 	@types/node@24.9.1
 	@types/qs@6.14.0
@@ -252,17 +252,15 @@ NPM_PKGS="
 	cacheable-request@7.0.2
 	call-bind-apply-helpers@1.0.2
 	call-bound@1.0.4
-	chai@5.1.1
 	chai@6.2.2
+	chai@6.3.0
 	chalk@5.3.0
 	character-entities@2.0.0
 	character-entities-legacy@3.0.0
 	character-reference-invalid@2.0.0
-	check-error@2.1.1
 	check-for-leaks@1.2.1
 	chownr@3.0.0
 	cli-cursor@5.0.0
-	cli-spinners@2.9.2
 	cli-truncate@5.2.0
 	cliui@7.0.4
 	clone-response@1.0.2
@@ -293,7 +291,6 @@ NPM_PKGS="
 	decode-named-character-reference@1.0.2
 	decompress-response@10.0.0
 	decompress-response@6.0.0
-	deep-eql@5.0.2
 	defer-to-connect@2.0.1
 	define-properties@1.2.0
 	delegates@1.0.0
@@ -372,7 +369,6 @@ NPM_PKGS="
 	get-caller-file@2.0.5
 	get-east-asian-width@1.2.0
 	get-east-asian-width@1.6.0
-	get-func-name@2.0.2
 	get-intrinsic@1.3.0
 	get-proto@1.0.1
 	get-stream@5.2.0
@@ -425,12 +421,9 @@ NPM_PKGS="
 	is-glob@3.1.0
 	is-glob@4.0.3
 	is-hexadecimal@2.0.0
-	is-interactive@2.0.0
 	is-number@7.0.0
 	is-promise@4.0.0
 	is-stream@4.0.1
-	is-unicode-supported@1.3.0
-	is-unicode-supported@2.1.0
 	isarray@0.0.1
 	isarray@1.0.0
 	isbinaryfile@4.0.10
@@ -461,11 +454,9 @@ NPM_PKGS="
 	lodash@4.18.1
 	lodash.camelcase@4.3.0
 	lodash.get@4.4.2
-	log-symbols@6.0.0
 	log-update@6.1.0
 	long@4.0.0
 	long@5.3.2
-	loupe@3.1.1
 	lowercase-keys@2.0.0
 	lowercase-keys@3.0.0
 	lru-cache@11.2.2
@@ -563,7 +554,6 @@ NPM_PKGS="
 	once@1.4.0
 	onetime@7.0.0
 	optimist@0.6.1
-	ora@8.1.0
 	oxfmt@0.42.0
 	oxlint@1.80.0
 	p-cancelable@2.1.1
@@ -583,7 +573,6 @@ NPM_PKGS="
 	path-to-regexp@1.9.0
 	path-to-regexp@8.4.2
 	path-type@6.0.0
-	pathval@2.0.0
 	pause-stream@0.0.11
 	pdfjs-dist@4.10.38
 	pe-library@1.0.1
@@ -671,7 +660,6 @@ NPM_PKGS="
 	statuses@2.0.1
 	statuses@2.0.2
 	std-env@4.2.0
-	stdin-discarder@0.2.2
 	stream-chain@2.2.5
 	stream-combiner@0.2.2
 	stream-json@1.9.1
@@ -719,6 +707,7 @@ NPM_PKGS="
 	undici@6.28.0
 	undici@7.29.0
 	undici-types@6.19.8
+	undici-types@6.21.0
 	undici-types@7.16.0
 	unicorn-magic@0.3.0
 	unist-util-is@6.0.0
@@ -778,6 +767,8 @@ NPM_PKGS="
 	yargs-parser@20.2.9
 	yargs-parser@22.0.0
 	yauzl@2.10.0
+	yocto-spinner@1.2.2
+	yoctocolors@2.2.0
 	zwitch@2.0.2
 "
 
@@ -1677,6 +1668,18 @@ src_configure() {
 	mkdir -p -m 755 "${TMPDIR}" || die
 
 	addpredict /dev/dri/ #nowarn
+
+	# 45.4 derives v8_embedder_string by running electron/script/v8-patch-fingerprint.py
+	# with the bundled hermetic Python, which bin-finder removes; the script also needs
+	# a V8 git checkout the -lite tarball does not ship. Set the same value ourselves
+	# from a hash of the v8 patch series so V8 code caches still invalidate when the
+	# patches change.
+	local v8_patch_dir="electron/patches/v8"
+	local fingerprint
+	fingerprint=$(cat "${v8_patch_dir}/.patches" | while IFS= read -r p; do
+			[[ -n ${p} ]] && cat "${v8_patch_dir}/${p}"
+		done | sha256sum | cut -c1-16) || die
+	export ELECTRON_V8_EMBEDDER_STRING="-electron.${fingerprint}"
 
 	local gn_system_libraries=(
 		flac
