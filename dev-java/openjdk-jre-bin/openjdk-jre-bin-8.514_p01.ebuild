@@ -26,7 +26,6 @@ DESCRIPTION="Prebuilt Java JRE binaries provided by Eclipse Temurin"
 HOMEPAGE="https://adoptium.net/"
 SRC_URI="
 	$(abi_uri x64 amd64 glibc)
-	$(abi_uri x64 amd64 llvm)
 "
 S="${WORKDIR}/jdk${MY_PV}-jre"
 
@@ -34,9 +33,7 @@ LICENSE="GPL-2-with-classpath-exception"
 SLOT="${MY_SLOT}"
 KEYWORDS="~amd64"
 
-# elibc_llvm is not one of the values the gentoo profiles declare, so it is
-# named here rather than left to USE_EXPAND.
-IUSE="alsa cups headless-awt selinux elibc_llvm"
+IUSE="alsa cups headless-awt selinux"
 
 RDEPEND="
 	media-libs/fontconfig:1.0
@@ -44,7 +41,6 @@ RDEPEND="
 	>net-libs/libnet-1.1-r9999
 	>=sys-apps/baselayout-java-0.1.0-r1
 	elibc_glibc? ( >=sys-libs/glibc-2.2.5:* )
-	elibc_llvm? ( sys-libs/musl-abi )
 	virtual/zlib:=
 	alsa? ( media-libs/alsa-lib )
 	cups? ( net-print/cups )
@@ -70,8 +66,7 @@ src_install() {
 	rm ASSEMBLY_EXCEPTION LICENSE THIRD_PARTY_README || die
 
 	# this does not exist on arm64 hence -f
-	# The Alpine build links libfontmanager to the bundled copy by name.
-	use elibc_llvm || rm -fv lib/*/libfreetype.so* || die
+	rm -fv lib/*/libfreetype.so* || die
 
 	if ! use alsa ; then
 		rm -v lib/*/libjsoundalsa.so* || die
