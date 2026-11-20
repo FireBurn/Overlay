@@ -16,7 +16,7 @@ BUN_VENDOR=(
 	"libjpeg-turbo libjpeg-turbo/libjpeg-turbo c85e6b905bf237038faa936dab160ebfc5da0344"
 	"libspng randy408/libspng fb768002d4288590083a476af628e51c3f1d47cd"
 	"libwebp webmproject/libwebp b7e29b9d75bd31422b00c2a446d49d7af06c328d"
-	"cares c-ares/c-ares c7a3138dcfe3bb0eaaf10c0c24c36dc66dc790ab"
+	"cares c-ares/c-ares 0b88066f79ac9745d6819899f1794df91b73c873"
 	"hdrhistogram HdrHistogram/HdrHistogram_c 18c7a324383dded1451d15621cd018b0048057d0"
 	"highway google/highway 2607d3b5b0113992fe84d3848859eae13b3b52c1"
 	"lolhtml oven-sh/lol-html 725ce499aa9b71e38b7a2d0a9fbb6d7294a4079e"
@@ -25,13 +25,13 @@ BUN_VENDOR=(
 	"lsqpack litespeedtech/ls-qpack 91567706c41c0d97ab8dc576873ecd472d7869fa"
 	"mimalloc oven-sh/mimalloc 92ef6587c57b262f6e6abf513f7776a2f8d12aeb"
 	"tinycc oven-sh/tinycc 05f0fafaa3be31e31d7b4b5c17dc60f62c991171"
-	"boringssl oven-sh/boringssl 41bf9b59c2ebf277a7aa427e1ecad5cc80dd4d4f"
-	"lsquic litespeedtech/lsquic f812ceb9529e26717df78c6064a2ff648b949f3e"
+	"boringssl oven-sh/boringssl fe703e9faa3bfd22b04eb192066856557b7e015c"
+	"lsquic litespeedtech/lsquic f52c00172e04f9b889ab9e28d21e5d1805133cfb"
 )
 BUN_WEBKIT_COMMIT="d6375c72affe0f70222cdcb45012b10f0bf3a9d5"
 BUN_NODEJS_HEADERS="https://nodejs.org/dist/v26.3.0/node-v26.3.0-headers.tar.gz"
 # Commit of the bun-v${PV} tag, reported by "bun --revision"
-BUN_GIT_SHA="38afee6c84fcf48c0edb2466aa4b27d287a59c30"
+BUN_GIT_SHA="a7733435cf40429e3b35c36072769df2052b80f1"
 
 CRATES="
 	addr2line@0.27.1
