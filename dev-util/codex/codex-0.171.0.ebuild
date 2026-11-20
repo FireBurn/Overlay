@@ -45,6 +45,7 @@ CRATES="
 	assert_matches@1.5.0
 	async-broadcast@0.7.2
 	async-channel@2.5.0
+	async-compression@0.4.44
 	async-executor@1.13.3
 	async-fs@2.2.0
 	async-io@2.6.0
@@ -174,6 +175,8 @@ CRATES="
 	colorchoice@1.0.4
 	combine@4.6.7
 	compact_str@0.9.1
+	compression-codecs@0.4.39
+	compression-core@0.4.34
 	concurrent-queue@2.5.0
 	condtype@1.3.0
 	console@0.15.11
@@ -183,7 +186,7 @@ CRATES="
 	const_format@0.2.35
 	const_format_proc_macros@0.2.34
 	constant_time_eq@0.3.1
-	constant_time_eq@0.4.2
+	constant_time_eq@0.6.1
 	convert_case@0.10.0
 	convert_case@0.6.0
 	cookie-factory@0.3.3
@@ -316,6 +319,7 @@ CRATES="
 	errno@0.3.14
 	error-code@3.3.2
 	etcetera@0.11.0
+	etherparse@0.21.0
 	euclid@0.22.14
 	event-listener-strategy@0.5.4
 	event-listener@5.4.1
@@ -455,6 +459,7 @@ CRATES="
 	headers@0.4.1
 	heapless@0.7.17
 	heapless@0.8.0
+	heapless@0.9.3
 	heck@0.5.0
 	hermit-abi@0.5.2
 	hex@0.4.3
@@ -569,7 +574,7 @@ CRATES="
 	libm@0.2.16
 	libredox@0.1.12
 	libsqlite3-sys@0.39.1
-	libz-sys@1.1.29
+	libz-sys@1.1.33
 	line-clipping@0.3.7
 	link-section@0.17.2
 	linkify@0.11.0
@@ -589,9 +594,10 @@ CRATES="
 	lru-slab@0.1.2
 	lru@0.18.2
 	lsp-types@0.97.0
-	lzma-rust2@0.21.0
+	lzma-rust2@0.22.0
 	mac_address@1.1.8
 	mach2@0.6.0
+	managed@0.8.0
 	maplit@1.0.2
 	matchers@0.2.0
 	matchit@0.8.4
@@ -732,8 +738,8 @@ CRATES="
 	piper@0.2.4
 	pkcs8@0.10.2
 	pkg-config@0.3.32
-	plist@1.9.0
-	png@0.18.0
+	plist@1.10.0
+	png@0.18.1
 	polling@3.11.0
 	poly1305@0.8.0
 	polyval@0.6.2
@@ -779,12 +785,11 @@ CRATES="
 	pulldown-cmark@0.10.3
 	pxfm@0.1.27
 	quick-error@2.0.1
-	quick-xml@0.39.4
 	quick-xml@0.41.0
 	quickcheck@1.1.0
-	quinn-proto@0.11.18
-	quinn-udp@0.5.14
-	quinn-udp@0.6.1
+	quinn-proto@0.11.19
+	quinn-udp@0.5.16
+	quinn-udp@0.6.3
 	quinn@0.11.9
 	quote@1.0.45
 	r-efi@5.3.0
@@ -957,6 +962,7 @@ CRATES="
 	smallvec@1.15.1
 	smawk@0.3.2
 	smol_str@0.3.5
+	smoltcp@0.14.0
 	socket2@0.5.10
 	socket2@0.6.3
 	socks5-protocol@0.3.5
@@ -968,6 +974,7 @@ CRATES="
 	sonora-simd@0.2.0
 	sonora@0.2.0
 	sorted_vector_map@0.2.1
+	spiffe@0.18.0
 	spin@0.9.8
 	spki@0.7.3
 	sqlx-macros-core@0.9.0
@@ -1168,7 +1175,7 @@ CRATES="
 	wayland-client@0.31.12
 	wayland-protocols-wlr@0.3.10
 	wayland-protocols@0.32.10
-	wayland-scanner@0.31.10
+	wayland-scanner@0.31.11
 	wayland-sys@0.31.8
 	web-sys@0.3.85
 	web-time@1.1.0
@@ -1284,15 +1291,17 @@ CRATES="
 	zerotrie@0.2.4
 	zerovec-derive@0.11.3
 	zerovec@0.11.6
-	zip@9.0.0
+	zip@9.0.5
 	zlib-rs@0.5.5
 	zlib-rs@0.6.3
 	zmij@1.0.19
 	zoneinfo64@0.3.0
 	zopfli@0.8.3
 	zstd-safe@7.2.4
-	zstd-sys@2.0.16+zstd.1.5.7
+	zstd-safe@8.2.0
+	zstd-sys@2.1.2+zstd.1.5.7
 	zstd@0.13.3
+	zstd@0.14.3
 	zune-core@0.4.12
 	zune-core@0.5.1
 	zune-jpeg@0.4.21
@@ -1303,14 +1312,14 @@ CRATES="
 "
 
 declare -A GIT_CRATES=(
-	[crossterm]='https://github.com/openai-oss-forks/crossterm;ed1cdab335221515706178d68495bba2aed1924f;crossterm-%commit%'
+	[crossterm]='https://github.com/openai-oss-forks/crossterm;37ca4a27a9424ec5dbe6451f48c339d7b45f8d63;crossterm-%commit%'
 	[h3]='https://github.com/hyperium/h3;e07e69412876f7e26f026bd75a48b2704d8c8283;h3-%commit%/h3'
 	[h3-quinn]='https://github.com/hyperium/h3;e07e69412876f7e26f026bd75a48b2704d8c8283;h3-%commit%/h3-quinn'
 	[mxc-sdk]='https://github.com/microsoft/mxc;b21120168d70befe12356411423266bfef168446;mxc-%commit%/src/mxc-sdk'
 	[nucleo]='https://github.com/helix-editor/nucleo;4253de9faabb4e5c6d81d946a5e35a90f87347ee;nucleo-%commit%'
 	[nucleo-matcher]='https://github.com/helix-editor/nucleo;4253de9faabb4e5c6d81d946a5e35a90f87347ee;nucleo-%commit%/matcher'
-	[rmcp]='https://github.com/modelcontextprotocol/rust-sdk;98a54789b80110ad210495c4ad845c89e1980471;rust-sdk-%commit%/crates/rmcp'
-	[rmcp-macros]='https://github.com/modelcontextprotocol/rust-sdk;98a54789b80110ad210495c4ad845c89e1980471;rust-sdk-%commit%/crates/rmcp-macros'
+	[rmcp]='https://github.com/modelcontextprotocol/rust-sdk;b11a40d889e022087d7f2b8cd23aa28e19ceaf5b;rust-sdk-%commit%/crates/rmcp'
+	[rmcp-macros]='https://github.com/modelcontextprotocol/rust-sdk;b11a40d889e022087d7f2b8cd23aa28e19ceaf5b;rust-sdk-%commit%/crates/rmcp-macros'
 	[runfiles]='https://github.com/dzbarsky/rules_rust;b56cbaa8465e74127f1ea216f813cd377295ad81;rules_rust-%commit%/rust/runfiles'
 	[sqlx-core]='https://github.com/transact-rs/sqlx;10462fa4414c6c7f1ed1d39bb31678e3b726878c;sqlx-%commit%/sqlx-core'
 	[sqlx-sqlite]='https://github.com/transact-rs/sqlx;10462fa4414c6c7f1ed1d39bb31678e3b726878c;sqlx-%commit%/sqlx-sqlite'
