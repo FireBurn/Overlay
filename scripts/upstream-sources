@@ -32,7 +32,7 @@
 # Packages built only as live ebuilds are skipped automatically.
 
 @rocm       github-release ROCm/rocm-systems prefix=therock- pad=3 batch=1
-@libreoffice page https://downloadarchive.documentfoundation.org/libreoffice/old/ href="(\d+\.\d+\.(?:0\.3|[1-9]\d*\.2))/"
+@libreoffice page https://download.documentfoundation.org/libreoffice/stable/ href="(\d+\.\d+\.\d+)/" https://download.documentfoundation.org/libreoffice/src/{}/ href="libreoffice-(\d+\.\d+\.\d+\.\d+)\.tar\.xz"
 @openjdk     agent one ebuild per major version, each followed by hand; latest GA per major from api.adoptium.net/v3/assets/latest/<major>/hotspot (release_link tag = jdk-<version>), JDK 8 tags as jdk8u<b>-b<bb>; ebuilds fetch the +N tag (MY_PV), not the -ga tag, which is missing for some releases during OpenJDK's tag transition (e.g. 17.0.21+9)
 
 dev-build/rocm-cmake              @rocm
@@ -90,8 +90,9 @@ dev-cpp/cpp-jwt                   github-release arun11299/cpp-jwt prefix=v
 dev-lang/bun                      github-release oven-sh/bun prefix=bun-v
 dev-lang/rust                     github-release rust-lang/rust
 dev-lang/vala                     agent snapshot of frida-forks/vala pinned to the commit in releng/deps.toml of the frida-core release; version is 0.58.0_p<commit date YYYYMMDD> and it must match the vala pin of dev-libs/frida-core, so it moves with a frida-core bump, not on its own
-dev-libs/libixion                 gitlab-tag ixion/ixion
-dev-libs/liborcus                 gitlab-tag orcus/orcus
+# LibreOffice 26.8 (and master) requires mdds-3.0 and liborcus-0.21 (libixion-0.20).
+dev-libs/libixion                 gitlab-tag ixion/ixion match=^0\.20\.
+dev-libs/liborcus                 gitlab-tag orcus/orcus match=^0\.21\.
 dev-libs/frida-core               skip bumped with dev-python/frida
 dev-python/frida                  agent frida-core.eclass pins one release of every subproject; follow scripts/frida-core/README.md to regenerate them, then rename dev-libs/frida-core and dev-python/frida together and build both
 dev-python/ghidrecomp             pypi ghidrecomp
@@ -107,7 +108,8 @@ dev-util/esbuild                  github-release evanw/esbuild prefix=v
 dev-util/frida-tools              pypi frida-tools
 dev-util/ghidra                   github-release NationalSecurityAgency/ghidra prefix=Ghidra_ suffix=_build
 dev-util/llvm-mingw64             git-tag https://git.code.sf.net/p/mingw-w64/mingw-w64 prefix=v
-dev-util/mdds                     gitlab-tag mdds/mdds
+# LibreOffice 26.8 (and master) and libetonyek require mdds-3.0.
+dev-util/mdds                     gitlab-tag mdds/mdds match=^3\.
 dev-util/pyghidra-mcp             github-release clearbluejar/pyghidra-mcp prefix=v
 dev-util/radeon-developer-tool-suite skip versioned by suite release date (YYYY.MM.DD); no machine-readable source, check gpuopen.com/rgp by hand
 games-emulation/cemu              skip bump on request or for a major feature; upstream commits daily
