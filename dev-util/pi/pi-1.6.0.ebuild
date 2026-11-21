@@ -69,7 +69,7 @@ NPM_PKGS="
 	@floating-ui/dom@1.8.0
 	@floating-ui/react-dom@2.1.9
 	@floating-ui/utils@0.2.12
-	@google/genai@2.21.0
+	@google/genai@2.32.0
 	@img/colour@1.1.0
 	@img/sharp-libvips-linux-arm64@1.3.4|arm64
 	@img/sharp-libvips-linux-x64@1.3.4|amd64
@@ -261,7 +261,7 @@ NPM_PKGS="
 	node-fetch@3.3.2
 	obug@2.1.3
 	once@1.4.0
-	openai@7.19.0
+	openai@7.59.0
 	p-retry@4.6.2
 	partial-json@0.1.7
 	path-key@3.1.1
@@ -322,7 +322,7 @@ NPM_PKGS="
 	typescript@7.0.2
 	undici@6.29.1
 	undici@7.30.1
-	undici@8.12.3
+	undici@8.12.4
 	undici-types@6.21.0
 	unenv@2.0.0-rc.24
 	use-sync-external-store@1.7.0
