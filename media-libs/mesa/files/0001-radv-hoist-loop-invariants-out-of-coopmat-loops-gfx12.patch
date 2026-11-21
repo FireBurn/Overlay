@@ -44,14 +44,13 @@ llama.cpp matmuls on Navi48 (4096x512x14336): f16 813 -> 771 us, q4_K 719 ->
 Assisted-by: Claude Code (Claude Opus 5.5)
 Signed-off-by: Mike Lothian <mike@fireburn.co.uk>
 ---
- src/amd/vulkan/radv_pipeline.c | 27 +++++++++++++++++++++++++++
+ src/amd/vulkan/radv_shader.c | 27 +++++++++++++++++++++++++++
  1 file changed, 27 insertions(+)
 
-diff --git a/src/amd/vulkan/radv_pipeline.c b/src/amd/vulkan/radv_pipeline.c
-index 7bc63a544c0..1776d186793 100644
---- a/src/amd/vulkan/radv_pipeline.c
-+++ b/src/amd/vulkan/radv_pipeline.c
-@@ -250,6 +250,26 @@ non_uniform_access_callback(const nir_src *src, void *_)
+diff --git a/src/amd/vulkan/radv_shader.c b/src/amd/vulkan/radv_shader.c
+--- a/src/amd/vulkan/radv_shader.c
++++ b/src/amd/vulkan/radv_shader.c
+@@ -2853,6 +2853,26 @@ non_uniform_access_callback(const nir_src *src, void *_)
     return nir_chase_binding(*src).success ? 0x2 : 0x3;
  }
  
@@ -78,7 +77,7 @@ index 7bc63a544c0..1776d186793 100644
  void
  radv_postprocess_nir(const struct radv_compiler_info *compiler_info, const struct radv_graphics_state_key *gfx_state,
                       struct radv_shader_stage *stage)
-@@ -613,6 +633,13 @@ radv_postprocess_nir(const struct radv_compiler_info *compiler_info, const struc
+@@ -3192,6 +3212,13 @@ radv_postprocess_nir(const struct radv_compiler_info *compiler_info, const struc
     NIR_PASS(_, stage->nir, nir_opt_copy_prop);
     NIR_PASS(_, stage->nir, nir_opt_dce);
  
