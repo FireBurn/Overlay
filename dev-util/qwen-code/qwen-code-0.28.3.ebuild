@@ -25,8 +25,10 @@ NPM_PKGS="
 	@azure/identity@4.13.1
 	@azure/logger@1.3.0
 	@azure/msal-browser@5.12.0
+	@azure/msal-common@16.13.0
 	@azure/msal-common@16.7.0
 	@azure/msal-node@5.2.3
+	@azure/msal-node@5.6.0
 	@babel/code-frame@7.29.7
 	@babel/compat-data@7.29.7
 	@babel/core@7.29.7
@@ -178,6 +180,9 @@ NPM_PKGS="
 	@lydell/node-pty-linux-x64@1.2.0-beta.10|amd64
 	@marijn/find-cluster-break@1.0.2
 	@mermaid-js/parser@1.2.1
+	@microsoft/agents-activity@1.9.1
+	@microsoft/agents-hosting@1.9.1
+	@microsoft/agents-telemetry@1.9.1
 	@mixmark-io/domino@2.2.0
 	@mobilewright/core@0.0.53
 	@mobilewright/driver-mobilecli@0.0.53
@@ -189,6 +194,11 @@ NPM_PKGS="
 	@modelcontextprotocol/ext-apps@1.7.5
 	@modelcontextprotocol/sdk@1.32.2
 	@mswjs/interceptors@0.39.5
+	@napi-rs/canvas@1.1.1
+	@napi-rs/canvas-linux-arm64-gnu@1.1.1|arm64
+	@napi-rs/canvas-linux-arm64-musl@1.1.1|arm64,elibc_musl
+	@napi-rs/canvas-linux-x64-gnu@1.1.1|amd64
+	@napi-rs/canvas-linux-x64-musl@1.1.1|amd64,elibc_musl
 	@napi-rs/lzma-linux-x64-gnu@1.5.1|amd64
 	@napi-rs/wasm-runtime@1.2.4
 	@noble/hashes@1.8.0
@@ -474,6 +484,7 @@ NPM_PKGS="
 	@types/jsdom@28.0.3
 	@types/json-schema@7.0.15
 	@types/json5@0.0.29
+	@types/jsonwebtoken@9.0.10
 	@types/katex@0.16.8
 	@types/linkify-it@5.0.0
 	@types/mailparser@3.4.6
@@ -1259,6 +1270,7 @@ NPM_PKGS="
 	jsx-ast-utils@3.3.5
 	jszip@3.10.2
 	jwa@2.0.1
+	jwks-rsa@4.0.1
 	jws@4.0.1
 	katex@0.18.2
 	keytar@7.9.0
@@ -1285,6 +1297,7 @@ NPM_PKGS="
 	lightningcss-linux-x64-gnu@1.32.0|amd64
 	lightningcss-linux-x64-musl@1.32.0|amd64,elibc_musl
 	lilconfig@3.1.3
+	limiter@1.1.5
 	lines-and-columns@1.2.4
 	linkify-it@5.0.2
 	linkify-it@6.1.0
@@ -1298,6 +1311,7 @@ NPM_PKGS="
 	lodash@4.18.1
 	lodash-es@4.18.1
 	lodash.camelcase@4.3.0
+	lodash.clonedeep@4.5.0
 	lodash.defaults@4.2.0
 	lodash.difference@4.5.0
 	lodash.escaperegexp@4.1.2
@@ -1333,6 +1347,7 @@ NPM_PKGS="
 	lru-cache@11.5.1
 	lru-cache@5.1.1
 	lru-cache@6.0.0
+	lru-memoizer@3.0.0
 	lru_map@0.4.1
 	lucide-react@1.24.0
 	lz-string@1.5.0
@@ -1565,6 +1580,7 @@ NPM_PKGS="
 	pathval@1.1.1
 	pathval@2.0.1
 	pbkdf2@3.1.7
+	pdfjs-dist@6.5.438
 	peberminta@0.10.0
 	pend@1.2.0
 	picocolors@1.1.1
@@ -2046,6 +2062,7 @@ NPM_PKGS="
 	yoga-layout@3.2.1
 	zip-stream@4.1.1
 	zip-stream@6.0.1
+	zod@3.25.75
 	zod@3.25.76
 	zod@4.6.6
 	zod-to-json-schema@3.25.0
@@ -2144,6 +2161,13 @@ NPM_STUB_PKGS="
 	@lydell/node-pty-darwin-x64@1.2.0-beta.10
 	@lydell/node-pty-win32-arm64@1.2.0-beta.10
 	@lydell/node-pty-win32-x64@1.2.0-beta.10
+	@napi-rs/canvas-android-arm64@1.1.1
+	@napi-rs/canvas-darwin-arm64@1.1.1
+	@napi-rs/canvas-darwin-x64@1.1.1
+	@napi-rs/canvas-linux-arm-gnueabihf@1.1.1
+	@napi-rs/canvas-linux-riscv64-gnu@1.1.1
+	@napi-rs/canvas-win32-arm64-msvc@1.1.1
+	@napi-rs/canvas-win32-x64-msvc@1.1.1
 	@node-rs/jieba-android-arm-eabi@2.0.2
 	@node-rs/jieba-android-arm64@2.0.2
 	@node-rs/jieba-darwin-arm64@2.0.2
