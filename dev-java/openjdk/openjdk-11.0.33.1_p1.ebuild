@@ -181,7 +181,9 @@ src_configure() {
 
 	# hotspot 11 calls member functions on a markOop whose "this" holds tag
 	# bits, so clang must not assume it is aligned
-	use elibc_llvm && append-flags -fmax-type-align=1
+	if tc-is-clang || use elibc_llvm; then
+		append-flags -fmax-type-align=1
+	fi
 
 	# bug #945282
 	append-cflags -std=gnu17
