@@ -13,16 +13,16 @@ Flash attention kernel, R9700: 5 query tokens at 34k tokens of q8_0 KV 257 -> 22
 
 Assisted-by: Claude Code (Claude Opus 5.5)
 ---
- ggml/src/ggml-vulkan/ggml-vulkan.cpp          |  7 ++++-
- .../vulkan-shaders/flash_attn_base.glsl       |  2 ++
- .../vulkan-shaders/flash_attn_cm1.comp        | 31 ++++++++++++++++---
- 3 files changed, 35 insertions(+), 5 deletions(-)
+ ggml/src/ggml-vulkan/ggml-vulkan.cpp          |  7 +++-
+ .../vulkan-shaders/flash_attn_base.glsl       |  2 +
+ .../vulkan-shaders/flash_attn_cm1.comp        | 37 ++++++++++++++++---
+ 3 files changed, 40 insertions(+), 6 deletions(-)
 
 diff --git a/ggml/src/ggml-vulkan/ggml-vulkan.cpp b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
-index 0c0bf7f..7a10ec2 100644
+index 221ceba..fa6172a 100644
 --- a/ggml/src/ggml-vulkan/ggml-vulkan.cpp
 +++ b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
-@@ -1435,6 +1435,10 @@ vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_
+@@ -1446,6 +1446,10 @@ vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_
      const bool old_amd_windows = device->vendor_id == VK_VENDOR_ID_AMD && device->driver_id == vk::DriverId::eAmdProprietary &&
                                   (device->architecture == AMD_GCN || device->architecture == AMD_RDNA1 || device->architecture == AMD_RDNA2);
  
@@ -33,7 +33,7 @@ index 0c0bf7f..7a10ec2 100644
      uint32_t flags = (use_mask_opt      ? 1 : 0) |
                       (use_mask          ? 2 : 0) |
                       (use_logit_softcap ? 4 : 0) |
-@@ -1444,7 +1448,8 @@ vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_
+@@ -1455,7 +1459,8 @@ vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_
                       (params.flip       ? 64 : 0) |
                       (params.flip_direct ? 128 : 0) |
                       (use_mq            ? 256 : 0) |
@@ -57,10 +57,10 @@ index 702d501..57e6bd5 100644
  // Round up head sizes to a multiple of 16, for coopmat1/coopmat2 paths
  const uint32_t HSK_pad = (HSK + 15) & ~15;
 diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp
-index 6995f69..76b0ca3 100644
+index 1878c2d..f21d5cf 100644
 --- a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp
 +++ b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp
-@@ -49,7 +49,14 @@ const uint32_t qchunk_dtiles = 4;
+@@ -50,7 +50,14 @@ const uint32_t qchunk_dtiles = 4;
  const uint32_t qchunk_stride = qchunk_dtiles * 16 / 4 + 2;
  const uint32_t psh_size = Bc * psh_stride;
  const uint32_t qchunk_size = Q_IN_REGS ? Br * qchunk_stride : 0;
@@ -76,7 +76,7 @@ index 6995f69..76b0ca3 100644
  
  // Avoid padding for hsk==256 to make it fit in 48KB shmem.
  const uint32_t sfshstride = (HSK <= 128) ? (Br / 4 + 2) : Br / 4;
-@@ -473,14 +480,26 @@ void main() {
+@@ -476,14 +483,26 @@ void main() {
              [[unroll]] for (uint32_t r = 0; r < rows_per_thread; r += 4) {
                  const uint row = tile_row(r);
                  if (KV_bounds_check && j * Bc + col >= KV) {
@@ -105,18 +105,27 @@ index 6995f69..76b0ca3 100644
                  }
              }
          }
-@@ -593,7 +612,11 @@ void main() {
+@@ -593,10 +612,18 @@ void main() {
+                         coopMatLoad(QMat, kvsh, v_tile_offset, kvsh_stride, gl_CooperativeMatrixLayoutRowMajor);
                      }
  
-                     [[unroll]] for (uint32_t q = 0; q < q_tiles; ++q) {
--                        coopMatLoad(KMat, Psh, bc_chunk * MatBc * psh_stride + q * (MatBc / 4), psh_stride, gl_CooperativeMatrixLayoutColumnMajor);
+-                    coopMatLoad(KMat, Psh, bc_chunk * MatBc * psh_stride, psh_stride, gl_CooperativeMatrixLayoutColumnMajor);
++                    if (P_TRANSPOSED) {
++                        coopMatLoad(KMat, PshT, bc_chunk * MatBc / 4, pt_stride, gl_CooperativeMatrixLayoutRowMajor);
++                    } else {
++                        coopMatLoad(KMat, Psh, bc_chunk * MatBc * psh_stride, psh_stride, gl_CooperativeMatrixLayoutColumnMajor);
++                    }
+                     PVMat0 = coopMatMulAdd(KMat, QMat, PVMat0);
+                     if (q_tiles > 1) {
+-                        coopMatLoad(KMat, Psh, bc_chunk * MatBc * psh_stride + MatBc / 4, psh_stride, gl_CooperativeMatrixLayoutColumnMajor);
 +                        if (P_TRANSPOSED) {
-+                            coopMatLoad(KMat, PshT, q * MatBc * pt_stride + bc_chunk * MatBc / 4, pt_stride, gl_CooperativeMatrixLayoutRowMajor);
++                            coopMatLoad(KMat, PshT, MatBc * pt_stride + bc_chunk * MatBc / 4, pt_stride, gl_CooperativeMatrixLayoutRowMajor);
 +                        } else {
-+                            coopMatLoad(KMat, Psh, bc_chunk * MatBc * psh_stride + q * (MatBc / 4), psh_stride, gl_CooperativeMatrixLayoutColumnMajor);
++                            coopMatLoad(KMat, Psh, bc_chunk * MatBc * psh_stride + MatBc / 4, psh_stride, gl_CooperativeMatrixLayoutColumnMajor);
 +                        }
-                         PVMat[q] = coopMatMulAdd(KMat, QMat, PVMat[q]);
+                         PVMat1 = coopMatMulAdd(KMat, QMat, PVMat1);
                      }
                  }
 -- 
-2.55.0
+2.56.1
+
