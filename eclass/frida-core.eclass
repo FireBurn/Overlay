@@ -27,7 +27,7 @@ inherit flag-o-matic toolchain-funcs
 # @ECLASS_VARIABLE: FRIDA_CORE_PV
 # @DESCRIPTION:
 # The frida-core release that the pins below belong to.
-FRIDA_CORE_PV=17.27.3
+FRIDA_CORE_PV=17.27.4
 
 # @ECLASS_VARIABLE: FRIDA_CORE_SRC_URI
 # @DESCRIPTION:
@@ -35,7 +35,7 @@ FRIDA_CORE_PV=17.27.3
 FRIDA_CORE_SRC_URI="
 	https://github.com/frida/frida-core/archive/refs/tags/${FRIDA_CORE_PV}.tar.gz -> frida-core-${FRIDA_CORE_PV}.tar.gz
 	https://github.com/frida/efni/archive/a4c0f6ce168c332e015368ee9d153d013074dfcc.tar.gz -> frida-efni-a4c0f6ce168c332e015368ee9d153d013074dfcc.tar.gz
-	https://github.com/frida/frida-gum/archive/refs/tags/17.27.3.tar.gz -> frida-frida-gum-17.27.3.tar.gz
+	https://github.com/frida/frida-gum/archive/refs/tags/17.27.4.tar.gz -> frida-frida-gum-17.27.4.tar.gz
 	https://github.com/frida-forks/capstone/archive/f919a03a5417e1c7ea3af7035225073437030ef2.tar.gz -> frida-forks-capstone-f919a03a5417e1c7ea3af7035225073437030ef2.tar.gz
 	https://github.com/frida-forks/json-glib/archive/0242c39f1f60f844c9df41e83434251b06609e82.tar.gz -> frida-forks-json-glib-0242c39f1f60f844c9df41e83434251b06609e82.tar.gz
 	https://github.com/frida-forks/libdwarf/archive/9ac8cc22cab54d72cb355a44e85db716a7006f47.tar.gz -> frida-forks-libdwarf-9ac8cc22cab54d72cb355a44e85db716a7006f47.tar.gz
@@ -95,7 +95,7 @@ FRIDA_CORE_BDEPEND="
 # <directory inside the tree> <distfile>
 _FRIDA_PINS=(
 	"subprojects/efni frida-efni-a4c0f6ce168c332e015368ee9d153d013074dfcc.tar.gz"
-	"subprojects/frida-gum frida-frida-gum-17.27.3.tar.gz"
+	"subprojects/frida-gum frida-frida-gum-17.27.4.tar.gz"
 	"subprojects/frida-gum/subprojects/capstone frida-forks-capstone-f919a03a5417e1c7ea3af7035225073437030ef2.tar.gz"
 	"subprojects/frida-gum/subprojects/json-glib frida-forks-json-glib-0242c39f1f60f844c9df41e83434251b06609e82.tar.gz"
 	"subprojects/frida-gum/subprojects/libdwarf frida-forks-libdwarf-9ac8cc22cab54d72cb355a44e85db716a7006f47.tar.gz"
