@@ -11,31 +11,31 @@ GE_TAG=GE-Proton${PV/./-}
 # the commit Proton's prep script reverts to bring back the configure files
 WINE_REVERT_COMMIT=e813ca5771658b00875924ab88d525322e50d39f
 
-VKD3D_PROTON_COMMIT=8293130ebe370b1deb761898ae0d397d680837de
+VKD3D_PROTON_COMMIT=cae8353ed7959c448ac976342052de1ec2b81715
 
 # Proton's submodules at the commits the GE-Proton11-12 tag pins, and theirs
 # in turn: "path repository commit". Parents come before what lives under them.
 PROTON_TREES=(
-	"wine ValveSoftware/wine fda79a585939fb7512dc220a11249f9ffe825fcf"
+	"wine ValveSoftware/wine a47c73f52fd7b2efafc1c560710f3a5099ae51e0"
 	"wine-staging wine-staging/wine-staging 6cc805ea57132eeaf44764e9213823c9b8d0d300"
-	"dxvk doitsujin/dxvk f863776806824486d709fee16ea619c03e22def4"
-	"vkd3d-proton HansKristian-Work/vkd3d-proton 8293130ebe370b1deb761898ae0d397d680837de"
+	"dxvk doitsujin/dxvk f90f1bf180f41356695ddf3df6af62119fb64a3e"
+	"vkd3d-proton HansKristian-Work/vkd3d-proton cae8353ed7959c448ac976342052de1ec2b81715"
 	"d7vk WinterSnowfall/d7vk 06656b9e94bf275854e3d83d6426517253937738"
-	"dxvk-nvapi jp7677/dxvk-nvapi 9c0f214cb66b543ed6604ef04c29fde98832dc77"
+	"dxvk-nvapi jp7677/dxvk-nvapi 51a0f7930e550b832109d263365291c5979b818e"
 	"Vulkan-Headers KhronosGroup/Vulkan-Headers 36872f9062b17b1a30b8ed1d81ca5ea6bb608a72"
 	"openvr ValveSoftware/openvr 91825305130f446f82054c1ec3d416321ace0072"
-	"protonfixes open-wine-components/umu-protonfixes 28a02c25e4b895131c9ebdeda411ec3646b38151"
+	"protonfixes open-wine-components/umu-protonfixes 4e4f13bc11cee73d0a340a5893a71d6c24f82afe"
 	"vklayers/low_latency_layer Korthos-Software/low_latency_layer 4e7fe12b797d89be07919acf3d2df5cda3f4d89f"
 	"dxvk/include/native/directx Joshua-Ashton/mingw-directx-headers 9df86f2341616ef1888ae59919feaa6d4fad693d"
 	"dxvk/include/spirv KhronosGroup/SPIRV-Headers 04f10f650d514df88b76d25e83db360142c7b174"
 	"dxvk/include/vulkan KhronosGroup/Vulkan-Headers 6802bb4733b63ed5efd3adb308a6c885ef180ea1"
-	"dxvk/subprojects/dxbc-spirv doitsujin/dxbc-spirv 76236b827e95381aa1b37bccfb31642896c427f8"
+	"dxvk/subprojects/dxbc-spirv doitsujin/dxbc-spirv 6196cc6c62b7b04acb4f3e713ff3bb1a7e7950fd"
 	"dxvk/subprojects/dxbc-spirv/submodules/spirv_headers KhronosGroup/SPIRV-Headers c8ad050fcb29e42a2f57d9f59e97488f465c436d"
-	"dxvk/subprojects/libdisplay-info doitsujin/libdisplay-info 275e6459c7ab1ddd4b125f28d0440716e4888078"
+	"dxvk/subprojects/libdisplay-info doitsujin/libdisplay-info e31831929007a7b46c4150a43597a2ba73d0db76"
 	"vkd3d-proton/khronos/SPIRV-Headers KhronosGroup/SPIRV-Headers f88a2d766840fc825af1fc065977953ba1fa4a91"
 	"vkd3d-proton/khronos/Vulkan-Headers KhronosGroup/Vulkan-Headers ee2ec5fd83dafce291024683b50dc89219333076"
-	"vkd3d-proton/subprojects/dxil-spirv HansKristian-Work/dxil-spirv 8b48f0e0392d76be4fdcea2a3ba3ea99dddaae5b"
-	"vkd3d-proton/subprojects/dxil-spirv/subprojects/dxbc-spirv doitsujin/dxbc-spirv 8dae2d8573af08378c6059aca3d5987da99d20b5"
+	"vkd3d-proton/subprojects/dxil-spirv HansKristian-Work/dxil-spirv 34f0ff845eb7f1ca76ca8df5d1593d6913f19e9c"
+	"vkd3d-proton/subprojects/dxil-spirv/subprojects/dxbc-spirv doitsujin/dxbc-spirv d82d9eaa6cab5c7277a6839f328e1b4d2f146894"
 	"vkd3d-proton/subprojects/dxil-spirv/subprojects/dxbc-spirv/submodules/spirv_headers KhronosGroup/SPIRV-Headers c8ad050fcb29e42a2f57d9f59e97488f465c436d"
 	"vkd3d-proton/subprojects/dxil-spirv/third_party/SPIRV-Cross KhronosGroup/SPIRV-Cross be71ee8c12cd7dc5ca8fa9581f708c2e8561fe2a"
 	"vkd3d-proton/subprojects/dxil-spirv/third_party/SPIRV-Tools KhronosGroup/SPIRV-Tools 199cb207b911501ddd76dcddf100a6e21c15ef23"
@@ -48,7 +48,7 @@ PROTON_TREES=(
 	"d7vk/subprojects/libdisplay-info doitsujin/libdisplay-info 275e6459c7ab1ddd4b125f28d0440716e4888078"
 	"dxvk-nvapi/external/DirectX-Headers microsoft/DirectX-Headers ea2799ce66647c69710a81338e828b19973e0370"
 	"dxvk-nvapi/external/Vulkan-Headers KhronosGroup/Vulkan-Headers e3b1eec08173d6b825cd3ac88c885a63b621504a"
-	"dxvk-nvapi/external/nvapi NVIDIA/nvapi 87dca625e83fd89a983e19b904e5f3a580da90d2"
+	"dxvk-nvapi/external/nvapi NVIDIA/nvapi 51e5aae4bc40c3ccd3fb7d4dfd94256e7bfc496e"
 	"dxvk-nvapi/external/vkroots misyltoad/vkroots 20733b938267dcac60f6ac105dbb757f9cc8df9c"
 )
 
@@ -77,7 +77,7 @@ LICENSE="LGPL-2.1+ BSD BSD-2 IJG MIT OPENLDAP ZLIB libpng2 public-domain"
 SLOT="0"
 IUSE="
 	+X +alsa cups +dbus +ffmpeg +fontconfig opencl +opengl pcap
-	pulseaudio +sdl +ssl +truetype udev usb v4l +vulkan wayland
+	pipewire pulseaudio +sdl +ssl +truetype udev usb v4l +vulkan wayland
 	xinerama
 "
 REQUIRED_USE="
@@ -119,6 +119,7 @@ WINE_COMMON_DEPEND="
 	media-libs/openxr[${WINE_USEDEP}]
 	ffmpeg? ( media-video/ffmpeg:=[${WINE_USEDEP}] )
 	pcap? ( net-libs/libpcap[${WINE_USEDEP}] )
+	pipewire? ( media-video/pipewire[${WINE_USEDEP}] )
 	pulseaudio? ( media-libs/libpulse[${WINE_USEDEP}] )
 	udev? ( virtual/libudev:=[${WINE_USEDEP}] )
 	usb? ( dev-libs/libusb:1[${WINE_USEDEP}] )
@@ -191,11 +192,6 @@ src_prepare() {
 	sed -i '/^EXTRADEFS/s/=/= -include wchar.h/' \
 		lsteamclient/Makefile.in vrclient_x64/Makefile.in || die
 
-	# DXVK refuses AVX on Windows because GCC does not realign the stack for
-	# 32-byte spills, which clang does
-	sed -i '/defined(_WIN32) && (defined(__AVX__) || defined(__AVX2__))/s/#if /#if !defined(__clang__) \&\& /' \
-		dxvk/src/util/util_bit.h d7vk/src/util/util_bit.h || die
-
 	# OpenVR's Windows code assumes MSVC wherever it sees _WIN32
 	sed -i 's/^#if defined( _WIN32 ) && _MSC_VER < 1800$/#if defined( _WIN32 ) \&\& defined( _MSC_VER ) \&\& _MSC_VER < 1800/' \
 		openvr/src/vrcore/strtools_public.h || die
@@ -240,6 +236,7 @@ src_configure() {
 		$(use_with opengl)
 		--without-oss
 		$(use_with pcap)
+		$(use_with pipewire)
 		$(use_with pulseaudio pulse)
 		$(use_with sdl)
 		$(use_with ssl gnutls)
@@ -453,7 +450,7 @@ _proton_install_dist() {
 
 	local pf=${PROTON_S}/protonfixes
 	mkdir -p "${dist}"/protonfixes || die
-	cp -r "${pf}"/gamefixes-* "${pf}"/verbs "${pf}"/*.py \
+	cp -r "${pf}"/gamefixes-* "${pf}"/verbs "${pf}"/vdf "${pf}"/*.py \
 		"${pf}"/umu-database.csv "${dist}"/protonfixes/ || die
 	rm -f "${dist}"/protonfixes/protonfixes_test.py
 
