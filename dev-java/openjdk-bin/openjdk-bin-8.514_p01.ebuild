@@ -7,7 +7,6 @@ inherit java-vm-2
 
 abi_uri() {
 	local baseuri="https://github.com/adoptium/temurin$(ver_cut 1)-binaries/releases/download/jdk${MY_PV}"
-	local musl=
 	local os=linux
 
 	case ${2} in
@@ -15,25 +14,17 @@ abi_uri() {
 		*-solaris)  os=solaris  ;;
 	esac
 
-	if [[ ${3} == musl || ${3} == llvm ]]; then
-		os=alpine-linux
-		musl=elibc_${3}
-	fi
-
 	echo "${2-$1}? (
-		${musl:+ ${musl}? ( }
-			${baseuri}/OpenJDK$(ver_cut 1)U-jdk_${1}_${os}_hotspot_${MY_PV//-/}.tar.gz
-		${musl:+ ) } )"
+		${baseuri}/OpenJDK$(ver_cut 1)U-jdk_${1}_${os}_hotspot_${MY_PV//-/}.tar.gz )"
 }
 
 MY_PV=$(ver_rs 1 'u' 2 '-' ${PV//p/b})
 
 DESCRIPTION="Prebuilt Java JDK binaries provided by Eclipse Temurin"
 HOMEPAGE="https://adoptium.net"
+# 8u514-b01 dropped the alpine (musl) build, so there is no elibc_llvm variant
 SRC_URI="
 	$(abi_uri x64 amd64)
-	$(abi_uri x64 amd64 musl)
-	$(abi_uri x64 amd64 llvm)
 "
 S="${WORKDIR}/jdk${MY_PV}"
 
@@ -41,9 +32,7 @@ LICENSE="GPL-2-with-classpath-exception"
 SLOT=$(ver_cut 1)
 KEYWORDS="~amd64"
 
-# elibc_llvm is not one of the values the gentoo profiles declare, so it is
-# named here rather than left to USE_EXPAND.
-IUSE="alsa cups examples headless-awt selinux source elibc_llvm"
+IUSE="alsa cups examples headless-awt selinux source"
 
 RDEPEND="
 	>=sys-apps/baselayout-java-0.1.0-r1
@@ -52,7 +41,6 @@ RDEPEND="
 		media-libs/freetype:2
 		elibc_glibc? ( >=sys-libs/glibc-2.2.5:* )
 		elibc_musl? ( sys-libs/musl )
-		elibc_llvm? ( sys-libs/musl-abi )
 		virtual/zlib:=
 		alsa? ( media-libs/alsa-lib )
 		arm? ( dev-libs/libffi-compat:6 )
@@ -96,7 +84,7 @@ src_install() {
 	# that's shipped works.
 	if [[ ${A} != *_mac_* ]] ; then
 		# this does not exist on arm64 hence -f
-		use elibc_llvm || rm -fv jre/lib/*/libfreetype.so* || die
+		rm -fv jre/lib/*/libfreetype.so* || die
 
 		if ! use alsa ; then
 			rm -v jre/lib/*/libjsoundalsa.so* || die
