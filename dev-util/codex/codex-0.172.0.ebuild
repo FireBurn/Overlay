@@ -261,6 +261,7 @@ CRATES="
 	der-parser@10.0.0
 	der-parser@9.0.0
 	der@0.7.10
+	der@0.8.3
 	deranged@0.5.9
 	derivative@2.2.0
 	derive_more-impl@1.0.0
@@ -719,6 +720,7 @@ CRATES="
 	pbkdf2@0.12.2
 	pbkdf2@0.13.0
 	pem-rfc7468@0.7.0
+	pem-rfc7468@1.0.0
 	pem@3.0.6
 	percent-encoding@2.3.2
 	pest@2.8.7
@@ -1139,9 +1141,12 @@ CRATES="
 	unsafe-libyaml@0.2.11
 	untrusted@0.7.1
 	untrusted@0.9.0
+	ureq-proto@0.6.0
+	ureq@3.3.0
 	url@2.5.8
 	urlencoding@2.1.3
 	utf-8@0.7.6
+	utf8-zero@0.8.1
 	utf8_iter@1.0.4
 	utf8parse@0.2.2
 	uuid@1.20.0
@@ -1315,7 +1320,7 @@ declare -A GIT_CRATES=(
 	[crossterm]='https://github.com/openai-oss-forks/crossterm;37ca4a27a9424ec5dbe6451f48c339d7b45f8d63;crossterm-%commit%'
 	[h3]='https://github.com/hyperium/h3;e07e69412876f7e26f026bd75a48b2704d8c8283;h3-%commit%/h3'
 	[h3-quinn]='https://github.com/hyperium/h3;e07e69412876f7e26f026bd75a48b2704d8c8283;h3-%commit%/h3-quinn'
-	[mxc-sdk]='https://github.com/microsoft/mxc;b21120168d70befe12356411423266bfef168446;mxc-%commit%/src/mxc-sdk'
+	[mxc-sdk]='https://github.com/microsoft/mxc;c66201839d63cae2239db5e92f1f1d6076cf5181;mxc-%commit%/src/mxc-sdk'
 	[nucleo]='https://github.com/helix-editor/nucleo;4253de9faabb4e5c6d81d946a5e35a90f87347ee;nucleo-%commit%'
 	[nucleo-matcher]='https://github.com/helix-editor/nucleo;4253de9faabb4e5c6d81d946a5e35a90f87347ee;nucleo-%commit%/matcher'
 	[rmcp]='https://github.com/modelcontextprotocol/rust-sdk;b11a40d889e022087d7f2b8cd23aa28e19ceaf5b;rust-sdk-%commit%/crates/rmcp'
@@ -1323,8 +1328,8 @@ declare -A GIT_CRATES=(
 	[runfiles]='https://github.com/dzbarsky/rules_rust;b56cbaa8465e74127f1ea216f813cd377295ad81;rules_rust-%commit%/rust/runfiles'
 	[sqlx-core]='https://github.com/transact-rs/sqlx;10462fa4414c6c7f1ed1d39bb31678e3b726878c;sqlx-%commit%/sqlx-core'
 	[sqlx-sqlite]='https://github.com/transact-rs/sqlx;10462fa4414c6c7f1ed1d39bb31678e3b726878c;sqlx-%commit%/sqlx-sqlite'
-	[tokio-tungstenite]='https://github.com/openai-oss-forks/tokio-tungstenite;7447c427513cfe685f236e1ac0513c4ea3dd9c0b;tokio-tungstenite-%commit%'
-	[tungstenite]='https://github.com/openai-oss-forks/tungstenite-rs;bc589d684755a8c02da0fc7e58d0861cbfc306f1;tungstenite-rs-%commit%'
+	[tokio-tungstenite]='https://github.com/openai-oss-forks/tokio-tungstenite;7a920470d62138955446b64220c7609e46ad770e;tokio-tungstenite-%commit%'
+	[tungstenite]='https://github.com/openai-oss-forks/tungstenite-rs;e19950ef7828cb311e6d51a6bedcebf0192e055c;tungstenite-rs-%commit%'
 	[v8]='https://github.com/openai-oss-forks/rusty_v8;90a65f887a0c0f048f3784afbcb320b373c8a2e0;rusty_v8-%commit%'
 )
 
