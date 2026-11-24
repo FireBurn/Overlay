@@ -13,14 +13,14 @@ WINE_REVERT_COMMIT=e813ca5771658b00875924ab88d525322e50d39f
 
 VKD3D_PROTON_COMMIT=cae8353ed7959c448ac976342052de1ec2b81715
 
-# Proton's submodules at the commits the GE-Proton11-12 tag pins, and theirs
+# Proton's submodules at the commits the GE-Proton11-14 tag pins, and theirs
 # in turn: "path repository commit". Parents come before what lives under them.
 PROTON_TREES=(
 	"wine ValveSoftware/wine a47c73f52fd7b2efafc1c560710f3a5099ae51e0"
 	"wine-staging wine-staging/wine-staging 6cc805ea57132eeaf44764e9213823c9b8d0d300"
 	"dxvk doitsujin/dxvk f90f1bf180f41356695ddf3df6af62119fb64a3e"
 	"vkd3d-proton HansKristian-Work/vkd3d-proton cae8353ed7959c448ac976342052de1ec2b81715"
-	"d7vk WinterSnowfall/d7vk 06656b9e94bf275854e3d83d6426517253937738"
+	"d7vk WinterSnowfall/d7vk 9fb6a2d5046bbda0ab31d8399b68f6e979127320"
 	"dxvk-nvapi jp7677/dxvk-nvapi 51a0f7930e550b832109d263365291c5979b818e"
 	"Vulkan-Headers KhronosGroup/Vulkan-Headers 36872f9062b17b1a30b8ed1d81ca5ea6bb608a72"
 	"openvr ValveSoftware/openvr 91825305130f446f82054c1ec3d416321ace0072"
@@ -43,9 +43,9 @@ PROTON_TREES=(
 	"d7vk/include/native/directx Joshua-Ashton/mingw-directx-headers 9df86f2341616ef1888ae59919feaa6d4fad693d"
 	"d7vk/include/spirv KhronosGroup/SPIRV-Headers 04f10f650d514df88b76d25e83db360142c7b174"
 	"d7vk/include/vulkan KhronosGroup/Vulkan-Headers 6802bb4733b63ed5efd3adb308a6c885ef180ea1"
-	"d7vk/subprojects/dxbc-spirv doitsujin/dxbc-spirv 76236b827e95381aa1b37bccfb31642896c427f8"
+	"d7vk/subprojects/dxbc-spirv doitsujin/dxbc-spirv 6196cc6c62b7b04acb4f3e713ff3bb1a7e7950fd"
 	"d7vk/subprojects/dxbc-spirv/submodules/spirv_headers KhronosGroup/SPIRV-Headers c8ad050fcb29e42a2f57d9f59e97488f465c436d"
-	"d7vk/subprojects/libdisplay-info doitsujin/libdisplay-info 275e6459c7ab1ddd4b125f28d0440716e4888078"
+	"d7vk/subprojects/libdisplay-info doitsujin/libdisplay-info e31831929007a7b46c4150a43597a2ba73d0db76"
 	"dxvk-nvapi/external/DirectX-Headers microsoft/DirectX-Headers ea2799ce66647c69710a81338e828b19973e0370"
 	"dxvk-nvapi/external/Vulkan-Headers KhronosGroup/Vulkan-Headers e3b1eec08173d6b825cd3ac88c885a63b621504a"
 	"dxvk-nvapi/external/nvapi NVIDIA/nvapi 51e5aae4bc40c3ccd3fb7d4dfd94256e7bfc496e"
