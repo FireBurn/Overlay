@@ -8,7 +8,7 @@ Subject: [PATCH] Use llvm spirv backend
  src/compiler/clc/clc_helpers.cpp              | 113 ++++--------------
  src/compiler/clc/meson.build                  |   2 +-
  src/gallium/frontends/rusticl/core/program.rs |   6 +-
- .../rusticl/mesa/compiler/clc/spirv.rs        |   2 +-
+  ...frontends/rusticl/core/platform.rs        |   2 +-
  src/gallium/frontends/rusticl/meson.build     |  20 ++--
  .../rusticl/rusticl_llvm_bindings.hpp         |   8 +-
  7 files changed, 39 insertions(+), 133 deletions(-)
@@ -269,19 +269,18 @@ index 02111596751..e4088cb6555 100644
      ];
      unsafe {
          DISK_CACHE_ONCE.call_once(|| {
-diff --git a/src/gallium/frontends/rusticl/mesa/compiler/clc/spirv.rs b/src/gallium/frontends/rusticl/mesa/compiler/clc/spirv.rs
-index 3bac9f72233..f6467ab5010 100644
---- a/src/gallium/frontends/rusticl/mesa/compiler/clc/spirv.rs
-+++ b/src/gallium/frontends/rusticl/mesa/compiler/clc/spirv.rs
-@@ -164,7 +164,7 @@ impl SPIRVBin {
-             num_args: c_args.len() as u32,
-             spirv_version: clc_spirv_version::CLC_SPIRV_VERSION_MAX,
-             features: features,
--            use_llvm_spirv_target: false,
-+            use_llvm_spirv_target: true,
-             allowed_spirv_extensions: spirv_extensions.as_ptr(),
-             c_compatible: false,
-             address_bits: address_bits,
+diff --git a/src/gallium/frontends/rusticl/core/platform.rs b/src/gallium/frontends/rusticl/core/platform.rs
+--- a/src/gallium/frontends/rusticl/core/platform.rs
++++ b/src/gallium/frontends/rusticl/core/platform.rs
+@@ -100,7 +100,7 @@ static mut PLATFORM_DBG: PlatformDebug = PlatformDebug {
+     reuse_context: true,
+     sync_every_event: false,
+     untyped_pointers: false,
+-    use_llvm_spirv_target: false,
++    use_llvm_spirv_target: true,
+     validate_spirv: false,
+ };
+ static mut PLATFORM_FEATURES: PlatformFeatures = PlatformFeatures {
 diff --git a/src/gallium/frontends/rusticl/meson.build b/src/gallium/frontends/rusticl/meson.build
 index 235eb75c2b5..698050f6505 100644
 --- a/src/gallium/frontends/rusticl/meson.build
