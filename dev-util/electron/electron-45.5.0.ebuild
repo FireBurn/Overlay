@@ -13,7 +13,7 @@ EAPI=8
 # Versions come from electron's DEPS file. NPM_PKGS comes from its yarn.lock:
 #   scripts/npm-deps.py electron/yarn.lock --ebuild <this ebuild>
 
-CHROMIUM_VER="156.0.8078.93"
+CHROMIUM_VER="156.0.8078.102"
 ELECTRON_NODE_VER="24.22.3"
 ELECTRON_NAN_COMMIT="675cefebca42410733da8a454c8d9391fcebfbc2"
 
@@ -1216,12 +1216,11 @@ src_prepare() {
 	chromium_rust_prepare_crubit
 	python_setup
 
-	# 45.3.2 updates these against Chromium 156.0.8078.100, which has no
-	# tarball; use the 45.3.0 patches made for the 156.0.8078.93 code
-	cp "${FILESDIR}/electron-45.3.0-refactor_expose_file_system_access_blocklist.patch" \
+	# 45.5.0 updates refactor_expose_file_system_access_blocklist.patch against
+	# Chromium 156.0.8078.109, which has no tarball; use a patch made for the
+	# 156.0.8078.102 code
+	cp "${FILESDIR}/electron-45.5.0-refactor_expose_file_system_access_blocklist.patch" \
 		electron/patches/chromium/refactor_expose_file_system_access_blocklist.patch || die
-	cp "${FILESDIR}/electron-45.3.0-skia-cherry-pick-ffae953f7ec8.patch" \
-		electron/patches/skia/cherry-pick-ffae953f7ec8.patch || die
 
 	# Electron's patches are made against pristine Chromium, apply them first
 	electron_apply_patches

@@ -30,7 +30,7 @@ index 2dcc3cd1f1c0fe7bfa4a31960af70272ae36a026..9c60126db8e46598832202ba0d47d10c
  #include "components/tabs/public/tab_interface.h"
  #if BUILDFLAG(ENABLE_PLATFORM_APPS)
  #include "extensions/browser/extension_registry.h"  // nogncheck
-@@ -401,316 +403,10 @@ bool IsAllowedWslHomePath(const base::FilePath& path) {
+@@ -401,321 +403,10 @@ bool IsAllowedWslHomePath(const base::FilePath& path) {
  }
  #endif
  
@@ -261,6 +261,11 @@ index 2dcc3cd1f1c0fe7bfa4a31960af70272ae36a026..9c60126db8e46598832202ba0d47d10c
 -                                BlockType::kBlockAllChildren),
 -      BlockPath::CreateAbsolute(FILE_PATH_LITERAL("/etc"),
 -                                BlockType::kBlockAllChildren),
+-      // And runtime data in /run, including per-session runtime directories
+-      // (/run/user/<uid>, the default $XDG_RUNTIME_DIR), see
+-      // crbug.com/577376424.
+-      BlockPath::CreateAbsolute(FILE_PATH_LITERAL("/run"),
+-                                BlockType::kBlockAllChildren),
 -      // Block ~/.dbus as well, just in case, although there probably isn't much
 -      // a website can do with access to that directory and its contents.
 -      BlockPath::CreateRelative(base::DIR_HOME, FILE_PATH_LITERAL(".dbus"),
@@ -349,8 +354,8 @@ index 2dcc3cd1f1c0fe7bfa4a31960af70272ae36a026..9c60126db8e46598832202ba0d47d10c
 +// NOTE IF THERE IS A CONFLICT ABOVE, you will need to copy the changes in the
 +// removed block over to chrome_file_system_access_permission_context.h.
  
- // Checks if `path` should be blocked by the `rules`.
- // The BlockType of the nearest ancestor of a path to check is what
+ // Returns true if `child_components` is the same as or a descendant of
+ // `parent_components`, ignoring case differences.
 @@ -1794,16 +1490,6 @@ struct ChromeFileSystemAccessPermissionContext::OriginState {
    std::unique_ptr<base::RetainingOneShotTimer> cleanup_timer;
  };
@@ -433,7 +438,7 @@ index 05ee182cf840bc925697a2bfa3d1c281579296c4..53eb33076332cc9ff7dfb0b75387fabf
  #include "components/enterprise/buildflags/buildflags.h"
  #include "components/permissions/features.h"
  #include "components/permissions/object_permission_context_base.h"
-@@ -470,6 +474,325 @@ class ChromeFileSystemAccessPermissionContext
+@@ -470,6 +474,330 @@ class ChromeFileSystemAccessPermissionContext
    bool IsPathInDowngradedReadPathsForTesting(const url::Origin& origin,
                                               const base::FilePath& path) const;
  
@@ -671,6 +676,11 @@ index 05ee182cf840bc925697a2bfa3d1c281579296c4..53eb33076332cc9ff7dfb0b75387fabf
 +        BlockPath::CreateAbsolute(FILE_PATH_LITERAL("/boot"),
 +                                  BlockType::kBlockAllChildren),
 +        BlockPath::CreateAbsolute(FILE_PATH_LITERAL("/etc"),
++                                  BlockType::kBlockAllChildren),
++        // And runtime data in /run, including per-session runtime directories
++        // (/run/user/<uid>, the default $XDG_RUNTIME_DIR), see
++        // crbug.com/577376424.
++        BlockPath::CreateAbsolute(FILE_PATH_LITERAL("/run"),
 +                                  BlockType::kBlockAllChildren),
 +        // Block ~/.dbus as well, just in case, although there probably isn't much
 +        // a website can do with access to that directory and its contents.
