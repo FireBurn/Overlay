@@ -4,6 +4,8 @@ description: Assess and bump Gentoo overlay packages, validate with emerge, and 
 mode: primary
 permission:
   question: deny
+  websearch: deny
+  codesearch: deny
   read:
     "*": allow
     "**/Manifest": deny
@@ -50,9 +52,15 @@ Detecting a failed package. Do not infer progress from timestamps or process lis
 1. A phase has failed when Portage's `temp/build.log` contains ` * ERROR: <cat>/<pkg>-<ver>::FireBurn failed (<phase> phase)` or the `ebuild`/`emerge` process has exited non-zero. `grep -n 'ERROR:' <build.log>` and read the 40 lines above the first hit, because the cause precedes the `die` stack trace. A package is installed only when `qlist -Iv <cat>/<pkg>` shows the new version.
 2. A build is hung, not slow, when no `emerge`/`ebuild`/`rustc`/`cargo`/`ninja` process of the package exists, or `build.log` has not grown for 15 minutes while the process uses no CPU. Treat it as failed.
 3. Read the error before changing anything. Fix the cause in the ebuild, eclass or patches. Do not work around a source inconsistency by mixing in sources from another artifact (for example overlaying a git tag onto a release tarball); a vendored-crate or lockfile mismatch means a wrong ebuild step or a missing dependency, so compare against the Gentoo tree's ebuild for that version (`/var/db/repos/gentoo`) and the previous bump commit first.
-4. Give each distinct failure at most three fix attempts and a total of 90 minutes after the first failed phase. If it still fails, restore the package to its committed state (`git restore --staged --worktree`, remove the new ebuild and untracked files for that package only), leave the Manifest as committed, and report the failing phase, the first error line and what you tried. Never keep retrying while idle or polling for more than a few minutes after a build has ended.
+4. Fix a failure now and do not move on. Never end your turn on a failed phase while you still have something to try. For ordinary packages give each distinct failure at most three fix attempts and 90 minutes; then restore the package to its committed state (`git restore --staged --worktree`, remove the new ebuild and untracked files for that package only), leave the Manifest as committed, and report the failing phase, the first error line and what you tried. Heavy packages (Chromium, Electron, Firefox, Rust, Bun, LibreOffice, Zed, Codex, Zig, Bazel, SWC) have no such limit: a lost build costs hours, so keep fixing, keep the work directory, resume the failed phase, and leave the package uncommitted rather than restored if you must stop. The caller asks again in the same session. Never keep polling while idle for more than a few minutes after a build has ended.
 5. When a bump touches an eclass (for example `eclass/rust.eclass`), commit the eclass change as its own commit after the package builds, with subject `eclass/rust.eclass: ...`.
 6. Run `ebuild ... clean` with `sudo -n`; as your own user it fails silently on Portage's work directory and the next build reuses stale, hybrid sources. When an error looks like an upstream inconsistency (vendored crate versions, lockfile mismatch), first verify the work tree against the distfile (`tar -xf` it elsewhere and `diff -rq`) before blaming the tarball.
+
+Web search is not available in this run; asking for it ends the run with an error. Use `curl`, `gh api` and the files on this host to read upstream releases, changelogs and bugs.
+
+Shared files. A patch or file under `files/` that more than one ebuild names (Chromium's slots share `www-client/chromium/files`) must not be edited in place for one version if another ebuild still uses it. Copy it to a name that carries the version or milestone (`cr160-...patch`), point only the ebuild you are fixing at the copy, and leave the original as committed. Check with `grep -l <patch name> <package>/*.ebuild`.
+
+Disk. A finished or abandoned build must not stay in `/var/tmp/portage`, which is RAM. After a build installs, `sudo -n ebuild <ebuild> clean`; if you stop on a failure you could not fix, the caller collects the build log and removes the directory, except for Chromium, whose directory is kept so the next run can resume it.
 
 Host facts, so you do not have to discover them (each discovery costs a model turn, and model turns are the slowest part of a run):
 

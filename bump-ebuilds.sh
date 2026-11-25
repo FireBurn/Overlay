@@ -8,11 +8,14 @@ cd "$(dirname "$0")"
 # Packages that always go to the agent. Everything else with a single
 # non-live ebuild is bumped mechanically (rename, digest, emerge) first and
 # only reaches the agent if a step fails.
-AI_PKGS=( dev-util/codex app-editors/zed www-client/chromium )
+AI_PKGS=( www-client/chromium )
 
 # Slow source builds. Agent bumps of these run after every quicker bump and
 # group, in this order, and before Chromium.
-HEAVY_PKGS=( dev-lang/rust dev-lang/bun app-office/libreoffice www-client/firefox dev-util/electron )
+# Ordered roughly by build time, from the emerge/agent timings in
+# state/timings.tsv. A heavy package is fixed until it is committed before the
+# run moves on to anything else.
+HEAVY_PKGS=( dev-build/bazel dev-util/swc dev-lang/zig app-editors/zed dev-util/codex dev-lang/rust dev-lang/bun app-office/libreoffice www-client/firefox dev-util/electron )
 
 # --- CLI ------------------------------------------------------------------
 DRY_RUN=0
@@ -155,14 +158,16 @@ run_step() {
 
 # Rebasing with --autostash and pkgcheck --commits both drop staged renames,
 # so keep the caller's staged changes and put them back when we are done.
+# Renames are recorded as a delete and an add: a rename whose source this run
+# committed away (a Chromium rotation) could not be applied otherwise.
 STAGED="$RUN_DIR/staged.diff"
-git diff --cached --binary >"$STAGED"
+git diff --cached --binary --no-renames >"$STAGED"
 RESTORED=0
 restore_index() {
     (( RESTORED )) && return
     local -a skip=()
     local f
-    cmp -s "$STAGED" <(git diff --cached --binary) && return
+    cmp -s "$STAGED" <(git diff --cached --binary --no-renames) && return
     [[ -s "$STAGED" ]] || { RESTORED=1; return; }
     # Paths committed by this run are no longer staged changes.
     if [[ -n "${START_HEAD:-}" ]]; then
@@ -537,7 +542,7 @@ PY
     return 0
 }
 
-AGENT_RULES="Work only on the ebuilds in this overlay and leave them there, uncommitted, if you cannot finish. Builds run in Portage's default /var/tmp/portage; never set PORTAGE_TMPDIR. Read build failures in Portage's own /var/tmp/portage/<category>/<package>-<version>/temp/build.log and do not copy build logs elsewhere. Put downloads, unpacked sources and checkouts in $SCRATCH/<package name>/ and nowhere else outside the overlay (not /tmp); the caller empties it. Start long builds detached with their console output sent to /dev/null and block on the process until it ends. After fixing a failed build, resume with ebuild <ebuild> compile, and when the phases pass finish with sudo ebuild <ebuild> install qmerge clean, which installs the finished work directory without another full build and then removes it; use a clean emerge only when the fix requires a fresh build. Remove the package's directory under /var/tmp/portage when you stop, whether it built or not: /var/tmp/portage is RAM, and a leftover directory makes the packages after it fail their space check. Keep one ebuild per package: rename the old ebuild to the new version (git mv) instead of adding one beside it, unless the package is slotted and the versions are in different slots. Live 9999 ebuilds stay. Record how to find upstream versions: if a package's entry in scripts/upstream-sources is missing, wrong or could not be checked, add or fix it using the methods documented at the top of that file, and add an @group when other ebuilds in this overlay share the same pattern. Leave scripts/upstream-sources uncommitted; the caller reports it for review. Run a normal emerge -1 of each new package and a relevant smoke test, then pkgcheck scan --repo FireBurn --commits. Commit only if emerge installed successfully and checks pass, one commit per package, using git commit --only -- <package paths> so changes already staged by someone else stay out of the commit. Leave a package unchanged and report why if there is no safe bump. Do not push."
+AGENT_RULES="Work only on the ebuilds in this overlay and leave them there, uncommitted, if you cannot finish. Builds run in Portage's default /var/tmp/portage; never set PORTAGE_TMPDIR. Read build failures in Portage's own /var/tmp/portage/<category>/<package>-<version>/temp/build.log and do not copy build logs elsewhere. Put downloads, unpacked sources and checkouts in $SCRATCH/<package name>/ and nowhere else outside the overlay (not /tmp); the caller empties it. Start long builds detached with their console output sent to /dev/null and block on the process until it ends. After fixing a failed build, resume with ebuild <ebuild> compile, and when the phases pass finish with sudo ebuild <ebuild> install qmerge clean, which installs the finished work directory without another full build and then removes it; use a clean emerge only when the fix requires a fresh build. Remove the package's directory under /var/tmp/portage as soon as it is installed or you give up on it: /var/tmp/portage is RAM, and a leftover directory makes the packages after it fail their space check. Keep it only while a failure is still being fixed, so the fix can resume from the failed phase. Keep one ebuild per package: rename the old ebuild to the new version (git mv) instead of adding one beside it, unless the package is slotted and the versions are in different slots. Live 9999 ebuilds stay. Record how to find upstream versions: if a package's entry in scripts/upstream-sources is missing, wrong or could not be checked, add or fix it using the methods documented at the top of that file, and add an @group when other ebuilds in this overlay share the same pattern. Leave scripts/upstream-sources uncommitted; the caller reports it for review. Run a normal emerge -1 of each new package and a relevant smoke test, then pkgcheck scan --repo FireBurn --commits. Commit only if emerge installed successfully and checks pass, one commit per package, using git commit --only -- <package paths> so changes already staged by someone else stay out of the commit. Leave a package unchanged and report why if there is no safe bump. Do not push."
 
 # Token counts of opencode sessions in this directory since START_MS, for the log.
 agent_usage() {
@@ -624,6 +629,21 @@ print(c["provider"][prov]["options"]["baseURL"].removesuffix("/v1"))' 2>/dev/nul
     [[ "$AGENT_UP" == 1 ]]
 }
 
+# Wait up to ten minutes for the model server to answer again.
+agent_available_force() {
+    local i url
+    url="$(python3 -c 'import json, os
+c = json.load(open(os.path.expanduser("~/.config/opencode/opencode.json")))
+prov = c["model"].split("/")[0]
+print(c["provider"][prov]["options"]["baseURL"].removesuffix("/v1"))' 2>/dev/null)"
+    [[ -z "$url" ]] && return 0
+    for i in $(seq 20); do
+        curl -sf -m 10 "$url/health" >/dev/null && return 0
+        sleep 30
+    done
+    return 1
+}
+
 # PIDs of Portage builds that are running now.
 portage_jobs() { pgrep -f 'python-exec/[^/]+/(emerge|ebuild) ' | sort; }
 
@@ -635,7 +655,8 @@ portage_jobs() { pgrep -f 'python-exec/[^/]+/(emerge|ebuild) ' | sort; }
 # hour; a run that wanders is stopped so the queue (and Chromium) can move on.
 agent_timeout() {
     case "$1" in
-        www-client/chromium*|dev-lang/rust|dev-util/electron|*rocm*) echo 14400 ;;
+        www-client/chromium*|dev-util/electron) echo 28800 ;;
+        dev-lang/rust|*rocm*) echo 14400 ;;
         *) in_list "$1" "${HEAVY_PKGS[@]}" && echo 10800 || echo 2700 ;;
     esac
 }
@@ -664,6 +685,17 @@ run_agent() {
         info "agent ended its turn with a build still running; waiting for it (round $round)"
         while [[ -n "$(comm -13 <(echo "$before") <(portage_jobs))" ]]; do sleep 30; done
         opencode run --agent ebuild-bumper --session "$session" "The build you started has finished. Read the end of its log and Portage's build.log, then carry on with the task: fix any failure and resume, run the smoke test and pkgcheck, and commit as instructed. Do not end your turn while a job is running." </dev/null >>"$alog" 2>&1
+        rc=$?
+    done
+    # The model server sometimes drops the connection or crashes (std::bad_alloc)
+    # mid-task. The session keeps its context, so ask it to carry on.
+    local retry=0
+    while (( rc != 0 && rc != 124 && retry < 3 )) &&
+          sed 's/\x1b\[[0-9;]*m//g' "$alog" | tail -n 8 | grep -aqiE 'bad_alloc|ECONNRESET|ECONNREFUSED|socket hang up|fetch failed|connection (error|closed|reset)|terminated|overloaded'; do
+        retry=$((retry + 1))
+        info "agent stopped on a model server error; resuming its session (retry $retry)"
+        agent_available_force || break
+        timeout -k 30 "$(agent_timeout "$label")" opencode run --agent ebuild-bumper --session "$session" "The previous turn was cut off by a model server error. Carry on from the current state of the work directory and overlay; do not start over. Check what is already done with git status and the build log, then finish the task as instructed. Do not end your turn while a job is running." </dev/null >>"$alog" 2>&1
         rc=$?
     done
     heartbeat_stop
@@ -699,23 +731,42 @@ bump_agent() {
         prompt="Assess $pkg in this overlay (current version $old).${reason:+ Note: $reason.} Find and verify the latest appropriate upstream release. Determine whether a bump is appropriate and whether it is a simple rename or needs package-specific work. For Chromium, follow the three-channel instructions and build exactly one Chromium version at a time with no other package builds running. Preserve the source build and update fetched dependencies and the Manifest as needed. $ctx$AGENT_RULES"
     fi
 
-    if ! run_agent "$pkg" "$prompt"; then
-        echo "ERROR: agent bump failed for $pkg" >&2
-        leave_package "$pkg"
-        return 2
-    fi
+    # A package is worked on until it is committed. The agent is asked again,
+    # in the same session, with the failed build's work directory kept, so a
+    # fix resumes from the last good phase. Heavy packages get more attempts
+    # and nothing else runs until they are done.
+    local attempt=0 max=2 rc
+    in_list "$pkg" "${HEAVY_PKGS[@]}" && max=5
+    while true; do
+        attempt=$((attempt + 1))
+        run_agent "$pkg" "$prompt"; rc=$?
+        # The agent exits non-zero when it asked for input nobody can give, even
+        # after committing; what counts is the repository.
+        if [[ "$(git rev-parse HEAD)" != "$head" ]] && package_clean "$pkg"; then
+            (( rc )) && info "agent exited with status $rc after committing $pkg; treating it as done"
+            break
+        fi
+        if (( rc == 0 )) && package_clean "$pkg"; then
+            clear_workdir "$pkg"
+            info "agent made no commit for $pkg"
+            return 1
+        fi
+        if (( rc == 2 )) || (( attempt >= max )); then
+            echo "ERROR: agent bump failed for $pkg after $attempt attempt(s)" >&2
+            leave_package "$pkg"
+            return 2
+        fi
+        info "$pkg is not finished (agent status $rc); attempt $((attempt + 1)) of $max"
+        prompt="The previous attempt did not finish $pkg: nothing is committed for it yet. Read git status -sb, git diff --stat for $pkg and the end of Portage's build.log in /var/tmp/portage/<category>/<package>-<version>/temp/, then fix the cause and carry on from where it stopped, resuming the failed phase and keeping the work directory; do not restore the package or start over. Do not stop until the package is installed, smoke-tested, checked with pkgcheck and committed, or you have a concrete reason it cannot be bumped, which you state. $AGENT_RULES"
+    done
     clear_workdir "$pkg"
     if ! package_clean "$pkg"; then
         echo "ERROR: agent left uncommitted changes in $pkg" >&2
         leave_package "$pkg"
         return 2
     fi
-    if [[ "$(git rev-parse HEAD)" != "$head" ]]; then
-        info "agent committed $pkg"
-        return 0
-    fi
-    info "agent made no commit for $pkg"
-    return 1
+    info "agent committed $pkg"
+    return 0
 }
 
 # Chromium rotates ebuilds between its stable, beta and unstable slots. The
@@ -767,12 +818,35 @@ kill_tree() {
     done
 }
 
+# Checksums of the patches and files in files/, to see what a fix changed.
+chromium_files_sum() {
+    (cd "$CHROMIUM" && find files -type f -print0 2>/dev/null | sort -z | xargs -0 -r md5sum)
+}
+
+# Slots whose ebuilds name a file that a fix to another slot changed. Their
+# unpacked trees were patched with the old content, so they are prepared again.
+CHROMIUM_REPREP=()
+chromium_note_shared() {
+    local slot="$1" before="$2" f other e
+    while read -r f; do
+        for other in stable beta unstable; do
+            [[ "$other" == "$slot" ]] && continue
+            e="$(chromium_ebuild "$other")"
+            [[ -n "$e" ]] && grep -q "\${FILESDIR}/${f#files/}" "$e" || continue
+            in_list "$other" "${CHROMIUM_REPREP[@]}" ||
+                { CHROMIUM_REPREP+=("$other"); info "$f changed for $slot and is used by $other; $other will be prepared again"; }
+        done
+    done < <(diff <(echo "$before") <(chromium_files_sum) | sed -n 's/^[<>] [0-9a-f]*  //p' | sort -u)
+}
+
 # chromium_fix SLOT PHASE LOG TMPDIR -- ask the agent to fix one failure.
 chromium_fix() {
     local slot="$1" phase="$2" flog="$3" tmp="$4" e v rc
     e="$(chromium_ebuild "$slot")"; v="$(chromium_version "$e")"
     [[ "$DRY_RUN" == 1 ]] && return 1
     info "asking the agent to fix $CHROMIUM $v ($slot): $phase failed"
+    local before_sum
+    before_sum="$(chromium_files_sum)"
     local n=$(( ${CHROMIUM_FIX_N[$slot]:-0} + 1 )) prev="" alog="$RUN_DIR/agent-${CHROMIUM//\//_}-$slot.log"
     CHROMIUM_FIX_N[$slot]=$n
     (( n > 1 )) && prev=" This is fix attempt $n of $((CHROMIUM_FIX_ATTEMPTS + 1)) for this slot; the earlier attempt did not leave the phase passing. Read only the last 40 lines of its transcript, $alog, and the failing log, then try a different fix; do not repeat what already failed. Never conclude that no fix is needed unless the phase itself passes when you resume it."
@@ -782,7 +856,12 @@ chromium_fix() {
     # block on its dead terminal. Stop it; the next build resumes its work.
     # shellcheck disable=SC2046
     kill_tree $(pgrep -f -- "[/ ]chromium-$v([].[:space:]]|$)" | grep -vx "$$")
-    return "$rc"
+    chromium_note_shared "$slot" "$before_sum"
+    # A failed agent turn is not the end: the caller runs the phase again and
+    # asks again, up to CHROMIUM_FIX_ATTEMPTS. Only a dead model server stops it.
+    (( rc == 2 )) && return 1
+    (( rc )) && info "agent for $slot ended with status $rc; the phase is run again"
+    return 0
 }
 
 # chromium_prepare SLOT -- unpack, patch and configure in PREP_TMPDIR, with fixes.
@@ -886,6 +965,20 @@ chromium_commit() {
     push_commits
 }
 
+# chromium_reprepare FIRST SLOT... -- prepare again the slots a later fix touched.
+chromium_reprepare() {
+    local first="$1" slot rc=0; shift
+    local -a again=("${CHROMIUM_REPREP[@]}")
+    CHROMIUM_REPREP=()
+    for slot in "$@"; do
+        in_list "$slot" "${again[@]}" || continue
+        chromium_prepare "$slot" || { echo "ERROR: $slot does not configure after a change to a shared file" >&2; rc=1; }
+    done
+    in_list "$first" "${again[@]}" &&
+        info "files used by $first changed after its build started; its emerge may need repeating"
+    return "$rc"
+}
+
 bump_chromium() {
     local plan rc slot e v first pid ok=1
     local -a todo=()
@@ -943,8 +1036,10 @@ bump_chromium() {
         for slot in "${todo[@]:1}"; do
             chromium_prepare "$slot" || { echo "ERROR: $slot does not configure" >&2; ok=0; }
         done
+        chromium_reprepare "$first" "${todo[@]:1}" || ok=0
         if ! wait "$pid"; then
             chromium_emerge "$first" resume || { echo "ERROR: $first did not build" >&2; ok=0; }
+            chromium_reprepare "$first" "${todo[@]:1}" || ok=0
         fi
         if (( ok )); then
             chromium_commit "$first" && { changed_any=1; push_commits; } || ok=0
