@@ -8,7 +8,7 @@ cd "$(dirname "$0")"
 # Packages that always go to the agent. Everything else with a single
 # non-live ebuild is bumped mechanically (rename, digest, emerge) first and
 # only reaches the agent if a step fails.
-AI_PKGS=( www-client/chromium )
+AI_PKGS=( www-client/chromium dev-python/frida )
 
 # Slow source builds. Agent bumps of these run after every quicker bump and
 # group, in this order, and before Chromium.

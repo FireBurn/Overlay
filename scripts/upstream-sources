@@ -92,11 +92,11 @@ dev-build/gnrt                    skip follows www-client/chromium; reviewed in 
 dev-cpp/cpp-jwt                   github-release arun11299/cpp-jwt prefix=v
 dev-lang/bun                      github-release oven-sh/bun prefix=bun-v
 dev-lang/rust                     github-release rust-lang/rust
-dev-lang/vala                     agent snapshot of frida-forks/vala pinned to the commit in releng/deps.toml of the frida-core release; version is 0.58.0_p<commit date YYYYMMDD> and it must match the vala pin of the frida-core release in eclass/frida-core.eclass, so it moves with a frida-core bump, not on its own
+dev-lang/vala                     skip moves with dev-python/frida: the vala commit pinned in releng/deps.toml of the frida-core release (version 0.58.0_p<commit date YYYYMMDD>); the dev-python/frida bump updates it, see scripts/bump-hints/dev-python_frida.md
 # LibreOffice 26.8 (and master) requires mdds-3.0 and liborcus-0.21 (libixion-0.20).
 dev-libs/libixion                 gitlab-tag ixion/ixion match=^0\.20\.
 dev-libs/liborcus                 gitlab-tag orcus/orcus match=^0\.21\.
-dev-python/frida                  agent frida-core.eclass pins one release of every subproject; follow scripts/frida-core/README.md to regenerate them, then rename dev-python/frida and build it
+dev-python/frida                  github-tag frida/frida-python
 dev-python/ghidrecomp             pypi ghidrecomp
 dev-python/httpx-sse              pypi httpx-sse
 dev-python/jpype                  pypi JPype1
