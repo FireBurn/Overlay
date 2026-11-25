@@ -1,17 +1,17 @@
-From b0c54beddc877111fe3513d6a630baf066045a18 Mon Sep 17 00:00:00 2001
+From e589b52472c1c31affc6aa616a0967c9f3e61efc Mon Sep 17 00:00:00 2001
 From: Mike Lothian <mike@fireburn.co.uk>
-Date: Sat, 26 Sep 2026 15:38:21 +0100
-Subject: [PATCH 09/18] hip : share the FA vec K/V pass between the Q heads of
- a GQA group on RDNA
+Date: Wed, 25 Nov 2026 19:31:52 +0000
+Subject: [PATCH] hip : share the FA vec K/V pass between the Q heads of a GQA
+ group on RDNA
 
 Assisted-by: Claude Code (Claude Opus 5.5)
 ---
- ggml/src/ggml-cuda/fattn-vec.cuh | 131 +++++++++++++++++++++----------
+ ggml/src/ggml-cuda/fattn-vec.cuh | 135 +++++++++++++++++++++----------
  tests/test-backend-ops.cpp       |  16 ++++
- 2 files changed, 107 insertions(+), 40 deletions(-)
+ 2 files changed, 109 insertions(+), 42 deletions(-)
 
 diff --git a/ggml/src/ggml-cuda/fattn-vec.cuh b/ggml/src/ggml-cuda/fattn-vec.cuh
-index 09a4618..ff75a4b 100644
+index 978a2a038..c152614e5 100644
 --- a/ggml/src/ggml-cuda/fattn-vec.cuh
 +++ b/ggml/src/ggml-cuda/fattn-vec.cuh
 @@ -16,7 +16,9 @@ static constexpr __device__ int ggml_cuda_fattn_vec_get_nthreads_device() {
@@ -24,7 +24,7 @@ index 09a4618..ff75a4b 100644
 +template<int D, int ncols1, int ncols2, ggml_type type_K, ggml_type type_V, bool use_logit_softcap> // D == head size
  __launch_bounds__(ggml_cuda_fattn_vec_get_nthreads_device(), 1)
  static __global__ void flash_attn_ext_vec(
-         const char * Q_ptr,
+         const float2 * Q_ptr,
 @@ -70,12 +72,15 @@ static __global__ void flash_attn_ext_vec(
  
      //In this kernel Q, K, V are matrices while i, j, k are matrix indices.
@@ -54,16 +54,16 @@ index 09a4618..ff75a4b 100644
 +    const int sequence = blockIdx.z / (ne02/ncols2);
 +    const int head0 = blockIdx.z*ncols2 - sequence*ne02; // First Q head of this block.
      const int gqa_ratio = ne02 / ne12; // With grouped query attention there are > 1 Q matrices per K, V matrix.
--    Q += nb03*sequence + nb02* head              + nb01*ic0;
--    K += nb13*sequence + nb12*(head / gqa_ratio);
--    V += nb23*sequence + nb22*(head / gqa_ratio);
-+    Q += nb03*sequence + nb02*head0              + nb01*ic0;
-+    K += nb13*sequence + nb12*(head0 / gqa_ratio);
-+    V += nb23*sequence + nb22*(head0 / gqa_ratio);
+-    Q += s03*sequence + s02* head              + s01*ic0;
+-    K += s13*sequence + s12*(head / gqa_ratio);
+-    V += s23*sequence + s22*(head / gqa_ratio);
++    Q += s03*sequence + s02* head0              + s01*ic0;
++    K += s13*sequence + s12*(head0 / gqa_ratio);
++    V += s23*sequence + s22*(head0 / gqa_ratio);
  
--    const half * maskh  = mask ? (const half  *) (mask + nb33*(sequence % ne33) + nb32*(head % ne32) + nb31*ic0) : nullptr;
+-    const half * maskh  = mask ? mask + s33*(sequence % ne33) + s32*(head % ne32) + s31*ic0 : nullptr;
 +    // The heads of a block share one mask: the host only sets ncols2 > 1 when the mask is broadcast over heads.
-+    const half * maskh  = mask ? (const half  *) (mask + nb33*(sequence % ne33) + nb32*(head0 % ne32) + nb31*ic0) : nullptr;
++    const half * maskh  = mask ? mask + s33*(sequence % ne33) + s32*(head0 % ne32) + s31*ic0 : nullptr;
  
 -    const float slope = get_alibi_slope(max_bias, head, n_head_log2, m0, m1);
 +    // ALiBi is excluded on the host when ncols2 > 1.
@@ -84,17 +84,32 @@ index 09a4618..ff75a4b 100644
                      tmp_q_ds[threadIdx.x] = make_float2(0.0f, 0.0f);
                  }
              } else {
--                const float * Q_f = (const float *) (Q + j*nb01);
-+                const float * Q_f = (const float *) (Q + (j/ncols2)*nb01 + (j%ncols2)*nb02);
+-                const float * Q_f = (const float *) (Q + j*s01);
++                const float * Q_f = (const float *) (Q + (j/ncols2)*s01 + (j%ncols2)*s02);
                  constexpr int nthreads_quantize = D/sizeof(int) < WARP_SIZE ? D/sizeof(int) : WARP_SIZE;
  #pragma unroll
                  for (int i0 = 0; i0 < int(D/sizeof(int)); i0 += nthreads_quantize) {
+@@ -206,12 +213,12 @@ static __global__ void flash_attn_ext_vec(
+     } else if constexpr (type_K == GGML_TYPE_F8_E4M3) {
+ #pragma unroll
+         for (int j = 0; j < ncols; ++j) {
+-            const float * Q_j = (const float *) (Q + j*s01);
++            const float * Q_j = (const float *) (Q + (j/ncols2)*s01 + (j%ncols2)*s02);
+ #pragma unroll
+             for (int i0 = 0; i0 < D; i0 += nthreads_KQ*4) {
+                 const int i = i0 + (threadIdx.x % nthreads_KQ)*4;
+                 float4 tmp = make_float4(0.0f, 0.0f, 0.0f, 0.0f);
+-                if (ncols == 1 || ic0 + j < int(ne01.z)) {
++                if (ncols1 == 1 || ic0 + j/ncols2 < int(ne01.z)) {
+                     ggml_cuda_memcpy_1<sizeof(tmp)>(&tmp, Q_j + i);
+                 }
+ #ifdef V_DOT2_F32_F16_AVAILABLE
 @@ -229,13 +236,13 @@ static __global__ void flash_attn_ext_vec(
          const half2 scale_h2 = make_half2(scale, scale);
  #pragma unroll
          for (int j = 0; j < ncols; ++j) {
--            const float2 * Q_j = (const float2 *) (Q + j*nb01);
-+            const float2 * Q_j = (const float2 *) (Q + (j/ncols2)*nb01 + (j%ncols2)*nb02);
+-            const float2 * Q_j = Q + j*s01;
++            const float2 * Q_j = Q + (j/ncols2)*s01 + (j%ncols2)*s02;
  #pragma unroll
              for (int i0 = 0; i0 < D/2; i0 += nthreads_KQ*cpy_ne) {
                  const int i = i0 + (nthreads_KQ == WARP_SIZE ? threadIdx.x : threadIdx.x % nthreads_KQ)*cpy_ne;
@@ -109,8 +124,8 @@ index 09a4618..ff75a4b 100644
  #else
  #pragma unroll
          for (int j = 0; j < ncols; ++j) {
--            const float2 * Q_j = (const float2 *) (Q + j*nb01);
-+            const float2 * Q_j = (const float2 *) (Q + (j/ncols2)*nb01 + (j%ncols2)*nb02);
+-            const float2 * Q_j = Q + j*s01;
++            const float2 * Q_j = Q + (j/ncols2)*s01 + (j%ncols2)*s02;
  #pragma unroll
              for (int i0 = 0; i0 < D/2; i0 += nthreads_KQ*cpy_ne) {
                  const int i = i0 + (nthreads_KQ == WARP_SIZE ? threadIdx.x : threadIdx.x % nthreads_KQ)*cpy_ne;
@@ -134,7 +149,7 @@ index 09a4618..ff75a4b 100644
      }
  
      if (sinks && blockIdx.y == 0) {
--        const float sink = ((const float *) sinks)[head];
+-        const float sink = sinks[head];
 -
  #pragma unroll
          for (int j0 = 0; j0 < ncols; j0 += nwarps) {
@@ -193,8 +208,8 @@ index 09a4618..ff75a4b 100644
      const bool need_f16_K = type_K == GGML_TYPE_F16;
      const bool need_f16_V = type_V == GGML_TYPE_F16;
      constexpr size_t nbytes_shared = 0;
--    launch_fattn<D, cols_per_block, 1>(ctx, dst, fattn_kernel, nwarps, nbytes_shared, D, need_f16_K, need_f16_V, false, false);
-+    launch_fattn<D, cols_per_block, ncols2>(ctx, dst, fattn_kernel, nwarps, nbytes_shared, D, need_f16_K, need_f16_V, false, false);
+-    launch_fattn<D, cols_per_block, 1, char, char>(ctx, dst, fattn_kernel, nwarps, nbytes_shared, D, need_f16_K, need_f16_V, false, false);
++    launch_fattn<D, cols_per_block, ncols2, char, char>(ctx, dst, fattn_kernel, nwarps, nbytes_shared, D, need_f16_K, need_f16_V, false, false);
 +}
 +
 +template <int D, int cols_per_block, int ncols2, ggml_type type_K, ggml_type type_V>
@@ -281,10 +296,10 @@ index 09a4618..ff75a4b 100644
  
  #define DECL_FATTN_VEC_CASE(D, type_K, type_V)                              \
 diff --git a/tests/test-backend-ops.cpp b/tests/test-backend-ops.cpp
-index 7f1f1ff..77052c8 100644
+index 098350f9f..4f9743cea 100644
 --- a/tests/test-backend-ops.cpp
 +++ b/tests/test-backend-ops.cpp
-@@ -13037,6 +13037,17 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_eval() {
+@@ -13749,6 +13749,17 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_eval() {
          }
      }
  
@@ -302,7 +317,7 @@ index 7f1f1ff..77052c8 100644
      // asymmetric head_dim (hsk != hsv) with one or both sides not 64-aligned
      test_cases.emplace_back(new test_flash_attn_ext(72, 64, 4, {1, 1}, 256, 2, true, false, 0, 0, GGML_PREC_F32, GGML_TYPE_F16, GGML_TYPE_F16));
      test_cases.emplace_back(new test_flash_attn_ext(64, 72, 4, {1, 1}, 256, 2, true, false, 0, 0, GGML_PREC_F32, GGML_TYPE_F16, GGML_TYPE_F16));
-@@ -13522,6 +13533,11 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_eval() {
+@@ -14309,6 +14320,11 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_eval() {
  static std::vector<std::unique_ptr<test_case>> make_test_cases_perf() {
      std::vector<std::unique_ptr<test_case>> test_cases;
  
@@ -314,5 +329,3 @@ index 7f1f1ff..77052c8 100644
      test_cases.emplace_back(new test_timestep_embedding());
      test_cases.emplace_back(new test_timestep_embedding(GGML_TYPE_F32, {32769, 1, 1, 1}, 4096, 10000));
      test_cases.emplace_back(new test_timestep_embedding(GGML_TYPE_F32, {65, 1, 1, 1}, 1, 10000));
--- 
-2.55.0
