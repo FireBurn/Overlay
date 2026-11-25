@@ -69,7 +69,7 @@ NPM_PKGS="
 	@floating-ui/dom@1.8.0
 	@floating-ui/react-dom@2.1.9
 	@floating-ui/utils@0.2.12
-	@google/genai@2.32.0
+	@google/genai@3.6.1
 	@img/colour@1.1.0
 	@img/sharp-libvips-linux-arm64@1.3.4|arm64
 	@img/sharp-libvips-linux-x64@1.3.4|amd64
