@@ -67,8 +67,9 @@ FRIDA_CORE_SRC_URI="
 
 # @ECLASS_VARIABLE: FRIDA_CORE_FILESDIR
 # @DESCRIPTION:
-# Directory holding the patches that frida-core needs.
-FRIDA_CORE_FILESDIR=${{EBUILD%/*/*/*}}/dev-libs/frida-core/files
+# Directory holding the patches that frida-core needs, the files directory of
+# the consumer.
+FRIDA_CORE_FILESDIR=${{FILESDIR}}
 
 # @ECLASS_VARIABLE: FRIDA_CORE_PATCHES
 # @DESCRIPTION:
