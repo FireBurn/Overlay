@@ -143,3 +143,4 @@ virtual/libc                      skip virtual
 virtual/libintl                   skip virtual
 www-client/chromium               agent assess the stable, beta and dev channels
 www-client/firefox                json https://product-details.mozilla.org/1.0/firefox_versions.json LATEST_FIREFOX_VERSION
+www-client/firefox-l10n           skip bumped with www-client/firefox, which depends on the matching l10n version
