@@ -10,9 +10,9 @@ it out.
 --- a/third_party/chromium-bidi/src/bidiMapper/CommandProcessor.ts
 +++ b/third_party/chromium-bidi/src/bidiMapper/CommandProcessor.ts
 @@ -104,7 +104,7 @@
+     bluetoothProcessor: BluetoothProcessor,
      digitalCredentialsProcessor: DigitalCredentialsProcessor,
      userContextStorage: UserContextStorage,
-     aclStorage: AclStorage,
 -    parser: BidiCommandParameterParser = new BidiNoOpParser(),
 +    parser: BidiCommandParameterParser|undefined = new BidiNoOpParser(),
      initConnection: (options: MapperOptions) => Promise<void>,
