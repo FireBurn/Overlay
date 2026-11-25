@@ -1220,7 +1220,8 @@ process_row() {
                 fi
                 bump_simple "$pkg" "$old" "$new"
             else
-                bump_agent "$pkg" "$old" "$new" "" "$source"
+                # Slotted packages (Java) carry the outdated slots in the note.
+                bump_agent "$pkg" "$old" "$new" "$([[ "$note" == slots:* ]] && echo "$note")" "$source"
             fi ;;
         *)
             info "unexpected status '$status' for $pkg"; return 1 ;;

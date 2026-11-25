@@ -18,6 +18,9 @@
 #   json           URL KEY       dotted KEY in the JSON response
 #   page           URL REGEX...  highest REGEX group 1 match in the page; further
 #                                URL REGEX pairs may use {} for the previous match
+#   adoptium                     slotted Java packages: every LTS and the latest GA
+#                                release of api.adoptium.net, each compared with the
+#                                ebuild of its slot
 #   agent          NOTE...       no automatic check; the agent assesses it
 #   skip           NOTE...       never checked
 #
@@ -33,7 +36,7 @@
 
 @rocm       github-release ROCm/rocm-systems prefix=therock- pad=3 batch=1
 @libreoffice page https://download.documentfoundation.org/libreoffice/stable/ href="(\d+\.\d+\.\d+)/" https://download.documentfoundation.org/libreoffice/src/{}/ href="libreoffice-(\d+\.\d+\.\d+\.\d+)\.tar\.xz"
-@openjdk     agent one ebuild per major version, each followed by hand; latest GA per major from api.adoptium.net/v3/assets/latest/<major>/hotspot (release_link tag = jdk-<version>), JDK 8 tags as jdk8u<b>-b<bb>; ebuilds fetch the +N tag (MY_PV), not the -ga tag, which is missing for some releases during OpenJDK's tag transition (e.g. 17.0.21+9)
+@openjdk     adoptium one ebuild per major version, each followed by hand; latest GA per major from api.adoptium.net/v3/assets/latest/<major>/hotspot (release_link tag = jdk-<version>), JDK 8 tags as jdk8u<b>-b<bb>; ebuilds fetch the +N tag (MY_PV), not the -ga tag, which is missing for some releases during OpenJDK's tag transition (e.g. 17.0.21+9)
 
 dev-build/rocm-cmake              @rocm
 dev-libs/rccl                     @rocm

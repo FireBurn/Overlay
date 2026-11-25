@@ -217,6 +217,55 @@ def local_version(pkg):
     return top
 
 
+def adoptium_pv(release_name):
+    """jdk-17.0.21.1+2 -> 17.0.21.1_p2, jdk8u514-b01 -> 8.514_p01."""
+    m = re.fullmatch(r"jdk8u(\d+)-b(\d+)", release_name)
+    if m:
+        return f"8.{m.group(1)}_p{m.group(2)}"
+    m = re.fullmatch(r"jdk-(\d+(?:\.\d+)*)\+(\d+)", release_name)
+    if m:
+        return f"{m.group(1)}_p{m.group(2)}"
+    return None
+
+
+def adoptium_latest(major):
+    data = json.loads(http(f"https://api.adoptium.net/v3/assets/latest/{major}/hotspot"))
+    pvs = [pv for pv in (adoptium_pv(r.get("release_name", "")) for r in data) if pv]
+    if not pvs:
+        raise LookupError_(f"no GA release of JDK {major}")
+    top = pvs[0]
+    for pv in pvs[1:]:
+        if vercmp(pv, top) > 0:
+            top = pv
+    return top
+
+
+def check_adoptium(pkg, group, source):
+    """One ebuild per major: every LTS and the latest GA are kept current."""
+    info = json.loads(http("https://api.adoptium.net/v3/info/available_releases"))
+    majors = sorted(set(info["available_lts_releases"]) | {info["most_recent_feature_release"]})
+    local = {}
+    for pv in ebuild_versions(pkg):
+        if is_live(pv):
+            continue
+        major = int(pv.split(".")[0])
+        if major not in local or vercmp(pv, local[major]) > 0:
+            local[major] = pv
+    changes, first = [], None
+    for major in majors:
+        up = adoptium_latest(str(major))
+        if major not in local:
+            changes.append(f"new slot {major}: {up}")
+            first = first or (max(local.values(), key=lambda v: int(v.split(".")[0])), up)
+        elif vercmp(up, local[major]) > 0:
+            changes.append(f"{major}: {local[major]} -> {up}")
+            first = first or (local[major], up)
+    top = max(local.values(), key=lambda v: int(v.split(".")[0]))
+    if not changes:
+        return [pkg, "current", top, top, group, "", source, ""]
+    return [pkg, "newer", first[0], first[1], group, "", source, "slots: " + "; ".join(changes)]
+
+
 def infer(pkg):
     """Guess a source from metadata.xml and SRC_URI. Returns a sources line or None."""
     meta = REPO / pkg / "metadata.xml"
@@ -256,6 +305,11 @@ def check(pkg, sources):
         group, inferred = "", line
     method = args[0]
     source = " ".join(args)
+    if method == "adoptium":
+        try:
+            return check_adoptium(pkg, group, source)
+        except Exception as e:
+            return [pkg, "agent", local, "", group, "", source, f"lookup failed: {e}"]
     if method in ("agent", "skip"):
         return [pkg, method, local, "", group, "", source, " ".join(args[1:])]
     local_base = re.sub(r"-r\d+$", "", local)

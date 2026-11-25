@@ -9,3 +9,5 @@ Slotted per major version (`SLOT="$(ver_cut 1)"`).
    - Under `elibc_llvm`, ensure `--with-stdc++lib=dynamic` is passed (already unconditional in 21+; guarded by `use elibc_llvm` with `elibc_llvm` in `IUSE` on 17 and earlier) and check whether `openjdk-sysinfo-new-include.patch` or `elibc_llvm` compiler/libc++ patches are needed for that slot.
 4. Keep `Manifest` complete for all arches referenced in `SRC_URI` by running `sudo -n ebuild <ebuild> manifest`.
 5. Validate each changed or added slot with `emerge -1 =dev-java/openjdk-<ver>`, a smoke test (`java -version` and `javac -version` from the installed VM), and `pkgcheck scan --repo FireBurn --commits`.
+
+The caller has already checked the Adoptium API: you are only asked when a slot has a newer release or a new LTS/GA major exists. The prompt's note lists exactly which slots ("slots: 17: old -> new; new slot 28: ..."). Touch only those and skip the rest.
