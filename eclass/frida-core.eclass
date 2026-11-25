@@ -5,7 +5,7 @@
 # @MAINTAINER:
 # Mike Lothian <fireburn@gentoo.org>
 # @SUPPORTED_EAPIS: 8
-# @BLURB: Sources and build options shared by frida-core and its consumers
+# @BLURB: Sources and build options of the frida-core release that dev-python/frida builds
 # @DESCRIPTION:
 # frida-core pins every subproject by git revision and its build runs with
 # downloads disabled, so each pin is a distfile of its own. This eclass holds
@@ -54,8 +54,9 @@ FRIDA_CORE_SRC_URI="
 
 # @ECLASS_VARIABLE: FRIDA_CORE_FILESDIR
 # @DESCRIPTION:
-# Directory holding the patches that frida-core needs.
-FRIDA_CORE_FILESDIR=${EBUILD%/*/*/*}/dev-libs/frida-core/files
+# Directory holding the patches that frida-core needs, the files directory of
+# the consumer.
+FRIDA_CORE_FILESDIR=${FILESDIR}
 
 # @ECLASS_VARIABLE: FRIDA_CORE_PATCHES
 # @DESCRIPTION:

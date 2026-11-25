@@ -22,6 +22,7 @@ S=${WORKDIR}/frida-python-${PV}
 LICENSE="wxWinLL-3.1 LGPL-2.1+ BSD MIT"
 SLOT="0"
 KEYWORDS="~amd64"
+IUSE="+tools"
 REQUIRED_USE=${PYTHON_REQUIRED_USE}
 
 DEPEND="${FRIDA_CORE_DEPEND}"
@@ -29,6 +30,7 @@ RDEPEND="
 	${PYTHON_DEPS}
 	${DEPEND}
 "
+PDEPEND="tools? ( dev-util/frida-tools[${PYTHON_USEDEP}] )"
 BDEPEND="
 	${PYTHON_DEPS}
 	${FRIDA_CORE_BDEPEND}

@@ -5,6 +5,9 @@
 		<email>fireburn@gentoo.org</email>
 		<name>Mike Lothian</name>
 	</maintainer>
+	<use>
+		<flag name="tools">Install <pkg>dev-util/frida-tools</pkg>, the command line tools built on the bindings</flag>
+	</use>
 	<upstream>
 		<remote-id type="github">frida/frida-python</remote-id>
 		<remote-id type="pypi">frida</remote-id>
