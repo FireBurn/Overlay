@@ -3,13 +3,13 @@
 
 EAPI=8
 
-FIREFOX_PATCHSET="firefox-160-patches-01.tar.xz"
+FIREFOX_PATCHSET="firefox-161-patches-01.tar.xz"
 
 LLVM_COMPAT=( 22 23 )
 
 # This will also filter rust versions that don't match LLVM_COMPAT in the non-clang path; this is fine.
 RUST_NEEDS_LLVM=1
-RUST_MIN_VER=1.91.0
+RUST_MIN_VER=1.95.0
 
 PYTHON_COMPAT=( python3_{12..15} )
 PYTHON_REQ_USE="ncurses,sqlite,ssl"
