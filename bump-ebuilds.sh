@@ -742,7 +742,7 @@ bump_agent() {
         run_agent "$pkg" "$prompt"; rc=$?
         # The agent exits non-zero when it asked for input nobody can give, even
         # after committing; what counts is the repository.
-        if [[ "$(git rev-parse HEAD)" != "$head" ]] && package_clean "$pkg"; then
+        if [[ -n "$(git log --format=%h "$head..HEAD" -- "$pkg")" ]] && package_clean "$pkg"; then
             (( rc )) && info "agent exited with status $rc after committing $pkg; treating it as done"
             break
         fi
