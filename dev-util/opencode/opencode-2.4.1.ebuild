@@ -225,9 +225,9 @@ NPM_PKGS="
 	@gar/promise-retry@1.0.3
 	@graphql-typed-document-node/core@3.2.0
 	@happy-dom/global-registrator@20.0.11
-	@hona/strobe@0.42.0
-	@hona/strobe-linux-arm64@0.42.0|arm64
-	@hona/strobe-linux-x64@0.42.0|amd64
+	@hona/strobe@0.44.1
+	@hona/strobe-linux-arm64@0.44.1|arm64
+	@hona/strobe-linux-x64@0.44.1|amd64
 	@hono/node-server@2.1.5
 	@ibm/plex@6.4.1
 	@ibm/telemetry-js@1.11.0
@@ -311,6 +311,11 @@ NPM_PKGS="
 	@npmcli/query@5.0.0
 	@npmcli/redact@4.0.0
 	@npmcli/run-script@10.0.4
+	@number0/iroh@1.2.0
+	@number0/iroh-linux-arm64-gnu@1.2.0|arm64
+	@number0/iroh-linux-arm64-musl@1.2.0|arm64,elibc_musl
+	@number0/iroh-linux-x64-gnu@1.2.0|amd64
+	@number0/iroh-linux-x64-musl@1.2.0|amd64
 	@octokit/auth-app@8.0.1
 	@octokit/auth-oauth-app@9.0.4
 	@octokit/auth-oauth-device@8.0.4
@@ -361,13 +366,13 @@ NPM_PKGS="
 	@opentelemetry/sdk-trace-base@2.8.0
 	@opentelemetry/sdk-trace-node@2.8.0
 	@opentelemetry/semantic-conventions@1.43.0
-	@opentui/core@0.8.4
-	@opentui/core-linux-arm64@0.8.4|arm64
-	@opentui/core-linux-arm64-musl@0.8.4|arm64,elibc_musl
-	@opentui/core-linux-x64@0.8.4|amd64
-	@opentui/core-linux-x64-musl@0.8.4|amd64,elibc_musl
-	@opentui/keymap@0.8.4
-	@opentui/solid@0.8.4
+	@opentui/core@0.9.4
+	@opentui/core-linux-arm64@0.9.4|arm64
+	@opentui/core-linux-arm64-musl@0.9.4|arm64,elibc_musl
+	@opentui/core-linux-x64@0.9.4|amd64
+	@opentui/core-linux-x64-musl@0.9.4|amd64,elibc_musl
+	@opentui/keymap@0.9.4
+	@opentui/solid@0.9.4
 	@opentunnel/client@0.6.1
 	@opentunnel/protocol@0.6.1
 	@oxc-parser/binding-linux-arm64-gnu@0.141.0|arm64
@@ -1131,7 +1136,6 @@ NPM_PKGS="
 	make-fetch-happen@15.0.6
 	markdown-extensions@2.0.0
 	markdown-table@3.0.4
-	marked@17.0.1
 	marked@18.0.11
 	marky@1.3.0
 	matcher@3.0.0
@@ -1336,6 +1340,7 @@ NPM_PKGS="
 	property-information@7.2.0
 	proxy-addr@2.0.8
 	proxy-from-env@1.1.0
+	psychoscript@0.2.1
 	pump@3.0.4
 	pupa@3.3.0
 	puppeteer-core@25.9.0
@@ -1529,7 +1534,9 @@ NPM_PKGS="
 	tiny-typed-emitter@2.1.0
 	tinyexec@0.3.2
 	tinyglobby@0.2.17
+	tldts@7.5.1
 	tldts-core@7.4.11
+	tldts-core@7.5.1
 	tldts-icann@7.4.11
 	tmp@0.2.7
 	tmp-promise@3.0.3
@@ -1780,10 +1787,10 @@ NPM_STUB_PKGS="
 	@ff-labs/fff-bin-darwin-x64@0.10.5
 	@ff-labs/fff-bin-win32-arm64@0.10.5
 	@ff-labs/fff-bin-win32-x64@0.10.5
-	@hona/strobe-darwin-arm64@0.42.0
-	@hona/strobe-darwin-x64@0.42.0
-	@hona/strobe-win32-arm64@0.42.0
-	@hona/strobe-win32-x64@0.42.0
+	@hona/strobe-darwin-arm64@0.44.1
+	@hona/strobe-darwin-x64@0.44.1
+	@hona/strobe-win32-arm64@0.44.1
+	@hona/strobe-win32-x64@0.44.1
 	@img/sharp-darwin-arm64@0.34.5
 	@img/sharp-darwin-arm64@0.35.4
 	@img/sharp-darwin-arm64@0.35.5
@@ -1838,14 +1845,21 @@ NPM_STUB_PKGS="
 	@lydell/node-pty-darwin-x64@1.2.0-beta.12
 	@lydell/node-pty-win32-arm64@1.2.0-beta.12
 	@lydell/node-pty-win32-x64@1.2.0-beta.12
+	@number0/iroh-android-arm-eabi@1.2.0
+	@number0/iroh-android-arm64@1.2.0
+	@number0/iroh-darwin-arm64@1.2.0
+	@number0/iroh-linux-arm-gnueabihf@1.2.0
+	@number0/iroh-linux-arm-musleabihf@1.2.0
+	@number0/iroh-win32-arm64-msvc@1.2.0
+	@number0/iroh-win32-x64-msvc@1.2.0
 	@opencode/pty-darwin-arm64@0.6.0
 	@opencode/pty-darwin-x64@0.6.0
 	@opencode/pty-win32-arm64@0.6.0
 	@opencode/pty-win32-x64@0.6.0
-	@opentui/core-darwin-arm64@0.8.4
-	@opentui/core-darwin-x64@0.8.4
-	@opentui/core-win32-arm64@0.8.4
-	@opentui/core-win32-x64@0.8.4
+	@opentui/core-darwin-arm64@0.9.4
+	@opentui/core-darwin-x64@0.9.4
+	@opentui/core-win32-arm64@0.9.4
+	@opentui/core-win32-x64@0.9.4
 	@oxc-parser/binding-android-arm-eabi@0.141.0
 	@oxc-parser/binding-android-arm64@0.141.0
 	@oxc-parser/binding-darwin-arm64@0.141.0
