@@ -17,9 +17,6 @@ inherit flag-o-matic llvm-r2 optfeature qt6-build xdg
 
 DESCRIPTION="Qt Tools Collection"
 
-# qtbase and qtdeclarative 6.12.1 are not in portage yet
-QT_PV="6.12.0"
-
 if [[ ${QT6_BUILD_TYPE} == release ]]; then
 	KEYWORDS="~amd64 ~arm ~arm64 ~hppa ~loong ~ppc ~ppc64 ~riscv ~x86"
 fi
@@ -41,15 +38,15 @@ REQUIRED_USE="
 "
 
 RDEPEND="
-	~dev-qt/qtbase-${QT_PV}:6[widgets?]
-	assistant? ( ~dev-qt/qtbase-${QT_PV}:6[concurrent,network,sql,sqlite] )
+	~dev-qt/qtbase-${PV}:6[widgets?]
+	assistant? ( ~dev-qt/qtbase-${PV}:6[concurrent,network,sql,sqlite] )
 	designer? (
-		~dev-qt/qtbase-${QT_PV}:6[network,xml,zstd=]
+		~dev-qt/qtbase-${PV}:6[network,xml,zstd=]
 		zstd? ( app-arch/zstd:= )
 	)
-	kmap2qmap? ( ~dev-qt/qtbase-${QT_PV}:6[evdev] )
+	kmap2qmap? ( ~dev-qt/qtbase-${PV}:6[evdev] )
 	qdbus? (
-		~dev-qt/qtbase-${QT_PV}:6[dbus,xml]
+		~dev-qt/qtbase-${PV}:6[dbus,xml]
 	)
 	qdoc? (
 		$(llvm_gen_dep '
@@ -57,10 +54,10 @@ RDEPEND="
 			llvm-core/llvm:${LLVM_SLOT}=
 		')
 	)
-	qml? ( ~dev-qt/qtdeclarative-${QT_PV}:6[widgets?] )
-	qmlls? ( ~dev-qt/qtdeclarative-${QT_PV}:6[qmlls] )
-	qtdiag? ( ~dev-qt/qtbase-${QT_PV}:6[network,gles2-only=,vulkan=] )
-	widgets? ( ~dev-qt/qtbase-${QT_PV}:6[opengl=] )
+	qml? ( ~dev-qt/qtdeclarative-${PV}:6[widgets?] )
+	qmlls? ( ~dev-qt/qtdeclarative-${PV}:6[qmlls] )
+	qtdiag? ( ~dev-qt/qtbase-${PV}:6[network,gles2-only=,vulkan=] )
+	widgets? ( ~dev-qt/qtbase-${PV}:6[opengl=] )
 "
 DEPEND="
 	${RDEPEND}
@@ -90,8 +87,6 @@ src_configure() {
 	use qdoc && llvm_chost_setup
 
 	local mycmakeargs=(
-		# qtbase 6.12.1 is not in portage yet; 6.12.0 is ABI-compatible
-		-DQT_NO_PACKAGE_VERSION_CHECK=TRUE
 		# prevent the clang test as it can abort due to bug #916098
 		$(cmake_use_find_package qdoc WrapLibClang)
 		$(cmake_use_find_package qml Qt6Qml)
