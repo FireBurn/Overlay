@@ -657,6 +657,7 @@ agent_timeout() {
     case "$1" in
         www-client/chromium*|dev-util/electron) echo 28800 ;;
         dev-lang/rust|*rocm*) echo 14400 ;;
+        sci-misc/llama-cpp) echo 10800 ;;
         *) in_list "$1" "${HEAVY_PKGS[@]}" && echo 10800 || echo 2700 ;;
     esac
 }
