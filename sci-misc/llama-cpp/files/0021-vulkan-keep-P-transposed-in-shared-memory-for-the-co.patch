@@ -13,16 +13,16 @@ Flash attention kernel, R9700: 5 query tokens at 34k tokens of q8_0 KV 257 -> 22
 
 Assisted-by: Claude Code (Claude Opus 5.5)
 ---
- ggml/src/ggml-vulkan/ggml-vulkan.cpp          |  7 ++++-
- .../vulkan-shaders/flash_attn_base.glsl       |  2 ++
- .../vulkan-shaders/flash_attn_cm1.comp        | 28 ++++++++++++++++---
- 3 files changed, 32 insertions(+), 5 deletions(-)
+ ggml/src/ggml-vulkan/ggml-vulkan.cpp          |  7 +++-
+ .../vulkan-shaders/flash_attn_base.glsl       |  2 +
+ .../vulkan-shaders/flash_attn_cm1.comp        | 37 ++++++++++++++++---
+ 3 files changed, 40 insertions(+), 6 deletions(-)
 
 diff --git a/ggml/src/ggml-vulkan/ggml-vulkan.cpp b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
-index 4bdec5114..9ead2226b 100644
+index 221ceba..fa6172a 100644
 --- a/ggml/src/ggml-vulkan/ggml-vulkan.cpp
 +++ b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
-@@ -1376,13 +1376,18 @@ vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_
+@@ -1446,6 +1446,10 @@ vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_
      const bool old_amd_windows = device->vendor_id == VK_VENDOR_ID_AMD && device->driver_id == vk::DriverId::eAmdProprietary &&
                                   (device->architecture == AMD_GCN || device->architecture == AMD_RDNA1 || device->architecture == AMD_RDNA2);
  
@@ -33,38 +33,42 @@ index 4bdec5114..9ead2226b 100644
      uint32_t flags = (use_mask_opt      ? 1 : 0) |
                       (use_mask          ? 2 : 0) |
                       (use_logit_softcap ? 4 : 0) |
-                      (old_amd_windows   ? 8 : 0) |
-                      (use_sparse        ? 16 : 0) |
-                      (use_mq            ? 32 : 0) |
--                     (use_tiled_kv      ? 64 : 0);
-+                     (use_tiled_kv      ? 64 : 0) |
-+                     (p_transposed      ? 128 : 0);
+@@ -1455,7 +1459,8 @@ vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_
+                      (params.flip       ? 64 : 0) |
+                      (params.flip_direct ? 128 : 0) |
+                      (use_mq            ? 256 : 0) |
+-                     (use_tiled_kv      ? 512 : 0);
++                     (use_tiled_kv      ? 512 : 0) |
++                     (p_transposed      ? 1024 : 0);
  
      const uint32_t subgroup_size = params.disable_subgroups ? 0 : params.subgroup_size;
  
 diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl
-index 5275a3d1c..531fbfcd4 100644
+index 702d501..57e6bd5 100644
 --- a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl
 +++ b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl
-@@ -31,6 +31,8 @@ const bool USE_SPARSE      = (Flags & 16) != 0;
- const bool USE_MQ          = (Flags & 32) != 0;
+@@ -35,6 +35,8 @@ const bool FLIP_DIRECT     = (Flags & 128) != 0;
+ const bool USE_MQ          = (Flags & 256) != 0;
  // K/V are f16 scratch in 16x16 tiles (K row-major, V transposed): each fragment is one contiguous 512 byte load
- const bool TILED_KV        = (Flags & 64) != 0;
+ const bool TILED_KV        = (Flags & 512) != 0;
 +// P is kept transposed in shared memory so coopmat operand loads are contiguous (AMD WMMA)
-+const bool P_TRANSPOSED    = (Flags & 128) != 0;
++const bool P_TRANSPOSED    = (Flags & 1024) != 0;
  
  // Round up head sizes to a multiple of 16, for coopmat1/coopmat2 paths
  const uint32_t HSK_pad = (HSK + 15) & ~15;
 diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp
-index 6df261711..2c53577cb 100644
+index 1878c2d..f21d5cf 100644
 --- a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp
 +++ b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp
-@@ -45,7 +45,11 @@ const uint32_t qstride = HSK_pad / 4 + 2;
- shared FLOAT_TYPEV4 Qf[Br * qstride];
- 
- const uint psh_stride = Br / 4 + 2;
--shared FLOAT_TYPEV4 Psh[Bc * psh_stride];
-+shared FLOAT_TYPEV4 Psh[P_TRANSPOSED ? 1 : Bc * psh_stride];
+@@ -50,7 +50,14 @@ const uint32_t qchunk_dtiles = 4;
+ const uint32_t qchunk_stride = qchunk_dtiles * 16 / 4 + 2;
+ const uint32_t psh_size = Bc * psh_stride;
+ const uint32_t qchunk_size = Q_IN_REGS ? Br * qchunk_stride : 0;
+-shared FLOAT_TYPEV4 Psh[psh_size >= qchunk_size ? psh_size : qchunk_size];
++// P_TRANSPOSED keeps P in PshT, so Psh is only needed as Q staging for Q_IN_REGS.
++const uint32_t psh_used = P_TRANSPOSED ? 0 : psh_size;
++const uint32_t psh_len = psh_used >= qchunk_size ? psh_used : qchunk_size;
++shared FLOAT_TYPEV4 Psh[psh_len > 0 ? psh_len : 1];
 +// Transposed P (K index contiguous): each lane's WMMA operand is a contiguous run, so it loads as
 +// ds_read_b64 instead of eight strided 16-bit reads.
 +const uint pt_stride = Bc / 4 + 2;                    // in vec4 units
@@ -72,7 +76,7 @@ index 6df261711..2c53577cb 100644
  
  // Avoid padding for hsk==256 to make it fit in 48KB shmem.
  const uint32_t sfshstride = (HSK <= 128) ? (Br / 4 + 2) : Br / 4;
-@@ -413,14 +417,26 @@ void main() {
+@@ -476,14 +483,26 @@ void main() {
              [[unroll]] for (uint32_t r = 0; r < rows_per_thread; r += 4) {
                  const uint row = tile_row(r);
                  if (KV_bounds_check && j * Bc + col >= KV) {
@@ -101,19 +105,27 @@ index 6df261711..2c53577cb 100644
                  }
              }
          }
-@@ -509,7 +525,11 @@ void main() {
+@@ -593,10 +612,18 @@ void main() {
+                         coopMatLoad(QMat, kvsh, v_tile_offset, kvsh_stride, gl_CooperativeMatrixLayoutRowMajor);
+                     }
  
-             if (hsv_offset < HSV_pad) {
-                 [[unroll]] for (uint32_t bc_chunk = 0; bc_chunk < Bc / MatBc; ++bc_chunk) {
 -                    coopMatLoad(KMat, Psh, bc_chunk * MatBc * psh_stride, psh_stride, gl_CooperativeMatrixLayoutColumnMajor);
 +                    if (P_TRANSPOSED) {
 +                        coopMatLoad(KMat, PshT, bc_chunk * MatBc / 4, pt_stride, gl_CooperativeMatrixLayoutRowMajor);
 +                    } else {
 +                        coopMatLoad(KMat, Psh, bc_chunk * MatBc * psh_stride, psh_stride, gl_CooperativeMatrixLayoutColumnMajor);
 +                    }
- 
-                     if (SHMEM_STAGING == 0) {
-                     if (!USE_DECODE_V && !KV_bounds_check && !USE_SPARSE) {
+                     PVMat0 = coopMatMulAdd(KMat, QMat, PVMat0);
+                     if (q_tiles > 1) {
+-                        coopMatLoad(KMat, Psh, bc_chunk * MatBc * psh_stride + MatBc / 4, psh_stride, gl_CooperativeMatrixLayoutColumnMajor);
++                        if (P_TRANSPOSED) {
++                            coopMatLoad(KMat, PshT, MatBc * pt_stride + bc_chunk * MatBc / 4, pt_stride, gl_CooperativeMatrixLayoutRowMajor);
++                        } else {
++                            coopMatLoad(KMat, Psh, bc_chunk * MatBc * psh_stride + MatBc / 4, psh_stride, gl_CooperativeMatrixLayoutColumnMajor);
++                        }
+                         PVMat1 = coopMatMulAdd(KMat, QMat, PVMat1);
+                     }
+                 }
 -- 
-2.56.0
+2.56.1
 
