@@ -1,25 +1,25 @@
-From c0ed46d0b2f3c6c45989727435b1d1d221287e7d Mon Sep 17 00:00:00 2001
+From 52d741fb0e4fe19afb83307aad81db6ffc791cd3 Mon Sep 17 00:00:00 2001
 From: Mike Lothian <mike@fireburn.co.uk>
 Date: Sun, 27 Sep 2026 13:29:32 +0100
-Subject: [PATCH 14/18] vulkan : store the flash attention quantized K/V
- scratch as 16x16 tiles
+Subject: [PATCH] vulkan : store the flash attention quantized K/V scratch as
+ 16x16 tiles
 
 Assisted-by: Claude Code (Claude Opus 5.5)
 ---
  ggml/src/ggml-vulkan/ggml-vulkan-types.h      |  2 ++
- ggml/src/ggml-vulkan/ggml-vulkan.cpp          | 19 ++++++++---
- .../vulkan-shaders/dequant_q8_0.comp          | 22 ++++++++++++-
+ ggml/src/ggml-vulkan/ggml-vulkan.cpp          | 19 ++++++++++----
+ .../vulkan-shaders/dequant_q8_0.comp          | 22 +++++++++++++++-
  .../vulkan-shaders/flash_attn_base.glsl       |  2 ++
- .../vulkan-shaders/flash_attn_cm1.comp        | 12 +++++--
+ .../vulkan-shaders/flash_attn_cm1.comp        | 12 +++++++--
  .../vulkan-shaders/vulkan-shaders-gen.cpp     |  2 ++
- tests/test-backend-ops.cpp                    | 33 +++++++++++++++++--
- 7 files changed, 82 insertions(+), 10 deletions(-)
+ tests/test-backend-ops.cpp                    | 26 +++++++++++++++++--
+ 7 files changed, 75 insertions(+), 10 deletions(-)
 
 diff --git a/ggml/src/ggml-vulkan/ggml-vulkan-types.h b/ggml/src/ggml-vulkan/ggml-vulkan-types.h
-index 24af328..a82f885 100644
+index d6931425d..9fc03ad53 100644
 --- a/ggml/src/ggml-vulkan/ggml-vulkan-types.h
 +++ b/ggml/src/ggml-vulkan/ggml-vulkan-types.h
-@@ -824,6 +824,8 @@ struct vk_device_struct {
+@@ -862,6 +862,8 @@ struct vk_device_struct {
  
      vk_pipeline pipeline_dequant[GGML_TYPE_COUNT];
      vk_pipeline pipeline_dequant_transpose[GGML_TYPE_COUNT]; // fused dequant+transpose for FA quant-KV
@@ -29,19 +29,19 @@ index 24af328..a82f885 100644
      vk_pipeline pipeline_dequant_mul_mat_vec_f16_f32[DMMV_WG_SIZE_COUNT][GGML_TYPE_COUNT][mul_mat_vec_max_cols];
      vk_pipeline pipeline_dequant_mul_mat_vec_id_f32[DMMV_WG_SIZE_COUNT][GGML_TYPE_COUNT];
 diff --git a/ggml/src/ggml-vulkan/ggml-vulkan.cpp b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
-index 2a21351..b6229cd 100644
+index 51dd68883..391669f9e 100644
 --- a/ggml/src/ggml-vulkan/ggml-vulkan.cpp
 +++ b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
-@@ -1431,7 +1431,7 @@ vk_fa_tuning_params get_fa_tuning_params(const vk_device& device, uint32_t hsk,
+@@ -1451,7 +1451,7 @@ static constexpr uint32_t FA_FLAG_BIAS_STAGE = 256;
  
  vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_tuning_params& params, uint32_t hsk, uint32_t hsv, bool aligned, bool f32acc,
                                                    bool use_mask, bool use_mask_opt, bool use_logit_softcap, bool use_sparse, ggml_type k_type, ggml_type v_type,
--                                                  bool use_mq = false) {
-+                                                  bool use_mq = false, bool use_tiled_kv = false) {
+-                                                  uint32_t bias_bins, bool use_mq = false) {
++                                                  uint32_t bias_bins, bool use_mq = false, bool use_tiled_kv = false) {
      const bool old_amd_windows = device->vendor_id == VK_VENDOR_ID_AMD && device->driver_id == vk::DriverId::eAmdProprietary &&
                                   (device->architecture == AMD_GCN || device->architecture == AMD_RDNA1 || device->architecture == AMD_RDNA2);
  
-@@ -1443,7 +1443,8 @@ vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_
+@@ -1463,7 +1463,8 @@ vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_
                       (params.q_in_regs  ? 32 : 0) |
                       (params.flip       ? 64 : 0) |
                       (params.flip_direct ? 128 : 0) |
@@ -51,7 +51,7 @@ index 2a21351..b6229cd 100644
  
      const uint32_t subgroup_size = params.disable_subgroups ? 0 : params.subgroup_size;
  
-@@ -3433,6 +3434,8 @@ void ggml_vk_load_shaders(vk_device& device, vk_pipeline requested) {
+@@ -3535,6 +3536,8 @@ void ggml_vk_load_shaders(vk_device& device, vk_pipeline requested) {
      ggml_vk_create_pipeline(device, device->pipeline_dequant[GGML_TYPE_Q5_1], "dequant_q5_1", dequant_q5_1_len, dequant_q5_1_data, "main", 2, 5 * sizeof(uint32_t), {256 * 16, 1, 1}, {}, 1);
      ggml_vk_create_pipeline(device, device->pipeline_dequant[GGML_TYPE_Q8_0], "dequant_q8_0", dequant_q8_0_len, dequant_q8_0_data, "main", 2, 5 * sizeof(uint32_t), {256 * 16, 1, 1}, {}, 1);
      ggml_vk_create_pipeline(device, device->pipeline_dequant_transpose[GGML_TYPE_Q8_0], "dequant_q8_0_transpose", dequant_q8_0_transpose_len, dequant_q8_0_transpose_data, "main", 2, 5 * sizeof(uint32_t), {256 * 16, 1, 1}, {}, 1);
@@ -60,24 +60,24 @@ index 2a21351..b6229cd 100644
      ggml_vk_create_pipeline(device, device->pipeline_dequant[GGML_TYPE_Q2_K], "dequant_q2_k", dequant_q2_k_len, dequant_q2_k_data, "main", 2, 5 * sizeof(uint32_t), {256 * 64, 1, 1}, {}, 1);
      ggml_vk_create_pipeline(device, device->pipeline_dequant[GGML_TYPE_Q3_K], "dequant_q3_k", dequant_q3_k_len, dequant_q3_k_data, "main", 2, 5 * sizeof(uint32_t), {256 * 64, 1, 1}, {}, 1);
      ggml_vk_create_pipeline(device, device->pipeline_dequant[GGML_TYPE_Q4_K], "dequant_q4_k", dequant_q4_k_len, dequant_q4_k_data, "main", 2, 5 * sizeof(uint32_t), {256 * 32, 1, 1}, {}, 1);
-@@ -8817,9 +8820,15 @@ void ggml_vk_flash_attn(ggml_backend_vk_context * ctx, vk_context& subctx, const
+@@ -9269,9 +9272,15 @@ void ggml_vk_flash_attn(ggml_backend_vk_context * ctx, vk_context& subctx, const
      // Only use mask opt when the mask is fairly large. This hasn't been tuned extensively.
      bool use_mask_opt = mask && !use_sparse && gqa_nq == 1 && nem1 >= 32 && nem0 * nem1 > 32768 && nem0 >= tuning_params.block_cols * 16
                          && (ctx->device->architecture != vk_device_architecture::AMD_GCN || HSK > 256 || HSV > 256);
 +    // coopmat1 reads the f16 scratch as 16x16 tiles, one contiguous fragment per load
 +    const bool use_tiled_kv = use_dequant_kv && !kv_raw_strided && !use_sparse && aligned && gqa_nq == 1 &&
-+                              tuning_params.path == FA_COOPMAT1 && !tuning_params.flip && !tuning_params.shmem_staging &&
++                              tuning_params.path == FA_COOPMAT1 && !tuning_params.shmem_staging &&
 +                              HSK % 16 == 0 && HSV % 16 == 0 && KV % 16 == 0 &&
 +                              ctx->device->pipeline_dequant_ktile[k->type] != nullptr &&
 +                              ctx->device->pipeline_dequant_vtile[v->type] != nullptr;
      vk_fa_pipeline_state fa_pipeline_state = get_fa_pipeline_state(ctx->device, tuning_params, HSK, HSV, aligned, f32acc,
                                                                     mask != nullptr, use_mask_opt, logit_softcap != 0, use_sparse, k_type_eff, v_type_eff,
--                                                                   gqa_nq > 1);
-+                                                                   gqa_nq > 1, use_tiled_kv);
- 
-     vk_pipeline pipeline = nullptr;
- 
-@@ -9098,8 +9107,8 @@ void ggml_vk_flash_attn(ggml_backend_vk_context * ctx, vk_context& subctx, const
+-                                                                   bias_bins, gqa_nq > 1);
++                                                                   bias_bins, gqa_nq > 1, use_tiled_kv);
+     // GQA rows share one index row, the per-element bias is cheaper there
+     if (bias_bins && gqa_ratio == 1 && tuning_params.path == FA_COOPMAT2 &&
+         ggml_vk_flash_attn_cm2_bias_stage_shmem_support(ctx->device, tuning_params, f32acc)) {
+@@ -9557,8 +9566,8 @@ void ggml_vk_flash_attn(ggml_backend_vk_context * ctx, vk_context& subctx, const
              ggml_vk_dispatch_pipeline(ctx, subctx, cp_v, { v_buf, v_dst },
                  make_pc((uint32_t)HSV, (uint32_t)nev2, (uint32_t)KV, v_nel), cpy_elems(v_nel));
          } else {
@@ -89,7 +89,7 @@ index 2a21351..b6229cd 100644
              ggml_pipeline_request_descriptor_sets(ctx, tr_v, 1);
              if (ctx->prealloc_x_need_sync) {
 diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q8_0.comp b/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q8_0.comp
-index 3b3fbbe..764d0c6 100644
+index 3b3fbbe89..764d0c63f 100644
 --- a/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q8_0.comp
 +++ b/ggml/src/ggml-vulkan/vulkan-shaders/dequant_q8_0.comp
 @@ -18,7 +18,21 @@ void main() {
@@ -131,23 +131,23 @@ index 3b3fbbe..764d0c6 100644
 +#endif
  }
 diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl
-index 172bbed..702d501 100644
+index bddc4e726..3e07e7f3a 100644
 --- a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl
 +++ b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl
-@@ -33,6 +33,8 @@ const bool FLIP_DIRECT     = (Flags & 128) != 0;
+@@ -35,6 +35,8 @@ const bool FLIP_DIRECT     = (Flags & 128) != 0;
  // Multi-query GQA: several query rows fold into the GQA rows of one tile and share one K/V pass.
  // Row r maps to query row r / gqa_ratio and head r % gqa_ratio.
  const bool USE_MQ          = (Flags & 256) != 0;
 +// K/V are f16 scratch in 16x16 tiles (K row-major, V transposed): each fragment is one contiguous 512 byte load
 +const bool TILED_KV        = (Flags & 512) != 0;
+ const bool USE_BIAS        = BiasBins != 0;
  
  // Round up head sizes to a multiple of 16, for coopmat1/coopmat2 paths
- const uint32_t HSK_pad = (HSK + 15) & ~15;
 diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp
-index 3b16327..6995f69 100644
+index a8e27e5a4..c8c3d7932 100644
 --- a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp
 +++ b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp
-@@ -377,6 +377,9 @@ void main() {
+@@ -414,6 +414,9 @@ void main() {
              if (stage_k) {
                  uint coord = (gl_SubgroupID * MatBc) * kvsh_stride;
                  coopMatLoad(KMat, kvsh, coord, kvsh_stride, gl_CooperativeMatrixLayoutRowMajor);
@@ -157,7 +157,7 @@ index 3b16327..6995f69 100644
              } else {
                  const uint coord = k_offset / 4 + (j * Bc + gl_SubgroupID * MatBc) * k_stride / 4 + d * 16 / 4;
                  coopMatLoad(KMat, data_kv4, coord, k_stride / 4, gl_CooperativeMatrixLayoutRowMajor);
-@@ -573,8 +576,13 @@ void main() {
+@@ -613,8 +616,13 @@ void main() {
                      if (!USE_DECODE_V && !KV_bounds_check && !USE_SPARSE) {
                          // F16/BF16 values can be loaded directly from global memory
                          const uint v_tile_row = j * Bc + bc_chunk * MatBc;
@@ -174,10 +174,10 @@ index 3b16327..6995f69 100644
                          const uint v_tile_offset = bc_chunk * MatBr * v_cols + gl_SubgroupID * (MatBc / 4);
                          coopMatLoad(QMat, kvsh, v_tile_offset, vsh_stride, gl_CooperativeMatrixLayoutRowMajor);
 diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/vulkan-shaders-gen.cpp b/ggml/src/ggml-vulkan/vulkan-shaders/vulkan-shaders-gen.cpp
-index 52e5f04..3642767 100644
+index bac0fcfc0..aa3810725 100644
 --- a/ggml/src/ggml-vulkan/vulkan-shaders/vulkan-shaders-gen.cpp
 +++ b/ggml/src/ggml-vulkan/vulkan-shaders/vulkan-shaders-gen.cpp
-@@ -840,6 +840,8 @@ void process_shaders() {
+@@ -848,6 +848,8 @@ void process_shaders() {
          // Fused dequant+transpose variant for FA quant-KV (per-head-contiguous f16 scratch).
          if (tname == "q8_0") {
              string_to_spv("dequant_" + tname + "_transpose", "dequant_" + tname + ".comp", merge_maps(base_dict, {{data_a_key, "1"}, {"D_TYPE", "float16_t"}, {"DEQUANT_TRANSPOSE", "1"}}));
@@ -187,10 +187,10 @@ index 52e5f04..3642767 100644
  
          shader = (tname == "f32" || tname == "f16" || tname == "bf16") ? "get_rows.comp" : "get_rows_quant.comp";
 diff --git a/tests/test-backend-ops.cpp b/tests/test-backend-ops.cpp
-index 77052c8..e623af1 100644
+index 383eca0cd..d06328ba6 100644
 --- a/tests/test-backend-ops.cpp
 +++ b/tests/test-backend-ops.cpp
-@@ -13048,6 +13048,28 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_eval() {
+@@ -14854,6 +14854,28 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_eval() {
          }
      }
  
@@ -219,7 +219,7 @@ index 77052c8..e623af1 100644
      // asymmetric head_dim (hsk != hsv) with one or both sides not 64-aligned
      test_cases.emplace_back(new test_flash_attn_ext(72, 64, 4, {1, 1}, 256, 2, true, false, 0, 0, GGML_PREC_F32, GGML_TYPE_F16, GGML_TYPE_F16));
      test_cases.emplace_back(new test_flash_attn_ext(64, 72, 4, {1, 1}, 256, 2, true, false, 0, 0, GGML_PREC_F32, GGML_TYPE_F16, GGML_TYPE_F16));
-@@ -13084,9 +13106,9 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_eval() {
+@@ -14890,9 +14912,9 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_eval() {
      // q8_0 KV cases: decode and prompt batches, KV pad, permuted KV, feature flags, and long context
      test_cases.emplace_back(new test_flash_attn_ext(256, 256, 2, {16, 1},   113,   1, true, false, 0, 0, GGML_PREC_F32, GGML_TYPE_Q8_0, GGML_TYPE_Q8_0));
      test_cases.emplace_back(new test_flash_attn_ext(256, 256, 2, {16, 1},  1024,   1, true, false, 0, 0, GGML_PREC_F32, GGML_TYPE_Q8_0, GGML_TYPE_Q8_0));
@@ -231,19 +231,3 @@ index 77052c8..e623af1 100644
      test_cases.emplace_back(new test_flash_attn_ext(256, 256, 2, {16, 1}, 16384,   1, true, false, 0, 0, GGML_PREC_F32, GGML_TYPE_Q8_0, GGML_TYPE_Q8_0));
  
      // Dense Q8 KV pre-dequantization: both query thresholds and a partial final tile.
-@@ -13533,6 +13555,13 @@ static std::vector<std::unique_ptr<test_case>> make_test_cases_eval() {
- static std::vector<std::unique_ptr<test_case>> make_test_cases_perf() {
-     std::vector<std::unique_ptr<test_case>> test_cases;
- 
-+    // Qwen3.x 27B style attention: 24 Q / 4 KV heads, head size 256, q8_0 KV cache (prefill + decode)
-+    for (int kv : { 8192, 32768, 33792, 34816, 65536, 66560, }) {
-+        for (int nb : { 4, 512, 1024, }) {
-+            test_cases.emplace_back(new test_flash_attn_ext(256, 256, 4, {6, 1}, kv, nb, true, false, 0, 0, GGML_PREC_F32, GGML_TYPE_Q8_0, GGML_TYPE_Q8_0, {0, 2, 1, 3}, false));
-+        }
-+    }
-+
-     // Qwen3.x 27B style decode: 24 Q heads / 4 KV heads, head size 256, q8_0 KV cache
-     for (int kv : { 1024, 4096, 8192, 16384, 65536, }) {
-         test_cases.emplace_back(new test_flash_attn_ext(256, 256, 4, {6, 1}, kv, 1, true, false, 0, 0, GGML_PREC_F32, GGML_TYPE_Q8_0, GGML_TYPE_Q8_0));
--- 
-2.55.0

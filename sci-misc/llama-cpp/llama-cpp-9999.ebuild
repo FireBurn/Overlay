@@ -88,13 +88,12 @@ RDEPEND="${CDEPEND}
 PATCHES=(
 	"${FILESDIR}/0001-vulkan-handle-IQ4_XS-mat-vec-with-more-than-2-column.patch"
 	"${FILESDIR}/9999/0002-vulkan-share-the-K-V-pass-between-query-rows-in-coop.patch"
-	"${FILESDIR}/0003-qwen35-optional-reduced-vocab-LM-head-for-MTP-drafti.patch"
-	"${FILESDIR}/9999/0004-vulkan-use-4-rows-for-legacy-quant-mat-vec-from-2-co.patch"
+	"${FILESDIR}/9999/0003-qwen35-optional-reduced-vocab-LM-head-for-MTP-drafti.patch"
+	"${FILESDIR}/0004-vulkan-use-4-rows-for-legacy-quant-mat-vec-from-2-co.patch"
 	"${FILESDIR}/0006-server-keep-speculative-checkpoints-on-device.patch"
 	"${FILESDIR}/0007-hip-keep-MMQ-WMMA-k-loops-rolled-to-avoid-VGPR-spill.patch"
-	"${FILESDIR}/9999/0009-hip-share-the-FA-vec-K-V-pass-between-the-Q-heads-of.patch"
-	"${FILESDIR}/9999/0010-vulkan-write-gated-delta-net-state-straight-into-the.patch"
-	"${FILESDIR}/9999/0011-vulkan-keep-the-rms_norm-row-in-registers-for-the-.patch"
+	"${FILESDIR}/0010-vulkan-write-gated-delta-net-state-straight-into-the.patch"
+	"${FILESDIR}/0011-vulkan-keep-the-rms_norm-row-in-registers-for-the-.patch"
 	"${FILESDIR}/0012-vulkan-dual-issue-friendly-int8-epilogue-in-cm1-mmq-.patch"
 	"${FILESDIR}/9999/0014-vulkan-store-the-flash-attention-quantized-K-V-scrat.patch"
 	"${FILESDIR}/0016-vulkan-load-16-values-per-thread-for-q4_K-q5_K-q6_K-.patch"
@@ -106,7 +105,7 @@ PATCHES=(
 	"${FILESDIR}/0022-hip-allow-host-constexpr-use-of-physical-warp-size.patch"
 	"${FILESDIR}/0023-vulkan-split-k-for-32-64-column-mat-mat-on-AMD.patch"
 	"${FILESDIR}/0024-vulkan-use-the-integer-mat-vec-for-q6_K-with-three-o.patch"
-	"${FILESDIR}/0025-vulkan-compute-two-rows-per-workgroup-in-the-integer.patch"
+	"${FILESDIR}/9999/0025-vulkan-compute-two-rows-per-workgroup-in-the-integer.patch"
 	"${FILESDIR}/0027-vulkan-split-the-K-V-range-of-multi-row-flash-attent.patch"
 )
 

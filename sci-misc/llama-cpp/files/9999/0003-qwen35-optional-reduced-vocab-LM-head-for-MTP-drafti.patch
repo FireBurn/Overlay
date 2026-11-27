@@ -1,0 +1,35 @@
+From c968a8c5b846f25142ca189cc1db144fb01ed35a Mon Sep 17 00:00:00 2001
+From: Mike Lothian <mike@fireburn.co.uk>
+Date: Wed, 16 Sep 2026 15:38:10 +0100
+Subject: [PATCH] qwen35 : optional reduced-vocab LM head for MTP drafting
+
+Assisted-by: Claude Code (Claude Opus 5.5)
+---
+ src/models/qwen35.cpp | 14 +++++++++++++-
+ 1 file changed, 13 insertions(+), 1 deletion(-)
+
+diff --git a/src/models/qwen35.cpp b/src/models/qwen35.cpp
+index 542e150cb..7f1f570e5 100644
+--- a/src/models/qwen35.cpp
++++ b/src/models/qwen35.cpp
+@@ -661,7 +661,19 @@ llama_model_qwen35::graph_mtp::graph_mtp(const llm_graph_params & params)
+ 
+     ggml_tensor * head_w = layer.nextn.shared_head_head ? layer.nextn.shared_head_head : model.output;
+     GGML_ASSERT(head_w && "QWEN35 MTP: missing LM head (nextn.shared_head_head or model.output)");
+-    cur = build_lora_mm(head_w, cur);
++    // Optionally draft over the first n LM head rows only (LLAMA_MTP_DRAFT_NVOCAB): low token ids are the frequent tokens.
++    static const int64_t n_draft_vocab = getenv("LLAMA_MTP_DRAFT_NVOCAB") ? atoll(getenv("LLAMA_MTP_DRAFT_NVOCAB")) : 0;
++    if (n_draft_vocab > 0 && n_draft_vocab < head_w->ne[1] && !layer.nextn.shared_head_head) {
++        const int64_t n_vocab_full = head_w->ne[1];
++        ggml_tensor * head_sub = ggml_view_2d(ctx0, head_w, head_w->ne[0], n_draft_vocab, head_w->nb[1], 0);
++        cur = ggml_mul_mat(ctx0, head_sub, cur);
++        // the rest of the vocabulary gets a logit of -1e4
++        cur = ggml_scale_bias(ctx0, cur, 1.0f, 1e4f);
++        cur = ggml_pad(ctx0, cur, n_vocab_full - n_draft_vocab, 0, 0, 0);
++        cur = ggml_scale_bias(ctx0, cur, 1.0f, -1e4f);
++    } else {
++        cur = build_lora_mm(head_w, cur);
++    }
+     cb(cur, "result_output", -1);
+ 
+     res->t_logits = cur;

@@ -1,4 +1,4 @@
-From 5fe40ed1ea4f2d41717926b62dc9866584c4e742 Mon Sep 17 00:00:00 2001
+From 52db03cf45343897a9ba95c6c990d257fe757eec Mon Sep 17 00:00:00 2001
 From: Mike Lothian <mike@fireburn.co.uk>
 Date: Sun, 4 Oct 2026 14:40:40 +0100
 Subject: [PATCH] vulkan : keep P transposed in shared memory for the coopmat1
@@ -19,10 +19,10 @@ Assisted-by: Claude Code (Claude Opus 5.5)
  3 files changed, 40 insertions(+), 6 deletions(-)
 
 diff --git a/ggml/src/ggml-vulkan/ggml-vulkan.cpp b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
-index 221ceba..fa6172a 100644
+index 8f34a4ef0..ea70e6552 100644
 --- a/ggml/src/ggml-vulkan/ggml-vulkan.cpp
 +++ b/ggml/src/ggml-vulkan/ggml-vulkan.cpp
-@@ -1446,6 +1446,10 @@ vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_
+@@ -1455,6 +1455,10 @@ vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_
      const bool old_amd_windows = device->vendor_id == VK_VENDOR_ID_AMD && device->driver_id == vk::DriverId::eAmdProprietary &&
                                   (device->architecture == AMD_GCN || device->architecture == AMD_RDNA1 || device->architecture == AMD_RDNA2);
  
@@ -33,7 +33,7 @@ index 221ceba..fa6172a 100644
      uint32_t flags = (use_mask_opt      ? 1 : 0) |
                       (use_mask          ? 2 : 0) |
                       (use_logit_softcap ? 4 : 0) |
-@@ -1455,7 +1459,8 @@ vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_
+@@ -1464,7 +1468,8 @@ vk_fa_pipeline_state get_fa_pipeline_state(const vk_device& device, const vk_fa_
                       (params.flip       ? 64 : 0) |
                       (params.flip_direct ? 128 : 0) |
                       (use_mq            ? 256 : 0) |
@@ -44,20 +44,20 @@ index 221ceba..fa6172a 100644
      const uint32_t subgroup_size = params.disable_subgroups ? 0 : params.subgroup_size;
  
 diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl
-index 702d501..57e6bd5 100644
+index 3e07e7f3a..3074f9df3 100644
 --- a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl
 +++ b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_base.glsl
-@@ -35,6 +35,8 @@ const bool FLIP_DIRECT     = (Flags & 128) != 0;
+@@ -37,6 +37,8 @@ const bool FLIP_DIRECT     = (Flags & 128) != 0;
  const bool USE_MQ          = (Flags & 256) != 0;
  // K/V are f16 scratch in 16x16 tiles (K row-major, V transposed): each fragment is one contiguous 512 byte load
  const bool TILED_KV        = (Flags & 512) != 0;
 +// P is kept transposed in shared memory so coopmat operand loads are contiguous (AMD WMMA)
 +const bool P_TRANSPOSED    = (Flags & 1024) != 0;
+ const bool USE_BIAS        = BiasBins != 0;
  
  // Round up head sizes to a multiple of 16, for coopmat1/coopmat2 paths
- const uint32_t HSK_pad = (HSK + 15) & ~15;
 diff --git a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp
-index 1878c2d..f21d5cf 100644
+index c8c3d7932..b5d395506 100644
 --- a/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp
 +++ b/ggml/src/ggml-vulkan/vulkan-shaders/flash_attn_cm1.comp
 @@ -50,7 +50,14 @@ const uint32_t qchunk_dtiles = 4;
@@ -76,7 +76,7 @@ index 1878c2d..f21d5cf 100644
  
  // Avoid padding for hsk==256 to make it fit in 48KB shmem.
  const uint32_t sfshstride = (HSK <= 128) ? (Br / 4 + 2) : Br / 4;
-@@ -476,14 +483,26 @@ void main() {
+@@ -515,14 +522,26 @@ void main() {
              [[unroll]] for (uint32_t r = 0; r < rows_per_thread; r += 4) {
                  const uint row = tile_row(r);
                  if (KV_bounds_check && j * Bc + col >= KV) {
@@ -105,7 +105,7 @@ index 1878c2d..f21d5cf 100644
                  }
              }
          }
-@@ -593,10 +612,18 @@ void main() {
+@@ -632,10 +651,18 @@ void main() {
                          coopMatLoad(QMat, kvsh, v_tile_offset, kvsh_stride, gl_CooperativeMatrixLayoutRowMajor);
                      }
  
@@ -126,6 +126,3 @@ index 1878c2d..f21d5cf 100644
                          PVMat1 = coopMatMulAdd(KMat, QMat, PVMat1);
                      }
                  }
--- 
-2.56.1
-
