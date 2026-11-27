@@ -3,7 +3,9 @@
 
 EAPI=8
 
-# Generated from bun.lock by scripts/npm-deps.py
+# Generated from bun.lock by scripts/npm-deps.py.  The iroh musl variants
+# are devDependencies of packages/core, and bun installs those without
+# checking the libc condition, so they are fetched on glibc hosts too.
 NPM_PKGS="
 	@agentclientprotocol/sdk@1.6.0
 	@ai-sdk/openai-compatible@2.0.41
@@ -313,7 +315,7 @@ NPM_PKGS="
 	@npmcli/run-script@10.0.4
 	@number0/iroh@1.2.0
 	@number0/iroh-linux-arm64-gnu@1.2.0|arm64
-	@number0/iroh-linux-arm64-musl@1.2.0|arm64,elibc_musl
+	@number0/iroh-linux-arm64-musl@1.2.0|arm64
 	@number0/iroh-linux-x64-gnu@1.2.0|amd64
 	@number0/iroh-linux-x64-musl@1.2.0|amd64
 	@octokit/auth-app@8.0.1
@@ -366,13 +368,13 @@ NPM_PKGS="
 	@opentelemetry/sdk-trace-base@2.8.0
 	@opentelemetry/sdk-trace-node@2.8.0
 	@opentelemetry/semantic-conventions@1.43.0
-	@opentui/core@0.9.4
-	@opentui/core-linux-arm64@0.9.4|arm64
-	@opentui/core-linux-arm64-musl@0.9.4|arm64,elibc_musl
-	@opentui/core-linux-x64@0.9.4|amd64
-	@opentui/core-linux-x64-musl@0.9.4|amd64,elibc_musl
-	@opentui/keymap@0.9.4
-	@opentui/solid@0.9.4
+	@opentui/core@0.9.9
+	@opentui/core-linux-arm64@0.9.9|arm64
+	@opentui/core-linux-arm64-musl@0.9.9|arm64,elibc_musl
+	@opentui/core-linux-x64@0.9.9|amd64
+	@opentui/core-linux-x64-musl@0.9.9|amd64,elibc_musl
+	@opentui/keymap@0.9.9
+	@opentui/solid@0.9.9
 	@opentunnel/client@0.6.1
 	@opentunnel/protocol@0.6.1
 	@oxc-parser/binding-linux-arm64-gnu@0.141.0|arm64
@@ -641,7 +643,6 @@ NPM_PKGS="
 	axe-core@4.13.0
 	babel-plugin-jsx-dom-expressions@0.40.10
 	babel-plugin-jsx-dom-expressions@0.40.11
-	babel-plugin-module-resolver@5.0.2
 	babel-plugin-polyfill-corejs2@0.4.17
 	babel-plugin-polyfill-corejs3@0.14.2
 	babel-plugin-polyfill-regenerator@0.6.8
@@ -896,8 +897,6 @@ NPM_PKGS="
 	filelist@1.0.6
 	fill-range@7.1.1
 	finalhandler@2.1.1
-	find-babel-config@2.1.2
-	find-up@3.0.0
 	find-up@5.0.0
 	for-each@0.3.5
 	foreground-child@3.3.1
@@ -937,7 +936,6 @@ NPM_PKGS="
 	glob@13.0.5
 	glob@13.0.6
 	glob@7.2.3
-	glob@9.3.5
 	glob-parent@5.1.2
 	global-agent@3.0.0
 	globalthis@1.0.4
@@ -1117,7 +1115,6 @@ NPM_PKGS="
 	lightningcss-linux-x64-musl@1.32.0|amd64
 	lightningcss-linux-x64-musl@1.33.0|amd64
 	linebreak@1.1.0
-	locate-path@3.0.0
 	locate-path@6.0.0
 	lodash@4.18.1
 	lodash-es@4.18.1
@@ -1214,11 +1211,9 @@ NPM_PKGS="
 	minimatch@10.2.5
 	minimatch@3.1.5
 	minimatch@5.1.9
-	minimatch@8.0.7
 	minimatch@9.0.9
 	minimist@1.2.8
 	minipass@3.3.6
-	minipass@4.2.8
 	minipass@7.1.3
 	minipass-collect@2.0.1
 	minipass-fetch@5.0.2
@@ -1276,12 +1271,9 @@ NPM_PKGS="
 	oxc-parser@0.141.0
 	oxlint@1.93.0
 	p-cancelable@2.1.1
-	p-limit@2.3.0
 	p-limit@3.1.0
-	p-locate@3.0.0
 	p-locate@5.0.0
 	p-map@7.0.6
-	p-try@2.2.0
 	package-json-from-dist@1.0.1
 	pacote@21.5.1
 	pagefind@1.5.2
@@ -1292,7 +1284,6 @@ NPM_PKGS="
 	parse-latin@7.0.0
 	parse5@7.3.0
 	parseurl@1.3.3
-	path-exists@3.0.0
 	path-exists@4.0.0
 	path-exists@5.0.0
 	path-is-absolute@1.0.1
@@ -1310,7 +1301,6 @@ NPM_PKGS="
 	picomatch@4.0.5
 	picomatch@4.0.7
 	pkce-challenge@5.0.1
-	pkg-up@3.1.0
 	pkijs@3.4.0
 	playwright@1.60.0
 	playwright-core@1.59.1
@@ -1340,7 +1330,7 @@ NPM_PKGS="
 	property-information@7.2.0
 	proxy-addr@2.0.8
 	proxy-from-env@1.1.0
-	psychoscript@0.2.1
+	psychoscript@0.3.0
 	pump@3.0.4
 	pupa@3.3.0
 	puppeteer-core@25.9.0
@@ -1389,7 +1379,6 @@ NPM_PKGS="
 	require-from-string@2.0.2
 	require-in-the-middle@8.0.1
 	resedit@1.7.2
-	reselect@4.1.8
 	resolve@1.22.12
 	resolve-alpn@1.2.1
 	resolve-pkg-maps@1.0.0
@@ -1856,10 +1845,10 @@ NPM_STUB_PKGS="
 	@opencode/pty-darwin-x64@0.6.0
 	@opencode/pty-win32-arm64@0.6.0
 	@opencode/pty-win32-x64@0.6.0
-	@opentui/core-darwin-arm64@0.9.4
-	@opentui/core-darwin-x64@0.9.4
-	@opentui/core-win32-arm64@0.9.4
-	@opentui/core-win32-x64@0.9.4
+	@opentui/core-darwin-arm64@0.9.9
+	@opentui/core-darwin-x64@0.9.9
+	@opentui/core-win32-arm64@0.9.9
+	@opentui/core-win32-x64@0.9.9
 	@oxc-parser/binding-android-arm-eabi@0.141.0
 	@oxc-parser/binding-android-arm64@0.141.0
 	@oxc-parser/binding-darwin-arm64@0.141.0
