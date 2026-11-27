@@ -8,11 +8,13 @@ EAPI=8
 NPM_PKGS="
 	@a2a-js/sdk@1.1.0
 	@agentclientprotocol/sdk@0.14.1
+	@agentclientprotocol/sdk@0.22.1
 	@alcalzone/ansi-tokenize@0.3.0
 	@alloc/quick-lru@5.2.0
 	@ampproject/remapping@2.3.0
 	@antfu/install-pkg@1.1.0
 	@anthropic-ai/sdk@0.36.3
+	@anthropic-ai/sdk@0.81.0
 	@asamuzakjp/css-color@3.2.0
 	@azu/format-text@1.0.2
 	@azu/style-format@1.0.1
@@ -26,9 +28,10 @@ NPM_PKGS="
 	@azure/logger@1.3.0
 	@azure/msal-browser@5.12.0
 	@azure/msal-common@16.13.0
+	@azure/msal-common@16.14.3
 	@azure/msal-common@16.7.0
-	@azure/msal-node@5.2.3
 	@azure/msal-node@5.6.0
+	@azure/msal-node@7.1.1
 	@babel/code-frame@7.29.7
 	@babel/compat-data@7.29.7
 	@babel/core@7.29.7
@@ -75,6 +78,9 @@ NPM_PKGS="
 	@codemirror/search@6.7.0
 	@codemirror/state@6.6.0
 	@codemirror/view@6.43.1
+	@commander-js/extra-typings@14.0.0
+	@crosscopy/clipboard@0.3.6
+	@crosscopy/clipboard-linux-x64-gnu@0.3.6|amd64
 	@csstools/color-helpers@5.0.2
 	@csstools/css-calc@2.1.4
 	@csstools/css-color-parser@3.0.10
@@ -120,6 +126,7 @@ NPM_PKGS="
 	@gitbeaker/core@42.5.0
 	@gitbeaker/requester-utils@42.5.0
 	@gitbeaker/rest@42.5.0
+	@google/genai@1.30.0
 	@google/genai@2.6.0
 	@grammyjs/types@3.25.0
 	@grpc/grpc-js@1.14.5
@@ -136,19 +143,28 @@ NPM_PKGS="
 	@iconify/types@2.0.0
 	@iconify/utils@3.1.3
 	@img/colour@1.1.0
-	@img/sharp-libvips-linux-arm64@1.3.3|arm64
-	@img/sharp-libvips-linux-x64@1.3.3|amd64
-	@img/sharp-libvips-linuxmusl-arm64@1.3.3|arm64,elibc_musl
-	@img/sharp-libvips-linuxmusl-x64@1.3.3|amd64,elibc_musl
-	@img/sharp-linux-arm64@0.35.4|arm64
-	@img/sharp-linux-x64@0.35.4|amd64
-	@img/sharp-linuxmusl-arm64@0.35.4|arm64,elibc_musl
-	@img/sharp-linuxmusl-x64@0.35.4|amd64,elibc_musl
-	@img/sharp-wasm32@0.35.4
+	@img/sharp-libvips-linux-arm64@1.2.4|arm64
+	@img/sharp-libvips-linux-arm64@1.3.4|arm64
+	@img/sharp-libvips-linux-x64@1.2.4|amd64
+	@img/sharp-libvips-linux-x64@1.3.4|amd64
+	@img/sharp-libvips-linuxmusl-arm64@1.2.4|arm64,elibc_musl
+	@img/sharp-libvips-linuxmusl-arm64@1.3.4|arm64,elibc_musl
+	@img/sharp-libvips-linuxmusl-x64@1.2.4|amd64,elibc_musl
+	@img/sharp-libvips-linuxmusl-x64@1.3.4|amd64,elibc_musl
+	@img/sharp-linux-arm64@0.34.5|arm64
+	@img/sharp-linux-arm64@0.35.5|arm64
+	@img/sharp-linux-x64@0.34.5|amd64
+	@img/sharp-linux-x64@0.35.5|amd64
+	@img/sharp-linuxmusl-arm64@0.34.5|arm64,elibc_musl
+	@img/sharp-linuxmusl-arm64@0.35.5|arm64,elibc_musl
+	@img/sharp-linuxmusl-x64@0.34.5|amd64,elibc_musl
+	@img/sharp-linuxmusl-x64@0.35.5|amd64,elibc_musl
+	@img/sharp-wasm32@0.35.5
 	@inquirer/confirm@5.1.14
 	@inquirer/core@10.1.15
 	@inquirer/figures@1.0.13
 	@inquirer/type@3.0.8
+	@isaacs/cliui@9.0.0
 	@isaacs/fs-minipass@4.0.1
 	@isaacs/nonrecursive-glob-match@1.1.0
 	@istanbuljs/schema@0.1.3
@@ -175,21 +191,26 @@ NPM_PKGS="
 	@lezer/common@1.5.2
 	@lezer/highlight@1.2.3
 	@lezer/lr@1.4.10
+	@lydell/node-pty@1.1.0
 	@lydell/node-pty@1.2.0-beta.10
+	@lydell/node-pty-linux-arm64@1.1.0|arm64
 	@lydell/node-pty-linux-arm64@1.2.0-beta.10|arm64
+	@lydell/node-pty-linux-x64@1.1.0|amd64
 	@lydell/node-pty-linux-x64@1.2.0-beta.10|amd64
 	@marijn/find-cluster-break@1.0.2
 	@mermaid-js/parser@1.2.1
-	@microsoft/agents-activity@1.9.1
-	@microsoft/agents-hosting@1.9.1
-	@microsoft/agents-telemetry@1.9.1
+	@microsoft/agents-activity@1.10.2
+	@microsoft/agents-hosting@1.10.2
+	@microsoft/agents-telemetry@1.10.2
 	@mixmark-io/domino@2.2.0
 	@mobilewright/core@0.0.53
 	@mobilewright/driver-mobilecli@0.0.53
 	@mobilewright/driver-mobilenext@0.0.53
 	@mobilewright/inspector@0.0.53
 	@mobilewright/protocol@0.0.53
+	@modelcontextprotocol/client@2.0.0
 	@modelcontextprotocol/client@2.4.0
+	@modelcontextprotocol/core@2.0.0
 	@modelcontextprotocol/core@2.4.0
 	@modelcontextprotocol/ext-apps@1.7.5
 	@modelcontextprotocol/sdk@1.32.2
@@ -202,6 +223,7 @@ NPM_PKGS="
 	@napi-rs/lzma-linux-x64-gnu@1.5.1|amd64
 	@napi-rs/wasm-runtime@1.2.4
 	@noble/hashes@1.8.0
+	@noble/hashes@2.4.0
 	@nodable/entities@2.2.0
 	@node-rs/jieba@2.0.2
 	@node-rs/jieba-linux-arm64-gnu@2.0.2|arm64
@@ -232,11 +254,14 @@ NPM_PKGS="
 	@open-draft/logger@0.3.0
 	@open-draft/until@2.1.0
 	@opentelemetry/api@1.9.0
+	@opentelemetry/api-logs@0.211.0
 	@opentelemetry/api-logs@0.221.0
 	@opentelemetry/configuration@0.221.0
 	@opentelemetry/context-async-hooks@2.10.0
 	@opentelemetry/core@2.10.0
+	@opentelemetry/core@2.5.0
 	@opentelemetry/exporter-logs-otlp-grpc@0.221.0
+	@opentelemetry/exporter-logs-otlp-http@0.211.0
 	@opentelemetry/exporter-logs-otlp-http@0.221.0
 	@opentelemetry/exporter-logs-otlp-proto@0.221.0
 	@opentelemetry/exporter-metrics-otlp-grpc@0.221.0
@@ -250,17 +275,23 @@ NPM_PKGS="
 	@opentelemetry/instrumentation@0.221.0
 	@opentelemetry/instrumentation-http@0.221.0
 	@opentelemetry/instrumentation-undici@0.31.0
+	@opentelemetry/otlp-exporter-base@0.211.0
 	@opentelemetry/otlp-exporter-base@0.221.0
 	@opentelemetry/otlp-grpc-exporter-base@0.221.0
+	@opentelemetry/otlp-transformer@0.211.0
 	@opentelemetry/otlp-transformer@0.221.0
 	@opentelemetry/propagator-b3@2.10.0
 	@opentelemetry/propagator-jaeger@2.10.0
 	@opentelemetry/resources@2.10.0
+	@opentelemetry/resources@2.5.0
+	@opentelemetry/sdk-logs@0.211.0
 	@opentelemetry/sdk-logs@0.221.0
 	@opentelemetry/sdk-metrics@2.10.0
+	@opentelemetry/sdk-metrics@2.5.0
 	@opentelemetry/sdk-node@0.221.0
 	@opentelemetry/sdk-trace@2.10.0
 	@opentelemetry/sdk-trace-base@2.10.0
+	@opentelemetry/sdk-trace-base@2.5.0
 	@opentelemetry/sdk-trace-node@2.10.0
 	@opentelemetry/semantic-conventions@1.36.0
 	@opentui/core@0.5.10
@@ -277,12 +308,16 @@ NPM_PKGS="
 	@pierre/trees@1.0.0-beta.6
 	@pinojs/redact@0.4.0
 	@playwright/test@1.61.1
+	@pnpm/config.env-replace@1.1.0
+	@pnpm/network.ca-file@1.0.2
+	@pnpm/npm-conf@3.0.3
 	@protobufjs/aspromise@1.1.2
 	@protobufjs/base64@1.1.2
 	@protobufjs/codegen@2.0.5
 	@protobufjs/eventemitter@1.1.1
 	@protobufjs/fetch@1.1.1
 	@protobufjs/float@1.0.2
+	@protobufjs/inquire@1.1.2
 	@protobufjs/path@1.1.2
 	@protobufjs/pool@1.1.0
 	@protobufjs/utf8@1.1.1
@@ -384,8 +419,9 @@ NPM_PKGS="
 	@shikijs/types@1.29.2
 	@shikijs/types@4.5.0
 	@shikijs/vscode-textmate@10.0.2
-	@simple-git/args-pathspec@1.0.3
-	@simple-git/argv-parser@1.1.1
+	@silvia-odwyer/photon-node@0.3.4
+	@simple-git/args-pathspec@1.0.4
+	@simple-git/argv-parser@3.0.0
 	@sinclair/typebox@0.27.8
 	@sinclair/typebox@0.34.37
 	@sindresorhus/merge-streams@2.3.0
@@ -481,12 +517,16 @@ NPM_PKGS="
 	@types/http-errors@2.0.5
 	@types/insert-module-globals@7.0.6
 	@types/istanbul-lib-coverage@2.0.6
+	@types/js-yaml@4.0.9
 	@types/jsdom@28.0.3
 	@types/json-schema@7.0.15
+	@types/json-stable-stringify@1.2.0
 	@types/json5@0.0.29
 	@types/jsonwebtoken@9.0.10
 	@types/katex@0.16.8
 	@types/linkify-it@5.0.0
+	@types/lodash@4.17.27
+	@types/lodash-es@4.17.12
 	@types/mailparser@3.4.6
 	@types/markdown-it@14.1.2
 	@types/marked@5.0.2
@@ -538,6 +578,7 @@ NPM_PKGS="
 	@types/yargs@17.0.33
 	@types/yargs-parser@21.0.3
 	@types/yauzl@2.10.3
+	@types/yauzl@3.4.0
 	@typescript-eslint/eslint-plugin@7.18.0
 	@typescript-eslint/eslint-plugin@8.35.0
 	@typescript-eslint/parser@7.18.0
@@ -629,11 +670,12 @@ NPM_PKGS="
 	archiver-utils@5.0.2
 	arg@5.0.2
 	argparse@2.0.1
-	argparse@3.0.0
+	argparse@3.0.4
 	aria-hidden@1.2.6
 	aria-query@5.3.0
 	array-buffer-byte-length@1.0.2
 	array-includes@3.1.9
+	array-timsort@1.0.3
 	array-union@2.1.0
 	array.prototype.findlast@1.2.5
 	array.prototype.findlastindex@1.2.6
@@ -668,6 +710,7 @@ NPM_PKGS="
 	base64-js@1.5.1
 	baseline-browser-mapping@2.9.19
 	before-after-hook@3.0.2
+	bidi-js@1.1.0
 	bignumber.js@9.3.1
 	binary-extensions@2.3.0
 	binaryextensions@6.11.0
@@ -747,6 +790,8 @@ NPM_PKGS="
 	cli-truncate@5.2.0
 	cli-truncate@6.0.0
 	cli-width@4.1.0
+	clipboard-image@0.1.0
+	clipboardy@5.2.1
 	cliui@6.0.0
 	cliui@8.0.1
 	clsx@2.1.1
@@ -771,6 +816,7 @@ NPM_PKGS="
 	commander@4.1.1
 	commander@7.2.0
 	commander@8.3.0
+	comment-json@4.6.2
 	component-emitter@1.3.1
 	compress-commons@4.1.2
 	compress-commons@6.0.2
@@ -778,6 +824,7 @@ NPM_PKGS="
 	concat-stream@1.6.2
 	conf@10.2.0
 	confbox@0.1.8
+	config-chain@1.1.13
 	console-browserify@1.2.0
 	constants-browserify@1.0.0
 	content-disposition@1.1.0
@@ -806,6 +853,7 @@ NPM_PKGS="
 	cross-spawn@6.0.6
 	cross-spawn@7.0.6
 	crypto-browserify@3.12.1
+	crypto-random-string@4.0.0
 	css-select@5.2.2
 	css-what@6.2.2
 	cssesc@3.0.0
@@ -909,7 +957,9 @@ NPM_PKGS="
 	dompurify@3.4.17
 	domutils@3.2.2
 	dot-prop@6.0.1
+	dotenv@16.6.1
 	dotenv@17.4.2
+	dotenv-expand@12.0.3
 	dts-bundle-generator@9.5.1
 	dunder-proto@1.0.1
 	duplexer2@0.1.4
@@ -934,6 +984,7 @@ NPM_PKGS="
 	entities@6.0.1
 	entities@7.0.1
 	entities@8.0.0
+	entities@8.1.0
 	env-paths@2.2.1
 	environment@1.1.0
 	err-code@2.0.3
@@ -1019,6 +1070,7 @@ NPM_PKGS="
 	fd-slicer@1.1.0
 	fdir@6.5.0
 	fetch-blob@3.2.0
+	fflate@0.8.3
 	figures@6.1.0
 	file-entry-cache@6.0.1
 	file-entry-cache@8.0.0
@@ -1033,7 +1085,7 @@ NPM_PKGS="
 	flat-cache@3.2.0
 	flat-cache@4.0.1
 	flatted@3.4.4
-	follow-redirects@1.16.0
+	follow-redirects@1.16.3
 	for-each@0.3.5
 	foreground-child@3.3.1
 	form-data@4.0.6
@@ -1073,6 +1125,7 @@ NPM_PKGS="
 	get-symbol-description@1.1.0
 	get-tsconfig@4.10.1
 	github-from-package@0.0.0
+	glob@12.0.0
 	glob@14.0.6
 	glob@7.2.3
 	glob-parent@5.1.2
@@ -1087,6 +1140,7 @@ NPM_PKGS="
 	google-auth-library@10.6.2
 	google-logging-utils@1.1.3
 	gopd@1.2.0
+	graceful-fs@4.2.10
 	graceful-fs@4.2.11
 	gradient-string@2.0.2
 	grammy@1.41.1
@@ -1222,11 +1276,13 @@ NPM_PKGS="
 	is-typed-array@1.1.15
 	is-unicode-supported@1.3.0
 	is-unicode-supported@2.1.0
+	is-wayland@0.1.0
 	is-weakmap@2.0.2
 	is-weakref@1.1.1
 	is-weakset@2.0.4
 	is-wsl@2.2.0
 	is-wsl@3.1.0
+	is64bit@2.0.0
 	isarray@1.0.0
 	isarray@2.0.5
 	isexe@2.0.0
@@ -1237,13 +1293,13 @@ NPM_PKGS="
 	istanbul-reports@3.1.7
 	istextorbinary@9.5.0
 	iterator.prototype@1.1.5
+	jackspeak@4.2.3
 	jiti@1.21.7
 	jiti@2.7.0
 	jose@6.2.12
 	js-levenshtein@1.1.6
 	js-tokens@4.0.0
 	js-tokens@9.0.1
-	js-yaml@4.3.1
 	js-yaml@4.3.2
 	jsdom@26.1.0
 	jsesc@3.1.0
@@ -1253,6 +1309,7 @@ NPM_PKGS="
 	json-parse-better-errors@1.0.2
 	json-parse-even-better-errors@2.3.1
 	json-parse-even-better-errors@4.0.0
+	json-schema-to-ts@3.1.1
 	json-schema-traverse@0.4.1
 	json-schema-traverse@1.0.0
 	json-schema-typed@7.0.3
@@ -1279,7 +1336,9 @@ NPM_PKGS="
 	klaw-sync@6.0.0
 	kleur@3.0.3
 	kleur@4.1.5
+	ky@1.14.3
 	labeled-stream-splicer@2.0.2
+	latest-version@9.0.0
 	layout-base@1.0.2
 	layout-base@2.0.1
 	lazystream@1.0.1
@@ -1342,6 +1401,7 @@ NPM_PKGS="
 	loose-envify@1.4.0
 	loupe@2.3.7
 	loupe@3.1.4
+	lovely-mermaid@0.3.3
 	lowlight@3.3.0
 	lru-cache@10.4.3
 	lru-cache@11.5.1
@@ -1351,17 +1411,19 @@ NPM_PKGS="
 	lru_map@0.4.1
 	lucide-react@1.24.0
 	lz-string@1.5.0
+	macos-version@6.0.0
 	magic-string@0.30.21
 	magicast@0.3.5
 	mailparser@3.9.28
 	make-dir@4.0.0
 	make-fetch-happen@14.0.3
-	markdown-it@14.2.0
-	markdown-it@15.0.0
+	markdown-it@14.3.3
+	markdown-it@15.0.3
 	markdown-table@3.0.4
 	marked@15.0.12
 	marked@16.4.2
 	marked@17.0.1
+	marked@17.0.6
 	math-intrinsics@1.1.0
 	md5.js@1.3.5
 	mdast-util-find-and-replace@3.0.2
@@ -1473,6 +1535,7 @@ NPM_PKGS="
 	node-abi@3.92.0
 	node-addon-api@4.3.0
 	node-addon-api@7.1.1
+	node-addon-api@8.9.2
 	node-domexception@1.0.0
 	node-fetch@2.7.0
 	node-fetch@3.3.2
@@ -1522,7 +1585,9 @@ NPM_PKGS="
 	open@7.4.2
 	open@8.4.2
 	openai@5.11.0
+	openai@6.49.0
 	openapi-typescript@7.13.0
+	opencc-js@1.4.2
 	optionator@0.9.4
 	ora@8.2.0
 	os-browserify@0.3.0
@@ -1538,6 +1603,8 @@ NPM_PKGS="
 	p-map@7.0.4
 	p-retry@4.6.2
 	p-try@2.2.0
+	package-json@10.0.1
+	package-json-from-dist@1.0.1
 	package-manager-detector@1.6.0
 	pako@1.0.11
 	papaparse@5.5.4
@@ -1569,6 +1636,7 @@ NPM_PKGS="
 	path-key@4.0.0
 	path-parse@1.0.7
 	path-platform@0.11.15
+	path-scurry@2.0.2
 	path-scurry@3.0.0
 	path-to-regexp@6.3.0
 	path-to-regexp@8.4.2
@@ -1618,6 +1686,7 @@ NPM_PKGS="
 	postcss-selector-parser@7.1.4
 	postcss-value-parser@4.2.0
 	powershell-utils@0.1.0
+	powershell-utils@0.2.1
 	preact@11.0.0-beta.0
 	preact-render-to-string@6.6.5
 	prebuild-install@7.1.3
@@ -1637,8 +1706,10 @@ NPM_PKGS="
 	prop-types@15.8.1
 	proper-lockfile@4.1.2
 	property-information@7.2.0
+	proto-list@1.2.4
 	protobufjs@7.6.5
-	proxy-addr@2.0.7
+	protobufjs@8.0.0
+	proxy-addr@2.0.8
 	proxy-from-env@2.1.0
 	psl@1.15.0
 	public-encrypt@4.0.3
@@ -1654,6 +1725,7 @@ NPM_PKGS="
 	queue-microtask@1.2.3
 	quick-format-unescaped@4.0.4
 	quickjs-emscripten-core@0.32.0
+	quickjs-wasi@3.6.2
 	radix-ui@1.6.2
 	randombytes@2.1.0
 	randomfill@1.0.4
@@ -1669,6 +1741,7 @@ NPM_PKGS="
 	react-is@17.0.2
 	react-is@18.3.1
 	react-markdown@9.1.0
+	react-reconciler@0.32.0
 	react-reconciler@0.33.0
 	react-refresh@0.17.0
 	react-remove-scroll@2.7.2
@@ -1698,6 +1771,8 @@ NPM_PKGS="
 	regex-recursion@6.0.2
 	regex-utilities@2.3.0
 	regexp.prototype.flags@1.5.4
+	registry-auth-token@5.1.1
+	registry-url@6.0.1
 	rehype-katex@7.0.1
 	remark-cjk-friendly@2.3.1
 	remark-gfm@4.0.1
@@ -1731,6 +1806,7 @@ NPM_PKGS="
 	router@2.2.0
 	rrweb-cssom@0.8.0
 	run-applescript@7.0.0
+	run-jxa@3.0.0
 	run-parallel@1.2.0
 	rw@1.3.3
 	safe-array-concat@1.1.3
@@ -1743,6 +1819,7 @@ NPM_PKGS="
 	sax@1.6.0
 	saxes@5.0.1
 	saxes@6.0.0
+	scheduler@0.26.0
 	scheduler@0.27.0
 	secretlint@10.2.2
 	selderee@0.12.0
@@ -1759,13 +1836,14 @@ NPM_PKGS="
 	setprototypeof@1.2.0
 	sha.js@2.4.12
 	shadcn@4.13.0
-	sharp@0.35.4
+	sharp@0.34.5
+	sharp@0.35.5
 	shasum-object@1.0.1
 	shebang-command@1.2.0
 	shebang-command@2.0.0
 	shebang-regex@1.0.0
 	shebang-regex@3.0.0
-	shell-quote@1.9.0
+	shell-quote@1.12.0
 	shiki@1.29.2
 	shiki@4.5.0
 	side-channel@1.1.1
@@ -1777,7 +1855,7 @@ NPM_PKGS="
 	signal-exit@4.1.0
 	simple-concat@1.0.1
 	simple-get@4.0.1
-	simple-git@3.36.0
+	simple-git@4.1.0
 	sisteransi@1.0.5
 	slash@2.0.0
 	slash@3.0.0
@@ -1845,6 +1923,7 @@ NPM_PKGS="
 	style-to-object@1.0.14
 	stylis@4.4.0
 	subarg@1.0.0
+	subsume@4.0.0
 	sucrase@3.35.1
 	superagent@10.3.0
 	supertest@7.2.2
@@ -1855,6 +1934,7 @@ NPM_PKGS="
 	supports-preserve-symlinks-flag@1.0.0
 	symbol-tree@3.2.4
 	syntax-error@1.4.0
+	system-architecture@0.1.0
 	systeminformation@5.31.16
 	table@6.9.0
 	tagged-tag@1.0.0
@@ -1906,9 +1986,12 @@ NPM_PKGS="
 	tr46@0.0.3
 	tr46@5.1.1
 	tree-dump@1.0.3
+	tree-kill@1.2.2
+	tree-sitter-bash@0.25.1
 	tree-sitter-wasms@0.1.13
 	trim-lines@3.0.1
 	trough@2.2.0
+	ts-algebra@2.0.0
 	ts-api-utils@1.4.3
 	ts-api-utils@2.4.0
 	ts-dedent@2.2.0
@@ -1929,6 +2012,7 @@ NPM_PKGS="
 	type-fest@0.20.2
 	type-fest@0.21.3
 	type-fest@1.4.0
+	type-fest@2.19.0
 	type-fest@4.41.0
 	type-fest@5.6.0
 	type-is@2.1.0
@@ -1958,6 +2042,7 @@ NPM_PKGS="
 	unified@11.0.5
 	unique-filename@4.0.0
 	unique-slug@5.0.0
+	unique-string@3.0.0
 	unist-util-find-after@5.0.0
 	unist-util-is@6.0.1
 	unist-util-position@5.0.0
@@ -2062,15 +2147,18 @@ NPM_PKGS="
 	yoga-layout@3.2.1
 	zip-stream@4.1.1
 	zip-stream@6.0.1
-	zod@3.25.75
 	zod@3.25.76
 	zod@4.6.6
+	zod@4.6.7
 	zod-to-json-schema@3.25.0
 	zod-to-json-schema@3.25.2
 	zrender@6.1.0
 	zwitch@2.0.4
 "
 NPM_STUB_PKGS="
+	@crosscopy/clipboard-darwin-arm64@0.3.6
+	@crosscopy/clipboard-darwin-x64@0.3.6
+	@crosscopy/clipboard-win32-x64-msvc@0.3.6
 	@esbuild/aix-ppc64@0.21.5
 	@esbuild/aix-ppc64@0.25.12
 	@esbuild/aix-ppc64@0.28.2
@@ -2140,26 +2228,46 @@ NPM_STUB_PKGS="
 	@esbuild/win32-x64@0.21.5
 	@esbuild/win32-x64@0.25.12
 	@esbuild/win32-x64@0.28.2
-	@img/sharp-darwin-arm64@0.35.4
-	@img/sharp-darwin-x64@0.35.4
-	@img/sharp-freebsd-wasm32@0.35.4
-	@img/sharp-libvips-darwin-arm64@1.3.3
-	@img/sharp-libvips-darwin-x64@1.3.3
-	@img/sharp-libvips-linux-arm@1.3.3
-	@img/sharp-libvips-linux-ppc64@1.3.3
-	@img/sharp-libvips-linux-riscv64@1.3.3
-	@img/sharp-libvips-linux-s390x@1.3.3
-	@img/sharp-linux-arm@0.35.4
-	@img/sharp-linux-ppc64@0.35.4
-	@img/sharp-linux-riscv64@0.35.4
-	@img/sharp-linux-s390x@0.35.4
-	@img/sharp-webcontainers-wasm32@0.35.4
-	@img/sharp-win32-arm64@0.35.4
-	@img/sharp-win32-ia32@0.35.4
-	@img/sharp-win32-x64@0.35.4
+	@img/sharp-darwin-arm64@0.34.5
+	@img/sharp-darwin-arm64@0.35.5
+	@img/sharp-darwin-x64@0.34.5
+	@img/sharp-darwin-x64@0.35.5
+	@img/sharp-freebsd-wasm32@0.35.5
+	@img/sharp-libvips-darwin-arm64@1.2.4
+	@img/sharp-libvips-darwin-arm64@1.3.4
+	@img/sharp-libvips-darwin-x64@1.2.4
+	@img/sharp-libvips-darwin-x64@1.3.4
+	@img/sharp-libvips-linux-arm@1.2.4
+	@img/sharp-libvips-linux-arm@1.3.4
+	@img/sharp-libvips-linux-ppc64@1.2.4
+	@img/sharp-libvips-linux-ppc64@1.3.4
+	@img/sharp-libvips-linux-riscv64@1.2.4
+	@img/sharp-libvips-linux-riscv64@1.3.4
+	@img/sharp-libvips-linux-s390x@1.2.4
+	@img/sharp-libvips-linux-s390x@1.3.4
+	@img/sharp-linux-arm@0.34.5
+	@img/sharp-linux-arm@0.35.5
+	@img/sharp-linux-ppc64@0.34.5
+	@img/sharp-linux-ppc64@0.35.5
+	@img/sharp-linux-riscv64@0.34.5
+	@img/sharp-linux-riscv64@0.35.5
+	@img/sharp-linux-s390x@0.34.5
+	@img/sharp-linux-s390x@0.35.5
+	@img/sharp-wasm32@0.34.5
+	@img/sharp-webcontainers-wasm32@0.35.5
+	@img/sharp-win32-arm64@0.34.5
+	@img/sharp-win32-arm64@0.35.5
+	@img/sharp-win32-ia32@0.34.5
+	@img/sharp-win32-ia32@0.35.5
+	@img/sharp-win32-x64@0.34.5
+	@img/sharp-win32-x64@0.35.5
+	@lydell/node-pty-darwin-arm64@1.1.0
 	@lydell/node-pty-darwin-arm64@1.2.0-beta.10
+	@lydell/node-pty-darwin-x64@1.1.0
 	@lydell/node-pty-darwin-x64@1.2.0-beta.10
+	@lydell/node-pty-win32-arm64@1.1.0
 	@lydell/node-pty-win32-arm64@1.2.0-beta.10
+	@lydell/node-pty-win32-x64@1.1.0
 	@lydell/node-pty-win32-x64@1.2.0-beta.10
 	@napi-rs/canvas-android-arm64@1.1.1
 	@napi-rs/canvas-darwin-arm64@1.1.1
