@@ -11,7 +11,7 @@ if [[ ${PV} == 9999 ]]; then
 	EGIT_SUBMODULES=( 'ggml' )
 else
 	MY_BUILD="${PV#0_p}"
-	MY_COMMIT="3b0426f"
+	MY_COMMIT="cab31f1"
 	MY_PV="master-${MY_BUILD}-${MY_COMMIT}"
 	GGML_COMMIT="e9e6fe2c4c460eb7e6293c512acd6df777b4a7ac"
 	SRC_URI="
