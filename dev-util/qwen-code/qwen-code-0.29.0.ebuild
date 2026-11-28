@@ -2346,7 +2346,7 @@ NPM_NATIVE_DEPEND="
 "
 NPM_PNPM_VERSION="11.24.0"
 
-inherit edo npm wrapper
+inherit edo npm toolchain-funcs wrapper
 
 DESCRIPTION="The open source AI coding agent for the terminal by Qwen"
 HOMEPAGE="https://github.com/QwenLM/qwen-code"
@@ -2413,6 +2413,9 @@ src_compile() {
 	npm_native_link_all @tailwindcss/oxide "@tailwindcss/oxide-${platform}" \
 		"${BROOT}/usr/$(get_libdir)/tailwindcss-oxide-@V@/tailwindcss-oxide.node"
 	edo pnpm --recursive run build
+	edo $(tc-getCC) ${CFLAGS} ${LDFLAGS} -std=c11 -static \
+		-o "${WORKDIR}"/qwen-landlock-run \
+		packages/core/vendor/landlock-run/src/qwen-landlock-run.c
 	edo pnpm run bundle
 
 	# The bundle leaves node-pty external; upstream ships it prebuilt
@@ -2435,6 +2438,15 @@ src_install() {
 	# Upstream's native libraries are prebuilt
 	rm -rf dist/opentui-assets/@opentui/core-linux-* || die
 	use opentui || { rm -rf dist/opentui-assets || die; }
+
+	# ripgrep comes from sys-apps/ripgrep and the landlock helper is built
+	# in src_compile; the bundled prebuilt binaries are not used
+	rm -rf dist/vendor/ripgrep dist/vendor/landlock-run/{src,*-linux} \
+		"${WORKDIR}"/pty/node_modules/node-pty/{third_party,deps/winpty} || die
+	insinto "${home}"/dist/vendor/landlock-run/$(usex arm64 arm64 x64)-linux
+	insopts -m0755
+	doins "${WORKDIR}"/qwen-landlock-run
+	insopts -m0644
 
 	insinto "${home}"
 	doins -r dist "${WORKDIR}/pty/node_modules"
