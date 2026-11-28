@@ -60,6 +60,7 @@ NPM_PKGS="
 	@earendil-works/elanor-fonts@0.1.0
 	@earendil-works/elanor-icons-react@0.1.0
 	@earendil-works/elanor-react@0.1.0
+	@earendil-works/elanor-react@0.1.1
 	@earendil-works/gondolin@0.14.0
 	@earendil-works/gondolin-krun-runner-linux-x64@0.14.0|amd64
 	@emnapi/runtime@1.11.3
